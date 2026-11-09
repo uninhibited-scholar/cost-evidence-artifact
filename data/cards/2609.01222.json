@@ -1,0 +1,196 @@
+{
+  "arxiv_id": "2609.01222",
+  "title": "What's in Your Agent's Context? Context Privilege Escalation Attacks against AI Agent Harness",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "mixed",
+    "carrier": "Persistent agent-context sources assembled by agent harnesses: memory files (CLAUDE.md, GEMINI.md, AGENTS.md and agent-proprietary memory paths), SKILL.md skill files and their name/description metadata, agent configuration files (e.g., ~/.codex/config.toml, .claude/settings.json), and environment information (file/directory names, git commit messages) loaded into LLM context with vendor-assigned privilege roles (r0-r4) and scopes (session/project/user)",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "Instructions in an agent's context should only carry the authority of the privilege role (system/developer/user/assistant/tool) and scope (session/project/user) that the harness assigned to their source: attacker-controlled low-privileged, session-scope content (e.g., tool outputs, web contents) must not be propagated into higher-privileged message roles (M-CPE) or into more persistent/broader-scope sources that survive restarts and affect other projects (X-CPE). The property is judged violated when injected instructions are loaded in an elevated role/scope and the agent follows them (up to full agent compromise and RCE).",
+    "operationalized_as": "CoRA two-round canary validation per CPE path: (1) 'Loaded' - the injected instruction reaches the higher-privileged source and appears in the LLM endpoint request with the elevated role/scope; (2) 'Verified' - the agent performs the expected harmless behavior (e.g., running a hello-world script or including a 'hello to CoRA' tag in its response)."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Third-party Content Attacker: controls agent-external content processed at runtime via tools (web pages, poisoned search results, downloaded documents, GitHub issues or pull requests), enabling indirect prompt injection",
+      "Third-party Component Attacker: develops and releases components used by victim agents (skill, tool, plugin, sub-agent definition, MCP server) through registries/marketplaces or public skill hubs",
+      "Can control file names and directory names inside attacker-supplied packages, and git commit messages in pull requests, which harnesses silently assemble into context"
+    ],
+    "assumptions": [
+      "Agent users, agent vendors, and LLM providers are not malicious",
+      "The host OS running the agent is benign, secure, and up-to-date",
+      "The adversary does not have any access or control to the host machine running the victim agent"
+    ],
+    "not_covered": [
+      "Malicious agent users, agent vendors, or LLM providers",
+      "Compromised host OS or adversaries with access to the victim host",
+      "Network-level adversaries; attacks requiring host-machine access"
+    ]
+  },
+  "intervention": {
+    "name": "CoRA (Context Risk Analyzer)",
+    "mechanism_layer": "provenance",
+    "description": "An LLM-assisted analysis pipeline for agent harnesses: static analysis of harness source code identifies candidate context sources (role/scope) and context markups; runtime instrumentation hooks the LLM endpoint APIs and injects traceable canaries into sources, differentially verifying each source's role (r0-r4) and scope (user/project/session) across three launches; then it enumerates candidate M-CPE/X-CPE paths and end-to-end validates them with PoC payloads in isolated environments (validation is deterministic, LLM output is only used for identification). The authors additionally advocate that vendors publish a SBOM-like 'context manifest' documenting context sources, roles, scopes, and assembly logic."
+  },
+  "controls": [
+    {"name": "Manual ground-truth context-source inventories for Codex and Gemini CLI (40 person-hours)", "purpose": "fair-comparison"},
+    {"name": "Cross-model attack validation (GPT-5.4 mini vs GPT-5.5; Claude Sonnet 4.6 vs Claude Opus 4.6; Gemini 2.5 Flash vs Gemini 2.5 Pro)", "purpose": "baseline"},
+    {"name": "Harmless observable behavior (hello-world script / 'hello to CoRA' tag) as attack-success oracle", "purpose": "positive-control"},
+    {"name": "Codex PR review with vs without AGENTS.override.md (same source code)", "purpose": "negative-control"}
+  ],
+  "results": [
+    {
+      "claim": "Across 12 real-world agent harnesses, CoRA identified 463 context sources and runtime-verified 282 of them (average 23.5 verified sources per agent, range 15-41), showing every harness assembles context from heterogeneous and often opaque sources.",
+      "metric": "verified_context_sources",
+      "value": "282 verified of 463 identified (avg 23.5 per agent, range 15-41)",
+      "comparison": null,
+      "setting": "12 high-profile open agent harnesses (Codex, Claude Code, Gemini CLI, OpenClaw, etc., Table I); CoRA static identification plus canary-based runtime validation",
+      "quote": "Across the 12 agent harnesses in our study, CoRA identifies 463 context sources and verifies 282 of them through runtime validation. Every analyzed agent harness assembles context from heterogeneous sources, with an average of 23.5 verified sources per agent, and a range from 15 to 41.",
+      "locator": "VII-B (Table VI)",
+      "denominator": {
+        "n_total": "463 identified context sources",
+        "n_valid": "282 runtime-verified sources",
+        "how_counted": "CoRA canary-based runtime validation of LLM endpoint requests; 161 filtered in static analysis as uncontrollable/payload-capacity issues, 20 environment-construction failures"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Among the 282 verified context sources, the majority (183, 64.9%) enter the highest-privilege system r0 role, and project-scope sources are the largest scope group, meaning most assembled sources carry high authority in context.",
+      "metric": "role_distribution",
+      "value": "64.9% system role (183), 21.3% user role (60), 3.2% assistant (9), 10.6% tool (30)",
+      "comparison": null,
+      "setting": "282 runtime-verified context sources across 12 agent harnesses",
+      "quote": "Among the 282 verified sources (Table VI), 183 enter the system r0r_{0} role (64.9%), 60 enter the user (r1r_{1}) role (21.3%), 9 enter the assistant (r2r_{2}) role (3.2%), and 30 enter the tool r3r_{3} role (10.6%).",
+      "locator": "VII-B (Table VI)",
+      "denominator": {
+        "n_total": "282 verified context sources",
+        "n_valid": "183 system role",
+        "how_counted": "Role verified per source by matching captured endpoint requests against injected canary values (CoRA VI-C)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "From verified sources, CoRA enumerated 1761 unique candidate CPE paths across the 12 harnesses, split into 940 M-CPE (role escalation), 640 X-CPE (scope escalation), and 181 increasing both dimensions.",
+      "metric": "candidate_CPE_paths",
+      "value": "1761 candidate CPE paths (940 M-CPE, 640 X-CPE, 181 both)",
+      "comparison": null,
+      "setting": "Pairs of verified context sources with escalating role or scope across 12 agent harnesses; median 7 both-dimension paths per agent (range 2-58)",
+      "quote": "Across the 12 analyzed agent harnesses, this produces 1761 unique candidate CPE paths, including 940 paths that involve M-CPE, 640 that involve X-CPE, and 181 that increase both dimensions (M-CPE and X-CPE).",
+      "locator": "VII-C",
+      "denominator": {
+        "n_total": "1761 unique candidate CPE paths",
+        "n_valid": "940 M-CPE + 640 X-CPE (181 counted in both)",
+        "how_counted": "Automatic enumeration of verified-source pairs whose role or scope increases (CoRA VI-D)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under end-to-end attack validation, 73% of the 1761 candidate paths loaded the injected instruction into the higher-privileged source and 58% were behaviorally verified under GPT-5.4 mini; GPT-5.5 gave 74% loaded and 58% verified, indicating most candidate escalation paths are practically reachable.",
+      "metric": "attack_validation_rate",
+      "value": "73% loaded and 58% behaviorally verified (GPT-5.4 mini)",
+      "comparison": "GPT-5.4 mini 73%/58% vs GPT-5.5 74%/58%",
+      "setting": "1761 candidate CPE paths across 12 agent harnesses, backend models GPT-5.4 mini and GPT-5.5 (Claude Code additionally on Claude Sonnet/Opus 4.6, Gemini CLI on Gemini 2.5 Flash/Pro)",
+      "quote": "Under GPT-5.4 mini, 1284 paths are loaded (73%) and 1028 are behaviorally verified (58%); under GPT-5.5, the corresponding results are 1315 (74%) and 1034 (58%).",
+      "locator": "VII-C (Table VII)",
+      "denominator": {
+        "n_total": "1761 candidate CPE paths",
+        "n_valid": "1284 loaded / 1028 behaviorally verified under GPT-5.4 mini; 1315 / 1034 under GPT-5.5",
+        "how_counted": "Two-round execution per path: round 1 checks propagation to the higher-privileged source (Loaded), round 2 checks the agent follows the propagated instruction (Verified)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Against 40 person-hours of manual ground truth, CoRA's static source identification achieved 100% precision and 93% recall on Codex (28 of 30 sources, 0 false positives) and 97% precision and 91% recall on Gemini CLI (38 of 42, 1 false positive).",
+      "metric": "precision_and_recall",
+      "value": "100% precision and 93% recall (Codex); 97% precision and 91% recall (Gemini CLI)",
+      "comparison": null,
+      "setting": "Manual ground-truth context-source inventories for Codex (30 sources) and Gemini CLI (42 sources), built with 40 person-hours; all CoRA-reported sources manually inspected before classifying false positives",
+      "quote": "For Codex, CoRA identifies 28 of the 30 manually identified sources and reports 0 false positives, corresponding to 100% precision and 93% recall. For Gemini CLI, CoRA identifies 38 of the 42 manually identified sources and reports 1 false positives, corresponding to 97% precision and 91% recall.",
+      "locator": "VII-D",
+      "denominator": {
+        "n_total": "30 manually identified sources (Codex) and 42 (Gemini CLI)",
+        "n_valid": "28 identified for Codex, 38 for Gemini CLI",
+        "how_counted": "Comparison of CoRA static analysis with manual analysis; ground truth from 40 person-hours of manual source enumeration"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "CoRA successfully verified 282 of the 302 eligible identified sources (93.4%) by automatically constructing their validation environments, and manual review found its filtering of 161 sources was appropriate in 156 cases with 5 false negatives.",
+      "metric": "source_validation_success_rate",
+      "value": "93.4% of eligible sources verified",
+      "comparison": null,
+      "setting": "302 eligible context sources after static-analysis filtering; isolated docker environments with canary injection",
+      "quote": "For the remaining 302 sources, CoRA successfully verifies 282 (93.4%) by constructing their validation environments, showing the effectiveness of CoRA in automatically validating the eligible sources reported by static analysis.",
+      "locator": "VII-D",
+      "denominator": {
+        "n_total": "302 eligible sources remaining after filtering",
+        "n_valid": "282 verified",
+        "how_counted": "CoRA environment construction plus canary-based endpoint-request validation"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "CPE paths in Claude Code remain reachable under its native models: of 51 candidate paths, 40 (78%) were behaviorally verified with Claude Sonnet 4.6 versus 31 (61%) with Claude Opus 4.6.",
+      "metric": "attack_validation_rate",
+      "value": "78% behaviorally verified (Claude Sonnet 4.6) vs 61% (Claude Opus 4.6)",
+      "comparison": "Sonnet 4.6: 40 (78%) verified vs Opus 4.6: 31 (61%) verified",
+      "setting": "Claude Code v2.1.88 harness, 51 candidate CPE paths, native backend models Claude Sonnet 4.6 and Claude Opus 4.6 (Table VII)",
+      "quote": "| | | Claude-Sonnet-4.6 | 40 (78%) | 40 (78%) | | | | Claude-Opus-4.6 | 36 (71%) | 31 (61%) |",
+      "locator": "VII-C Table VII (Claude Code rows)",
+      "denominator": {
+        "n_total": "51 candidate CPE paths for Claude Code",
+        "n_valid": "40 verified (Sonnet 4.6) / 31 verified (Opus 4.6)",
+        "how_counted": "Table VII attack validation: Loaded = injected instruction reaches higher-privileged source; Verified = expected behavioral effect"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "CoRA's source validation can fail to produce a valid EnvSpec for sources requiring complex agent configuration files or runtime requirements (e.g., dynamically discovered memory files).",
+      "quote": "A limitation of CoRA in source validation is that some sources require complex agent configuration files, or runtime requirements (e.g., dynamically discovered memory files) and CoRA may fail to produce a valid EnvSpec to set up the environment containing the target source.",
+      "locator": "VI-D (Limitation)"
+    },
+    {
+      "statement": "In attack validation, target LLMs may refuse to follow the generated instructions in high-privileged sources because of their security alignment, and CoRA's simple embedded instruction template is weaker than what a human expert could craft.",
+      "quote": "Another limitation is that in the attack validation, the LLMs may fail to follow the generated instructions in high-privileged sources due to their security alignment and ability to follow instructions.",
+      "locator": "VI-D (Limitation)"
+    },
+    {
+      "statement": "The automatically confirmed attack paths are only a lower bound on the privilege-escalation paths an agent actually has.",
+      "quote": "Consequently, the verified attack paths automatically confirmed by CoRA provide a lower bound of the privilege escalation paths an agent have.",
+      "locator": "VI-D (Limitation)"
+    },
+    {
+      "statement": "The behavioral-verification outcome depends on the evaluated model, reasoning effort, injection location, and user tasks, so the authors report it as a reference rather than a definitive measure of exploitability; a path that propagates without triggering the expected behavior remains potentially exploitable.",
+      "quote": "The latter outcome depends on the evaluated model, its reasoning effort, the injection location, and the user tasks; we therefore report it primarily as a reference rather than as a definitive measure of exploitability.",
+      "locator": "VI-D"
+    },
+    {
+      "statement": "CoRA's source-filtering stage made wrong skipping decisions for 5 of 161 filtered sources (e.g., Aider's LANG environment variable can in fact carry natural-language instructions).",
+      "quote": "For the majority of these cases (156 out of 161), the skipping decision is appropriate; the remaining 5 are false negatives.",
+      "locator": "VII-D"
+    },
+    {
+      "statement": "End-to-end attacks contain randomness beyond the deterministic injection steps: the agent may not always decide to use the malicious skill, which can decrease real-world attack success rates.",
+      "quote": "However, in reality, the agent may not always decide to use the skill, which may decrease the attack success rate.",
+      "locator": "VII-E (Discussion)"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "Authors state they will release full source code of CoRA with the paper (project site https://zichuan.li/LLMAgentCPE); Claude Code source and its evaluation artifact will NOT be included",
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": []
+}

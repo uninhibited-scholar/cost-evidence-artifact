@@ -1,0 +1,200 @@
+{
+ "arxiv_id": "2610.30485",
+ "title": "Why Bother Me Again? Benchmarking Personal Agent Memory for Interaction Preferences",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "被测对象为挂在 nanobot 个人代理上的记忆系统（每用户跨 99 个会话/四个月累积）：File memory（nanobot 内置，DeepSeek-V4-Flash 滚动固化到 MEMORY.md/HISTORY.md）、Simple RAG（Mem0 store infer=False 存原始消息+向量检索）、Mem0 v2.0.2（DeepSeek-V4-Flash 抽取）、MemOS v2.0.15（MemCube，GPT-5.5 记忆 LLM）；持久内容是用户的 14 类交互偏好在 work/personal 语境下共 28 个 cell 的设置",
+  "operations_covered": ["formation", "update", "retention", "retrieval"]
+ },
+ "safety_property": {
+  "type": "confidentiality",
+  "statement": "基准内置一条信息边界/偏好泄露控制属性：PA 只能从用户对其行为的反应中习得交互偏好；模拟器不得点名偏好或设置，wrapper 扣留的内容与目标设置不得进入记忆或判分。该属性用于保障评测效度（偏好只经反应通道暴露），由运行时拦截加事后全量审计检验，论文报告未发现泄露。基准本身不评测被测记忆系统的安全机制，也无攻击者。",
+  "operationalized_as": "运行时：prompt 规则+私有块隔离+rule-based checks+LLM 消息检查器（21,093 条已投递消息 0 条违反检查，43 条被拦回重写）；事后：Claude Opus 5.5 四阶段审计 34 个累积 run（3,193 会话/31,703 句）与 111 个 probe run（3,377 probe 会话/17,051 句），判定 1,839 句，Leak=0（Table 10）；组件信息可见性矩阵（Table 9）；用户匿名化去除先验捷径（源身份 53.2% → 匿名 46.4%，Appendix B.4）"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "用户模拟器只通过反应暴露偏好、不点名设置、不在 probe 中指涉先前会话（运行时检查+事后审计，Appendix D.4/H）",
+   "用户匿名化使 backbone 无法从对源角色的先验知识猜出偏好（Appendix B.4 shortcut check：53.2%→46.4%，接近 45.2% 随机）",
+   "四个记忆条件共享相同用户、会话日程、wrapper、工具与 checkpoint，仅记忆状态不同（Appendix F.1）",
+   "probe 在冻结 checkpoint 的隔离分支上运行且写回被丢弃，probe 之间互不影响（§3.5）"
+  ],
+  "not_covered": [
+   "无对抗者：不评测记忆投毒、提示注入或跨用户越权读取他人偏好",
+   "不评测记忆撤销（revocation）与修复（repair）操作",
+   "用户为 LLM 模拟用户（Gemini-3.8-Flash），非真实人类",
+   "偏好不泄露作为评测效度控制被审计，而非作为被测系统的攻防指标"
+  ]
+ },
+ "intervention": {
+  "name": null,
+  "mechanism_layer": "none",
+  "description": "论文提出评测环境 MemPABench（含 IX Wrapper 执行层与统一记忆适配器），on-policy 评估个人代理记忆获取/区分/更新交互偏好的能力；不提出记忆安全干预或防御机制。"
+ },
+ "controls": [
+  {"name": "No Memory（跳过累积、清空记忆，反映 backbone 默认交互习惯，作下界）", "purpose": "baseline"},
+  {"name": "Oracle（在 probe 中直接注入目标设置及其定义，移除 acquisition 环节，作上界）", "purpose": "positive-control"},
+  {"name": "四记忆条件共享同一用户/会话/wrapper/工具/checkpoint，仅记忆状态不同", "purpose": "fair-comparison"}
+ ],
+ "results": [
+  {
+   "claim": "在四个 backbone 等权平均下，只有 File memory 显著提升偏好选择准确率：PSA 59.2%，较 No Memory 高 9.6 点（95% cluster-bootstrap CI [+3.9, +15.6]，Table 13），随机基线为 45.2%",
+   "metric": "PSA (Preference Selection Accuracy, %)",
+   "value": "59.2%",
+   "comparison": "No Memory 49.6% -> File memory 59.2% (+9.6 points)",
+   "setting": "MemPABench：4 个 persona 用户 × 28 cell × 3 次重复；被测系统=File memory（nanobot 内置 MEMORY.md 固化，DeepSeek-V4-Flash 做 consolidation）；backbone=GPT-5.6-Sol / Qwen3.8-27B / HY4-Preview / DeepSeek-V4-Flash 四者等权平均",
+   "quote": "No Memory, where the PA selects by its defaults, reaches 49.6%, compared with 45.2% for random selection (Appendix A.1). Only File memory adds a clear gain. It raises PSA to 59.2%, a mean gain of 9.6 points over No Memory (95% cluster-bootstrap interval [+3.9, +15.6]).",
+   "locator": "Finding 1",
+   "denominator": {"n_total": "1,344", "n_valid": "1,344", "how_counted": "Table 12 caption：每 user–backbone–condition 336 个 final probes（4 users × 28 probes × 3 repeats）；Table 13 在 users、backbones、repeats 上 pooling，4 backbones × 336 = 1,344；model-capability 失败的 probe 计 PSA=0 且不缩减分母（Appendix F.2）"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "三个检索型记忆系统（Mem0、MemOS、Simple RAG）的 PSA 停留在 No Memory 水平，未超过无记忆基线（Table 13：与 No Memory 差 +0.4/+0.4/+0.2 点，95% CI 均在 2.7 点以内）",
+   "metric": "PSA (Preference Selection Accuracy, %)",
+   "value": "50.0% / 50.0% / 49.9%",
+   "comparison": null,
+   "setting": "MemPABench：被测系统=Mem0 v2.0.2、MemOS v2.0.15、Simple RAG（Mem0 store infer=False，text-embedding-3-small，top-10/4,000 token 注入）；4 backbone 等权平均；同一 1,344 final probes 池",
+   "quote": "On interaction preferences, however, Mem0, MemOS, and Simple RAG stay at the level of No Memory, with PSA of 50.0%, 50.0%, and 49.9%.",
+   "locator": "Finding 1",
+   "denominator": {"n_total": "1,344", "n_valid": "1,344", "how_counted": "同 Finding 1 池化口径：每 user–backbone–condition 336 个 final probes × 4 backbones（Table 12 caption + Table 13 pooling）"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "检索型条件在决策点前送入 PA 输入的内容极少包含可适用的交互偏好（仅 7/334），而 File memory 为 60/111（54%）；检索型条件 55–73% 的 probe 输入只有任务内容事件——瓶颈在检索而非存储（Finding 3 案例佐证）",
+   "metric": "applicable interaction preference present in PA input (rate)",
+   "value": "7 of 334",
+   "comparison": "60 of 111 (54%) under File memory",
+   "setting": "对每个记忆条件抽样 112 个 final probes（每 user × backbone 7 个）；两名 Claude Opus 5.5 读者在不知记忆条件与 backbone 下盲评 PA 首次选择前的输入",
+   "quote": "It appears in only 7 of the 334 judged probes, compared with 60 of 111 (54%) under File memory. Under these three conditions, the PA sees only content-related events in 55–73% of the judged probes.",
+   "locator": "Finding 2",
+   "denominator": {"n_total": "334（三个检索型条件）与 111（File memory）", "n_valid": "334 / 111", "how_counted": "论文原文：'we sampled 112 final probes per memory condition, seven for each user and backbone'（Figure 4 分析）；检索型条件判 334 个、File memory 判 111 个"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "File memory 是唯一明显跟得上偏好变更的条件：PET 25.4%，超过 No Memory（11.2%）的两倍且在 每个 backbone 上都更高；检索型条件 PET 仅 10.8–15.0%",
+   "metric": "PET (Preference Evolution Tracking, %)",
+   "value": "25.4%",
+   "comparison": "No Memory 11.2% -> File memory 25.4%",
+   "setting": "MemPABench：20 个被变更 cell 的 pre-event+final probe 配对；4 backbone × 3 repeats，users/backbones/repeats 上 pooling；被测系统=File memory",
+   "quote": "File memory helps the PA keep up with a preference change over time, but not tell the two contexts apart. Its PET is 25.4%, more than twice the 11.2% of No Memory, and it is higher on every backbone.",
+   "locator": "Finding 5",
+   "denominator": {"n_total": "240 = |E| 20 cells × 4 backbones × 3 repeats", "n_valid": "240", "how_counted": "|E|=20 来自 §3.3（'20 of the 112 cells change once over the timeline'，每用户 5 个变更事件 × 4 用户）；pooling 结构与 Appendix F.3 明示的 CS（18 对 × 4 backbone × 3 repeat = 216 实例）相同；PET 总实例数论文未直接写出，按同一 pooling 结构推导"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "没有任何记忆条件改善上下文区分：File memory 的 CS 反而低于 No Memory（14.4% vs 21.8%），且其 26.9% 的 CS 配对把一个语境的目标设置携带进另一语境（carry-over，No Memory 为 6.0%，Table 13）",
+   "metric": "CS (Context Sensitivity, %)",
+   "value": "14.4%",
+   "comparison": "No Memory 21.8% -> File memory 14.4%; carry-over 26.9%",
+   "setting": "MemPABench：18 个 work/personal 设置不同的 user–attribute 对；4 backbone × 3 repeats，users/backbones/repeats 上 pooling；被测系统=File memory",
+   "quote": "However, the CS does not improve, at 14.4% against 21.8% (Appendix G.3). In 26.9% of its CS pairs, the PA carries the target setting of one context over to the other.",
+   "locator": "Finding 5",
+   "denominator": {"n_total": "216", "n_valid": "216", "how_counted": "Appendix F.3 原文：'Each condition has 216 pair instances, from 18 pairs, four backbones, and three repeats'（18 个 work/personal 设置不同的 user–attribute 对）"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "即使 Oracle 直接给出目标设置，5 个最难设置（Hide/Terse/Iterative/Structured/Low）的正确选择中仅 59% 的回复达到 BRS≥4（No Memory 下为 24%）——供给正确偏好也难以覆盖 backbone 的默认交互习惯",
+   "metric": "BRS>=4 pass rate on correctly selected final probes (5 hardest settings, %)",
+   "value": "59%",
+   "comparison": "24% (No Memory) -> 59% (Oracle)",
+   "setting": "Oracle 参照条件（目标设置及定义直接注入 PA prompt，移除 acquisition）；5 个设置：Reasoning Visibility=Hide、Verbosity=Terse、Information Elicitation=Iterative 与 Structured、Solution Breadth=Low；BRS 由 Gemini-3.8-Flash 按 1–5 评分",
+   "quote": "Compared with No Memory, Oracle raises correct selections of the five settings from 33% to 96%, but the share of replies with a BRS of 4 or higher rises only from 24% to 59%.",
+   "locator": "Finding 7",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "用户感知分数上 File memory 同样最高：PRS 3.59–3.62，高于三个检索型条件（3.20–3.34）与 No Memory（3.19–3.39）",
+   "metric": "PRS (Perceived Realization Score, 1-5)",
+   "value": "3.59–3.62",
+   "comparison": "retrieval-based 3.20–3.34; No Memory 3.19–3.39",
+   "setting": "4 backbone 各自区间（对 4 用户 × 28 final probes × 3 repeats 平均，Figure 6）；PRS 由无累积记忆的用户模拟器（Gemini-3.8-Flash）在 probe 后评分",
+   "quote": "File memory reaches a PRS of 3.59–3.62 across the four backbones, above the 3.20–3.34 of the three retrieval-based conditions and the 3.19–3.39 of No Memory (Figure 7).",
+   "locator": "Finding 4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "行为实现分数同型：File memory BRS 3.46–3.57 在每个 backbone 上都是最高条件，检索型条件 3.03–3.26 与 No Memory 3.01–3.29 接近",
+   "metric": "BRS (Behavioral Realization Score, 1-5)",
+   "value": "3.46–3.57",
+   "comparison": "retrieval-based 3.03–3.26; No Memory 3.01–3.29",
+   "setting": "4 backbone 各自区间（对 4 用户 × 28 final probes × 3 repeats 平均，Figure 7）；BRS 由 Gemini-3.8-Flash 判者按统一 rubric 对公开回复+实际执行动作评分，不见 PA 的选择",
+   "quote": "File memory scores 3.46–3.57 and is the highest condition for each backbone, while the three retrieval-based conditions stay at 3.03–3.26, close to the 3.01–3.29 of No Memory.",
+   "locator": "Finding 4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "按维度看 Information Flow 最难：其 PSA 在所有条件下最低（34–44%），而 Expression Style（57–69%）与 Disclosure（55–58%）相对容易——关于 PA 动作的偏好比关于回复的偏好更难选对",
+   "metric": "PSA by interaction-preference dimension (%)",
+   "value": "34–44%",
+   "comparison": "Expression Style 57–69%; Disclosure 55–58%",
+   "setting": "四个 IX 维度 × 6 记忆/参照条件 × 4 backbone（Figure 8 / Table 14 明细）；MemPABench 全量 final probes",
+   "quote": "Across the four dimensions, Information Flow is the hardest under every condition (Figure 8). Its PSA stays at 34–44%, the lowest of the four, while Expression Style (57–69%) and Disclosure (55–58%) are relatively easier.",
+   "locator": "Finding 6",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "匿名化有效性（基准效度）：backbone 从源角色身份预测用户 28 个设置可达 53.2%，从匿名化画像降至 46.4%（接近 45.2% 随机）——匿名化去除了先验捷径",
+   "metric": "preference-matrix prediction accuracy (shortcut check, %)",
+   "value": "46.4%",
+   "comparison": "source identity 53.2% -> anonymized profile 46.4% (chance 45.2%)",
+   "setting": "4 个 backbone（GPT-5.6-Sol/Qwen3.8-27B/HY4-Preview/DeepSeek-V4-Flash）× 4 用户 × 3 repeats，temperature 0.7、关闭 reasoning；三条件：源身份 / 匿名化画像 / 无信息",
+   "quote": "A backbone that predicts a user’s 28 settings reaches 53.2% accuracy from the source identity but 46.4% from the anonymized profile, close to the 45.2% chance level (Figure 10; Appendix B.4).",
+   "locator": "Appendix B.4",
+   "denominator": {"n_total": "28 cells per prediction", "n_valid": "28", "how_counted": "B.4 原文：'Accuracy is the fraction of the 28 cells whose predicted setting matches the user’s final preference matrix'；4 backbone × 4 用户 × 3 repeats；no-information 提示相同，故每 backbone 3 次预测对 4 个矩阵计分"},
+   "is_primary_result": false
+  },
+  {
+   "claim": "偏好泄露审计（基准的信息边界属性）：对全部已报告 run 的模拟器语句做事后四阶段审计，未发现任何偏好泄露",
+   "metric": "leakage_rate",
+   "value": "0 leaks in 1,839 judged sentences",
+   "comparison": null,
+   "setting": "34 个累积 run（3,193 会话/31,703 句）+ 111 个 probe run（3,377 probe 会话/17,051 句）；Claude Opus 5.5 读者判定 1,839 句；另有 rule-based checks 拦截 43 条、21,093 条已投递消息 0 条违规",
+   "quote": "The audit found no leakage. The counts are given in Table 10. The reader judged 1,839 sentences, and 598 of them come from probes.",
+   "locator": "Appendix D.4",
+   "denominator": {"n_total": "1,839 judged sentences", "n_valid": "1,839", "how_counted": "D.4：审计覆盖 34 个累积 run（3,193 会话/31,703 句）与 111 个 probe run（3,377 probe 会话/17,051 句）；规则过滤+抽样清扫+LLM 读者+人工复核后判定 1,839 句；Table 10 Leak 列合计 0"},
+   "is_primary_result": false
+  },
+  {
+   "claim": "偏好暴露有效性（基准效度）：在抽样累积会话中，99.3% 的会话仅凭可见对话即可从用户反应识别目标设置（标注者间一致性 Gwet's AC1 95.4%）",
+   "metric": "preference exposure rate (%)",
+   "value": "99.3%",
+   "comparison": null,
+   "setting": "两名标注者盲评每用户 94 个累积会话中随机 30%（28 个/用户，共 112 个，全部取自 File memory run）",
+   "quote": "The preference was conveyed in 99.3% of the sessions, with an inter-annotator agreement of 95.4% (Gwet’s AC1; Gwet, 2008).",
+   "locator": "Appendix H",
+   "denominator": {"n_total": "112", "n_valid": "112", "how_counted": "Appendix H 原文：'a random 30% of each user’s accumulation sessions, 28 of the 94 per user and 112 in total'"},
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "论文没有独立的 Limitations 章节；正文/附录中作者明示的效度保留只有一处：BRS 与 PRS 同由 Gemini-3.8-Flash 给出，二者一致性可能部分来自共享的判分模型（作者随后用 Claude Sonnet 5 二判 418 个 probe 缓解，认为一致性主要反映交互本身）。",
+   "quote": "Gemini-3.8-Flash gives both BRS and PRS, so part of their agreement could come from the shared model.",
+   "locator": "Appendix H"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "论文称环境与数据集已发布（'The environment and dataset are available here.'，正文以链接形式给出）；附录 I 说明完整 prompt 随代码发布",
+  "data": "与代码/环境一并发布（同上）；语料 txt 中链接未展开为可读 URL",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "no_dedicated_limitations_section",
+  "pet_denominator_240_derived_from_stated_|E|=20_and_F.3_pooling_structure_not_stated_verbatim",
+  "finding2_judged_334_of_336_sampled_2_probes_unaccounted_in_text"
+ ]
+}

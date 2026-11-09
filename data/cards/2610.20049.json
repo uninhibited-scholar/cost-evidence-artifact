@@ -1,0 +1,190 @@
+{
+  "arxiv_id": "2610.20049",
+  "title": "CoRedSkill: Stealthy Skill Composition Attacks via AST-Guided Injection",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "skill",
+    "scope": "mixed",
+    "carrier": "Third-party-published skill packages (task instructions, executable scripts, auxiliary resources, input-output interfaces) installed in the victim agent's environment, plus intermediate JSON artifacts that carry task data and attack-relevant state between skills; the packages are shared via public skill libraries (publisher-to-user supply chain) and persist installed across sessions, while each evaluation case executes in a single fresh session",
+    "operations_covered": ["formation", "update", "retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "An agent using a composition of third-party skills must not perform operations outside the user's authorization while completing the legitimate task: no data exfiltration of protected values (confidentiality), no unauthorized tampering of installed skills' persistent state (integrity), and no privilege violation executing task-unrelated scripts (authority). The property fails when operations distributed across individually benign-looking skills jointly achieve the attack objective and no constituent package is flagged by auditing.",
+    "operationalized_as": "Binary oracles on the execution record tau: U(tau) task acceptance (final POST payload equals expected publication), A_o(tau) attack-objective success for o in {EXF, TAM, PRV} (recorded request to unauthorized host containing protected values / protected file copied into a skill archive / execution of a permission-locked task-unrelated helper script), and D_rho audit flagging (HIGH or CRITICAL rating); aggregated as ASR, TSR, DR, and JSR = (1/N) sum A_n U_n (1-D_n) over the 150-case benchmark"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Act as a third-party skill publisher",
+      "Inspect the original skill's documentation and scripts",
+      "Construct and publish multiple skills based on the original workflow",
+      "Modify their instructions, code, resources, and input-output interfaces",
+      "Influence the agent's skill selection and execution through the published skills and the intermediate artifacts they produce"
+    ],
+    "assumptions": [
+      "Skills supplied by a third-party publisher are installed alongside other available skills",
+      "The agent autonomously selects relevant skills and determines their invocation order based on the user's request, skill documentation, and input-output dependencies",
+      "The user's legitimate request defines the scope of authorized actions",
+      "The deployment (agent model, system prompt, safeguards, file/network/process permissions) is fixed and not controlled by the attacker"
+    ],
+    "not_covered": [
+      "Automatic adaptation of attack construction to arbitrary existing skill packages (not evaluated)",
+      "Dynamic service interactions or long-term operation (utility verified only on offline evaluation cases)",
+      "How online blocking by runtime defenses affects subsequent execution and attack outcomes (only offline record inspection evaluated)",
+      "Attacker control over the agent's model, system prompt, safeguards, or permissions"
+    ]
+  },
+  "intervention": {
+    "name": "CoRedSkill",
+    "mechanism_layer": "content",
+    "description": "A compositional red-teaming construction: decompose an existing task workflow into interdependent clean skills, assign attack-operation groups to workflow stages via stage specifications phi_i, and use abstract syntax tree (AST) rewriting to embed attack operations in task helper functions while updating related calls, arguments, and artifact reads/writes so original task logic and stage interfaces are preserved; skill instructions and input-output dependencies guide the agent to autonomously invoke the skills, and intermediate artifacts connect the distributed operations during execution."
+  },
+  "results": [
+    {
+      "claim": "On the 150-case benchmark audited by SkillScan (Deepseek), CoRedSkill jointly achieves attack success, task completion, and audit evasion far beyond four attack baselines.",
+      "metric": "ASR/TSR/DR/JSR",
+      "value": "ASR 98.0%, TSR 95.3%, DR 3.3%, JSR 90.7%",
+      "comparison": "JSR 90.7% vs 6.7–42.7% for the four baselines",
+      "setting": "150 cases (50 tasks x 3 objectives EXF/TAM/PRV); victim platform Claude Code CLI with deepseek-v4-flash execution backend; audit by SkillScan using Deepseek; three-skill compositions by default plus six clean distractor skills",
+      "quote": "In the main evaluation, CoRedSkill achieves 98.0% attack success and 95.3% task success with a 3.3% detection rate, and a joint success rate of 90.7% (attack success, task completion, and audit evasion in the same case) compared with 6.7–42.7% for the four baselines.",
+      "locator": "Abstract; §4.2 Table 1",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "ASR/TSR/DR measured as the fraction of the 150 benchmark cases (50 tasks x 3 attack objectives); JSR = (1/N) sum A_n U_n (1-D_n) per Eq. 5"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "On the 150-case benchmark, 140 cases achieve both task completion and attack success, and 136 of these also pass the skill audit, yielding JSR 90.7%.",
+      "metric": "JSR (joint success rate)",
+      "value": "140 of 150 cases both succeed; 136 pass audit; JSR 90.7%",
+      "comparison": null,
+      "setting": "150-case benchmark; SkillScan (Deepseek) audit; DeepSeek V4 Flash execution backend",
+      "quote": "On the 150-case benchmark, its ASR, TSR, and DR are 98.0%, 95.3%, and 3.3%, respectively. Of the 150 cases, 140 achieve both task completion and attack success, and 136 of these also pass the skill audit, yielding a JSR of 90.7%.",
+      "locator": "§4.2",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "Paper states: 'Of the 150 cases, 140 achieve both task completion and attack success, and 136 of these also pass the skill audit, yielding a JSR of 90.7%'"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Across the four LLM skill-audit configurations (SkillScan/SkillSpector x Deepseek/GLM), CoRedSkill's overall detection rate stays between 3.3% and 20.0%, lower than SkillJect, Skill-Inject, and SCR-Bench in each configuration.",
+      "metric": "DR (detection rate)",
+      "value": "overall DR 3.3% to 20.0%",
+      "comparison": null,
+      "setting": "Four LLM audit configurations: SkillScan and SkillSpector each with Deepseek and GLM-5.2 as audit models, on the 150-case benchmark",
+      "quote": "CoRedSkill’s overall DR ranges from 3.3% to 20.0% across the four LLM audit configurations and is lower than those of SkillJect, Skill-Inject, and SCR-Bench in each configuration (Table 2).",
+      "locator": "§4.3 Table 2",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "A composition case is counted as detected if any constituent skill is flagged as risky; fraction of the 150 benchmark cases per audit configuration"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Against runtime risk/policy defenses applied to execution records, CoRedSkill's detection rate is 10.7% under HITL and 1.3% under DefenseClaw, below ColluSkill's 32.0% under HITL.",
+      "metric": "DR (runtime detection rate)",
+      "value": "DR 10.7% under HITL, 1.3% under DefenseClaw",
+      "comparison": "below ColluSkill's 32.0% under HITL",
+      "setting": "HITL risk rules and DefenseClaw strict policy rules (HIGH/CRITICAL) applied to recorded execution traces, proxy network requests, and installed skill files on the benchmark",
+      "quote": "CoRedSkill’s DR is 10.7% under HITL (Shan et al., 2026) and 1.3% under DefenseClaw (Cisco AI Defense, 2026a), lower than those of Skill-Inject and SCR-Bench under both configurations (Table 3). Under HITL, its DR is also lower than ColluSkill’s 32.0%.",
+      "locator": "§4.5 Table 3",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "For runtime auditing, detection is determined by whether the execution record triggers the audit rules; fraction of benchmark cases"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under composition-aware auditing (all constituent skills submitted together, Deepseek audit model), CoRedSkill's overall DR rises to 28.7%, compared with 3.3% for SkillScan and 11.3% for SkillSpector under individual-package auditing, yet stays below SCR-Bench (74.0%) and ColluSkill (40.0%) under the same configuration.",
+      "metric": "DR (composition-aware detection rate)",
+      "value": "overall DR 28.7%",
+      "comparison": "vs 3.3% SkillScan and 11.3% SkillSpector (individual-package); SCR-Bench 74.0% and ColluSkill 40.0% (composition-aware)",
+      "setting": "Composition-aware auditing with Deepseek receiving documentation, code, and resources of all constituent skills together, on the 150-case benchmark; this configuration has a 24.0% false-positive rate on clean compositions",
+      "quote": "composition-aware auditing yields an overall DR of 28.7% for CoRedSkill, compared with 3.3% for SkillScan and 11.3% for SkillSpector under individual-package auditing. Under the same composition-aware audit configuration, its overall DR is lower than SCR-Bench’s 74.0% and ColluSkill’s 40.0%",
+      "locator": "§4.6 Table 4",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "Auditor reviews all constituent skills of each case together and assesses suspicious combined behavior; fraction of the 150 benchmark cases flagged"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Attack success depends on coordination among injected skills: averaged over injection-position configurations, ASR is 0% with zero or one injected skill, 36.6% with two injected skills, and 100% with all three skills injected.",
+      "metric": "ASR (partial-injection ablation)",
+      "value": "ASR 0% with zero or one injected skill, 36.6% with two, 100% with all three",
+      "comparison": null,
+      "setting": "Three-skill workflows on the fixed 24-task subset (72 cases per configuration, 24 per objective), selected injected skills replaced by clean versions, other settings unchanged",
+      "quote": "Averaged over injection-position configurations, ASR is 0% with zero or one injected skill, 36.6% with two injected skills, and 100% with all three skills injected.",
+      "locator": "§4.7; Appendix C Table C1",
+      "denominator": {
+        "n_total": "72 per configuration",
+        "n_valid": null,
+        "how_counted": "Each injection-position configuration evaluated on 72 cases from the fixed 24-task subset, with 24 cases per attack objective"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Composition size does not monotonically improve stealth: on the same 24-task subset, ASR stays 100% at all three composition sizes while overall DR ranges from 4.2% to 34.7%.",
+      "metric": "ASR and DR (composition-size study)",
+      "value": "ASR 100%; overall DR 4.2% to 34.7%",
+      "comparison": null,
+      "setting": "Two-, three-, and four-skill CoRedSkill compositions on the same 24-task subset (72 cases), audited by SkillScan and SkillSpector with Deepseek and GLM",
+      "quote": "ASR remains 100% at all three sizes, while overall DR ranges from 4.2% to 34.7% (Figure 2 and Appendix Table A3).",
+      "locator": "§4.4; Appendix A.5 Table A3",
+      "denominator": {
+        "n_total": "72",
+        "n_valid": null,
+        "how_counted": "Each composition size is evaluated on the same 72 cases from the fixed 24-task subset"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Static package scanners without LLM analysis (SkillFortify, CiscoSkillScan) produce zero detection on CoRedSkill's injected packages.",
+      "metric": "DR (static scanner detection rate)",
+      "value": "overall DR 0% under SkillFortify",
+      "comparison": null,
+      "setting": "SkillFortify (v0.6.0) and CiscoSkillScan (v2.0.13) static checks on benchmark skill packages; HIGH or CRITICAL rating counts as detection",
+      "quote": "| SkillFortify | CoRedSkill (Ours) | 0 | 0 | 0 | 0 |",
+      "locator": "Appendix Table A2 (also §4.3: 'SkillFortify and CiscoSkillScan both have zero DR for CoRedSkill')",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "Static audit of each injected skill package on the benchmark (EXF/TAM/PRV columns, 50 cases each); HIGH or CRITICAL risk rating counts as a detection"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Attack construction relies on predefined attack specifications and workflow interfaces; automatic adaptation to arbitrary existing skill packages has not been evaluated.",
+      "quote": "Attack construction in CoRedSkill relies on predefined attack specifications and workflow interfaces, and automatic adaptation to arbitrary existing skill packages has not been evaluated.",
+      "locator": "Limitations section (after §6 Conclusion)"
+    },
+    {
+      "statement": "Preservation of skill utility is verified only against output acceptance criteria on 150 offline evaluation cases, without dynamic service interactions or long-term operation.",
+      "quote": "We verify preservation of skill utility against output acceptance criteria for 150 offline evaluation cases, without evaluating dynamic service interactions or long-term operation.",
+      "locator": "Limitations section (after §6 Conclusion)"
+    },
+    {
+      "statement": "Runtime defense evaluation only measures offline detection on execution records, not how online blocking affects subsequent execution and attack outcomes.",
+      "quote": "Our runtime defense evaluation measures the detection capabilities of risk and policy rules using execution records, without evaluating how online blocking affects subsequent execution and attack outcomes.",
+      "locator": "Limitations section (after §6 Conclusion)"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "single_run_per_case_no_variance_reported (each case runs once in a separate sandbox per audit configuration)"
+  ]
+}

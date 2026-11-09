@@ -1,0 +1,27 @@
+key,c1,c2,c3,c4,quote_c1,quote_c2,quote_c3,quote_c4
+2610.04083,none,none,none,none,,,,
+2610.04195,qualitative,numeric,none,none,,at a measured latency overhead of roughly 1.4 ms per query,,
+2610.05943,none,none,none,none,,,,
+2610.07258,qualitative,numeric,none,none,,roughly 13 additional query executions per 100 requests,,
+2610.07309,none,none,none,none,,,,
+2610.07639,numeric,none,qualitative,none,with utility losses of 24.5 and 34.0 percentage points,,,
+2610.07645,none,none,none,none,,,,
+2610.07935,numeric,none,none,none,AgentHarm benign drops from the base model’s 76.6 to 66.8,,,
+2610.09008,none,numeric,none,none,,one diagnostic takes 24.83 ms median/26.42 ms p95,,
+2610.09832,none,none,none,none,,,,
+2610.11008,none,none,none,none,,,,
+2610.11188,numeric,none,none,none,"Both admission designs increase missed-personalization failures on the personalization task (FC +7.6+7.6pp, PS +5.3+5.3pp, both significant)",,,
+2610.11270,none,none,none,none,,,,
+2610.11781,none,numeric,none,none,,"limit of 2,048 completion tokens, two attempts, and a 30-second request timeout",,
+2610.13227,none,numeric,none,none,,SkillRelayGuard averages 27.3K tokens and 91.5 seconds per case,,
+2610.13267,qualitative,numeric,none,none,,"requiring only 178.42178.42s of runtime and 46,48446{,}484 tokens",,
+2610.14431,none,none,none,none,,,,
+2610.14488,numeric,numeric,none,none,"It completes 43 of 46 benign operations, with 8 approval prompts, and 4 of 7 workflows",A no-op brokered request has a median latency of 4.0 ms,,
+2610.14515,none,numeric,none,none,,token consumption increases by approximately 18.2%,,
+2610.14836,none,none,none,none,,,,
+2610.17544,qualitative,numeric,none,numeric,,it costs 0.290.29 more per query,,The LR-CUSUM detectors leave 1 of 24 (SPRT) and 0 of 11 (betting) unretired
+2610.17659,numeric,none,none,qualitative,Qwen3-8B produces empty outputs for 23.6%–58.0% of examples under the Tool condition,,,
+2610.17719,none,numeric,none,numeric,,the receipts for this build cost about $0.30,,"merges 18.1% leaky [13.7, 23.5], summaries 41.3% leaky [32.5, 50.7]"
+2610.18052,numeric,none,qualitative,numeric,"preservation degrades with length for nearly every system, from 70.0 to 26.7",,,no system passes more than 1.5% of forget requests end to end
+2610.18792,none,numeric,numeric,none,,"practice costs about $3.7 in API spend for Fable, $11 for Opus, and $18 for GPT-6-astra",it caused 13 refusals,
+2610.19005,none,none,numeric,numeric,,,A related pattern is the over-blocking patch (8%): a repair that closes unauthorized access but also rejects legitimate requests,in 4% of the games attacker-installed code remains executable after the defender deploys a patch

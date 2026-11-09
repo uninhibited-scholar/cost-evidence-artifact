@@ -1,0 +1,123 @@
+{
+ "arxiv_id": "2610.00093",
+ "title": "Safety in Self-Evolving Agents: A Survey",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "综述无单一载体：其 SAVER 的 substrate 半区覆盖全部可复用载体——prompt/context、长期记忆条目、检索与知识块、工具/API 绑定与凭证、技能与程序、工作流/规划器/拓扑状态、外部工件与共享状态、模型与策略侧状态（参数、适配器、KV cache、策略提示、安全分类器）",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "综述保护的是安全属性在可复用影响经历 写入(formation)-存储/变换(retention/update)-检索与激活(retrieval)-传播迁移-暴露-响应 各状态转换时的存续：激活权威（存储许可不等于把该状态当作指令、策略或工具授权使用的许可）、provenance、authority、scope、privacy/integrity 与可恢复性。失效判据：低权威观察经摘要/迁移后获得指令或工具权威、用户专属 scope 限制未随内容迁移、私有状态成为工具参数、或隔离/删除后影响仍可在其他载体（检索向量、生成的技能、复制的工作流规则、共享工件）复活。由 transition test 与 promotion test 以及 exposure surface 上的可见后果判定。",
+  "operationalized_as": "综述层面不运行实验；其操作化是 SAVER 五元组记录（carrier, operation, violation attribute, exposure surface, response）加 transition test / promotion test 两个属性检查；实证操作化来自其综述的 benchmark 全景（如 InjecAgent、AgentDojo、AgentPoison、PerMemSafe、HarnessSafe 等的评测口径）。"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "综述不设固定对手：其核心论点是风险机制为无对手的内生漂移——良性经验/合法状态经选择、抽象与跨上下文复用后，其 persistence、authority 或 scope 超出最初有效条件",
+   "所综述的攻击文献线包含外部对手能力：向记忆/知识库/技能库写入毒化内容、隐秘注入与延迟激活（GhostWriter、stealth injection、FragFuse）、触发器选路（AgentPoison）、毒化轨迹晋升为技能（PoisonedEvolution）、跨技能组合（ColluSkill）",
+   "亦包含 model-itself 线：评估器与效用函数随智能体共同演化（Red Queen Gödel Machine），经验驱动规则固化导致安全退化（OEP、experience-driven safety、EvoBreak）"
+  ],
+  "assumptions": [
+   "分析单元是 carrier–operation 转换（S×A）及其 V→E→R 后果，不依赖特定对手存在；同一操作在不同载体上可为良性或不安全",
+   "综述区分 central（直接检视可复用智能体状态的安全相关转换）与 adjacent（仅能力机制）工作，收录不要求完整恢复链",
+   "SAVER 自我定位为有界追踪透镜而非安全前提：缺少完整记录本身不证明系统不安全，只限制其关于诊断、恢复与问责的可主张范围"
+  ],
+  "not_covered": [
+   "一次性输出安全、无可持久复用的工具使用、静态模型训练（除非其阐明后续 adaptive-state 转换），作者明确排除在核心范围外",
+   "被引用的网页与标准不计入论文数（frozen corpus 口径）",
+   "检索/筛选细节、非论文排除与 coding limitations 记录于附录，本语料未包含附录内容",
+   "descendant repair 与恢复适应后的再评估证据在综述文献中仍然稀少（综述在摘要中明确指出）"
+  ]
+ },
+ "intervention": {
+  "name": "SAVER（transition-centered 分析框架）及其综述的控制族：admission gate、migration check、activation authorization、runtime guard、descendant rollback、deletion verification、contestability record",
+  "mechanism_layer": "provenance",
+  "description": "综述自身不提出单一防御机制，而是按 R（Response）字段综述控制点：准入、迁移检查、激活授权、运行时守卫、后代回滚、删除验证与可争议性。其综合立场的核心是谱系可追溯（provenance/lineage 元数据、审计轨迹、部署清单、回滚记录）作为跨会话遏制与修复的前提；综述亦覆盖 content 层（准入过滤、来源标记）与 execution 层（运行时守卫、激活授权）控制，但指出这些控制通常不修复请求该动作的更早记忆/工作流状态。"
+ },
+ "results": [
+  {
+   "claim": "综述自身的系统 scoping review 冻结编码语料池共 683 篇论文，由三部分全量枚举组成（非抽样）：579 篇去重 registry 工作 + 48 篇非重复 paper-card 补充 + 56 篇用于成稿的额外学术工作",
+   "metric": "corpus_size_papers",
+   "value": "683 papers",
+   "comparison": null,
+   "setting": "综述自身的语料统计口径（frozen coded pool，检索/筛选/截止与非论文排除记录于附录）；这是综述对自身语料库的统计，不是实验结果",
+   "quote": "The frozen coded pool contains 683 papers: 579 deduplicated registry works, 48 nonduplicate paper-card supplements, and 56 additional scholarly works used in the rendered manuscript.",
+   "locator": "§1 Scope",
+   "denominator": {
+    "n_total": "683",
+    "n_valid": "683",
+    "how_counted": "论文原话全量枚举：579 deduplicated registry works + 48 nonduplicate paper-card supplements + 56 additional scholarly works = 683"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "用于可视化的冻结语料子集为 577 篇论文（含经 rendered citation closure 加入的学术工作，排除被引用的网页与标准）；与 683 篇编码池的口径差及筛选漏斗记录于附录（本语料未含附录）",
+   "metric": "visualization_subset_papers",
+   "value": "577 papers",
+   "comparison": null,
+   "setting": "综述自身的语料统计口径（§1 Scope 与 Figure 1 的 current frozen corpus 口径）；综述对自身筛选流程的统计，非实验结果",
+   "quote": "The search, screening, cutoff, non-paper exclusions, and 577-paper visualization subset are documented in Appendix .",
+   "locator": "§1 Scope",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述将已提交的状态变更操作编码为七族（seven families）：add、abstract、activate、modify、forget、propagate、migrate；实现动词（write、summarize、retrieve、load、inherit、rollback）按其对状态的影响映射到这七族——本卡 object.operations_covered 的分类依据",
+   "metric": "operation_taxonomy_families",
+   "value": "seven families",
+   "comparison": null,
+   "setting": "综述自身的 SAVER 编码框架（对已提交状态变更操作的分类学，非实验结果）",
+   "quote": "The committed state-change operation applied to a carrier, coded using the seven families in Section : add, abstract, activate, modify, forget, propagate, or migrate.",
+   "locator": "§2.4 Record Structure",
+   "denominator": null,
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "SAVER 框架的最深边界是语义不透明：摘要化、检索抽象与潜在表示会部分溶解谱系，导致某些后代影响并非因未挂钩子而是本质上无法被追踪（作者对自身框架的边界声明）",
+   "quote": "The deepest boundary is semantic opacity: some descendants are missed not because hooks were omitted, but because summarization, retrieval abstraction, and latent representations partially dissolve lineage.",
+   "locator": "§2.4 Boundary of Use"
+  },
+  {
+   "statement": "综述语料编码存在已声明的局限（corpus funnel、非论文排除、coding limitations），但内容记录于附录，本语料未包含附录，故其具体局限条目无法核验",
+   "quote": "Appendix gives the corpus funnel, non-paper exclusions, and coding limitations.",
+   "locator": "Figure 1 caption"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "survey_paper_no_own_quantified_experiments",
+  "appendix_absent_from_corpus_reading_incomplete",
+  "corpus_truncated_after_section3_at_table1_header",
+  "appendix_documented_items_unverifiable_in_this_corpus"
+ ]
+}

@@ -1,0 +1,1704 @@
+{
+ "generated_by": "tools/build_same_loop_matrix.py",
+ "date": "2026-10-28",
+ "corpus_n": 129,
+ "protocol": {
+  "version": "v3-20261030",
+  "unit": "card（117 张证据卡，分母恒为 117）",
+  "L1": "被评估的防御工件自身状态在回路内至少更新一次，且更新由对抗反馈驱动。'回路内'包括部署流（test-time）与对抗训练环（train-time），stage 另记。评测者手动 ON/OFF、评估前的一次性离线训练、以及被攻击的任务记忆写入均不算。",
+  "L2": "对手侧在回路内使用回路自身产生的信号适应（观察防御输出/防御更新后再改写攻击），而非仅在回路开始前完成攻击构造。",
+  "L3a": "存在同一系统的冻结—演化分离对照，且攻击在冻结点之后继续（同流可比）。",
+  "L3b": "攻击以防御产物本身（记忆/技能库/规则库/门控/护栏）为目标。",
+  "strict": "strict = L1 yes ∧ L2 ∈ {yes, yes_weak} ∧ (L3a ∈ {yes, partial} ∨ L3b = yes)。四级取值域见 value_domain；unknown 不满足任何条件。",
+  "weak": "weak = L1 yes ∧ L2 ∈ {yes, yes_weak} ∧ L3a = yes_weak（分离对照只覆盖单格或该格无分母，读数不可直接外推）。",
+  "stage": "deployment（回路在被评估的部署流内闭合）/ training（回路在对抗训练环内闭合）/ benchmark（人类操作驱动的轮间修补，非工件自演化）/ design（设计有、实验无）/ none",
+  "value_domain": {
+   "yes": "证据字段直接支持该条件",
+   "yes_weak": "有支持，但只在单一设定或单一指标上（如分离对照仅覆盖单格）",
+   "partial": "条件部分成立（如分离对照为跨系统静态基线，非同一系统冻结臂）",
+   "no": "不成立",
+   "unknown": "未评估（仅出现在 determination=out 的卡的未查字段，永不满足 strict/weak）"
+  },
+  "scoring_note": "v2-20261028 的判据文本（L1 且 L2 且（L3a 或 L3b））未定义取值域，导致 2607.19351 的 L2=yes_weak / L3a=partial 与 strict 判定不可复算（REVIEWS-V3 R1-06）。v3-20261030 升级为四级取值域并写明计分规则；36 张被判卡按新规则全量重判，determination 零变化（见 same-loop-rejudge.md），持久状态 strict 2/117 与权重空间 strict 4/117 不变。"
+ },
+ "counts": {
+  "L1": 11,
+  "L1_and_L2": 7,
+  "L1_L2_L3": 6,
+  "strict": 6,
+  "weak": 1,
+  "by_stage": {
+   "deployment": 3,
+   "training": 4
+  },
+  "strict_persistent_state": 2,
+  "strict_weight_space": 4,
+  "strict_binary_lower_bound": 1,
+  "by_stage_note": "by_stage mixes strict and weak judgements; use strict_persistent_state / strict_weight_space for the paper counts",
+  "denominator": 129,
+  "note_129": "新增 12 卡于 2026-10-31 判定：L1 +3，无一满足 strict 或 weak；分子不变，分母 117→129。"
+ },
+ "sets": {
+  "L1": [
+   "2609.36580",
+   "2609.36603",
+   "2610.02920",
+   "2607.19351",
+   "2610.24896",
+   "2609.07529",
+   "2609.34463",
+   "2610.19422"
+  ],
+  "L1_and_L2": [
+   "2609.36603",
+   "2610.02920",
+   "2607.19351",
+   "2610.24896",
+   "2609.07529",
+   "2609.34463",
+   "2610.19422"
+  ],
+  "L1_L2_L3": [
+   "2609.36603",
+   "2610.02920",
+   "2610.24896",
+   "2609.07529",
+   "2609.34463",
+   "2610.19422"
+  ],
+  "strict": [
+   "2610.02920",
+   "2607.19351",
+   "2610.24896",
+   "2609.07529",
+   "2609.34463",
+   "2610.19422"
+  ],
+  "weak": [
+   "2609.36603"
+  ],
+  "by_stage": {
+   "deployment": [
+    "2609.36603",
+    "2610.02920",
+    "2607.19351"
+   ],
+   "training": [
+    "2610.24896",
+    "2609.07529",
+    "2609.34463",
+    "2610.19422"
+   ]
+  }
+ },
+ "judgments": [
+  {
+   "id": "2609.36580",
+   "title": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time",
+   "stage": "deployment",
+   "what_persists": "mixed",
+   "determination": "out",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "S-Harness five explicit safety components ... updated after each episode, plus Guard model parameters periodically updated by GuardVPO",
+    "note": "五组件每 episode 更新、GuardVPO 周期训练，均在评估流内由部署反馈驱动。"
+   },
+   "L2": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "Adaptive adversaries that react to the evolving defense during deployment",
+    "note": "作者自述不覆盖；攻击为 ASB 预置实例，不随 harness 更新改写。"
+   },
+   "L3a": {
+    "value": "no",
+    "field": "results",
+    "quote": null,
+    "note": "held-out 对照冻结的是演化后防御，攻击仍非自适应。"
+   },
+   "L3b": {
+    "value": "no",
+    "field": "threat_model.not_covered[1]",
+    "quote": "Attacks on the safety system itself (e.g., poisoning accumulated memory, skills, or event-level experience)",
+    "note": null
+   },
+   "reason": "流式时间结构 + 静态攻击集 = 防御单侧演化测量，回路不闭合（缺 L2）。"
+  },
+  {
+   "id": "2609.36603",
+   "title": "Self-Evolving Defense: Continual Security Policy Learning for LLM Agents",
+   "stage": "deployment",
+   "what_persists": "mixed",
+   "determination": "weak",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "after each episode an external LLM judge scores the full trajectory; harmful failures are written to episodic memory E and a synthesizer distills them into atomic security policies",
+    "note": "策略记忆在 episode 流内在线演化。"
+   },
+   "L2": {
+    "value": "yes",
+    "field": "threat_model.capabilities",
+    "quote": "AutoDAN-Turbo / X-Teaming iterate within a fixed per-behavior query budget observing the defended agent's responses and interaction history",
+    "note": "全语料唯一'攻击迭代发生在评估运行内'的实例（见 §6.3 判定二）。"
+   },
+   "L3a": {
+    "value": "yes_weak",
+    "field": "results[Figure 3]",
+    "quote": "cumulative ASR 23.4% (no defense) -> 13.4% (frozen) -> 9.4% (evolving)",
+    "note": "单格对照（X-Teaming x GLM-5.2），该结果行 denominator 为空，卡片带 denominator_unclear。"
+   },
+   "L3b": {
+    "value": "no",
+    "field": "threat_model.not_covered",
+    "quote": "strategy library write integrity not defended",
+    "note": "攻击目标函数仍是固定 harmful behavior。"
+   },
+   "reason": "L1+L2+L3a 齐备但分离对照只覆盖一格且无分母，记弱形式（语料内唯一）。"
+  },
+  {
+   "id": "2610.02920",
+   "title": "HASTE: Evolving Agent Harnesses Against Emerging Attacks Using Sparse Evidence",
+   "stage": "deployment",
+   "what_persists": "policy",
+   "determination": "strict",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "agent harness（安全规格 + 约束执行层）作为可演化持久工件；每轮由规格生成与攻击用例生成对抗互促后更新",
+    "note": null
+   },
+   "L2": {
+    "value": "yes",
+    "field": "intervention.description",
+    "quote": "阶段 3 用新生成的攻击用例探测更新后仍存的安全弱点，结果回灌前两阶段",
+    "note": "攻击侧为回路内生成器，使用更新后 harness 的反馈。"
+   },
+   "L3a": {
+    "value": "partial",
+    "field": "controls[Haste_blind / 复用首轮用例消融]",
+    "quote": "For both Haste variants, reusing the first-iteration cases leads to larger degradations in both ASR and SHR than using a fixed generic spec",
+    "note": "冻结的是攻击侧用例集，非防御侧；不构成 L3a。"
+   },
+   "L3b": {
+    "value": "yes",
+    "field": "intervention.description",
+    "quote": "探测更新后仍存的安全弱点",
+    "note": "攻击直接以更新后的 harness 为对象。"
+   },
+   "reason": "部署期回路的两个实例之一；L3 由 L3b 成立。结果行均无分母（卡片无 denominator 字段）。"
+  },
+  {
+   "id": "2607.19351",
+   "title": "OpenEvoShield: Dual Non-Stationary Continual Defense for Open-World Multi-Agent System Attacks",
+   "stage": "deployment",
+   "what_persists": "shared_state",
+   "determination": "strict",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "多智能体系统的行为边界与策略集成（M2 边界更新器、M3 EWC 正则化策略集成）随部署持续更新",
+    "note": null
+   },
+   "L2": {
+    "value": "yes_weak",
+    "field": "results[0],results[1]",
+    "quote": "Phase II 分布漂移下 INFA-GUARD ASR 23.3%->45.8%；Phase III 未见攻击 Novel-DR 61.8%",
+    "note": "'适应'指非平稳漂移与未见攻击，不是'观察到防御更新后改写攻击'——本组最弱的 L2。"
+   },
+   "L3a": {
+    "value": "partial",
+    "field": "controls",
+    "quote": "INFA-GUARD（静态分类器）/ Naive-Continual / M1-M4 逐项移除",
+    "note": "静态基线在漂移下退化是跨系统比较，非同一系统冻结臂。"
+   },
+   "L3b": {
+    "value": "no",
+    "field": "threat_model.not_covered",
+    "quote": "单智能体的持久语义记忆 || 跨会话用户级状态",
+    "note": null
+   },
+   "reason": "部署期回路的两个实例之一；L2/L3 均为弱成立，判定保留但标注为最弱一环。"
+  },
+  {
+   "id": "2610.24896",
+   "title": "Peer Pressure: Execution-Verified Co-Evolution of Attacker and Defender Populations",
+   "stage": "training",
+   "what_persists": "mixed",
+   "determination": "strict",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "攻防两侧各为一组 LoRA 适配器种群，跨训练轮次以 Elo/fitness 保留并由锦标赛淘汰-重播",
+    "note": "权重空间 + 轨迹缓存 + 技能库三载体。"
+   },
+   "L2": {
+    "value": "yes",
+    "field": "results[1]",
+    "quote": "Red certified evasion vs current Blue (slope)",
+    "note": "攻击对'当前'蓝方测量，随蓝方更新改写。"
+   },
+   "L3a": {
+    "value": "yes",
+    "field": "object.carrier(3)",
+    "quote": "RQ4 对照臂直接测试了'冻结权重 + 演化技能库'的纯非参数状态路线（62.4 对 frozen 61.4，PRPO 64.8）",
+    "note": "同系统冻结臂存在。"
+   },
+   "L3b": {
+    "value": "no",
+    "field": "threat_model.not_covered[1]",
+    "quote": "不防御对防御系统自身的投毒",
+    "note": null
+   },
+   "reason": "训练期回路的强实例：L1-L3 齐备且带分母；但作者明确'部署后防御不再演化'。"
+  },
+  {
+   "id": "2609.07529",
+   "title": "CoER: Defending against Adaptive Indirect Prompt Injection via Adversarial Co-Evolution and Refinement",
+   "stage": "training",
+   "what_persists": "mixed",
+   "determination": "strict",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "双方的历史策略检查点作为冻结对手池保留 ... 防御者与攻击者均为权重更新（PPO 各自带 critic）",
+    "note": "权重空间 + 对手检查点池。"
+   },
+   "L2": {
+    "value": "yes",
+    "field": "results[3]",
+    "quote": "feedback ablation ASR 29.57% -> 38.75%",
+    "note": "去掉执行内反馈攻击即变弱，证明 L2 是承重的。"
+   },
+   "L3a": {
+    "value": "yes",
+    "field": "results[2]",
+    "quote": "Effective ASR (frozen cross-play) 65.65% after BA-RL",
+    "note": "冻结交叉对局臂存在。"
+   },
+   "L3b": {
+    "value": "no",
+    "field": "threat_model.not_covered[2]",
+    "quote": "未防御针对防御系统自身/对手池的投毒",
+    "note": null
+   },
+   "reason": "训练期回路的强实例；作者明确'最终防御者冻结评估'。"
+  },
+  {
+   "id": "2609.34463",
+   "title": "CoDeL: Co-Evolutionary Defense against Indirect Prompt Injection in LLM Agents",
+   "stage": "training",
+   "what_persists": "policy",
+   "determination": "strict",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "防御者以 LoRA 形式每轮更新（权重空间）；攻击侧为共演化 prober，无外部记忆载体",
+    "note": null
+   },
+   "L2": {
+    "value": "yes",
+    "field": "intervention.description",
+    "quote": "共演化 prober 按攻击成功率与攻击延迟搜索仍能穿透当前防御者的注入，形成移动课程",
+    "note": "'当前'防御者——攻击随防御更新移动。"
+   },
+   "L3a": {
+    "value": "no",
+    "field": "controls",
+    "quote": "九个基线（含 PIGuard、TSGuard、Meta-SecAlign）+ 无防御",
+    "note": "只有跨系统基线，无同一系统冻结臂。"
+   },
+   "L3b": {
+    "value": "yes",
+    "field": "results[2]",
+    "quote": "静态训练的防御在仅改变投递方式时 TSGuard +45.9%",
+    "note": "攻击以防御产物为对象（L3b 成立）。"
+   },
+   "reason": "训练期回路的实例；L3 仅由 L3b 成立；结果行全部无分母（卡片 denominator 为 null）。"
+  },
+  {
+   "id": "2610.19422",
+   "title": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety",
+   "stage": "training",
+   "what_persists": "policy",
+   "determination": "strict",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "防御者与攻击者均为微调后的模型策略（权重空间），不涉及持久记忆/技能库等外部状态载体",
+    "note": null
+   },
+   "L2": {
+    "value": "yes",
+    "field": "results[2]",
+    "quote": "对基础防御者的 ASR 从 SFT 攻击者的 55.81% 升到最终攻击者的 92.59%",
+    "note": "攻击者在回路内依据攻击结果反馈持续精炼。"
+   },
+   "L3a": {
+    "value": "yes",
+    "field": "controls[Static-AT]",
+    "quote": "Static-AT（静态对抗训练）",
+    "note": "同族冻结臂（静态对抗训练）存在。"
+   },
+   "L3b": {
+    "value": "yes",
+    "field": "results[3]",
+    "quote": "面对最终攻击者，ASR 从基础防御者的 92.59% 降到最终防御者的 49.82%",
+    "note": "双向同步计量，两侧各带分母。"
+   },
+   "reason": "the survey's earlier version, Section 6.3 遗漏的一篇。L1-L3 全成立，且是语料内唯一同时报出攻击侧与防御侧演化幅度的卡。"
+  },
+  {
+   "id": "2610.19005",
+   "title": "CyberArena: Benchmarking AI Agents in Live Symmetric Attack-and-Defense Combat",
+   "stage": "benchmark",
+   "what_persists": "none",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "object.what_persists / carrier",
+    "quote": "不研究智能体持久记忆/技能组件：记忆与技能不是干预对象、威胁入口或被评组件，跨轮持久的是服务补丁与环境状态",
+    "note": "轮间修补由人类防守方执行，防御工件不自演化；the survey's earlier version, Section 6.3 表曾把它记为 L1 成立的 8 张之一，本次修订为基准层面单列。"
+   },
+   "L2": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "攻击方必须对演化后的防御重新适应（对手修补后捕获率随轮次下降）",
+    "note": "攻击侧适应成立，但防御侧无自动更新。"
+   },
+   "L3a": {
+    "value": "no",
+    "field": null,
+    "quote": null,
+    "note": "flag retention after patching 60% 对 9% 属配置对比。"
+   },
+   "L3b": {
+    "value": "no",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "活体对称对抗基准；L2 成立而 L1 不成立，故不计入回路，作 §6.4 评估问题证据。"
+  },
+  {
+   "id": "2608.15012",
+   "title": "SysEvolve: An AI-native, safe, autonomous adversarial attack-defense co-evolutionary system",
+   "stage": "design",
+   "what_persists": "mixed",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "没有任何实验测量'攻击产出改善防御、防御反馈升级攻击'的迭代效应；'防御侧持续自进化'无任何微调实验；agent 评估中 SysArmor 仅 observe-only",
+    "note": "设计存在、实验缺失——the survey's earlier version, Section 6.3 正文曾将其列入 L1 成立的 5 张核心研究，与卡片不符，本次修订。"
+   },
+   "L2": {
+    "value": "no",
+    "field": "threat_model.not_covered[1]",
+    "quote": "攻击是否针对演化后的防御重新适应——无测量",
+    "note": null
+   },
+   "L3a": {
+    "value": "no",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "no",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "无回路实验，作机制设计参照。"
+  },
+  {
+   "id": "d6f6b6c78cd3",
+   "title": "八种静态防御 x 白盒优化攻击",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "object.what_persists",
+    "quote": "八种防御全部为静态部署",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "防御在评估运行内零更新，L1 不成立；是固定防御对防御感知对手的核心证据。"
+  },
+  {
+   "id": "2510.17276",
+   "title": "LlamaFirewall / ControlValve 代际对比",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "object.carrier",
+    "quote": "ControlValve 的 CFG 与上下文规则每任务在规划期生成一次",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "代际交叉对比，非同一回路。"
+  },
+  {
+   "id": "2312.11513",
+   "title": "Maatphor 变体分析（无防御靶）",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered",
+    "quote": "未构建也未端到端评测任何已部署防御",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "无防御工件，L1 无从谈起。"
+  },
+  {
+   "id": "2610.07639",
+   "title": "静态配置对照（auto-approve 错位）",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention.description",
+    "quote": "机制 ON/OFF 由评测者设定并固定",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "配置错位与演化回路正交。"
+  },
+  {
+   "id": "2610.20845",
+   "title": "Skill-Policy 共演化陷阱",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered",
+    "quote": "无攻击者：没有对手优化漂移",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "演化产物自身脆弱性证据（§6.4），无对手。"
+  },
+  {
+   "id": "2609.17320",
+   "title": "长程压力测试",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered",
+    "quote": "无实时对智能体防御作出反应的自适应对手（事件预调度且静态）",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "长程时间结构证据，攻击侧连 L2 都不满足。"
+  },
+  {
+   "id": "2609.35596",
+   "title": "SEABench 内生失准基准",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention.description",
+    "quote": "无对手（endogenous misalignment）",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "基准参照；harness 更新在下游评估前完成。"
+  },
+  {
+   "id": "2608.00426",
+   "title": "MAPLE-Guard 记忆链路门控",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered",
+    "quote": "generalization to unseen adaptive attacks（one fixed signal/weight）",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "门控为静态信号/权重，L1 不成立。"
+  },
+  {
+   "id": "2506.12104",
+   "title": "DRIFT 动态规则防御",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "object.carrier",
+    "quote": "LoRA 微调的 Qwen2.5-7B 权重固化安全策略",
+    "note": null
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "Dynamic Validator 更新的是任务约束轨迹，不是防御工件；权重冻结。"
+  },
+  {
+   "id": "2604.16968",
+   "title": "On Safety Risks in Experience-Driven Self-Evolving Agents",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "未研究任何对抗性攻击者（经验投毒/注入/恶意经验）",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "未研究任何对抗性攻击者（经验投毒/注入/恶意经验）"
+  },
+  {
+   "id": "2608.01759",
+   "title": "Benign Alone, Harmful Together: Exploiting Experience Composition",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "未提出或评估任何防御；攻击侧组合攻击，无防御演化",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "未提出或评估任何防御；攻击侧组合攻击，无防御演化"
+  },
+  {
+   "id": "2609.01836",
+   "title": "Agent Memory Is a Surface for Endogenous Authorization Laundering",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 自述不覆盖记忆投毒与 prompt injection",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 自述不覆盖记忆投毒与 prompt injection"
+  },
+  {
+   "id": "2609.38372",
+   "title": "Self-Evolving Harness on Multiple Tasks with the Agent as Its Own Optimizer",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "无外部对手（adversary=model-itself），且 not_covered 明示 harness 与 notes 被攻击完全未建模",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "无外部对手（adversary=model-itself），且 not_covered 明示 harness 与 notes 被攻击完全未建模"
+  },
+  {
+   "id": "2610.00093",
+   "title": "Safety in Self-Evolving Agents: A Survey",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "综述，无实验",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "综述，无实验"
+  },
+  {
+   "id": "2610.03020",
+   "title": "DyadMem: A Long-Term Memory Benchmark",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 明示无对抗场景（无投毒/注入）",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 明示无对抗场景（无投毒/注入）"
+  },
+  {
+   "id": "2610.07935",
+   "title": "SIGMA: Self-Improving Alignment Generalization from a Model Spec",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "单轮自改进、无对手；AgentHarm 为固定基准题",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "单轮自改进、无对手；AgentHarm 为固定基准题"
+  },
+  {
+   "id": "2610.09832",
+   "title": "SkillForge: Co-Evolving Skills and Agents via Dynamic Skill Lifecycles",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 明示不覆盖技能库投毒/恶意技能注入",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 明示不覆盖技能库投毒/恶意技能注入"
+  },
+  {
+   "id": "2610.11781",
+   "title": "Skill-V: Verifiable Self-Evolving Skill Library",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "全文无攻击实验，蓄意攻击完全未讨论",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "全文无攻击实验，蓄意攻击完全未讨论"
+  },
+  {
+   "id": "2610.14431",
+   "title": "MemForm: Benchmarking Memory Formation Poisoning",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "攻击侧基准（记忆形成投毒），未研究防御工件演化",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "攻击侧基准（记忆形成投毒），未研究防御工件演化"
+  },
+  {
+   "id": "2610.14515",
+   "title": "SEPM: Self-Evolving Procedural Memory Grounded in Task Graphs",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 明示无对手模型",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 明示无对手模型"
+  },
+  {
+   "id": "2610.18792",
+   "title": "SEAR: Self-Evolving Agentic Robotics",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 明示无对手",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 明示无对手"
+  },
+  {
+   "id": "2610.24453",
+   "title": "Hippo: Training-Free Agent Self-Evolution via Hippocampal Replay",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 明示无对抗设置",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 明示无对抗设置"
+  },
+  {
+   "id": "2610.27495",
+   "title": "Self-Evolving Agents through Privileged Retrospective Distillation",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.not_covered[0]",
+    "quote": "not_covered 明示无对抗模型",
+    "note": "能力/基准类自演化，非防御工件演化"
+   },
+   "L2": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "unknown",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "not_covered 明示无对抗模型"
+  },
+  {
+   "id": "2510.02373",
+   "title": "A-MemGuard",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "lessons distilled from detected poisoning and reused in later tasks",
+    "note": "防御的教训库在部署流内由检测到的投毒更新"
+   },
+   "L2": {
+    "value": "no",
+    "field": "threat_model.capabilities",
+    "quote": "Direct poisoning: limited write access to the memory store",
+    "note": "攻击为预先构造的静态注入，未见对防御输出的再适应"
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": "无冻结—演化分离对照"
+   },
+   "L3b": {
+    "value": "partial",
+    "field": "threat_model.capabilities",
+    "quote": "injecting a limited set of malicious records",
+    "note": "攻击目标是任务记忆，不是防御自身的教训库"
+   },
+   "layer": "content",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2509.26354",
+   "title": "Your Agent May Misevolve",
+   "stage": "deployment",
+   "what_persists": "mixed",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.adversary",
+    "quote": "No dedicated external adversary",
+    "note": "研究自演化涌现风险，不评估防御工件"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": "无对手"
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "layer": "none",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2602.17692",
+   "title": "Agentic Unlearning",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention",
+    "quote": "unlearning driven by a deletion request, not adversarial feedback",
+    "note": "更新由删除请求驱动，非对抗反馈"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "partial",
+    "field": "",
+    "quote": "",
+    "note": "删除针对记忆内容本身"
+   },
+   "layer": "content",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2607.27080",
+   "title": "MemSecBench",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention",
+    "quote": "task-grounded benchmark",
+    "note": "基准研究，无被评估防御工件"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "layer": "none",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2410.02644",
+   "title": "Agent Security Bench",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention",
+    "quote": "formalizes, benchmarks, evaluates attacks and defenses",
+    "note": "基准研究"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "layer": "none",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2602.01146",
+   "title": "PersistBench",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.adversary",
+    "quote": "No external adversary",
+    "note": "无对手，测记忆保留时机"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "layer": "none",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2604.15774",
+   "title": "MemEvoBench",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention",
+    "quote": "benchmark of memory misevolution",
+    "note": "基准研究"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "partial",
+    "field": "threat_model.capabilities",
+    "quote": "misleading memory injection",
+    "note": "攻击目标是记忆内容"
+   },
+   "layer": "none",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2606.05743",
+   "title": "Membrane",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "each cell distilled from a harmful interaction and its benign counterpart, without retraining",
+    "note": "对比安全记忆单元在部署流内由对抗交互更新"
+   },
+   "L2": {
+    "value": "no",
+    "field": "threat_model.capabilities",
+    "quote": "six modern jailbreak mechanisms",
+    "note": "六类攻击为预先构造，未见依据防御输出的再适应"
+   },
+   "L3a": {
+    "value": "partial",
+    "field": "",
+    "quote": "cross-attack transfer and poisoning robustness",
+    "note": "只有跨攻击迁移与投毒稳健性，非冻结—演化同流对照"
+   },
+   "L3b": {
+    "value": "yes",
+    "field": "threat_model.capabilities",
+    "quote": "remain stable under memory poisoning",
+    "note": "投毒以防御自身的记忆单元为目标"
+   },
+   "layer": "content",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2610.17659",
+   "title": "Can Agents Truly Forget?",
+   "stage": "deployment",
+   "what_persists": "memory",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "intervention",
+    "quote": "machine unlearning applied to agent memory",
+    "note": "更新由遗忘请求驱动"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "partial",
+    "field": "",
+    "quote": "",
+    "note": "删除针对记忆内容"
+   },
+   "layer": "content",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2605.09315",
+   "title": "Do Self-Evolving Agents Forget?",
+   "stage": "deployment",
+   "what_persists": "mixed",
+   "determination": "out",
+   "L1": {
+    "value": "no",
+    "field": "threat_model.adversary",
+    "quote": "No adversary",
+    "note": "能力退化研究，不评估防御工件"
+   },
+   "L2": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "layer": "none",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "2603.22350",
+   "title": "Session Risk Memory",
+   "stage": "deployment",
+   "what_persists": "policy",
+   "determination": "out",
+   "L1": {
+    "value": "yes_weak",
+    "field": "object.carrier",
+    "quote": "session risk memory accumulates risk evidence across turns",
+    "note": "会话内风险状态随攻击行为更新，但只在单会话内"
+   },
+   "L2": {
+    "value": "no",
+    "field": "threat_model.capabilities",
+    "quote": "distributed attack decomposes intent across steps",
+    "note": "攻击分解意图，未依据防御输出再适应"
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "layer": "execution",
+   "added": "2026-10-31 expansion"
+  },
+  {
+   "id": "11e249ea5276",
+   "title": "AGrail",
+   "stage": "deployment",
+   "what_persists": "policy",
+   "determination": "out",
+   "L1": {
+    "value": "yes",
+    "field": "object.carrier",
+    "quote": "lifelong guardrail that keeps updating its safety detection",
+    "note": "护栏规则在长期运行中更新"
+   },
+   "L2": {
+    "value": "no",
+    "field": "threat_model.capabilities",
+    "quote": "AdvWeb injects adversarial strings",
+    "note": "注入为预先构造，未见再适应"
+   },
+   "L3a": {
+    "value": "no",
+    "field": "",
+    "quote": "",
+    "note": ""
+   },
+   "L3b": {
+    "value": "partial",
+    "field": "",
+    "quote": "",
+    "note": "攻击针对上下文内容"
+   },
+   "layer": "content",
+   "added": "2026-10-31 expansion"
+  }
+ ],
+ "not_applicable": [
+  {
+   "id": "2609.31186",
+   "title": "分类学（无实验）",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "not_applicable",
+   "L1": {
+    "value": "not_applicable",
+    "field": "quality_flags",
+    "quote": "no_empirical_results / survey_card_all_results_are_synthesis_not_experiments",
+    "note": null
+   },
+   "L2": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "无实验设定，判据不适用；作组织框架引用。"
+  },
+  {
+   "id": "2610.02996",
+   "title": "演化计算综述（无实验）",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "not_applicable",
+   "L1": {
+    "value": "not_applicable",
+    "field": "quality_flags",
+    "quote": "no_empirical_results / survey_card_all_results_are_synthesis_not_experiments",
+    "note": null
+   },
+   "L2": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "无实验设定，判据不适用；作组织框架引用。"
+  },
+  {
+   "id": "2608.01558",
+   "title": "设计/立场卡（无实验）",
+   "stage": "none",
+   "what_persists": null,
+   "determination": "not_applicable",
+   "L1": {
+    "value": "not_applicable",
+    "field": "quality_flags",
+    "quote": "no_empirical_results / survey_card_all_results_are_synthesis_not_experiments",
+    "note": null
+   },
+   "L2": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3a": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "L3b": {
+    "value": "not_applicable",
+    "field": null,
+    "quote": null,
+    "note": null
+   },
+   "reason": "无实验设定，判据不适用；作组织框架引用。"
+  }
+ ],
+ "reconciliation_vs_draft_v1": {
+  "draft_claim": "L1 8/117；L1+L2 6/117；严格 5/117（持久状态 2 + 权重空间 3）；基准层面 1/117；弱形式 1/117",
+  "this_file": "L1 8/117；L1+L2 7/117；严格 6/117；弱形式 1/117",
+  "deltas": [
+   "新增 2610.19422 AgentSafeEvo：L1-L3 全成立，the survey's earlier version, Section 6.3 完全遗漏 -> 严格计数 5 变 6。",
+   "2610.19005 CyberArena 在 the survey's earlier version, Section 6.3 表中被列为 L1 成立，但卡片 object.what_persists=none、轮间修补由人类执行 -> 移出 L1，作基准层面单列。",
+   "the survey's earlier version, Section 6.3 正文（非表）把 2608.15012 SysEvolve 列入 L1 成立的 5 张核心研究，但该卡 not_covered 明示防御侧自进化无任何实验 -> 移出 L1。",
+   "结论：严格 6/117 与 draft 的 5/117 是包含关系（draft 5 属于本文 6），差异只来自 AgentSafeEvo 遗漏，不是判据变更。"
+  ],
+  "unchanged": "Peer Pressure、CoER、CoDeL、HASTE、OpenEvoShield 五张判定与 draft 一致（draft 未逐篇给理由，本文件补齐）。"
+ },
+ "stage_split": {
+  "deployment": [
+   "2609.36603",
+   "2610.02920",
+   "2607.19351"
+  ],
+  "training": [
+   "2610.24896",
+   "2609.07529",
+   "2609.34463",
+   "2610.19422"
+  ],
+  "note": "部署期（回路在被评估部署流内闭合）3 张、其中严格 2 张（HASTE、OpenEvoShield），另 1 张为弱形式（SED）；训练期 4 张。评测'部署代价'的样本量应按 2 计，不按 6 计。"
+ },
+ "regression_measurement": {
+  "value": "0/129",
+  "scan": "tools/screen_same_loop.py 的 REG 词表对 129 张卡全量扫描，命中 13 张，逐张核对后均为概念性提及、能力遗忘测量或单侧消融，无任何卡报告'防御更新后旧攻击复活'的数值与分母。13 张中 2605.09315 测的是演化后旧任务能力衰减（旧域探针 83.9%→81.6%），方向与回归风险相反，记为排除。",
+  "hit_cards": [
+   "2312.11513",
+   "2410.23308",
+   "2605.09315",
+   "2609.08747",
+   "2609.13734",
+   "2609.34151",
+   "2609.38372",
+   "2610.00347",
+   "2610.11270",
+   "2610.11781",
+   "2610.14488",
+   "2610.27495",
+   "2610.29784"
+  ]
+ },
+ "reclassified_20261029": {
+  "reason": "option B: persistent-state criterion (card-building conditions + L1) excludes weight-space co-evolution",
+  "persistent_state_strict": [
+   "2610.02920",
+   "2607.19351"
+  ],
+  "weight_space_strict": [
+   "2610.24896",
+   "2609.07529",
+   "2609.34463",
+   "2610.19422"
+  ],
+  "graded_only": "2607.19351 satisfies L2 as yes_weak and L3a as partial; binary reading leaves 1"
+ }
+}

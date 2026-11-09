@@ -1,0 +1,180 @@
+{
+  "arxiv_id": "2602.17692",
+  "title": "Agentic Unlearning: When LLM Agent Meets Machine Unlearning",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Five-layer external memory store (episodic dialogue traces M, semantic summaries S, reflections R, procedural and external layers) organized as a dependency graph G=(V,E) with per-node reference counters and a persistent blocklist B; prototype store holds 2000 entries encoded by text-embedding-ada-002 (1536-dim), hybrid retrieval top-5 (semantic weight 0.7, keyword 0.3); deletion targets plus their dependency closure are pruned, vector index rebuilt when |B| > tau=100",
+    "operations_covered": ["retrieval", "update", "repair"]
+  },
+  "safety_property": {
+    "type": "privacy",
+    "statement": "Verifiable removal of targeted information from BOTH parametric and memory pathways of a memory-augmented agent without utility loss on retained data, preventing parameter-memory backflow: (i) the agent does not reveal target information D_tgt under adaptive interaction; (ii) memory contains no artifacts derived from D_tgt; (iii) the agent cannot rewrite D_tgt back into memory; (iv) utility on retained data is preserved. Failure condition: the backflow recontamination loop - parametric residue regenerates forgotten content which is re-stored, or residual memory artifacts re-expose deleted content through retrieval.",
+    "operationalized_as": "Forget-set accuracy (lower = better removal), Test-set accuracy and held-out generalization accuracy (utility preservation), MIA AUC (ideal 0.5) and normalized MIA Score on member vs non-member loss distributions, memory-side forget/retain accuracy before vs after unlearning (Table 4), and Agent-Loop retrieval hit rate across Store/Query/Delete/Probe stages (Figure 6); forget set sizes Q_F=100 and Q_F=1000; mean±std over 3 runs."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Membership-inference attacker: computes area under the ROC curve from loss distributions of member vs non-member data to detect whether forgotten records remain distinguishable (MIA AUC near 1 = under-unlearning, near 0 = over-unlearning)"
+    ],
+    "assumptions": [
+      "Deletion requests arrive incrementally as forget sets D_F over medical QA data; retain set D_R is available for the utility-preserving loss term",
+      "Memory is modeled as a dependency graph over {M,S,R,K}; unlearning guarantees depend on the graph structure, not on specific memory-layer content",
+      "Retrieval honors the blocklist at retrieval boundaries (Invariant 1: no memory in B appears in results); derived artifacts follow dependency consistency (Invariant 2)"
+    ],
+    "not_covered": [
+      "No adaptive multi-turn attacker in the evaluation: property (i) (no revelation under adaptive interaction) is defined but the measured attacks are static forget-set accuracy, MIA, and a scripted four-stage agent loop, not an adaptive red-team",
+      "Dependency tracking may not fully capture cross-agent information flow in shared knowledge graphs (authors' stated limitation; multi-agent unlearning left to future work)",
+      "Deployment in clinical settings and formal HIPAA/GDPR compliance verification are out of scope (Ethical Statement)"
+    ]
+  },
+  "intervention": {
+    "name": "Synchronized Backflow Unlearning (SBU): dual-pathway agentic unlearning",
+    "mechanism_layer": "architecture",
+    "description": "Memory pathway: dependency-aware unlearning - target IDs are added to a persistent blocklist for O(1) retrieval filtering, the dependency closure Dep(D_F) is traversed with reference counting to mark exclusively-dependent artifacts for deletion while preserving shared ones, zero-reference nodes are batch-removed, targets and their vectors are deleted, and the vector index is rebuilt when |B|>100; all operations logged in a tamper-evident write-ahead log with hash-chain verification. Parameter pathway: entropy-regularized unlearning (KL-to-random) - a frozen randomly-initialized reference model defines a high-entropy prior; the objective L_weight = L_CE^{D_R} + lambda_F T^2 L_KL^{D_F} aligns outputs on forget queries to the random-like distribution while cross-entropy on retain queries preserves utility. Unified protocol: memory unlearning executes FIRST so parameter updates operate on a sanitized retrieval context, preventing re-encoding; the process repeats per incremental request."
+  },
+  "controls": [
+    {"name": "Original Model (no unlearning)", "purpose": "baseline"},
+    {"name": "Gradient Ascent (GA)", "purpose": "baseline"},
+    {"name": "NPO", "purpose": "baseline"},
+    {"name": "Sequential LoRA / Sequential Retrain", "purpose": "baseline"},
+    {"name": "Adapter Merging (TIES)", "purpose": "baseline"},
+    {"name": "Naive Deletion (memory-side)", "purpose": "baseline"},
+    {"name": "Re-indexing (memory-side)", "purpose": "baseline"},
+    {"name": "Retraining Oracle (memory-side)", "purpose": "baseline"},
+    {"name": "w/o Mem (parameter pathway only)", "purpose": "ablation"},
+    {"name": "Mem-Only (memory pathway, frozen parameters)", "purpose": "ablation"},
+    {"name": "II-Medical-8B with vs without memory (Table 1)", "purpose": "fair-comparison"}
+  ],
+  "results": [
+      {
+        "claim": "On MedQA (Q_F=100), SBU achieves MIA Score 0.895 - a 24.8% improvement in privacy protection over baselines whose scores stagnate near the Original model (0.727) - while maintaining test accuracy 92.50% and generalization 90.50%.",
+        "metric": "MIA Score (higher better) with test/gen accuracy (%)",
+        "value": "0.895 (test 92.50, gen 90.50)",
+        "comparison": "Sequential LoRA MIA 0.717 / test 88.67; Sequential Retrain 0.729; GA 0.764; NPO 0.727; Adapter Merging 0.729; Origin 0.727",
+        "setting": "II-Medical-8B (Qwen3-8B based) with external memory (2000 entries, top-5 hybrid retrieval), MedQA forget set Q_F=100, mean±std over 3 runs (Table 2)",
+        "quote": "In contrast, SBU achieves a MIA Score of 0.895, representing a 24.8% improvement in privacy protection, while maintaining test accuracy (92.50%) and generalization (90.50%).",
+        "locator": "§4.2 (Table 2)",
+        "denominator": {
+          "n_total": 100,
+          "n_valid": null,
+          "how_counted": "Forget set size Q_F=100 MedQA questions; metrics reported as mean±std over 3 runs; test accuracy over the MedQA test split"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Memory-side forgetting: on MedQA (Q_F=100), memory accuracy on the forget set drops from 78% to 14% after memory unlearning while retain-set memory accuracy slightly rises from 54% to 56%.",
+        "metric": "memory retrieval accuracy (%) on forget vs retain sets",
+        "value": "forget 78% -> 14%; retain 54% -> 56%",
+        "comparison": "before vs after memory unlearning (Table 4); MedMCQA forget 84% -> 30%, MedReason forget 68% -> 26%",
+        "setting": "External memory system of II-Medical-8B, Q_F=100, memory-side pathway evaluation (Table 4)",
+        "quote": "As shown in Table 4, for MedQA with QF=100, the memory accuracy on the forget set drops from 78% to 14% after unlearning, while the memory accuracy on the retain set slightly increases from 54% to 56%.",
+        "locator": "§4.2 (Table 4)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Memory accuracy = fraction of forget/retain queries whose answers are correctly served from the memory store, before vs after unlearning; absolute query counts per set not stated"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Agent-Loop evaluation (Store, Query, Delete, Probe): after the deletion request at T4, forget-set retrieval hit rate falls from 100% to 0% while the retain set remains accessible, and summary updates plus dependency cleanup prevent indirect leakage through derived content.",
+        "metric": "retrieval hit rate (%) in a four-stage interactive agent loop",
+        "value": "100% -> 0% (forget); stable (retain)",
+        "comparison": "pre-deletion vs post-deletion probes within the interactive loop",
+        "setting": "Agent Loop with stages Store (T1-T2), Query (T3), Delete (T4), Probe (T5-T6) on medical Q&A pairs (Figure 6b)",
+        "quote": "As shown in Figure 6(b), the Forget Set retrieval hit rate drops from 100% to 0% while the Retain Set remains accessible.",
+        "locator": "§4.3 (Figure 6)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Hit rate over probe queries issued against the memory store before and after the deletion request; number of probe queries not stated"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Pathway ablation: removing the memory pathway (w/o Mem) degrades MIA-based privacy (MIA Score 0.834 vs 0.895 full), and the Mem-Only variant underperforms on forget (85.67) and test (88.33) accuracy - the two pathways are complementary.",
+        "metric": "MIA Score with forget/test/gen accuracy (ablation)",
+        "value": "0.895 (Ours) vs 0.834 (w/o Mem) vs 0.758 (Mem-Only)",
+        "comparison": "full SBU vs w/o Mem vs Mem-Only (Table 6)",
+        "setting": "Ablation on the MedQA setup (Table 6)",
+        "quote": "As shown in Table 6, removing the memory pathway leads to a noticeable degradation in MIA-based privacy metrics. In contrast, the Mem-Only variant underperforms on forget and test set accuracies, despite some privacy improvement.",
+        "locator": "§4.3 (Table 6)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Same MedQA Q_F=100 evaluation protocol as Table 2; per-variant item counts identical to the main setup"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Scalability: at Q_F=1000 on MedMCQA, SBU reaches MIA Score 0.996 (MIA AUC 0.5000, i.e., at the ideal) with forget accuracy 71.33 and test 89.33, while baseline privacy metrics stagnate around MIA Score ≈0.62 at Q_F=1000 on MedQA.",
+        "metric": "MIA Score (higher better), forget set size 1000",
+        "value": "0.996 (MedMCQA Q_F=1000)",
+        "comparison": "baselines ≈0.62 (MedQA Q_F=1000, Supplementary Table 1); Retraining Oracle 0.9920; Naive Deletion 0.9067; Re-indexing 0.9640 (Table 5)",
+        "setting": "MedMCQA forget set Q_F=1000, mean±std over 3 runs (Table 3)",
+        "quote": "On MedMCQA (QF=1000, Table 3), SBU reaches a MIA Score of 0.996.",
+        "locator": "§4.2 (Table 3)",
+        "denominator": {
+          "n_total": 1000,
+          "n_valid": null,
+          "how_counted": "Forget set size Q_F=1000 MedMCQA questions; mean±std over 3 runs"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Cost reading (tuning trade-off): the forgetting coefficient has a narrow safe range - lambda_F below 0.5 fails to induce sufficient forgetting (forget accuracy 86%), lambda_F >= 3.0 causes test degradation to 66%, and temperature T=4.0 destabilizes optimization and drops test accuracy to 68%.",
+        "metric": "forget vs test accuracy (%) across 34 hyperparameter configurations",
+        "value": "test 66% at lambda_F>=3.0; test 68% at T=4.0",
+        "comparison": "optimal configuration (lambda_F=1.5, T=2.0, entropy fallback): 90% test with forget 68%",
+        "setting": "34 configurations on MedMCQA varying lambda_F, temperature T, and entropy fallback (Figure 5)",
+        "quote": "The forgetting coefficient λF\\lambda_{F} controls forgetting-utility trade-off: values below 0.5 fail to induce sufficient forgetting (forget accuracy 86%); excessive values (λF≥3.0\\lambda_{F}{\\geq}3.0) cause test degradation (66%) despite stronger forgetting (forget accuracy 64%). Temperature exhibits a narrow effective range, with moderate values (1.0–2.0) performing best, whereas high temperature (T=4.0T{=}4.0) destabilizes optimization and drops test accuracy to 68%.",
+        "locator": "§4.3 (Figure 5)",
+        "denominator": {
+          "n_total": 34,
+          "n_valid": null,
+          "how_counted": "34 hyperparameter configurations evaluated on MedMCQA; accuracy per configuration"
+        },
+        "is_primary_result": false
+      }
+    ],
+  "limitations": [
+    {
+      "statement": "Dependency tracking does not capture cross-agent information flow in shared knowledge graphs; multi-agent unlearning protocols are deferred to future work.",
+      "quote": "A limitation of our current approach is that dependency tracking may not fully capture cross-agent information flow in shared knowledge graphs. Future work will explore unlearning protocols specifically tailored for multi-agent collaborative environments.",
+      "locator": "§5 Conclusion"
+    },
+    {
+      "statement": "The blocklist-based design leaves vector-index staleness that must be managed by periodic rebuilds (threshold tau=100), i.e., deletion is only eventually consistent at the index level.",
+      "quote": "To control vector-index staleness, the system periodically rebuilds the vector index when |B| exceeds threshold τ=100\\tau=100.",
+      "locator": "§3.2.1"
+    },
+    {
+      "statement": "The entropy-alignment design deliberately avoids a perfectly uniform output distribution because that risks over-unlearning and capability damage; the KL-to-random scheme is chosen for stability.",
+      "quote": "However, our KL-to-random scheme provides a more stable learning target by aligning to a structured high-entropy prior from a reference model, rather than forcing the output towards a perfectly uniform distribution, which can risk over-unlearning and damaging model capabilities.",
+      "locator": "§3.2.2"
+    }
+  ],
+  "counterexamples": [
+    {
+      "observation": "NPO attains the lowest forget accuracy (74.00%) but suffers severe generalization collapse (gen 41.67%) - aggressive forgetting destroys retained capability, demonstrating that parameter-only aggressive unlearning is not a viable cost profile.",
+      "locator": "§4.2"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": "MedQA (~10k questions), MedMCQA (~183k questions, 2,400 topics, 21 subjects), MedReason (~33k QA pairs, answer pairs only); forget sets Q_F=100 and Q_F=1000; memory store 2000 entries; 3 runs per configuration",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "related_work", "method", "experiments", "conclusion", "ethics_statement"],
+    "complete": false
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "supplementary_tables_unread",
+    "no_adaptive_redteam_in_agent_loop"
+  ]
+}

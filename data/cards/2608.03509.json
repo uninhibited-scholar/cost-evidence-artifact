@@ -1,0 +1,209 @@
+{
+  "arxiv_id": "2608.03509",
+  "title": "SkillJack: Persistent Skill Backdoors in Self-Evolving Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "skill",
+    "scope": "cross-task",
+    "carrier": "Separately stored reusable skill artifacts (structured skills of name, description, and code) compiled into the agent's skill library by the experience-to-skill extraction pipeline; the poisoned skill outlives its source trajectory record",
+    "operations_covered": ["formation", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Integrity of the derived skill library plus policy-compliance of skill-triggered behavior: an external attacker who can only influence the experience layer must not be able to have the agent's own pipeline compile poisoned experience into persistent, policy-violating skills that evade sanitization and survive deletion of their source records. The property fails when extracted skills drop from 98.5% to 11.4% LLM-judge detection, trigger the policy-violation proxy on 56.2% (SkillX) and 89.2% (Anything2Skill) of attack-oriented tasks, and retain 80.0% of triggers after source-record deletion.",
+    "operationalized_as": "A policy-violation proxy (regex pattern detector + DeepSeek-v4-flash LLM judge) measuring: (1) detection rate on raw trajectories vs derived skills, (2) routing-level trigger rate (ASR) on attack-oriented and clean tasks, (3) persistence rate of skill-based triggers after source-trajectory deletion, plus a supplementary dangerous-API pattern check on generated code"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Can cause a poisoned experience record to enter the learning corpus via indirect content injection, a shared experience pool, or a compromised trajectory dataset",
+      "Can craft transformation-resilient payloads: functionally framed trajectories (e.g., 'backup'/'archive' framing around external data transmission) whose task narrative survives extraction while retaining a policy-relevant action"
+    ],
+    "assumptions": [
+      "The attacker does not have direct write access to the skill library",
+      "The attacker cannot alter the extraction code or deterministically control routing; extraction and routing components run unchanged",
+      "All extraction, routing, judgment, and agent reasoning use a single model (DeepSeek-v4-flash) via API"
+    ],
+    "not_covered": [
+      "Direct write access to the skill library or modification of extraction code",
+      "Live execution against external services: all trigger/ASR figures are routing-level surrogates from local proxy detectors, not live-compromise rates",
+      "Multi-model generalization (results not yet replicated across models)",
+      "Insider or model-itself adversaries; base-model parameter poisoning"
+    ]
+  },
+  "intervention": {
+    "name": "Preliminary defenses: extraction-time LLM safety review, runtime signature monitoring, and their composition; proposed: provenance-aware skill lifecycle protection",
+    "mechanism_layer": "provenance",
+    "description": "Tested only as an exploratory study: D1 is content-level extraction-time LLM review that blocks flagged skills before routing; D2 is execution-level runtime monitoring that blocks generated actions matching a fixed risky-action regex list; D3 composes them. On SkillX D1 lowered the trigger rate to 6.7% and D2 to 0.0%, but D3 was worse than D2 alone (13.3%) because upstream filtering shifts the action distribution the monitor was written for; on Anything2Skill the original 16 signatures left 85.0%, an enhanced 54-signature list reached 20.0%, and review plus enhanced monitor reached 5.0% (post-hoc tuning). The paper's main recommendation, not implemented, is provenance-aware skill lifecycle protection: propagate provenance from trajectories to every derived skill so that deleting or quarantining a source triggers review or removal of descendants, plus behavior-aware checks at skill use time."
+  },
+  "controls": [
+    {"name": "Directly malicious wording baseline (65 paired trajectories)", "purpose": "baseline"},
+    {"name": "Memory-only / direct-context injection condition", "purpose": "fair-comparison"},
+    {"name": "Clean baseline skills and clean tasks (false-positive rates)", "purpose": "negative-control"},
+    {"name": "Metadata presentation ablation (full skill / content / name+doc / name only)", "purpose": "ablation"},
+    {"name": "Unmodified A2S SDK extractor vs DOC mode", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "On SkillX, extracting the 65 framed poisoned trajectories into 264 skills launders detectability: LLM-judge detection falls from 98.5% on raw trajectories to 11.4% on extracted skills (pattern detection 44.6% to 11.0%).",
+      "metric": "LLM-judge detection rate",
+      "value": "98.5% -> 11.4%",
+      "comparison": "pattern detection 44.6% -> 11.0%",
+      "setting": "SkillX experience-to-skill pipeline; 65 functionally framed poisoned trajectories before extraction vs 264 derived skills after extraction; pattern detector + DeepSeek-v4-flash LLM judge",
+      "quote": "Pattern detection is 44.6% for raw trajectories and 11.0% for extracted skills; LLM-judge detection is 98.5% for raw trajectories and 11.4% for extracted skills.",
+      "locator": "§4.3 (Table 2)",
+      "denominator": {
+        "n_total": "65 raw framed trajectories; 264 extracted framed skills",
+        "n_valid": "65 raw trajectories and 264 derived skills evaluated by both detectors",
+        "how_counted": "share of raw trajectories (65 framed) vs derived skills (264 framed) flagged by each detector (Sections 4.2-4.3)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The same extraction-stage whitewashing appears in the second, independently implemented system: on Anything2Skill, LLM-judge detection drops from 100.0% on raw trajectories to 44.4% in DOC mode and 28.6% in SDK mode after extraction.",
+      "metric": "LLM-judge detection rate",
+      "value": "100.0% -> 44.4%",
+      "comparison": "DOC mode 100.0% -> 44.4%; SDK mode 100.0% -> 28.6%",
+      "setting": "Anything2Skill DOC and SDK ingestion modes; same 65 framed trajectories, same raw-trajectory judge and DeepSeek-v4-flash configuration; DOC mode yields outputs for 41.5% of framed trajectories",
+      "quote": "Among the extracted framed trajectory outputs, LLM-judge detection is 44.4%, compared with 100.0% on the raw trajectories. SDK mode extracts fewer framed trajectories (10.8%) and has 28.6% derived LLM-judge detection.",
+      "locator": "§4.4 (Table 2)",
+      "denominator": {
+        "n_total": "65 framed trajectories input; DOC mode yields outputs for 41.5% of them",
+        "n_valid": "extracted framed-trajectory outputs judged in each mode",
+        "how_counted": "share of raw trajectories vs extracted framed outputs flagged by the LLM judge (Section 4.4, Table 2)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In routing-level evaluation on SkillX, derived poisoned skills trigger the policy-violation proxy on 56.2% of 32 attack-oriented tasks and misfire on 20.0% of 15 clean tasks (collateral routing).",
+      "metric": "ASR (routing-level trigger rate)",
+      "value": "56.2%",
+      "comparison": "clean-task collateral trigger 20.0%",
+      "setting": "SkillX native LLM routing over a 356-skill library (305 poisoned, 51 clean), 47 tasks total (32 attack-oriented, 15 clean), DeepSeek-v4-flash; trigger = routed skill satisfies the pattern+LLM policy-violation proxy",
+      "quote": "SkillX | Native routing, attack-oriented tasks | 32 | 56.2% | | SkillX | Native routing, clean tasks | 15 | 20.0% |",
+      "locator": "§4.6, Table 3 (Figure 4)",
+      "denominator": {
+        "n_total": "32 attack-oriented tasks; 15 clean tasks",
+        "n_valid": "47 evaluated tasks over the 356-skill library",
+        "how_counted": "share of tasks routed to a skill satisfying the policy-violation proxy (Section 4.6, Table 3)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Skills derived by Anything2Skill DOC mode remain broadly retrievable downstream: 89.2% of 65 attack-oriented queries trigger the policy-violation proxy, and 95.0% of clean-task retrievals select a poisoned skill under the lexical SkillBank retriever.",
+      "metric": "ASR (routing-level trigger rate)",
+      "value": "89.2%",
+      "comparison": "clean-task retrieval 95.0%",
+      "setting": "30-skill bank built from A2S DOC outputs; shared lexical skill-bank retriever over name/description/prompt plus the same LLM judge; 65 attack-oriented queries and 20 clean tasks",
+      "quote": "A2S DOC | Lexical SkillBank, attack-oriented tasks | 65 | 89.2% | | A2S DOC | Lexical SkillBank, clean-task retrieval | 20 | 95.0% |",
+      "locator": "§4.7, Table 3",
+      "denominator": {
+        "n_total": "65 attack-oriented queries; 20 clean tasks",
+        "n_valid": "all 65 framed attack-oriented task queries and 20 clean retrieval tasks",
+        "how_counted": "share of queries retrieving a skill that satisfies the policy-violation proxy (Section 4.7, Table 3)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Deleting the source poisoned trajectories does not remove the attack: in the matched 25-task experiment the persistence rate of skill-based triggers after source-record deletion is 80.0%, while the memory-only direct-context baseline triggers more often (68.0% vs skill-based 40.0%) but lacks persistence.",
+      "metric": "persistence rate after source deletion",
+      "value": "80.0%",
+      "comparison": "memory-only 68.0% vs skill-based 40.0%; post-deletion persistence 80.0%",
+      "setting": "SkillX matched 25 attack-oriented tasks under three conditions: memory-only (poisoned trajectory in context), skill-based (router over derived library), post-deletion (source trajectories removed before the same skill-based evaluation); pattern+LLM policy-violation proxy",
+      "quote": "The direct-context baseline triggers more frequently in this matched setting (68.0% versus 40.0%). The added risk of the skill pathway is instead persistence: the persistence rate is 80.0% after source-record deletion.",
+      "locator": "§4.5 (Figure 3)",
+      "denominator": {
+        "n_total": "25 matched attack-oriented tasks",
+        "n_valid": "32.0/40.0 skill-based triggers survive post-deletion overall (Figure 3 caption)",
+        "how_counted": "persistence rate = post-deletion triggers divided by skill-based triggers, overall 32.0/40.0 (Figure 3)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the exploratory defense study, runtime signature monitoring drives the SkillX trigger rate to 0.0% (15 tasks) versus 6.7% for extraction-time review, while on A2S the enhanced monitor reaches 20.0% and review plus enhanced monitor 5.0%.",
+      "metric": "trigger rate under defense",
+      "value": "0.0%",
+      "comparison": "extraction review 6.7% and runtime monitor 0.0% on SkillX; enhanced runtime monitor 20.0% and review + enhanced monitor 5.0% on DOC mode",
+      "setting": "SkillX: first 15 attack-oriented tasks over the poisoned library; A2S: 30 DOC skills evaluated over 20 clean tasks; rule-based monitor with 16 original (54 enhanced) signatures; small samples, exploratory",
+      "quote": "SkillX | Extraction review | 15 | 6.7% | | SkillX | Runtime monitor | 15 | 0.0% | | A2S DOC | Enhanced runtime monitor | 20 | 20.0% | | A2S DOC | Review + enhanced monitor | 20 | 5.0% |",
+      "locator": "§4.9, Table 3",
+      "denominator": {
+        "n_total": "SkillX: 15 attack-oriented tasks; A2S DOC: 20 clean tasks",
+        "n_valid": "15 SkillX defense trials and 20 A2S defense trials",
+        "how_counted": "trigger rate per defense condition (Table 3); zero count over 15 trials has a wide uncertainty interval (Section 4.9)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The LLM judge keys on surface metadata: for framed skills, detection is 36.7% when judging code content only but 10.0% when the benign name and documentation accompany the code.",
+      "metric": "LLM-judge detection rate",
+      "value": "36.7% -> 10.0%",
+      "comparison": null,
+      "setting": "SkillX framed skills; 30 sampled skills per presentation condition (full skill, content only, name+documentation, name only); DeepSeek-v4-flash LLM judge",
+      "quote": "For framed skills, LLM-judge detection is 36.7% for content only and 10.0% when names and documentation are included. This supports a metadata sensitivity interpretation: the tested judge's decisions depend materially on surface descriptions.",
+      "locator": "§4.8 (Figure 5)",
+      "denominator": {
+        "n_total": "30 sampled framed skills per condition (SkillX)",
+        "n_valid": "30 skills judged in each of four presentation conditions",
+        "how_counted": "share of sampled skills flagged by the LLM judge per presentation condition (Section 4.8, Figure 5)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Supplementary code-generation check: 75.0% of 4 poisoned tasks produce dangerous-API patterns in generated Python code, versus 0.0% on 2 clean baseline tasks (code-generation verification, not live execution).",
+      "metric": "dangerous-API pattern-match rate",
+      "value": "75.0%",
+      "comparison": "75.0% on poisoned vs 0.0% on clean",
+      "setting": "4 poisoned tasks and 2 clean baseline tasks with skills injected through the AppWorld prompt formatter; generated Python parsed for pre-specified dangerous API patterns",
+      "quote": "In the supplementary code-generation check, the dangerous-API pattern-match rate is 75.0% on four poisoned tasks and 0.0% on two clean tasks.",
+      "locator": "§4.10",
+      "denominator": {
+        "n_total": "4 poisoned tasks and 2 clean baseline tasks",
+        "n_valid": "6 code-generation runs parsed for dangerous API patterns",
+        "how_counted": "share of tasks whose generated code matches pre-specified dangerous-API patterns (Section 4.10)"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "All results use a single model and a policy-violation proxy rather than live external-service execution, so figures are routing-level, not deployment-level, and the defense study is exploratory.",
+      "quote": "Our claims are deliberately scoped. All results use a single model (DeepSeek-v4-flash) and score success with a policy-violation proxy rather than live external-service execution, so the reported figures are routing-level rather than deployment-level, and the defense study is exploratory.",
+      "locator": "§5.4"
+    },
+    {
+      "statement": "The whitewashing gap's mechanism (wording, metadata, code structure, or detector sensitivity) is not isolated by the raw-vs-extracted experiment.",
+      "quote": "It may reflect changes in wording, generated metadata, code structure, or detector sensitivity; the experiment does not isolate those mechanisms, which motivates the metadata ablation.",
+      "locator": "§4.3"
+    },
+    {
+      "statement": "The runtime monitor's 0.0% result is a zero count over only 15 trials with wide uncertainty, and its clean-task false-positive rate is unmeasured.",
+      "quote": "This is not a claim of perfect prevention: a zero count over 15 trials has a wide uncertainty interval, and the monitor's clean-task false-positive rate is unmeasured.",
+      "locator": "§4.9"
+    },
+    {
+      "statement": "The A2S defense reduction reflects post-hoc signature tuning after observing failures, not an a-priori defense.",
+      "quote": "Because these signatures were added after observing the failures, the A2S reduction reflects post-hoc tuning rather than an a-priori defense.",
+      "locator": "§4.9"
+    },
+    {
+      "statement": "Conclusions have not yet been replicated across models; DeepSeek-v4-flash is treated as an implementation detail.",
+      "quote": "All extraction, routing, judgment, and agent reasoning use DeepSeek-v4-flash via API; the model is an implementation detail, and our conclusions have not yet been replicated across models.",
+      "locator": "§4.1"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "https://github.com/Tencent/AI-Infra-Guard/research/skilljack (stated in abstract)",
+    "data": "Synthesized dataset of 150 AppWorld-format trajectories (65 framed poisoned, 65 direct baselines, 20 clean), not published as a separate artifact in the corpus",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "appendix_a4_signature_regex_lists_and_appendix_c_case_cards_not_present_in_corpus_text"
+  ]
+}

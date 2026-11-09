@@ -1,0 +1,227 @@
+{
+ "arxiv_id": "2609.07529",
+ "title": "CoER: Defending against Adaptive Indirect Prompt Injection via Adversarial Co-Evolution and Refinement",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v3"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-task",
+  "carrier": "训练期持续状态：(1) 双方的历史策略检查点作为冻结对手池保留（retained attackers/defenders，按 suite 分层奖励评估定期刷新），防御者训练混合当前对手与历史对手；(2) 保留的（已演化的）攻击者被复用于第三阶段挑战教师智能体、产出经安全+任务完成双重验证的教师轨迹（5,760 条 Defender-SFT 演示）；(3) 防御者与攻击者均为权重更新（PPO 各自带 critic）。任务执行内的历史（先前注入尝试与可见执行反馈）在单次执行内被攻击者用作再注入依据，执行间重置。部署时最终防御者冻结。注意：持续状态为权重空间 + 对手检查点池，不是语义记忆组件。",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "保护对象：工具调用智能体在间接提示注入（IPI）下的执行完整性——防御者须在继续完成任务的同时不被工具返回中的恶意指令劫持（不泄露数据、不误用工具、不执行未授权动作）。失效条件：任务内自适应攻击者依据防御者的可见响应与先前执行痕迹修订后续注入时（feedback-dependent IPI），仅对固定攻击集训练的防御会失败（论文核心动机与实证：Base 在自适应攻击下 ASR 41.31% 而固定模板攻击下仅 13.10%）。判定方式：独立验证器从执行轨迹或最终状态自动判定攻击成功与任务完成，二者可同时成立，因此以 Safe-U（安全且完成任务）而非单独 U 或 ASR 为联合终点。",
+  "operationalized_as": "主工作量每 seed 1,512 例（157 clean / 168 fixed-template / 1,187 adaptive），3 个评估 seed：Adaptive ASR、U（受攻击下任务成功）、Safe-U、Clean U；外部基准 AgentDojo/AgentDyn（important_instructions 协议）/AgentLAB Task-Injection（949 对）/InjecAgent（Base+Enhanced 载荷）"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "任务内多次注入：攻击者控制配置站点上的文本，每站点至多触发一次，可在同一任务内注入多次",
+   "反馈自适应：注入观察内容包括目标/契约、防御者公开轨迹、周围工具文本与先前尝试——后续注入依据先前注入被忽略/执行的后果修订（Figure 1：首次注入被忽略后，攻击者结合公开 trace 修订第二次注入；防御者可能完成购买但泄露 OTP）",
+   "防御者的动作改变工具状态与后续注入机会（双边相互塑造，general-sum Markov game，双方报酬之和非常数）",
+   "Q4 威胁升级测量：4 个保留攻击者各 2 次尝试的嵌套 1-8 次尝试预算，以及从共演化 checkpoint a200 继续攻击者-only RL 产生的新攻击"
+  ],
+  "assumptions": [
+   "攻击者不可见防御者私有指令与推理，只能访问公开轨迹（部分可观测）",
+   "两方历史在执行间重置；跨任务的知识保存在权重与对手池中",
+   "训练与评估共享 AgentDyn 7 域环境（独立验证器按执行轨迹/最终状态判定），外部基准另行评估",
+   "共演化与精炼阶段的攻击者与防御者共享同一底座模型（Qwen3.5-9B）；异构攻击者未测试（Limitations 自述）"
+  ],
+  "not_covered": [
+   "部署期防御不再演化：最终防御者冻结评估（训练期回路，非测试时回路）",
+   "非文本模态、更大骨干、其他智能体框架未测试（Limitations 自述）",
+   "未防御针对防御系统自身/对手池的投毒；历史检查点池的可利用性（攻击者针对旧防御训练的可迁移性）未作为威胁研究",
+   "教师蒸馏依赖强教师模型（GLM-5.2 / DeepSeek V4 Pro），增加数据生成成本与教师依赖（Limitations 自述）"
+  ]
+ },
+ "intervention": {
+  "name": "CoER: 三阶段共演化与精炼（Attacker SFT -> BA-RL -> Defender SFT）",
+  "mechanism_layer": "weight-space",
+  "description": "阶段 I：用 DeepSeek V4 Pro/Seed2.0 对基础防御者产生的已验证成功多轮攻击轨迹（3,995 条对话）监督微调攻击者，扩大初始攻击曲目以解决稀疏终端奖励下的探索问题。阶段 II：双边对抗 RL（BA-RL）在任务内自适应 IPI 的 general-sum Markov game 上用角色专属 PPO 联训双方——防御者只有安全完成任务才得正奖励（任务完成不能抵消被攻破），攻击者仅在最终失败时得一次性格式奖励；关键机制是双边历史对手混合：历史攻击者保持防御者对早期攻击策略的记忆（支撑已学防御的保持），历史防御者让攻击者接触多样防御行为以适应任务内后续注入，current/current 交互保持对最新防御的压力；冻结池定期用 suite 分层奖励评估刷新（12,705 条在线 RL 配置）。阶段 III：种群引导精炼——保留的共演化攻击者挑战教师智能体、按教师公开执行反馈适应注入，仅保留安全+任务完成双验证的轨迹（5,760 条去重演示）对共演化防御者做 SFT，补足残余弱点同时保住任务效用。"
+ },
+ "controls": [
+  {
+   "name": "Base (Qwen3.5-9B before training)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "PPO (defender-only, fixed templates, CoER 的防御 RL 配置)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GRPO (same data/settings as PPO)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "NoPop (双角色联训但无历史对手)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "BA-RL (选中的在线防御者，无最终 Defender SFT)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "单边历史对照：defender-only history / attacker-only history (App. Table 10)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Table 1c 2x2：Base/BA-RL 初始化 x 标准攻击/种群派生 SFT 数据（教师、数据量、SFT loss/更新/replay 比例全匹配）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "外部系统：MAGIC、Lifelong Defender i2 RR、Meta-SecAlign-8B、Qwen3.6-27B、GPT-5.4、DeepSeek V4 Pro、GLM-5.2-Thinking",
+   "purpose": "baseline (descriptive, separate evaluations)"
+  }
+ ],
+ "results": [
+  {
+   "claim": "主结果：三 seed 平均自适应 ASR 从 Base 41.31% 降到 CoER 0.22%，Safe-U 从 39.60% 升到 76.24%；固定模板 ASR 13.10% -> 0.40%，Clean U 77.92% -> 80.47%（效用不降反升）。",
+   "metric": "Adaptive ASR / Safe-U / Clean U",
+   "value": "ASR 0.22±0.13%；Safe-U 76.24±1.08%；Clean U 80.47±1.47%",
+   "comparison": "Base 41.31±0.89 -> NoPop 28.14 -> BA-RL 25.78 -> CoER 0.22（自适应 ASR）；Safe-U 39.60 -> 52.93 -> 54.84 -> 76.24",
+   "setting": "AgentDyn 3 套件 + AgentDojo 4 套件，每 seed 1,512 例（1,187 adaptive），3 个评估 seed，同骨干系统共享评估清单（Table 1a）",
+   "quote": "Across three evaluation seeds, Defender SFT reduces mean adaptive ASR from 25.78% to 0.22% and raises Safe-U from 54.84% to 76.24%, with an 8.13-point fixed Safe-U gain.",
+   "locator": "§5.2 Table 1a",
+   "denominator": {
+    "n_total": "1,187 adaptive cases/seed x 3 seeds；adaptive 集=1,189 个 task-goal 对剔除 2 个预声明不一致例",
+    "n_valid": "同上；整体 ASR 只在被攻击执行上平均",
+    "how_counted": "固定 checkpoint 的 seed 均值±样本 SD（seeds 0/1/2）；ASR=攻破执行/受攻击执行，Safe-U=安全且完成的执行/受攻击执行"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "核心问题直接证据——演化后的防御被继续进化的攻击者再攻击仍守住：从共演化 checkpoint a200 冻结最终 CoER、继续攻击者-only RL，在同一 held-out 清单上的峰值 Effective ASR 仅 0.59%；4 个保留攻击者各 2 次尝试、1-8 次嵌套尝试预算下 union ASR 从 0.25% 升到 4.97% 仍为最低；任务内注入预算 1/2/3/不封顶时 ASR 0.00-0.17%。",
+   "metric": "Effective ASR under further attacks (union & newly-learned)",
+   "value": "0.59% (newly learned, peak)；0.25% -> 4.97% (cumulative union, 8 attempts)",
+   "comparison": "across six attackers: CoER 0.18–0.47% vs 继续BA-RL(无Defender SFT) 15.10–31.29%",
+   "setting": "Q4：1,187 例 x 4 保留攻击者 x 2 尝试；新攻击=攻击者-only RL from a200，同一 held-out 清单；注入预算消融在原执行限制下冻结 a290（App. Tables 8/9, App. C）",
+   "quote": "To test newly learned attacks, we freeze final CoER and continue attacker-only RL from co-evolved checkpoint a200. Separate evaluation on the same held-out manifest yields a peak Effective ASR of 0.59% over reached, eligible executions (Appendix C).",
+   "locator": "§5.4 Q4 (App. Tables 8-9)",
+   "denominator": {
+    "n_total": "1,187 adaptive cases（union ASR）；新攻击评估=同一 held-out 清单的 reached, eligible executions",
+    "n_valid": "嵌套预算按 1-8 次尝试累计 union；峰值 Effective ASR 按到达条件（reach-conditioned）",
+    "how_counted": "Effective ASR=验证器判定的成功注入/到达可注入状态的合格执行；union ASR=任一尝试成功即计"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "攻击者的确在针对防御行为适应：冻结交叉对局下攻击者对 Base 的 Effective ASR 从 38.80%（Base 攻击者）经 SFT 49.55% 升到 BA-RL 后 65.65%；执行反馈消融显示完整反馈（trace+历史）把 ASR 从 29.57% 提到 38.75%，去掉'更新后的防御者行为'或'其他任务历史'分别降到 36.82%/35.97%——适应信号主要来自可观察的执行后果。",
+   "metric": "Effective ASR (frozen cross-play) / feedback ablation ASR",
+   "value": "65.65% (after BA-RL)；29.57% -> 38.75% (feedback on)",
+   "comparison": "Base attacker 38.80 -> SFT 49.55 -> BA-RL 65.65（vs Base 防御者）",
+   "setting": "Q5：冻结交叉对局（reach-conditioned，App. C）；消融在 1,187 例上共享 3 次注入上限，a290 与 Base 均冻结（App. Table 17）",
+   "quote": "Full feedback raises ASR from 29.57% without traces or history to 38.75%; ASR is 36.82% without updated defender behavior and 35.97% with other-task history (Appendix Table 17).",
+   "locator": "§5.5 Q5 (Fig. 4a, App. Table 17)",
+   "denominator": {
+    "n_total": "1,187 例（消融）；交叉对局为 reach-conditioned 合格执行",
+    "n_valid": "同上；冻结双方权重以隔离攻击者进步与训练对手变化",
+    "how_counted": "Effective ASR 同 Q4 口径；消融组共享 3-injection cap"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "双边历史对手混合对双方都有贡献：单运行历史消融中 bilateral 历史把自适应 Safe-U 从 NoPop 51.73% 提到 54.09%，高于防御侧-only（52.15%）与攻击侧-only（52.65%）历史；其攻击者对冻结 Base 达 65.65% Effective ASR，高于两个单边对照（58.20%/63.10%）。",
+   "metric": "adaptive Safe-U (history ablation, single run)",
+   "value": "54.09% (bilateral)",
+   "comparison": "51.73 (NoPop) < 52.15 (defender-only) / 52.65 (attacker-only) < 54.09 (bilateral)",
+   "setting": "Defender SFT 前的单运行历史消融，匹配总历史概率（App. Table 10）",
+   "quote": "In the single-run history ablation before Defender SFT, bilateral history raises adaptive Safe-U from 51.73% (NoPop) to 54.09%, exceeding defender-only (52.15%) and attacker-only history (52.65%) at matched total history probability (Appendix Table 10).",
+   "locator": "§5.2 (App. Table 10)",
+   "denominator": {
+    "n_total": "同一自适应评估集（单运行，未给 seed 数；单运行非 3-seed 均值）",
+    "n_valid": "同上",
+    "how_counted": "Safe-U 口径同主表；总历史概率匹配"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "共演化同时贡献更强初始化与更有效的精炼数据：教师、数据量、SFT 更新全匹配的 2x2 中，BA-RL 初始化+种群数据（D）达 75.40 自适应 Safe-U / 0.25% ASR，比 Base+标准数据（A: 58.97/15.00）高 16.4 点 Safe-U，两个因子各自有正贡献（D vs B +8.42 Safe-U；D vs C +10.36 Safe-U）。",
+   "metric": "adaptive Safe-U / ASR (2x2 attribution)",
+   "value": "75.40% / 0.25% (D)",
+   "comparison": "A 58.97/15.00；B 66.98/11.96；C 65.04/9.01；D 75.40/0.25",
+   "setting": "Table 1c：共同自适应集上的分离评估；Hist. union 列另报（D: 75.40 Safe-U / 4.97 ASR）",
+   "quote": "BA-RL initialization adds 8.42 adaptive Safe-U points with population data (D versus B); population data adds 10.36 with BA-RL initialization (D versus C). Co-evolution thus contributes both a stronger defender initialization and attackers that elicit more effective refinement demonstrations.",
+   "locator": "§5.4 Q3 (Table 1c)",
+   "denominator": {
+    "n_total": "共同自适应评估集（与主表同一 1,187 例口径，separate evaluations）",
+    "n_valid": "同上",
+    "how_counted": "Safe-U/ASR 同主表口径；2x2 各格独立评估"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "外部基准迁移：AgentLAB Task-Injection 在 949 对上 Safe-U 从 Base 37.83% / BA-RL 70.39% 升到 77.13%（GPT-5.4 自适应攻击）；InjecAgent ASR 从 Base 7.49/22.69 降到 0.00/1.97；AgentDojo ASR 13.3 -> 2.2，AgentDyn ASR 31.8 -> 2.5。",
+   "metric": "external ASR / Safe-U",
+   "value": "AgentLAB Safe-U 77.13%；InjecAgent ASR 0.00/1.97",
+   "comparison": "AgentLAB 37.83 (Base) / 70.39 (BA-RL) -> 77.13 (CoER)",
+   "setting": "App. C.1/D：AgentDojo+AgentDyn（U/ASR）、AgentLAB Task-Injection（949 对，GPT-5.4 adaptive 攻击）、InjecAgent（Base/Enhanced 载荷）",
+   "quote": "On AgentLAB Task-Injection (Jiang et al., 2026), Safe-U rises from 37.83% (Base) and 70.39% (BA-RL) to 77.13% under GPT-5.4 adaptive attacks on 949 pairs (Appendix Table 13).",
+   "locator": "§5.3 Table 2 (App. C.1, D)",
+   "denominator": {
+    "n_total": "AgentLAB 949 对；AgentDojo/AgentDyn/InjecAgent 的每套件分母见 App. D（未在正文复述）",
+    "n_valid": "同上",
+    "how_counted": "各基准官方协议；InjecAgent 两位小数；任务效用未在 InjecAgent 报告（正文注明）"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "精炼阶段引入教师依赖与数据生成成本；三阶段必须顺序执行；种群管理超参数敏感性未充分刻画。",
+   "quote": "CoER combines bilateral RL with verified demonstrations from strong teachers; refinement adds data-generation costs and teacher dependence. The three-stage pipeline must run sequentially, and population management introduces hyperparameters whose sensitivity we have not fully characterized.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "评估覆盖 7 个 AgentDyn 套件；对其他智能体框架、非文本模态、更大骨干的泛化未测试；攻击者与防御者共享底座——异构攻击者可能暴露同族共演化漏掉的弱点。",
+   "quote": "The attacker shares the defender’s base model—heterogeneous attackers could expose weaknesses that same-family co-evolution misses.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "双边 RL 共演化（权重空间），非持久状态载体，按 SCOPE 降为背景",
+   "quote": null,
+   "locator": null
+  }
+ ],
+ "counterexamples": [
+  {
+   "observation": "外部迁移不均匀：AgentDyn important_instructions 协议下 Travel 套件 Safe-U 从 BA-RL 下降 15.00 点（ASR 不变 2.86%）——效用与安全的权衡在个别套件仍存在；Shopping 精炼后 Safe-U 最低（57.2%）。",
+   "locator": "§5.3 (Fig. 3b, App. C.1)"
+  },
+  {
+   "observation": "防御者的进步压低了交叉对局中可见的攻击者上限：对最终 CoER，六个攻击者的 Effective ASR 全部落在 0.18–0.47%，而同样这些攻击者对'无最终 SFT 的继续 BA-RL'防御者可达 15.10–31.29%——防御精炼（而非攻击者变弱）解释了差异。",
+   "locator": "§5.5 Q5 (Fig. 4a)"
+  }
+ ],
+ "reproduction": {
+  "code": "项目页 https://ilianzby.github.io/CoER/（配置与评估清单'will accompany the artifact release'，发布状态待核）",
+  "data": "AgentDyn 7 域（自建训练环境+独立验证器）、AgentDojo、AgentLAB、InjecAgent；3,995 攻击者 SFT 对话 / 5,760 防御者 SFT 轨迹 / 12,705 在线 RL 配置",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix-partial",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "demoted_to_background_weight_space",
+  "denominator_reported_main_only",
+  "deployment_defense_frozen",
+  "same_loop_training_time_plus_reattack_eval",
+  "single_run_ablation",
+  "weight_space_coevolution_not_semantic_memory"
+ ]
+}

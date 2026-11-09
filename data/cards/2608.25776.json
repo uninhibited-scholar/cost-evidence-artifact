@@ -1,0 +1,184 @@
+{
+  "arxiv_id": "2608.25776",
+  "title": "EVOMAL: Self-Poisoning in Self-Evolving Coding Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "skill",
+    "scope": "mixed",
+    "carrier": "Persistent executable skill library (Voyager-style SkillManager on ChromaDB; 232 benign MetaGPT/BigCodeBench SE-helper entries). Malicious carrier is an agent-authored Python skill whose code body reproduces a planted 3-layer banner (copy-verbatim comment, @_telemetry decorator, import-time _register_tool hook) wrapping an interchangeable payload (env-variable exfiltration and 5 malware classes); each copy is stored in the library and re-retrievable by later tasks.",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "The persistent skill library must remain free of malicious executable entries: an external publish-only attacker who cannot access the model, runtime, prompts, or tasks must not be able to cause the agent to author, store, and run a malicious skill merely by planting a benign-looking one. The property fails on the create-path (authoring-and-storing step): agent-authored copies carry agent-chosen names and standard imports, so name-, code-, and signature-based submission-side defenses miss them, and infection persists even after the planted skills are revoked. Judged by ASPR (fraction of tasks adding a newly authored malicious skill) and callback rate (payload reaching C2), with benign Submitted-rate as utility guard.",
+    "operationalized_as": "ASPR = E[C_x], fraction of tasks whose agent-authored stored skill reproduces the planted pattern, with Wilson 95% CIs and two-sided two-proportion z-tests (p<0.05); callback rate = fraction of tasks where the copied payload runs and contacts the C2 endpoint; utility = benign task completion (Submitted rate) drop held under epsilon."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "A1 Publish-only: submits a handful of planted skills to the library/marketplace before the agent runs, choosing each skill's retrieval description and code body; a routine contributor can clear light marketplace review (MCP Registry, LangChain Hub, installed package, or starter pack)",
+      "A2 No-box: no access to model weights, training data, system prompt, runtime prompts, incoming tasks, retrieval index; cannot revoke a skill",
+      "A3 No victim knowledge and never needs the agent to invoke a planted skill by name; a planted skill need only enter top-k context once; optional targeted variant rewrites descriptions to one public task family"
+    ],
+    "assumptions": [
+      "The agent authors new skills by imitating retrieved ones (create-path exists and is unguarded)",
+      "Planted skill descriptions can rank into the agent's top-k retrieval",
+      "Planted skills read as benign utilities and pass registry review without evasion"
+    ],
+    "not_covered": [
+      "Reuse-path attacks (agent invoking planted skills by name): U_x = 0 on all runs by construction",
+      "Attackers with model/runtime access (weights, prompts, retrieval index) or victim-specific knowledge",
+      "Multi-parent retrieval collisions and finite-library saturation effects (treated as deviations outside the branching approximation)",
+      "Definitive test of the crowding source for DS-V4/MiniMax collapse (left to future work)"
+    ]
+  },
+  "intervention": {
+    "name": "Counter-prompt (paired with signed quarantine gate)",
+    "mechanism_layer": "content",
+    "description": "Counter-prompt: four fixed lines appended to the deployer's system prompt instructing the agent to treat banner-style 'REQUIRED PATTERN' / 'DO NOT MODIFY' content in retrieved skills as untrusted supply-chain material and refuse to reproduce it (full text in A.2); reduces baseline ASPR 20.3%-41.8% to <=1.8% with zero callbacks and no statistically significant task-completion loss, robust to token renaming and adaptive coercion (ASPR <=1.3%; sole residual case 6.7% on Devstral's 15-task pytest family). Also proposes a structural signed-quarantine gate at the write step: a two-level library where only curator-signed entries are retrievable and agent-authored skills enter an unretrievable quarantine level; Theorem 3 proves create-path propagation extinction under an unforgeable signature scheme, capping persistent-attacker exposure at the one-time round-0 seed rate."
+  },
+  "results": [
+    {
+      "claim": "Under the generic headline attack (8 planted skills at 3.4% poisoning rate), all six evaluated models self-poison, re-authoring the banner into a stored malicious skill on 20.3% to 41.8% of tool-relevant SWE-bench Verified tasks.",
+      "metric": "ASPR (agent self-poisoning rate)",
+      "value": "20.3%-41.8%",
+      "comparison": null,
+      "setting": "Six LLMs (Devstral-Small, Gemma-4-31B-IT, Qwen3-Coder-Next, GPT-OSS-120B, MiniMax-M2.7, DeepSeek-V4-Pro) on mini-SWE-agent + Voyager SkillManager (top-k=5, BGE-M3, ChromaDB), 8 planted skills in 232-entry benign library, SWE-bench Verified tool-relevant subset; publish-only no-box attacker",
+      "quote": "From an eight-skill seed at a 3.4%3.4\\% poisoning rate, all six models self-poison, re-authoring the banner into a stored skill on 20.320.3 to 41.8%41.8\\% of SWE-bench Verified tasks.",
+      "locator": "§6.3 (RQ1), Figure 3a",
+      "denominator": {
+        "n_total": "153",
+        "n_valid": "153",
+        "how_counted": "SWE-bench Verified tool-relevant subset N=153 of 500 tasks selected by a fixed pre-specified keyword filter (§6.1); ASPR = fraction of tasks that add a newly authored malicious skill to the library"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Self-poisoned libraries accumulate 4.9 to 9.0 times as many malicious skills as were initially planted (31 to 64 agent-authored malicious skills over 153 tasks, from an 8-skill seed).",
+      "metric": "malicious-skill amplification factor (total malicious / initially planted)",
+      "value": "4.9x-9.0x",
+      "comparison": null,
+      "setting": "Same six-model generic headline attack on the 153-task SWE-bench Verified subset, 8 planted skills",
+      "quote": "Over the 153153 tasks, the rates correspond to 3131 to 6464 newly authored malicious skills. Together with the eight planted skills, the total number of malicious skills is 4.94.9 to 9.09.0 times the initial count.",
+      "locator": "§6.3 (RQ1)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "The vulnerability exists without attacker-written instructions: a plain malicious skill with no banner is reproduced by imitation alone at 11.1% ASPR on DS-V4, and adding the three-layer banner raises this to 41.8%.",
+      "metric": "ASPR (banner ablation)",
+      "value": "11.1% -> 41.8%",
+      "comparison": "11.1% (no-banner control) -> 41.8% (full banner)",
+      "setting": "DS-V4, SWE-bench Verified N=153, payload fixed, banner layers removed one at a time",
+      "quote": "A plain malicious skill carrying no banner is already reproduced 11.1%11.1\\% of the time by imitation alone, and adding the banner raises this to 41.8%41.8\\% (Table 2).",
+      "locator": "§5.1 / Table 2",
+      "denominator": {
+        "n_total": "153",
+        "n_valid": "153",
+        "how_counted": "DS-V4 on SWE-bench Verified tool-relevant N=153 tasks (§6.1); Table 2 banner-ablation rows"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Targeting planted-skill descriptions to a single public task family (code bodies unchanged, no victim-specific knowledge) raises ASPR by +11.8 to +26.9 pp across six models, peaking at 86.7% on Qwen3's pytest family, significant for five of six models.",
+      "metric": "ASPR (targeted vs generic)",
+      "value": "86.7%",
+      "comparison": "generic -> targeted: +11.8 to +26.9 pp",
+      "setting": "Six models, three targeted task families on SWE-bench Verified; same eight code bodies as the generic attack, only descriptions/names rewritten",
+      "quote": "description-only change raises ASPR by +11.8+11.8 to +26.9+26.9 percentage points across the six models, peaking at 86.7%86.7\\% on Qwen3’s pytest tasks, and is significant for five of the six (Table 3, full statistics in § E.5).",
+      "locator": "§6.4 (RQ2), Table 3",
+      "denominator": {
+        "n_total": "15",
+        "n_valid": "15",
+        "how_counted": "Table 3 Pytest-Fixture family (N=15) of SWE-bench Verified; peak value is Qwen3's family-level attack ASPR"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Infection self-sustains after revocation: with the planted seed withdrawn after round 0 of the five-round rolling-replacement cascade, Qwen3's ASPR rises to 68%, so attacker removal alone is ineffective and the library must be scrubbed.",
+      "metric": "ASPR (removed-condition cascade, round 5)",
+      "value": "68%",
+      "comparison": null,
+      "setting": "Five-round rolling-replacement cascade (default replacement rate r=0.50), seed withdrawn after round 0, SWE-bench Verified task pool; three of six models stay infected after removal",
+      "quote": "After the seed is withdrawn at round 00 (Figure 4b), Qwen3 rises to 68%68\\%, showing strong self-sustaining propagation.",
+      "locator": "§6.5 (RQ3), Figure 4b",
+      "denominator": {
+        "n_total": "153 tasks per cascade round (locked dataset row of Table 12: SWE-bench Verified tool-relevant pool, N=153)",
+        "n_valid": "153 tasks per round; per-round completed-task counts are not printed (E.4 defines ASPR over completed tasks and Wilson CIs use the cell-specific N)",
+        "how_counted": "Per-round ASPR is the fraction of that round's tasks whose authored stored skill reproduces the banner (§5.3 Algorithm 1: 'Within a round the agent works through the whole task pool'; E.4). D.5 confirms 153 task-turns per round: '0/765 opportunities per model' across rounds 1-5 = 5 x 153. Integer corroboration: 104/153 = 67.97% ~= 68% (Qwen3 round-5 removed condition), and 53/153 = 34.6% (round 0) gives ASPR5/ASPR0 = 1.96 ~= Table 11's 1.97."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The proposed counter-prompt reduces baseline ASPR from 20.3%-41.8% to <=1.8% across all models on SWE-bench Verified and Pro, with zero callbacks and no statistically significant task-completion loss.",
+      "metric": "ASPR (defended)",
+      "value": "≤1.8%",
+      "comparison": "20.3%-41.8% -> ≤1.8%",
+      "setting": "Four-line deployer system-prompt instruction (§A.2), all six models, headline env-exfiltration attack on SWE-bench Verified and Pro; every malware class, targeted family, and round-5 cascade endpoint stays <=2.6% (sole residual case 6.7% on Devstral's 15-task pytest family)",
+      "quote": "Across all models and SWE-bench Pro, the counter-prompt reduces baseline ASPR values ranging from 20.3%20.3\\% to 41.8%41.8\\% down to ≤1.8%\\leq\\!1.8\\%, with zero callbacks (Figure 7a).",
+      "locator": "§9.2 (RQ4), Figure 7a",
+      "denominator": {
+        "n_total": "153 (Verified) / 114 (Pro)",
+        "n_valid": "153 (Verified) / 114 (Pro)",
+        "how_counted": "Tool-relevant task subsets of SWE-bench Verified (N=153) and SWE-bench Pro (N=114) per §6.1"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Existing defenses miss the create-path: an oracle blocklist over all planted names flags 0 of 275 agent-authored infections, and Bandit's 85% catch on authored copies is a single egress signature evaded to 7% by a one-line rewrite.",
+      "metric": "detector catch rate on create-path infections",
+      "value": "0/275",
+      "comparison": "Bandit catch 85% -> 7%",
+      "setting": "Oracle name blocklist (seeded with all planted-skill and banner-helper names) and Bandit MEDIUM+ code scanner evaluated on planted seeds and agent-authored infections; SWE-bench Verified",
+      "quote": "Empirically, an oracle blocklist over the planted names flags 00 of 275275 authored infections, and Bandit’s 85%85\\% catch is the same egress signature, evaded to 7%7\\% by the one-line rewrite.",
+      "locator": "§9.1 (RQ4), Table 5",
+      "denominator": {
+        "n_total": "275 authored infections",
+        "n_valid": "275 authored infections",
+        "how_counted": "§9.1: oracle blocklist evaluated over the agent-authored infections accumulated in the runs"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "A single planted skill at a 0.4% poisoning rate already yields 19.6% ASPR, so hardening the planting itself (making admission harder) does not stop the attack.",
+      "metric": "ASPR (planted-skill count ablation)",
+      "value": "19.6%",
+      "comparison": null,
+      "setting": "DS-V4, headline configuration on SWE-bench Verified, planted-skill count swept from one to sixteen at fixed benign pool",
+      "quote": "Even a single seed, at a 0.4%0.4\\% poisoning rate, already yields 19.6%19.6\\%, so a defender cannot raise the bar by making the planting itself harder.",
+      "locator": "§7, Figure 6a",
+      "denominator": {
+        "n_total": "153",
+        "n_valid": "153",
+        "how_counted": "DS-V4 on SWE-bench Verified tool-relevant N=153 tasks (§6.1), single-seed condition"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The branching-process propagation model mismatches DS-V4: the reproduction-number proxy predicts a worm but the observed cascade collapses, due to a retrieval-crowding effect the model does not capture.",
+      "quote": "The notable model mismatch is DS-V4, where ρ^proxy\\hat{\\rho}^{\\mathrm{proxy}} predicts a worm but the cascade collapses (Table 11). Section D.5 attributes this to a crowding effect the branching model does not capture",
+      "locator": "§8 / §D.5"
+    },
+    {
+      "statement": "The definitive test of whether same-model non-infected authored skills are the specific crowding source behind the DS-V4/MiniMax decline is left to future work.",
+      "quote": "A definitive test of whether those same-model non-infected authored skills are the specific crowding source is left to future work.",
+      "locator": "§D.5"
+    },
+    {
+      "statement": "The Galton-Watson treatment idealizes the cascade: multi-parent retrieval collisions and finite-library saturation effects fall outside the branching approximation.",
+      "quote": "Multi-parent retrieval collisions and finite-library saturation effects are treated as deviations outside the branching approximation, captured only by the early-cascade / regime-direction predictions of Theorem 2.",
+      "locator": "§D.1"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "appendix_read_20261025: Appendices A-E (incl. previously-skimmed B, C, E) fully read in corpus; per-round cascade pool confirmed as N=153 via D.5 '0/765 opportunities per model across rounds 1-5' = 5 x 153",
+    "corpus_figures_caption_only: Figure 3/4/7 panel curves appear as captions only in the corpus; numeric curve values beyond those quoted in prose are not recoverable"
+  ]
+}

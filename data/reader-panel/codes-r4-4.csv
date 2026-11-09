@@ -1,0 +1,27 @@
+key,c1,c2,c3,c4,quote_c1,quote_c2,quote_c3,quote_c4
+2610.04083,qualitative,none,none,none,,,,
+2610.04195,qualitative,numeric,none,none,,roughly 1.4 ms per query,,
+2610.05943,none,none,none,none,,,,
+2610.07258,numeric,numeric,none,none,the governance cost is a 1313–1414 percentage-point reuse reduction,"lineage-gated retrieval trades at most 13.82​μ13.82\,\mus in absolute terms",,
+2610.07309,qualitative,none,qualitative,none,,,,
+2610.07639,numeric,none,numeric,none,with utility losses of 24.5 and 34.0 percentage points,,refusing startup in all 40 ON trials after the workspace was marked untrusted,
+2610.07645,none,none,none,none,,,,
+2610.07935,numeric,none,qualitative,none,AgentHarm benign drops from the base model’s 76.6 to 66.8,,,
+2610.09008,none,numeric,none,none,,six-way batching costs 32.1 ms versus 24.8 ms for one diagnostic,,
+2610.09832,none,qualitative,none,numeric,,,,adding retirement trims the library from 121 skills to 95
+2610.11008,none,none,none,none,,,,
+2610.11188,numeric,none,qualitative,none,pm accuracy dropping 66.3%→57.0%66.3\%\to 57.0\% (FC),,,
+2610.11270,none,none,numeric,none,,,"admitting 5,527 (94.0%) and rejecting 355 (6.0%)",
+2610.11781,none,numeric,none,none,,"limit of 2,048 completion tokens, two attempts, and a 30-second request timeout",,
+2610.13227,none,numeric,none,qualitative,,SkillRelayGuard averages 27.3K tokens and 91.5 seconds per case,,
+2610.13267,numeric,numeric,none,qualitative,an overly large amplification (k=25k=25) sharply degrades ACC to 32.40%,"requiring only 178.42178.42s of runtime and 46,48446{,}484 tokens",,
+2610.14431,none,none,none,qualitative,,,,
+2610.14488,numeric,numeric,none,none,"It completes 43 of 46 benign operations, with 8 approval prompts, and 4 of 7 workflows",A no-op brokered request has a median latency of 4.0 ms,,
+2610.14515,none,numeric,none,none,,token consumption increases by approximately 18.2%,,
+2610.14836,none,none,none,none,,,,
+2610.17544,numeric,numeric,numeric,numeric,Dropping without re-forming loses 9.89.8 points,in LLM calls it costs 0.290.29 more per query,1010–3535 false retirements per 10410^{4} (ours: 1.81.8–3.43.4),"each episode costs counters about 1,3501{,}350 stale answers, against 38.538.5"
+2610.17659,numeric,none,none,numeric,retain-set F1 dropping from 50.2% to 34.4%,,,GD reduces forget-set by 6.3%6.3\% while reducing retain-set by only 1.5%
+2610.17719,none,numeric,numeric,numeric,,the receipts for this build cost about $0.30,merge over-deletion rises from 10.5% to 26.3%,"merges 18.1% leaky [13.7, 23.5], summaries 41.3% leaky [32.5, 50.7]"
+2610.18052,numeric,none,qualitative,numeric,"preservation degrades with length for nearly every system, from 70.0 to 26.7 for Full Context",,,no system passes more than 1.5% of forget requests end to end
+2610.18792,none,none,none,none,,,,
+2610.19005,none,none,numeric,numeric,,,the over-blocking patch (8%): a repair that closes unauthorized access but also rejects legitimate requests,in 4% of the games attacker-installed code remains executable after the defender deploys a patch

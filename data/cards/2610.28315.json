@@ -1,0 +1,266 @@
+{
+  "arxiv_id": "2610.28315",
+  "title": "Disclosure Begets Disclosure: A Self-Reinforcing Privacy Loop in LLM Agents with Persistent Memory",
+  "screening_status": "核心研究",
+  "versions_read": [
+    "v2"
+  ],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "append-only session summaries m_s = m_{s-1} ⊕ σ(τ_s) given to the support agent at dialogue time (main format, MemoryBank-style); also update-based Mem0 v2.0.2 fact store and retrieval-based FAISS/bge-m3 top-5 summary store in Appendix F",
+    "operations_covered": [
+      "formation",
+      "update",
+      "retention",
+      "retrieval"
+    ]
+  },
+  "safety_property": {
+    "type": "confidentiality",
+    "statement": "持久记忆累积的记录最终能被正确推断出的用户个人属性值比例（经验性泄露）应在提供个性化的同时保持低位；本文表明在普通非对抗协助中、即使 agent 不被指示推断属性且用户被指令不披露，对话时咨询记忆仍使泄露随会话数上升，且理想化用户侧过滤也只能以放弃质量为代价降低泄露；由记忆/无记忆配对比较、分支分析和更强推断模型复核判定失效。",
+    "operationalized_as": "empirical leakage（Eq. 1）：在每 5 个会话的检查点，用支持模型（或更强推断模型 Gemini 3.1 Pro / Kimi K3）从完整累积记录一次性推断全部 24 个属性值的加权准确率，权重随属性间规范化互信息递减；响应质量由独立评估器按 helpfulness/coherence 两个五分制量表评分。"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "获得完整累积记录（会话摘要或存储的记忆）",
+      "对记录施加一个 LLM（可以是带推理的更强模型）来推断全部 24 个属性值",
+      "不掌握关于该用户的任何辅助数据"
+    ],
+    "assumptions": [
+      "agent 本身非对抗：其指令既不鼓励也不 discourage 推断或引出属性（§2.2, Appendix N.7）",
+      "循环在普通个性化协助中自然产生，无需对抗意图",
+      "无记忆运行同样累积自己的记录；两个设置都从各自完整记录做推断，差异仅来自记忆对对话内容的改变",
+      "用户由 2024 ACS PUMS 档案模拟；过滤条件下的用户被指令不陈述/收窄属性值"
+    ],
+    "not_covered": [
+      "对记忆的主动攻击（提取、外传、注入）——论文明确声明不提出攻击",
+      "对抗性引出（adversarial elicitation）由 agent 发起的情形",
+      "将记录与辅助数据结合的重识别",
+      "用户侧删除/撤销记忆中的值",
+      "跨用户或共享记忆",
+      "真实长期人类使用（仅 8 人试点）"
+    ]
+  },
+  "intervention": {
+    "name": "response-side instruction（响应侧指令；对照：理想化 direct/strict 用户轮过滤、user-side 与 write-time 匿名化）",
+    "mechanism_layer": "content",
+    "description": "在支持 agent 的指令（记忆块之后）附加一条简短指令：除非用户主动提起，不陈述、不预设、不请求确认用户的属性。对照干预包括把 Staab et al. (2025) 的对抗式匿名化应用于每条用户话语（user-side）或每条写入记忆前的摘要（write-time），以及两条理想化的用户轮过滤（direct/strict，strict 使用真值档案、整轮拒收，均严于可部署过滤）。"
+  },
+  "controls": [
+    {
+      "name": "no-memory setting（同样累积记录但不对话时咨询）",
+      "purpose": "baseline"
+    },
+    {
+      "name": "session-1 与开场轮安慰剂（记忆为空，两条件输入相同）",
+      "purpose": "negative-control"
+    },
+    {
+      "name": "direct filter / strict filter（理想化用户轮过滤）",
+      "purpose": "fair-comparison"
+    },
+    {
+      "name": "Staab et al. (2025) anonymization（user-side 与 write-time）",
+      "purpose": "baseline"
+    },
+    {
+      "name": "分支分析（同一历史分记忆/无记忆两臂）与单轮重放（去记忆块/仅删提及）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "Mistral Small 4 用户侧复现（Appendix E）及 Mem0/RAG 记忆格式（Appendix F）",
+      "purpose": "ablation"
+    }
+  ],
+  "results": [
+    {
+      "claim": "在多会话模拟中（两个开源支持模型平均、无过滤条件），对话时咨询记忆同时提高经验性泄露（58 vs 53，%）与响应质量（helpfulness 4.2 vs 3.1，coherence 4.5 vs 3.2），且四个支持模型上泄露差距随会话数增长并在后期每个模型上都成立（Figure 2）。",
+      "metric": "empirical_leakage",
+      "value": "leakage 53 vs 58 (%); helpfulness 3.1 vs 4.2; coherence 3.2 vs 4.5; mentions 31 vs 54 (%)",
+      "comparison": "helpfulness 4.2 vs 3.1; coherence 4.5 vs 3.2; mentions 54 vs 31 (%)（v1 以 0–1 比例呈现：0.58/0.53、0.54/0.31，v2 改为百分数，数据相同）",
+      "setting": "N=300 个 ACS PUMS 模拟用户 × 80 会话 × ≤10 轮；支持模型 Qwen3.8-27B 与 DeepSeek V4-Flash 的平均（Table 19，Table 20 分模型）；Claude Sonnet 5 扮演用户 agent/裁判/评估器；无过滤",
+      "quote": "| Condition | Leakage | Helpfulness | Coherence | Mentions | | No memory | 53 | 3.1 | 3.2 | 31 | | Memory | 58 | 4.2 | 4.5 | 54 |",
+      "locator": "§3.2; Appendix L Table 19",
+      "denominator": {
+        "n_total": "300 profiles × 24 weighted attributes (Eq. 1)",
+        "n_valid": null,
+        "how_counted": "empirical leakage = 属性值预测的加权准确率（Eq. 1, §2.6）；Table 3 为两个开源支持模型的平均；Mentions 为带提及回应的份额"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "响应侧指令（不陈述/不预设/不请求确认属性）把泄露降回无记忆水平（53，%）并保留大部分质量（helpfulness 4.3 与记忆条件持平、coherence 4.2），且把提及率切到 12（%），优于写入时匿名化（51/4.0/3.5/39，损失大部分 coherence 增益）。",
+      "metric": "empirical_leakage / helpfulness / coherence / mentions份额",
+      "value": "leakage 53 (%), helpfulness 4.3, coherence 4.2, mentions 12 (%) (response-side instruction)",
+      "comparison": "vs write-time anonymization 51 / 4.0 / 3.5 / 39（v1：0.51/4.0/3.5/0.39）",
+      "setting": "两个开源支持模型（Qwen3.8-27B, V4-Flash）× 300 profiles，记忆设置无过滤；指令附加于支持 agent 指令（Appendix M）；Table 19 平均（Table 20 分模型）",
+      "quote": "| Write-time anonymization | 51† | 4.0† | 3.5† | 39† | | Agent response | | Response-side instruction | 53",
+      "locator": "§3.5; Appendix L Table 19",
+      "denominator": {
+        "n_total": "300 profiles × 24 weighted attributes (Eq. 1)",
+        "n_valid": null,
+        "how_counted": "同 Table 3：leakage 为加权准确率（Eq. 1）；Mentions 为带提及回应的份额"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "记忆只在 agent 回应之后的后续轮次改变用户披露：后续轮 value-level 披露率为 18.5% vs 12.1%（差 6.4†），而 session-1 安慰剂（14.3% vs 13.9%）与开场轮（21.2% vs 20.5%）两条件相同。",
+      "metric": "disclosure_rate（用户轮 value-level 披露份额）",
+      "value": "18.5% vs 12.1% (later turns)",
+      "comparison": "placebo: session 1 14.3% vs 13.9% (diff 0.4); opening turn 21.2% vs 20.5%",
+      "setting": "无过滤运行、全部四个支持模型；后续轮次按合并轮位分布标准化（Appendix J.3）；裁判为两个 LLM judge，经人工校验（Appendix D.2）",
+      "quote": "| Session 1 (placebo) | 14.3 | 13.9 | 0.4 | | Opening turn | 21.2 | 20.5 | 0.7 | | Later turns | 18.5 | 12.1 | 6.4",
+      "locator": "§3.3 Table 1",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "表行单位：'Share of user turns with a value-level disclosure (%)'，后续轮按合并轮位分布标准化（Appendix K.3）；论文未给出轮数原始计数"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "循环自我强化：删除 agent 回应中的属性提及后，该属性后续首次披露的观测降幅约为单轮效应预测的两倍（all-removed 组观测/预测比 2.3 无过滤、2.0 直接过滤；仅删显式提及为 1.6/1.4，均显著；v2 以 1 位小数呈现同一比值）。",
+      "metric": "observed/predicted 首次披露降幅比（计数 per 1,000 attributes）",
+      "value": "all removed 2.3 / 2.0 (unfiltered / direct); explicit removed 1.6 / 1.4",
+      "comparison": "v2 Table 2 以 1 位小数报告同一比值（v1：2.28/2.00 与 1.60/1.39）；未触及组 first cue-level 计数 71（unfiltered）/40（direct），all removed 49/26",
+      "setting": "从会话 40 分支的记忆运行，会话 41-50；Mistral Small 4 编辑模型按属性组删除提及；直接过滤下按首次 cue-level 披露计数（Appendix K）",
+      "quote": "| Observed / predicted | Explicit removed | 1.6† | 1.4† | | All removed | 2.3",
+      "locator": "§3.4 Table 2; Appendix K Table 16（单轮预测）",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "表题：'Counts are per 1,000 attributes over sessions 41 to 50'；比值为观测降幅除以单轮重放预测降幅（Appendix K，Table 15/16）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "机制证据：38.1% 的记忆条件化回应携带来自更早会话的属性值（无记忆条件按构造为 0.0%），即记忆→回应链路把早期值向前携带（多为预设形式）。",
+      "metric": "mention_share（带提及回应的来源份额）",
+      "value": "38.1% vs 0.0%",
+      "comparison": "difference 38.1",
+      "setting": "无过滤运行、全部四个支持模型、会话 40-80，由 Mistral Small 4 标注模型标记提及来源（Appendix J）",
+      "quote": "| Mention from an earlier session only | 38.1 | 0.0 | 38.1",
+      "locator": "§3.3 Table 1",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "表行单位：'Share of responses with a mention whose source is (%)'（Appendix K.3：response rows 为含至少一例的回应份额）"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "分支分析（因果分离）：从同一共同历史分支后，继续咨询记忆的一臂在每个分支点都推断出更多此前未推断的属性（b=50 时 2.4 vs 1.0；b=10 时 1.2 vs 0.8），差距不源于经过的会话数。（该分支对照实验在 v2 中已整体移除，v2 以 Figure 2 的会话曲线承载「差距随会话数增长」的陈述）",
+      "metric": "首次正确推断的属性数（分支后 10 会话，per profile）",
+      "value": "n/a (experiment removed in the current source version; see migration-C.md)",
+      "comparison": "1.2 vs 0.8 (branch point 10)",
+      "setting": "无过滤记忆运行在 b∈{10,...,70} 分支为记忆/无记忆两臂，同请求同历史；对 profiles 与四个支持模型平均（Appendix G）",
+      "quote": null,
+      "locator": "removed in source v2 (was Appendix G Table 7 in v1; see extraction/derived/migration-C.md)",
+      "denominator": null,
+      "is_primary_result": false,
+      "migration_status": "removed",
+      "migration_note": "v2 无此实验：附录 G 已改为 Stronger Inference Models（Table 10），全文无 'Memory arm'/'No-memory arm'/'branch point'，'branch' 仅指缓解实验的会话 40 分支；图 1–7 均不含分支设计。搜索字符串清单见 migration-C.md 表二第 5 行。"
+    },
+    {
+      "claim": "更强推断模型从相同记录恢复更多属性且记忆-无记忆差距保持（四模型均值 66.3 / 64.8 vs 自推断 59.3，%；差距 +7.8 / +7.5 vs +6.0），故主实验用支持模型自推断低估而非高估记录的暴露程度。",
+      "metric": "empirical_leakage（最终检查点，四支持模型均值）",
+      "value": "66.3 and 64.8 vs 59.3 (%)",
+      "comparison": "memory vs no-memory gap: +7.8 / +7.5 (stronger inference) vs +6.0 (self)（v1 以 0–1 比例呈现：0.66/0.65 vs 0.59，+0.08/+0.07 vs +0.06；同一数据）",
+      "setting": "对未过滤运行的最终检查点记录重跑推断；推断模型 Gemini 3.1 Pro 与 Kimi K3（均启用推理，来自未扮演其他角色的开发者），对照支持模型自推断（Appendix G, Table 10）",
+      "quote": "| Mean | 59.3 | 53.3 | +6.0† | 66.3 | 58.5 | +7.8† | 64.8 | 57.3 | +7.5",
+      "locator": "Appendix G Table 10",
+      "denominator": {
+        "n_total": "300 profiles × 24 weighted attributes (Eq. 1)",
+        "n_valid": null,
+        "how_counted": "s=80 最终检查点完整记录上的加权推断准确率，四支持模型平均（Appendix I）"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "人类试点（8 名参与者、每人 30 会话、记忆开关按 5 会话块交替、被指令不陈述属性）：全部八名参与者在记忆开启时有更多属性被首次正确推断（单侧符号检验 p=0.004），与模拟方向一致；八人中有七人至少有一个属性被正确推断且本人不记得陈述过。",
+      "metric": "one-sided sign test p 值（首次推断落在记忆开/关会话的属性数比较）",
+      "value": "p=0.004, all eight participants",
+      "comparison": null,
+      "setting": "人类试点：8 名成人参与者与 DeepSeek V4-Flash-0731 支持 agent 对话，记忆访问按 5 会话块交替，8 个目标属性，从累积摘要推断（Appendix E）",
+      "quote": "exceeds GoffG^{\\mathrm{off}} for all eight participants (one-sided sign test, p=0.004p=0.004), in the same direction as in simulation, and seven of the eight had at least one correctly inferred attribute that they did not recall stating.",
+      "locator": "Appendix E (Table 6)",
+      "denominator": {
+        "n_total": "8 participants × 8 attributes",
+        "n_valid": null,
+        "how_counted": "G^on 与 G^off 为首次正确预测落在记忆开/关会话的属性数（Appendix J Measures）"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "拒绝讨论不能避开循环（直接过滤下，以健康保险为例）：真实值属敏感集合（无医保）时用户更常拒绝（21 vs 7，%；差 14†），且拒绝后下一次预测向敏感值偏移——集合内者更常被猜对（41 vs 27，%），集合外者更常被猜错（71 vs 90，%），净偏移 33。",
+      "metric": "refusal_rate（及拒绝后下一检查点预测正确率）",
+      "value": "refusal rate 21 vs 7 (%; in-set vs not-in-set, difference 14)",
+      "comparison": "correct after refusal: 41 vs 27 (in set), 71 vs 90 (not in set); change 33（v1 以 0–1 比例呈现同一数据：0.21/0.07/0.14/0.27/0.41/0.90/0.71/0.33）",
+      "setting": "直接过滤记忆运行；五个敏感值集合（无医保、非公民、有残疾、失业、最低两档收入）在标注前固定；拒绝由用户 agent 自选，故为关联而非因果（Appendix K）",
+      "quote": "| Health insurance | not covered | 21 | 7 | 14† | 27 | 41 | 90 | 71 | 33",
+      "locator": "§3.4 Table 3; Appendix K Table 18",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Table 22：拒绝率为真实值在/不在集合中的档案间的比较；正确率为该属性被提及的会话中拒绝/不拒绝后下一检查点预测正确份额（Appendix L.3）；原始计数未报告"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "人类试点只指示方向，其比率能否推广到大量真实用户尚待测量。",
+      "quote": "A human pilot points in the same direction, although whether its rates hold across many users remains to be measured.",
+      "locator": "§5 Conclusion"
+    },
+    {
+      "statement": "实验只有 80 个会话，相对真实部署助手的长期使用偏短，泄露差距随使用时长增大。",
+      "quote": "The size of the gap thus depends on how long memory is used, and our 80 sessions are short compared with long-term use of a deployed assistant.",
+      "locator": "§3.2 'Memory increases empirical leakage'"
+    },
+    {
+      "statement": "每种替代记忆格式只是单一实现的单一配置，其他抽取提示或检索深度/查询/存储单元可能改变效应大小。",
+      "quote": "Each format is one configuration of one implementation, and other extraction prompts for Mem0, or other retrieval depths, queries, or stored units for retrieval, may change the size of the effects.",
+      "locator": "Appendix I 'Scope.'"
+    },
+    {
+      "statement": "人类试点仅 8 人，只能指示效应方向而非大小。",
+      "quote": "With eight participants, the pilot indicates the direction of the effect rather than its size.",
+      "locator": "Appendix E"
+    },
+    {
+      "statement": "拒绝行为由用户 agent 自选而非随机分配，相关比较只是关联；用户模型对敏感值的看法未必与真实用户一致。",
+      "quote": "Refusals are chosen by the user agent rather than assigned, so these comparisons are associations, and which values it declines to discuss reflects the user model’s own view of what is sensitive, which need not match that of human users.",
+      "locator": "Appendix K"
+    },
+    {
+      "statement": "各属性候选值空间从 2 到 200+ 类不等，跨属性的绝对准确率不可比，泄露只能通过条件间比较解释。",
+      "quote": "Because value spaces range from 2 to over 200 categories, per-attribute accuracies are not comparable across attributes, and we interpret empirical leakage through comparisons between conditions.",
+      "locator": "Appendix A.2"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": null,
+    "data": "profiles drawn from public 2024 ACS PUMS (Appendix B); attribute encodings/weights in Appendix A; all prompts verbatim in Appendix N; no code release stated",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "appendix",
+      "figures"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominators_given_as_units_not_counts",
+    "leakage_vs_session_curves_only_in_figures_numeric_values_from_tables",
+    "simulated_users_primary_evidence_human_pilot_n_8"
+  ]
+}

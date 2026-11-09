@@ -1,0 +1,157 @@
+{
+  "arxiv_id": "2608.09732",
+  "title": "ColluSkill: Adversarial Cross-Skill Composition for Evading Agent Skill Scanners",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "skill",
+    "scope": "mixed",
+    "carrier": "Independently packaged SKILL.md skill folders (instructions, scripts, resources) installed into agent environments and distributed via skill marketplaces (OpenClaw, ClawHub); the risk carrier is the ordered composition of multiple installed skills",
+    "operations_covered": ["formation", "update", "retention"]
+  },
+  "safety_property": {
+    "type": "policy-compliance",
+    "statement": "Every skill admitted into an agent environment must not compose with other installed skills into a harmful workflow. Existing per-skill scanners fail this property against ColluSkill (96.0% average ASR over the 200-chain dataset), and ChainGuard only partially restores it (ASR reduced to 22.5%, not zero, while 99.5% of benign workflows still pass).",
+    "operationalized_as": "Attack success rate (ASR): the fraction of attack chains for which all three sub-skills pass the scanner (a chain is counted as detected if any sub-skill is flagged); benign workflow pass rate measures defense usability."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Crafts multiple independently packaged, individually plausible sub-skills whose ordered composition reconstructs the full malicious payload",
+      "Black-box oracle access to the target skill scanners: submits flagged sub-skills and iteratively rewrites them using scanner feedback",
+      "Uses an attacker LLM (GPT-5.5) for chain planning and refinement",
+      "Can publish skills so that victim agents install several attacker-supplied skills in one environment"
+    ],
+    "assumptions": [
+      "Existing scanners inspect each skill in isolation, so a chain passes only if no single sub-skill is flagged",
+      "The victim agent installs several attacker-supplied skills and executes them in one workflow with artifact passing and execution handoffs",
+      "ChainGuard is not given the true attack-chain membership and must infer cross-skill relations from the installed-skill context",
+      "All attacks and four LLM-based scanners use the same underlying model (GPT-5.5) so differences reflect scanner behavior"
+    ],
+    "not_covered": [
+      "Adaptive attackers that use ChainGuard itself as refinement feedback (ColluSkill was refined only against the six third-party scanners)",
+      "Runtime defenses after installation; only installation-time blocking is studied",
+      "Collusion among multiple real skill authors or insider threats",
+      "Human review and marketplace governance processes"
+    ]
+  },
+  "intervention": {
+    "name": "ColluSkill (attack framework) and ChainGuard (context-aware chain-level scanner)",
+    "mechanism_layer": "content",
+    "description": "ColluSkill decomposes a malicious payload into three interdependent sub-payloads embedded in independently packaged SKILL.md sub-skills, uses LLM-based chain planning to preserve chain-level attack semantics through contextual dependencies, artifact passing, and execution handoffs, and iteratively rewrites flagged sub-skills from scanner feedback. ChainGuard counters by scanning each candidate skill together with all skills already installed in the environment, reconstructing cross-skill dependencies, artifact flows, and capability compositions, and blocking the candidate skill when a chain-level risk is identified."
+  },
+  "results": [
+    {
+      "claim": "Against six existing skill scanners, ColluSkill attains the highest average ASR (96.0%), showing that isolated per-skill scanning largely misses composition-based malicious behavior.",
+      "metric": "ASR",
+      "value": "96.0%",
+      "comparison": null,
+      "setting": "Six skill scanners (CISCO, SkillFortify, Auditor, SlowMist, Vetter, SkillSpector); attacks generated with GPT-5.5; 200-payload multi-skill dataset",
+      "quote": "Table 1 reports the ASR of different skill-based attacks against the evaluated skill scanners. Overall, ColluSkill achieves the highest ASR on almost all scanners, with an average ASR of 96.0%.",
+      "locator": "Experiments / Main results, Table 1",
+      "denominator": {
+        "n_total": "200 attack chains (600 generated sub-skills)",
+        "n_valid": null,
+        "how_counted": "An attack is counted as successful only when all three sub-skills pass the scanner."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Context-aware chain-level scanning (ChainGuard) reduces ColluSkill's average ASR from 96.0% to 22.5%, but not to zero.",
+      "metric": "ASR",
+      "value": "22.5%",
+      "comparison": "96.0% -> 22.5%",
+      "setting": "ChainGuard scanning each candidate skill with full installed-skill context; same 200-chain dataset; underlying model GPT-5.5",
+      "quote": "The average ASR of ColluSkill against existing skill scanners is 96.0%, while the ASR drops to 22.5% under ChainGuard.",
+      "locator": "Experiments / Main results (ChainGuard), Table 1 and Table 4",
+      "denominator": {
+        "n_total": "200 attack chains (600 generated sub-skills)",
+        "n_valid": null,
+        "how_counted": "An attack is counted as successful only when all three sub-skills pass the scanner."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Adding installed-skill context to ChainGuard barely hurts benign workflows: the benign pass rate only decreases from 99.7% to 99.5%.",
+      "metric": "benign_workflow_pass_rate",
+      "value": "99.5%",
+      "comparison": "99.7% -> 99.5%",
+      "setting": "ChainGuard with vs without full installed-skill context on benign workflows",
+      "quote": "At the same time, installed-skill context has little effect on benign workflows. The pass rate decreases only from 99.7% to 99.5%.",
+      "locator": "ChainGuard Defense Evaluation, Table 4",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "ColluSkill's gain does not come from naive payload splitting: chain planning raises the average ASR from 36.7% to 68.2%, and scanner-feedback refinement further raises it to 96.0%.",
+      "metric": "ASR",
+      "value": "96.0%",
+      "comparison": "36.7% -> 68.2% -> 96.0%",
+      "setting": "Ablation over Naive Split / Chain Planning / Full ColluSkill on the same six scanners and 200-chain dataset",
+      "quote": "Chain planning increases the average ASR from 36.7% to 68.2%, and scanner-feedback refinement further raises it to 96.0%.",
+      "locator": "Introduction; Ablation study, Table 3",
+      "denominator": {
+        "n_total": "200 attack chains (600 generated sub-skills)",
+        "n_valid": null,
+        "how_counted": "An attack is counted as successful only when all three sub-skills pass the scanner."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The first scanner-feedback refinement iteration delivers the largest stealth gain, raising the average ASR from 64.9% to 84.7%, with diminishing returns after about five iterations.",
+      "metric": "ASR",
+      "value": "84.7%",
+      "comparison": "64.9% -> 84.7%",
+      "setting": "Average ASR across the evaluated scanners at each refinement iteration (Figure 3)",
+      "quote": "Before refinement, the ASR is only 64.9%. After the first refinement iteration, it quickly increases to 84.7%.",
+      "locator": "Effect of LLM refinement iterations, Figure 3",
+      "denominator": {
+        "n_total": "200 attack chains (600 generated sub-skills)",
+        "n_valid": null,
+        "how_counted": "In the refinement experiment, we report the average ASR across the evaluated scanners at each iteration."
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "ColluSkill attack chains execute at runtime across three coding agents and three model backbones, with chain activation success rates ranging from 58.5% to 92.5% (highest and most stable on OpenCode).",
+      "metric": "chain_activation_success_rate",
+      "value": "58.5% to 92.5%",
+      "comparison": "OpenCode 87.5%-92.5%; Claude Code 62.0%-78.2%; Codex 58.5%-72.0%",
+      "setting": "OpenCode, Claude Code, Codex agents with GPT-5.5, DeepSeek-V4-Pro, GLM-5.2 model backbones",
+      "quote": "As shown in Table 2, ColluSkill achieves the highest and most stable activation rates on OpenCode, ranging from 87.5% to 92.5%. The rates range from 62.0% to 78.2% on Claude Code and from 58.5% to 72.0% on Codex.",
+      "locator": "Runtime Chain Activation Study, Table 2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Non-adversarial multi-skill composition alone is insufficient for scanner evasion: SCRBench reaches only 34.8% average ASR versus 96.0% for ColluSkill.",
+      "metric": "ASR",
+      "value": "96.0%",
+      "comparison": "34.8% vs 96.0%",
+      "setting": "SCRBench (multi-skill baseline) vs ColluSkill on the same six skill scanners",
+      "quote": "SCRBench achieves an average ASR of 34.8%, compared with 96.0% for ColluSkill.",
+      "locator": "Experiments / Main results, Table 1",
+      "denominator": {
+        "n_total": "200 attack chains (600 generated sub-skills)",
+        "n_valid": null,
+        "how_counted": "An attack is counted as successful only when all three sub-skills pass the scanner."
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "ChainGuard does not reduce ColluSkill's ASR to zero, so multi-skill attacks remain an open defense problem.",
+      "quote": "Still, ChainGuard does not reduce the ASR to zero, which means that multi-skill attacks remain a challenging defense problem in practice.",
+      "locator": "Experiments / Main results (ChainGuard discussion)"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "figures"],
+    "complete": false
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "appendix_referenced_but_not_in_corpus"
+  ]
+}

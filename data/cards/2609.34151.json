@@ -1,0 +1,289 @@
+{
+  "arxiv_id": "2609.34151",
+  "title": "Self-Evolving Agents via Likelihood-Guided Tool-Space Optimization",
+  "screening_status": "必要背景",
+  "versions_read": [
+    "v1"
+  ],
+  "object": {
+    "what_persists": "skill",
+    "scope": "mixed",
+    "carrier": "每个 recurring task 维护一个持久任务专属工具空间 E_t⊆S（保留工具名清单，TGB/PRUNING 下为可调用菜单，BFCL 下为 documentation demotion 的全文档工具集）及其运行分 I~_t(s)（对 leave-one-out 似然分 I_x(s) 做 EMA 累积，α=0.3），存储为 deployment state：'The persistent state of a task is its running scores and the resulting list of tool names; no model parameter or prompt is stored'（B.3）。模型参数 p_θ 全程冻结。空间在同一 task 的后续请求间复用（跨请求/会话），并随任务到达累积为集合 {E_1,…,E_t}（跨任务，Eq. 5）；作者定位：'LOTS stores it as the executable tool space the model is served'（Appendix A，与存文本记忆/技能库的系统相对）。",
+    "operations_covered": [
+      "formation",
+      "update",
+      "retention",
+      "retrieval",
+      "revocation"
+    ]
+  },
+  "safety_property": {
+    "type": "none",
+    "statement": "论文不以任何安全属性为目标：评估的是任务准确率与上下文/服务 token 成本。Ethics statement 明确划界：实验'不建立自主执行的安全性'，likelihood 工具分只度量模型对已生成答案的支持度，'不认证其正确性或工具的安全性'，实际执行需要适当的工具权限与监督。对综述的作用：作为机制背景论文，展示'工具空间本身作为持久可进化状态'这一 what_persists 实例的 formation/update/retention/retrieval/revocation 全套操作（本文称 persistent task-specific evolution）；其状态持久、跨请求复用、可撤销（top-K 剪枝）且无需标签的机制与综述关注的记忆安全机制同构，但本文未评估任何攻击、防御或失效后果。",
+    "operationalized_as": null
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "任务以 recurring task types 流式到达，任务指派来自 benchmark metadata（TGB families / BFCL API classes / GTA-Atomic annotated types）；Appendix D.1 证明可换成无监督请求聚类（TGB 上 k-means k=10 完全恢复 family 划分）",
+      "fitting 时需要访问服务模型的 token 似然做 teacher-forced 打分；'Since likelihood access is needed only at fitting time, a space fitted with an open-weight model could also serve closed API models'（§4.4）",
+      "工具为良性且行为确定/可执行（TGB 工具确定性执行；GTA-Atomic 走官方 harness 与可执行工具服务器）；正确性标签仅用于预算 K 的选择，评分本身不用标签",
+      "每次更新冻结模型已生成的输出 y_x，仅做 leave-one-out 上下文干预（移除该工具的证据并重执行依赖链），不生成替代答案（B.2）",
+      "贪心解码、关闭 thinking、方法间共享 fitting/evaluation 划分以降低采样方差（§4.1）"
+    ],
+    "not_covered": [
+      "不建立自主执行的安全性：'they do not establish the safety of autonomous execution'（Ethics statement）",
+      "likelihood 分数不认证答案正确性也不认证工具安全，论文未考虑恶意/被投毒工具、被操纵 trace 或对工具空间的对抗操纵",
+      "Theorem 1 的界只覆盖单批 common-menu 与 fixed-output 似然目标：'The analysis covers one common-menu batch and the fixed-output objective, not running scores across menus or execution accuracy'（E.1）",
+      "聚类路由结论限于 TGB 模板化请求流：'not that real request streams separate as cleanly'（D.1）",
+      "不正确输出下评分的鲁棒性依模型与 retention 规则而异，且 pooled 诊断不覆盖 per-task top-K 协议（E.5）",
+      "registry 扩容时打分成本超线性增长（15→120 工具：176 s→8,158 s，单卡 L40S），论文未讨论更新风暴/成本上限治理（F.1）"
+    ]
+  },
+  "intervention": {
+    "name": "LOTS（Likelihood-Only Tool Scoring）：从输出经验进化持久任务专属工具空间",
+    "mechanism_layer": "architecture",
+    "description": "对每个 recurring task c_t：(1) Serve——在当前候选空间下服务请求批次并记录 trace (h_x, y_x)；(2) Score——冻结已生成输出 y_x，对每个暴露且可打分的工具 s 构造移除其证据的干预上下文 h_x^{-s}（TGB 上重执行依赖链、下游工具收到错误；BFCL 上删除调用消息与观测；GTA 上删候选输出行），以 I_x(s)=L(y_x|h_x)−L(y_x|h_x^{-s}) 打分（B.2）；(3) Aggregate——任务内对提供证据的请求求均值得 I~_t(s)，跨批次按 EMA 更新 running score（Eq. 9）；(4) Prune——按 running score 取 Top-K 形成持久空间 E_t 并存储复用，未被评分的工具不补位，离开空间的工具可凭 running score 回归（B.3）；(5) Deploy——后续请求直接读该任务空间，不再逐请求检索/排序（amortized selection）。变体：BFCL 用 documentation demotion（全部工具保持可调用，仅文档降级）；任务指派可用无监督聚类替代 metadata（D.1）。理论：Theorem 1 证明 bounded interactions 下 Top-K 选择对 fixed-output 似然目标 F 的近似误差 ≤ C(r,2)β、选择间隙 ≤ r(r−1)β（§3.2/E.1）。"
+  },
+  "controls": [
+    {"name": "Keep all（全 registry 服务）", "purpose": "baseline"},
+    {"name": "No tools（空菜单）", "purpose": "negative-control"},
+    {"name": "Random（与 LOTS 空间等大小的随机子集；固定预算实验中同 K）", "purpose": "baseline"},
+    {"name": "Search-based：BM25 / Dense(BGE) / Tool2Vec（描述相似度，不看输出）", "purpose": "baseline"},
+    {"name": "LLM as router / Jev（逐请求按描述选择）", "purpose": "baseline"},
+    {"name": "TTO† / Beam Search†（用 fitting 正确性标签的输出感知搜索）", "purpose": "baseline"},
+    {"name": "Oracle（gold 工具注记 / No-API oracle / gold oracle；标注参考非上界）", "purpose": "positive-control"},
+    {"name": "Trace judge（LLM 判断替代似然分，同聚合同预算，Table 17）", "purpose": "ablation"},
+    {"name": "Per-candidate generation / gold-answer scoring / τ=0 变体（Table 14）", "purpose": "ablation"},
+    {"name": "Re-execute vs evidence-only 删除操作（Table 18）", "purpose": "ablation"},
+    {"name": "C1 单簇 / C2 随机划分路由对照（Table 10）", "purpose": "negative-control"},
+    {"name": "size-matched random / union of exposed tools 更新规则（Table 13）", "purpose": "ablation"},
+    {"name": "固定预算 K∈{2,4} 配对比较 + family-stratified paired bootstrap（Table 9）", "purpose": "fair-comparison"}
+  ],
+  "results": [
+    {
+      "claim": "TGB 上 LOTS 相对全 15 工具菜单（Keep all）在全部 8 个受评模型上提升，平均保留 2.8–6.8/15 个工具，提升幅度 3.8–25.0 个 accuracy 点；限定条件：每族一个拟合空间、80 fitting/320 evaluation 请求、贪心解码。",
+      "metric": "accuracy（TGB，对 Keep all 的提升）",
+      "value": "+3.8 to +25.0 accuracy points",
+      "comparison": "Keep all → LOTS：+3.8 to +25.0 accuracy points",
+      "setting": "TGB（4,000 请求、10 families、7 链工具+8 干扰工具）；8 模型（Qwen2.5-3B/7B/14B、Llama3.1-8B、Mistral-7B、Qwen3.5-9B、Qwen3-8B、Phi4-14B、Gemma4-12B）；每族 fitted space vs 15 工具全菜单；thinking 关闭、贪心解码",
+      "quote": "on TGB, a controlled compositional benchmark, LOTS keeps 2.8 to 6.8 of 15 tools on average and improves all eight evaluated models over serving every tool, by 3.8 to 25.0 accuracy points",
+      "locator": "§1 Introduction",
+      "denominator": {
+        "n_total": "10 families × 320 evaluation requests = 3,200",
+        "n_valid": "3,200",
+        "how_counted": "§4.1：每族 80 fitting + 320 evaluation；Table 19 caption：'Accuracy is averaged across ten task families, using 320 evaluation requests per family'（Table 1 的 LOTS 行与 Table 19 Top-K 列一致，82.9=0.829）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "TGB 上受无关工具影响最大的模型收益最大：Qwen3-8B 由 0.565 升至 0.815、Mistral-7B 由 0.464 升至 0.658（Keep all → LOTS）。",
+      "metric": "accuracy（TGB）",
+      "value": "0.815 (Qwen3-8B)",
+      "comparison": "0.565 → 0.815 (Qwen3-8B); 0.464 → 0.658 (Mistral-7B)",
+      "setting": "TGB，Keep all（全 15 工具菜单）vs LOTS 任务专属空间；Qwen3-8B 与 Mistral-7B；每族一个 fitted space；Table 1 对应行 56.5→81.5、46.4→65.8",
+      "quote": "The gains are largest on models most affected by irrelevant tools: accuracy rises from 0.5650.565 to 0.8150.815 on Qwen3-8B and from 0.4640.464 to 0.6580.658 on Mistral-7B.",
+      "locator": "§4.2 Table 1",
+      "denominator": {
+        "n_total": "10 families × 320 evaluation requests = 3,200",
+        "n_valid": "3,200",
+        "how_counted": "§4.1：每族 80 fitting + 320 evaluation；Table 19 caption：accuracy averaged across ten task families, 320 evaluation requests per family"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "BFCL v4 多轮函数调用上 LOTS 在 5 模型中 3 个给出最优空间，其余 2 个与最优（Jev）差 ≤0.21 点：Qwen3-4B 达 28.12%（最强基线 Dense 25.62%），Gemma4-12B 达 28.75%（Jev 28.96%）；LLM router 在全部 5 模型上落后 LOTS 1.5–19.6 点。",
+      "metric": "accuracy（BFCL v4 multi_turn）",
+      "value": "28.12%",
+      "comparison": "28.12% (LOTS) vs 25.62% (Dense) on Qwen3-4B; 28.75% (LOTS) vs 28.96% (Jev) on Gemma4-12B",
+      "setting": "BFCL v4 multi_turn_base（GorillaFileSystem/TradingBot/TravelAPI/VehicleControlAPI 四类）；documentation demotion（全部工具可调用，仅 top-K 全文档）；每类 10 records fitting、40 evaluation；3 seeds 均值",
+      "quote": "LOTS gives the best space on three of the five models and is within 0.21 points of the best, Jev, on the other two: on Qwen3-4B it reaches 28.12% against 25.62% for Dense, the strongest baseline there, and on Gemma4-12B it reaches 28.75% against 28.96% for Jev.",
+      "locator": "§4.2 Table 2",
+      "denominator": {
+        "n_total": "160 records",
+        "n_valid": "160",
+        "how_counted": "Table 2 caption：每类前 10 records fit、其余 40 records evaluate（4 类共 160 records），结果为 3 seeds 均值；整条 multi-turn record 全对才计成功"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "GTA-Atomic（ReAct 智能体+可执行工具）上 LOTS 在 7 模型中 6 个胜过 Keep all：Qwen3-8B 10.71%→22.32%、Qwen2.5-7B 7.14%→14.29%（与 Beam Search 打平）；唯一反例 Qwen2.5-14B 为 8.04% vs 7.14%。限定：用裁剪后空间拟合早期请求、执行后续请求。",
+      "metric": "accuracy %（GTA-Atomic，ReAct 执行；Table 3 数值单位为 %）",
+      "value": "22.32 (accuracy %)",
+      "comparison": "10.71 → 22.32 (Qwen3-8B); 7.14 → 14.29 (Qwen2.5-7B)",
+      "setting": "GTA-Atomic 三类型（read_arith/count_arith/web_fact，math_eq 不用）pooled 112 评测请求；official harness + 可执行工具服务器；pruning 变体；每模型一次 serving session",
+      "quote": "LOTS improves over Keep all on six of the seven models, with the largest gains on Qwen3-8B, from 10.7110.71 to 22.3222.32, and Qwen2.5-7B, from 7.147.14 to 14.2914.29, where it ties Beam Search; Qwen2.5-14B is the one model where Keep all stays ahead (8.048.04 against 7.147.14).",
+      "locator": "§4.2 Table 3",
+      "denominator": {
+        "n_total": "112 evaluation requests",
+        "n_valid": "112",
+        "how_counted": "§4.1：'Table 3 reports accuracy over the 112 evaluation requests of the three types pooled, from one serving session per model'（注：read_arith 65+web_fact 35+count_arith 30=130 与 112 不完全对账，math_eq 17 不用；以论文原话 112 为准）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "任务流式到达时 LOTS 构造并保留各任务空间，全程高于 Keep all，stream 结束 credited accuracy 0.87 vs 0.49（Qwen2.5-7B，120 工具 registry）；BFCL 上四类依次到达时全部改善（22.3% vs 17.7%）——空间作为持久状态跨请求/跨任务保留。",
+      "metric": "credited accuracy（task-arrival stream）",
+      "value": "0.87",
+      "comparison": "0.87 (LOTS) vs 0.49 (Keep all)",
+      "setting": "TGB task-arrival stream：8 families 陆续到达（图示 7/8）、每批 4 请求、registry 120 工具（15 authored+105 distractors）、ε=0.25、α=0.3、各家族用其 120-tool fit 的预算；Qwen2.5-7B",
+      "quote": "LOTS remains above Keep all throughout the stream and finishes at 0.870.87 versus 0.490.49.",
+      "locator": "§4.3 Figure 3",
+      "denominator": {
+        "n_total": "7 families × 320 evaluation requests",
+        "n_valid": "同左",
+        "how_counted": "§4.3：A_t=(1/T)Σ_j Acc(c_j)——对已到达任务在其各自 320 题固定评测集上的准确率取均值；Figure 3 为 Qwen2.5-7B 单次 stream（多 seed 版本见表 12）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "任务到达流在 7 模型 × 3 seeds 共 21 次运行中 LOTS 全部以高于 Keep all 收尾，且服务 prompt tokens 约为 Keep all 的三分之一（不含打分成本）——持久空间跨模型稳健。",
+      "metric": "credited accuracy（win count over runs）",
+      "value": "21 of 21 runs",
+      "comparison": "LOTS finishes above Keep all in 21 of 21 runs (seven models, three seeds)",
+      "setting": "TGB task-arrival stream（Table 12）：8 families、120-tool registry、3 seeds/模型；每条目 LOTS / Keep all；prompt tokens 为服务请求平均（含探索、不含更新打分）",
+      "quote": "Table 12 extends the main-text example to seven models and three seeds: LOTS finishes above Keep all in all 21 runs, with serving prompt tokens about one third of Keep all (scoring cost excluded).",
+      "locator": "Table 12",
+      "denominator": {
+        "n_total": "21 runs（7 models × 3 seeds）",
+        "n_valid": "21",
+        "how_counted": "Table 12：每 run 结束时对已到达 families 的 credited accuracy 逐 run 比较 LOTS 与 Keep all"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "TGB 上任务专属剪裁把每请求服务 prompt tokens 从全菜单的 251–319 降到 143–181（少 33–46%）；GTA-Atomic read_arith 总 token 成本（选择+服务）比 TTO 少 2.0–4.0×、比 Beam Search 少 4.4–9.5×。",
+      "metric": "serving prompt tokens（缩减幅度）",
+      "value": "33 to 46% fewer",
+      "comparison": "143 to 181 prompt tokens per request vs 251 to 319 for the full fifteen-tool menu",
+      "setting": "TGB serving，fitted 任务空间 vs 全 15 工具菜单（Appendix F）；对照 GTA-Atomic read_arith 的选择+服务总 token 记账（§4.4 Figure 5，†方法读标签）",
+      "quote": "On TGB, serving under the fitted spaces uses 143 to 181 prompt tokens per request against 251 to 319 for the full fifteen-tool menu, 33 to 46% fewer.",
+      "locator": "Appendix F",
+      "denominator": {
+        "n_total": "251–319 prompt tokens/request（full 15-tool menu）",
+        "n_valid": "143–181 prompt tokens/request（fitted space）",
+        "how_counted": "Appendix F：serving prompt tokens per request（含历史与每轮文档）；33–46% fewer 为论文由该组数字给出的缩减幅度"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "跨模型复用：用一个源模型的 trace 拟合的工具空间/文档排序可直接给另一执行模型用，在 20 个跨模型对中 18 个胜过执行模型自身的 Keep all（BFCL，K=16 全文档工具，3 seeds）——避免为换模型重新采集与打分。",
+      "metric": "cross-model reuse win count",
+      "value": "18 of 20 cross-model pairs",
+      "comparison": "transferred rankings beat the serving model's Keep all baseline in 18 of the 20 pairs",
+      "setting": "BFCL，K=16 fully documented tools；完整矩阵 Table 5 为 10 执行模型 × 11 源模型 × 3 seeds；主类协议版 Table 6：9 对中 8 对提升 1.3–6.1 点、第 9 对持平",
+      "quote": "Transferred rankings outperform the serving model’s\nKeep all baseline in 18 of the 20 cross-model pairs in\nFigure 6.",
+      "locator": "§4.4 Figure 6",
+      "denominator": {
+        "n_total": "20 cross-model pairs",
+        "n_valid": "18",
+        "how_counted": "§4.4 原文计数：'in 18 of the 20 cross-model pairs in Figure 6'；完整迁移矩阵见 Appendix C.1 Table 5（10 执行 × 11 源模型）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "机制归因：把似然排序以同族预算 Top-K 部署，八模型平均准确率 0.819，对同大小 Random 0.222、Keep all 0.694——增益来自排序本身而非空间大小。",
+      "metric": "accuracy（TGB，Top-K vs Random vs Keep all 均值）",
+      "value": "0.819",
+      "comparison": "Top-K 0.819 vs Random 0.222 vs Keep all 0.694",
+      "setting": "TGB，8 模型 × 10 families；前 80 请求缓存分数选 Top-K 与同大小随机子集，在其余 320 请求/族上评测；Random 单次固定种子抽取",
+      "quote": "In Table 19, Top-KK beats Random and Keep all on every model, averaging 0.819 against 0.222 and 0.694: the ranking, not the size of the space, carries the gain.",
+      "locator": "Table 19",
+      "denominator": {
+        "n_total": "10 families × 320 evaluation requests",
+        "n_valid": "同左",
+        "how_counted": "Table 19 caption：Accuracy is averaged across ten task families, using 320 evaluation requests per family；表中 Mean 行为 8 模型平均"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "评分有效性：除 no_tool 外，7 个模型的似然分在全部 9 个工具使用族上把 gold chain 工具与其余工具完全分开（AUROC=1.000），Gemma4-12B 为 0.992，即 72 个 model–family 对中 71 个完美分开。",
+      "metric": "AUROC（chain tools vs 其余）",
+      "value": "71 of 72 model–family pairs",
+      "comparison": "AUROC 1.000 on all nine families and 0.992 (Gemma4-12B)",
+      "setting": "TGB，8 模型 × 10 families（no_tool 除外）；用前 80 请求的缓存分数选 Top-K 与同大小随机子集，在其余 320 请求上评测",
+      "quote": "Excluding no_tool, seven models separate the reference-chain tools from the rest with an AUROC of 1.000 on all nine families and Gemma4-12B with 0.992, so 71 of 72 model–family pairs are separated perfectly.",
+      "locator": "E.4",
+      "denominator": {
+        "n_total": "72 model–family pairs（8 models × 9 tool-using families，no_tool 除外）",
+        "n_valid": "71",
+        "how_counted": "E.4 原文：'71 of 72 model–family pairs are separated perfectly'；以 AUROC=1.000（Gemma4-12B 0.992）为分开判据"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "论文明确不做安全性声明：实验只评估任务性能与工具使用效率，不建立自主执行的安全性。",
+      "quote": "Our experiments evaluate task performance and tool-use efficiency;\nthey do not establish the safety of autonomous execution.",
+      "locator": "Ethics statement"
+    },
+    {
+      "statement": "likelihood 分数不等于正确性/安全性：它只度量模型对已生成答案的支持度，不能认证答案正确或工具安全，部署需要工具权限与监督——持久化一个'模型依赖'的空间不等于持久化一个正确的空间。",
+      "quote": "Likelihood-based tool scores measure support for a model’s generated\nanswer and do not certify its correctness or the safety of a tool.",
+      "locator": "Ethics statement"
+    },
+    {
+      "statement": "评分不观察正确性，只测模型依赖的证据；正确与错误输出通常给出相近的任务级排序（何时成立/失效见 Appendix E）。",
+      "quote": "LOTS does not observe correctness, but measures which tool evidence the model relies on.",
+      "locator": "§3.1"
+    },
+    {
+      "statement": "不正确输出的鲁棒性依模型与 retention 规则而异：support-frequency 保留在 50% 答案腐化下保持八工具空间，而 mean-score 保留在 50%/75% 腐化下跌到 0.620/0.102；pooled 诊断不覆盖 per-task top-K 协议。",
+      "quote": "Incorrect outputs retain useful evidence, with robustness depending on the model and the retention rule; these pooled diagnostics do not cover the per-task top-KK protocol.",
+      "locator": "Appendix E.5"
+    },
+    {
+      "statement": "BFCL 打分混杂：调用多个工具的 assistant 消息被整条删除，最多 44.1% 的 (record, tool) 对的分数同时携带共同调用工具的贡献。",
+      "quote": "and 44.1% of the (record, called tool) pairs involve at least one such message (12.3% to 54.0%), so up to that share of BFCL scores also carries the contribution of a co-called tool.",
+      "locator": "Appendix B.2"
+    },
+    {
+      "statement": "评分量不是 KL 的无偏估计：对贪心生成输出取长度归一化差值，可为负。",
+      "quote": "LOTS evaluates a length-normalized difference on a greedily generated output; it is not an unbiased estimate of this KL divergence and need not be nonnegative.",
+      "locator": "Appendix B.2"
+    },
+    {
+      "statement": "Theorem 1 的适用边界：只覆盖单批 common-menu 与 fixed-output 似然目标，不覆盖跨菜单 running scores 与执行精度。",
+      "quote": "The analysis covers one common-menu batch and the fixed-output objective, not running scores across menus or execution accuracy.",
+      "locator": "Appendix E.1"
+    },
+    {
+      "statement": "聚类路由结论受 TGB 模板化生成利好，不能外推到真实请求流的可分性。",
+      "quote": "TGB requests are generated from family-specific templates, so this setting is favourable to clustering; the result shows that LOTS is insensitive to replacing metadata with an unsupervised partition, not that real request streams separate as cleanly.",
+      "locator": "Appendix D.1"
+    },
+    {
+      "statement": "评测集粒度小：40 请求评测集上 1 个答案变动 2.5 个百分点，重复服务同一空间偶有单答案翻转。",
+      "quote": "A 40-request evaluation set changes by 2.5 percentage points per answer; repeated serving of an unchanged space sometimes changes one answer.",
+      "locator": "Appendix B.4"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": null,
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "figures",
+      "appendix"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "no_safety_experiments",
+    "必要背景论文：results 为任务准确率/持久性/token 成本测量，非对抗安全实验；按 SPEC『results 可为空数组』本可留空，但论文确有可逐字验证的主结果，按原文抽取非空，safety_property.type=none",
+    "no_adversary_threat_model（adversary=none 为合法取值；capability 字段留空）",
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim（如 0.870.87、10.7110.71、Top-KK 为排版粘连，引文逐字复制）",
+    "gta_eval_112_stated_by_paper_but_type_counts_sum_130（read_arith 65+web_fact 35+count_arith 30=130≠112，math_eq 17 不用；以论文原话 112 为分母）",
+    "reproducibility_planned_not_released（作者计划发布实现/配置/评测脚本，论文中无可用链接，code/data 记 null）",
+    "no_appendix_tables_missing_in_corpus（Table 4/5/7/11 等以散排文本呈现，Table 15/16 部分单元格以 caption+正文形式给出）"
+  ]
+}

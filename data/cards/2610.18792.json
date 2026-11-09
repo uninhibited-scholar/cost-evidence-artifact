@@ -1,0 +1,496 @@
+{
+ "arxiv_id": "2610.18792",
+ "title": "SEAR: Self-Evolving Agentic Robotics",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-task",
+  "carrier": "the library: versioned code skills and written memories harvested from the best policy of each finished task ('What persists from task to task is the library'); AR checkpoints and data never carry over to the next task, and no LM or policy weights persist (code-as-policy LM weights never change); the library transfers across tasks, simulators, and even models (crossover runs)",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "No safety property is claimed, attacked, or measured: the paper evaluates task success, learning vs resampling, and generalization of self-evolving robot agents, with no collision-rate, damage, or safety-violation experiments. Physical-safety constraints exist only as fixed harness infrastructure (safety guard, workspace box per arm, 0.25 m keep-out region around the other arm's base, speed limit near the table; Appendix K), and harness refusals appear in the failure audit as one category of stopped episodes, not as an evaluated property. As 必要背景 it supports the survey's mechanism of persistent non-parametric agent state: a skill-and-memory library that forms (harvested from each finished task), updates (versioned, extended, shadowed by newer versions), persists across tasks/simulators/models, and is retrieved via imports - including the finding that mistakes persist like skills do (a self-built verifier saved as memory stays wrong).",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "The agent works in its own container with DEV seeds; only the frozen program with imported skills, or the AR checkpoint, is passed to a sealed judge that holds VAL/TEST initial states and grading logic and ignores any success the policy claims",
+   "Budgets are matched in wall-clock time (1 h per task, 2 h on RoboLab; 12 h per physical task), with tokens, environment steps, and GPU time logged beside them",
+   "Each condition runs three times per model except AR on LIBERO/LIBERO-PRO/RoboLab and every physical run (one run each)"
+  ],
+  "not_covered": [
+   "No adversary is modeled: the paper studies capability and measurement of self-evolution, not attacks on the agent, its library, or the judge",
+   "Physical-safety violations (collisions, damage, unsafe motion) are not measured; the harness safety guard is fixed infrastructure, not a studied property",
+   "Seal integrity (agents reading asset files, calling env.check_success(), task text leaking into libraries) is audited as benchmark-integrity limits of the seal (Section A.9), not as an adversary model; the harness now refuses exploration sessions touching held-out task identifiers"
+  ]
+ },
+ "intervention": {
+  "name": "SEAR: self-evolving agent framework (code-as-policy / agent-as-policy / auto-research) with a persistent skill-and-memory library, matched controls (best-of-3, no-library, three repetitions), a sealed judge, and five generalization tiers T1-T5",
+  "mechanism_layer": "content",
+  "description": "Improvement flows through editable non-parametric content rather than weights: the LM agent writes executable control code that becomes the policy and harvests versioned code skills plus written memories into a library that every next task inherits and extends; a final program imports a median of five skills. Auto-research additionally fine-tunes a VLA (pi_0.5) on rollouts of code teachers, but AR checkpoints and data never carry over between tasks, so the studied persistent state is the library content. The benchmark pairs every comparison with controls that separate retained experience from resampling, familiar tasks, privileged state, larger budgets, and luck."
+ },
+ "controls": [
+  {
+   "name": "Vanilla: every task starts from an empty library",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Best-of-3: three budget-split no-library restarts, best by VAL score",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Three independent repetitions of the whole run, library included",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Sealed judge grading frozen policies on held-out states with hidden logic",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Generalization tiers T1-T5 of distance from practice",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Library crossover: GPT-5.6-sol run with libraries written by Opus or Kimi-k3",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "In code-as-policy, how much an inherited library adds depends on the model's no-library baseline on that family: mean gain is +0.9 points where the baseline is above 80%, +12.0 points in the 30-80% band, +3.0 points below 30%.",
+   "metric": "library_gain_points_by_baseline_band",
+   "value": "+12.0 points (30-80% band)",
+   "comparison": "+0.9 (>80%) / +12.0 (30-80%) / +3.0 (<30%)",
+   "setting": "5 simulation LMs x 5 simulated families (robosuite, LIBERO, LIBERO-PRO, LIBERO-RIG, RoboLab), code-as-policy, TEST success, Lineage (with inherited library) vs Vanilla (no library), 3 runs per condition",
+   "quote": "Over the 25 model–family pairs of Table 6, it adds 0.9 points on average where the model already scores above 80% without it (Opus and GPT-5.6-sol on every family but RoboLab), 12.0 points between 30 and 80%, and 3.0 below 30% (Gemini-3.6-flash and DeepSeek-v4-flash on RoboLab).",
+   "locator": "§3.2 Experience Carries Forward, for Some Models",
+   "denominator": {
+    "n_total": "25 model-family pairs (Table 6)",
+    "n_valid": null,
+    "how_counted": "mean Lineage-Vanilla TEST-success difference per baseline band"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The library's help exceeds a rerun's noise: on 1,510 matched model-task pairs, a Lineage repetition beats the mean of two Vanilla repetitions more often than a third Vanilla repetition does, by 8 to 10 points on both unsolved and partly solved pairs.",
+   "metric": "library_margin_over_rerun_noise",
+   "value": "8 to 10 points",
+   "comparison": null,
+   "setting": "pooled over robosuite, LIBERO, LIBERO-PRO, RoboLab; split-repetition comparison (Lineage rep vs third Vanilla rep against the mean of the first two Vanilla reps)",
+   "quote": "These gains are larger than a rerun’s noise: comparing each Lineage run with a held-out Vanilla repetition over 1,510 model–task pairs puts the library’s help at 8 to 10 points, both on tasks the model never solved alone and on tasks it did (Table 7).",
+   "locator": "§A.2 The Library Against a Rerun’s Noise (Table 7)",
+   "denominator": {
+    "n_total": "1,510 matched model-task pairs",
+    "n_valid": "276 unsolved + 1,234 with some Vanilla success",
+    "how_counted": "share of comparisons above/below the reference (Table 7: +10.0/+10.1 unsolved; +7.6/-8.8 solved)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Experience saved as code transfers across models: on RoboLab, GPT-5.6-sol scores 46.9% without a library and 42.4% with its own, but 60.6% with the library Opus wrote and 55.7% with Kimi-k3's.",
+   "metric": "test_success_library_crossover",
+   "value": "46.9% (no library) / 42.4% (own) / 60.6% (Opus) / 55.7% (Kimi-k3)",
+   "comparison": "46.9% no library vs 42.4% own library vs 60.6%/55.7% donor libraries",
+   "setting": "GPT-5.6-sol on RoboLab (105 tasks, Isaac Sim), code-as-policy, TEST success, three runs over all 105 tasks per donor library",
+   "quote": "GPT-5.6-sol scores 46.9% without a library and 42.4% with its own, but 60.6% with the library Opus wrote and 55.7% with Kimi-k3’s (three runs over all 105 tasks for each donor library).",
+   "locator": "§3.2 Experience Carries Forward, for Some Models",
+   "denominator": {
+    "n_total": "105 RoboLab tasks x 10 TEST rollouts, 3 runs per donor library (630 runs)",
+    "n_valid": null,
+    "how_counted": "mean TEST success; seven judge crashes on zero-VAL policies excluded (Appendix A.3)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "A self-built success verifier persisted in memory and stayed wrong: it declared success on 699 later rollouts and was wrong on 91% of them, and because its verdict was also the stopping rule, 637 rollouts ended without another grasp attempt.",
+   "metric": "self_built_verifier_error_rate",
+   "value": "91% of 699 rollouts",
+   "comparison": null,
+   "setting": "one Opus self-exploration run (no judge; agent builds its own success detector), simulation; the false verdict was saved to memory and inherited by every later session",
+   "quote": "The verifier declared success on 699 later rollouts and was wrong on 91% of them. Because its verdict was also the stopping rule, 637 rollouts ended without another grasp attempt.",
+   "locator": "§3.3 What Carries Forward Includes Mistakes",
+   "denominator": {
+    "n_total": "699 rollouts",
+    "n_valid": null,
+    "how_counted": "verifier verdicts vs actual outcomes (Section 3.3)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The run that saved the false verdict in memory collapsed: 4.6% overall, against 15.5% and 23.6% for its two identical sibling runs without that verifier.",
+   "metric": "run_success_rate_with_inherited_false_verdict",
+   "value": "4.6% vs 15.5 and 23.6%",
+   "comparison": "4.6% with inherited false verifier vs 15.5%/23.6% siblings",
+   "setting": "three identical Opus self-exploration runs on RoboLab; one saved the verifier's verdict in memory as a fact",
+   "quote": "The run scored 4.6% overall. Its two sibling runs, identical in setup but without that verifier, scored 15.5 and 23.6%, three to five times higher.",
+   "locator": "§3.3 What Carries Forward Includes Mistakes",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "One long session beats three budget-matched restarts only for models whose median time to first validation success falls inside one short attempt: averaged over the five families, only GPT-5.6-sol reaches first success inside a short attempt and gains just 2.9 points from the long session, against 14.5 to 31.9 points for the other four models.",
+   "metric": "long_session_minus_best_of_3_points",
+   "value": "+2.9 points (GPT-5.6-sol) vs +14.5 to +31.9 (other four)",
+   "comparison": "long session beats best-of-3 by 2.9 points (GPT-5.6-sol) vs 14.5 to 31.9 points (others)",
+   "setting": "5 simulation LMs, code-as-policy, VAL success at budget end averaged with equal weight over the 5 families (Figure 5, Table 15)",
+   "quote": "The same holds averaged over all five families (Figure 5): only GPT-5.6-sol reaches its first success inside a short attempt, and it gains 2.9 points from the long session, against 14.5 to 31.9 for the other four models.",
+   "locator": "§3.1 One Long Session or Several Short Ones?",
+   "denominator": {
+    "n_total": "5 task families",
+    "n_valid": null,
+    "how_counted": "equal-weight mean of Vanilla minus best-of-3 best-so-far VAL success at 60 min (120 on RoboLab)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Success falls with distance from practice (Claude Opus 5, Table 3): code-as-policy TEST success 87.8% on new initial states (T1), 59.7% under changed scenes or hardware faults (T2), 33.3% on new tasks (T3), 28.7% in a new simulator (T4); the VLA falls 73.2 to 10.2.",
+   "metric": "test_success_by_generalization_tier",
+   "value": "87.8 (T1) to 28.7 (T4), CaP",
+   "comparison": "CaP 87.8 / 59.7 / 33.3 / 28.7; VLA (AR) 73.2 / 55.3 / 43.1 / 10.2",
+   "setting": "Claude Opus 5 policies, mean TEST success per tier over the practice-test family pairs where both the code policy and the VLA have results; T1/T2 policies frozen, T3/T4 written after self-exploration",
+   "quote": "| T1 | New initial states of the practiced tasks | 87.8 | 73.2 |\n| T2 | The same tasks under changed scenes or hardware faults | 59.7 | 55.3 |\n| T3 | New tasks in the same simulator | 33.3 | 43.1 |\n| T4 | New tasks in a new simulator and action API | 28.7 | 10.2 |",
+   "locator": "§4.1 Table 3",
+   "denominator": {
+    "n_total": "10 TEST rollouts per task",
+    "n_valid": null,
+    "how_counted": "mean TEST success (%) per tier over practice-test family pairs (Table 13 gives every pair)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The same LIBERO-practiced Opus code policy scores 94.4% on LIBERO's TEST states, 66.0% under LIBERO-RIG's hardware faults, and 47.7% under LIBERO-PRO's scene changes: a scene change costs more than a hardware fault because the code policy re-detects the object before each move.",
+   "metric": "test_success_under_condition_change",
+   "value": "94.4% (LIBERO TEST) / 66.0% (LIBERO-RIG faults) / 47.7% (LIBERO-PRO scenes)",
+   "comparison": "94.4% vs 66.0% vs 47.7% for the same frozen policy",
+   "setting": "Opus code-as-policy practiced on LIBERO, re-graded frozen on LIBERO-RIG (ten fault axes, moderate level) and LIBERO-PRO",
+   "quote": "The steps are uneven: the same code policy, practiced on LIBERO, scores 94.4% on LIBERO’s TEST states, 66.0% under LIBERO-RIG’s hardware faults, and 47.7% under LIBERO-PRO’s scene changes.",
+   "locator": "§4.1 Down the Generalization Tiers",
+   "denominator": {
+    "n_total": "40 LIBERO tasks (LIBERO and LIBERO-RIG re-grade) / 160 LIBERO-PRO tasks; 10 TEST rollouts each",
+    "n_valid": null,
+    "how_counted": "mean TEST success (Table 12 and Table 13)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "A task-general program written before the agent is told its tasks improves as its shared routines improve: on the same 44 RoboLab probe tasks success rises 15.5% to 31.6%, and on twelve scenes the lineage never explored, 5.8% to 22.5%.",
+   "metric": "test_success_task_general_program",
+   "value": "15.5% to 31.6% (44 tasks); 5.8% to 22.5% (twelve never-explored scenes)",
+   "comparison": "44 tasks 15.5% -> 31.6%; never-explored scenes 5.8% -> 22.5%",
+   "setting": "one Opus self-exploration lineage on RoboLab, its task-general program frozen at four library versions and graded ten times per probe task, nothing rewritten per task",
+   "quote": "Success on the same 44 tasks rises from 15.5 to 31.6%, and on twelve scenes the lineage never explored, from 5.8 to 22.5%.",
+   "locator": "§4.2 One Program, New Scenes",
+   "denominator": {
+    "n_total": "44 probe tasks; 12 never-explored scenes; 10 grades per task",
+    "n_valid": null,
+    "how_counted": "success of the frozen program at four checkpoints (Figure 16)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Libraries are reused across tasks and simulators: on the first half of RoboLab, Opus's three lineages imported 202 distinct skills 660 times, and skills written on the MuJoCo families were imported by about half of its RoboLab policies (two fifths for Kimi-k3, almost none for the other three models).",
+   "metric": "cross_simulator_skill_reuse",
+   "value": "202 distinct skills / 660 imports",
+   "comparison": null,
+   "setting": "Opus lineages, first half of the RoboLab curriculum (Isaac Sim), reusing skills formed on the MuJoCo families",
+   "quote": "On the first half of RoboLab, Opus’s three lineages imported 202 distinct skills 660 times, and skills written on the MuJoCo families were imported by about half of its RoboLab policies (two fifths for Kimi-k3, almost none for the other three models).",
+   "locator": "§4.2 One Program, New Scenes",
+   "denominator": {
+    "n_total": "first half of RoboLab curriculum, 3 lineages",
+    "n_valid": null,
+    "how_counted": "skill-import counts (Appendix P: 86 Opus imports of 12 MuJoCo-origin skills reached 52% of its RoboLab policies)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Weights match code where demonstrations are plentiful and fall short where they are scarce: the VLA scores within two points of code on LIBERO (94.0 vs 94.4) and LIBERO-PRO (90.6 vs 91.8) but well short on robosuite (61.0 vs 97.1) and RoboLab (47.2 vs 68.0).",
+   "metric": "test_success_vla_vs_code",
+   "value": "94.0 vs 94.4 (LIBERO); 90.6 vs 91.8 (LIBERO-PRO); 61.0 vs 97.1 (robosuite); 47.2 vs 68.0 (RoboLab)",
+   "comparison": "VLA vs code per family",
+   "setting": "Opus auto-research VLA (pi_0.5 fine-tuned on rollouts of per-task code teachers) vs code-as-policy, same development time, TEST success",
+   "quote": "On LIBERO and LIBERO-PRO the VLA scores within two points of code (94.0 vs. 94.4 and 90.6 vs. 91.8%) and matches or beats it on about four tasks in five. It falls well short on robosuite (61.0 vs. 97.1) and RoboLab (47.2 vs. 68.0; Table 8).",
+   "locator": "§4.3 Code and Weights Break Differently",
+   "denominator": {
+    "n_total": "7 / 40 / 160 / 105 tasks per family; 10 TEST rollouts each",
+    "n_valid": null,
+    "how_counted": "mean TEST success (Table 8)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Code and weights break differently: when the scene camera moves, the code policy falls to 9% while the VLA keeps 69%; under the seven faults that leave the scene camera in place, the code policy re-detects the object before each move and holds 90%.",
+   "metric": "test_success_camera_moved",
+   "value": "9% (code) vs 69% (VLA)",
+   "comparison": "code 9% with camera moved vs 90% on the seven non-camera faults",
+   "setting": "LIBERO-practiced Opus policies re-graded frozen on LIBERO-RIG at the moderate level (Figure 9b; per-axis values in Table 9)",
+   "quote": "Code falls to 9%, while the VLA keeps 69% (Figure 9b). Under the seven faults that leave the scene camera in place, the code policy re-detects the object before each move and holds 90%.",
+   "locator": "§4.3 Code and Weights Break Differently",
+   "denominator": {
+    "n_total": "40 LIBERO tasks x 3 camera-move axes (10 TEST rollouts each)",
+    "n_valid": null,
+    "how_counted": "9% = mean over camera orientation/position/field-of-view axes (Table 9: 7.0/8.7/11.3); VLA 56.7/60.0/90.0"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The VLA's limit is demonstration supply: RoboLab tasks with fewer than 50 successful demonstrations score 20.8% against 94.0% with 300 or more.",
+   "metric": "vla_test_success_by_demo_count",
+   "value": "20.8% (<50 demos) vs 94.0% (>=300 demos)",
+   "comparison": "20.8% vs 94.0%",
+   "setting": "the 105 RoboLab tasks grouped by the number of successful demonstrations recorded by their VLA lineage session (Table 25)",
+   "quote": "RoboLab tasks with fewer than 50 successful demonstrations score 20.8% against 94.0% with 300 or more (Table 25).",
+   "locator": "§4.3 Table 25",
+   "denominator": {
+    "n_total": "105 RoboLab tasks",
+    "n_valid": "12 tasks with 1-49 demos; 5 tasks with >=300 demos",
+    "how_counted": "mean VLA TEST success per demonstration-count bin"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On hardware, frozen code policies graded on ten operator-staged scenes per task score 70.2% (Fable 5.1), 41.4% (GPT-6-astra), and 35.6% (Opus 5) overall; each agent practices each task for up to 12 hours from an empty library.",
+   "metric": "held_out_score_physical_cap",
+   "value": "70.2% (Fable 5.1) vs 41.4% (GPT-6-astra) vs 35.6% (Opus 5)",
+   "comparison": "Fable 5.1 70.2% > GPT-6-astra 41.4% > Opus 5 35.6%",
+   "setting": "two YAM-Ultra arms, five physical tasks (Banana into Bowl, Push-T, Cup Upright, Block Stacking, Spell SEAR), one practice run per agent, external evaluator plus operator confirmation",
+   "quote": "Table 4 gives the frozen policies’ scores on staged scenes: Fable 5.1 leads at 70.2%, ahead of GPT-6-astra at 41.4 and Opus at 35.6.",
+   "locator": "§4.4 Table 4",
+   "denominator": {
+    "n_total": "5 tasks x 10 operator-staged scenes per CaP agent",
+    "n_valid": null,
+    "how_counted": "mean outcome (success 1, partial 0.5, failure 0); Block Stacking scored as mean highest tower capped at ten cubes (Tables 4 and 18)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "GPT-6-astra more than doubles its held-out score when it acts live in the control loop: 88.0% as agent-as-policy against 41.4% as a frozen code policy, and 95% against 48% on the four non-stacking tasks.",
+   "metric": "held_out_score_aap_vs_cap",
+   "value": "88.0% (AaP) vs 41.4% (CaP)",
+   "comparison": "88.0% vs 41.4%; 95% vs 48% on the four non-stacking tasks",
+   "setting": "GPT-6-astra on the physical rig, five staged scenes per AaP task and ten per CaP task, one practice run per agent",
+   "quote": "Acting live, it scores 88.0%, against 41.4% as a frozen code policy, and 95% against 48% on the four non-stacking tasks.",
+   "locator": "§5.3 Models Have Preferences",
+   "denominator": {
+    "n_total": "5 tasks x 5 staged scenes (AaP); 5 tasks x 10 scenes (CaP)",
+    "n_valid": null,
+    "how_counted": "mean outcome over staged scenes (Table 4; practice/evaluation detail in Table 19)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Acting live is slow: a live agent-as-policy episode takes a median of 12.8 minutes of robot time against 3.8 minutes for a frozen code policy.",
+   "metric": "median_episode_robot_time_minutes",
+   "value": "12.8 min (AaP) vs 3.8 min (CaP)",
+   "comparison": "12.8 vs 3.8 median minutes per evaluation episode",
+   "setting": "physical offline evaluation, all episodes of the campaign (Table 20)",
+   "quote": "Acting live is slower: a live episode takes a median of 12.8 minutes of robot time against 3.8 for a frozen code policy (Table 20).",
+   "locator": "§5.3 Table 20",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Fable 5.1 shows no mode preference: it scripts the robot even in the live loop (its scripts issue 99% of its commands) and scores 66.4% live against 70.2% frozen overall.",
+   "metric": "held_out_score_aap_vs_cap_fable",
+   "value": "66.4% live vs 70.2% frozen",
+   "comparison": "66.4% (AaP) vs 70.2% (CaP)",
+   "setting": "Fable 5.1 on the physical rig; the overall gap comes from Block Stacking, whose live runs used a different stopping rule",
+   "quote": "Overall it scores 66.4% live against 70.2% frozen, a gap that comes from Block Stacking, whose live runs used a different stopping rule.",
+   "locator": "§5.3 Models Have Preferences",
+   "denominator": {
+    "n_total": "5 tasks x 5 staged scenes (AaP); 5 tasks x 10 scenes (CaP)",
+    "n_valid": null,
+    "how_counted": "mean outcome over staged scenes (Table 4)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "A ten-success practice streak does not guarantee held-out success: practice segments that reached the streak average 67% on staged scenes against 38% for the six non-stacking segments that ran out of budget; in the main text, only one of the six streak runs (Fable's Push-T) then succeeded on all ten staged scenes.",
+   "metric": "staged_scene_score_by_streak_status",
+   "value": "67% (reached streak) vs 38% (budget-limited)",
+   "comparison": "67% vs 38%",
+   "setting": "physical CaP campaign, non-stacking practice segments (Appendix L); agent's own resets choose the practiced states",
+   "quote": "segments that reached the streak average 67% on staged scenes, against 38% for the six non-stacking segments that ran out of budget.",
+   "locator": "Appendix L Physical Campaign: Practice Behavior in Detail",
+   "denominator": {
+    "n_total": "six non-stacking segments that ran out of budget; the count of streak segments is not stated",
+    "n_valid": null,
+    "how_counted": "mean staged-scene score per segment group (Appendix L, Section 4.4)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Frozen policies fail at limits the agents set themselves: in 29 of 34 failed/partial units for Fable, 32 of 35 for Opus, and 26 of 47 for GPT-6-astra, the policy stopped at a limit, rule, or motion the agent had chosen itself, typically after a single incident in practice.",
+   "metric": "failures_at_self_imposed_limits",
+   "value": "29/34 (Fable), 32/35 (Opus), 26/47 (GPT-6-astra)",
+   "comparison": null,
+   "setting": "audit of all 116 failed or partial physical evaluation outcomes; no scene was physically impossible (each was solved by another agent or lay within measured reach)",
+   "quote": "In 29 of 34 for Fable, 32 of 35 for Opus, and 26 of 47 for GPT-6-astra, the policy stopped at a limit, rule, or motion the agent had chosen itself, typically after a single incident in practice.",
+   "locator": "§4.4 Table 21",
+   "denominator": {
+    "n_total": "116 failed or partial evaluation outcomes (34 Fable / 35 Opus / 47 GPT-6-astra)",
+    "n_valid": null,
+    "how_counted": "Appendix K audit classifying the check that ended progress (Table 21)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "A text-only model beats a multimodal model with the same general-capability index score on the hardest family: DeepSeek-v4-flash beats Gemini-3.6-flash (both Artificial Analysis index 34) on RoboLab without a library (23.1 vs 18.3%) and with one (30.7 vs 22.6% on the 58 tasks both completed), though not in best-of-3.",
+   "metric": "test_success_text_only_vs_multimodal",
+   "value": "23.1% vs 18.3% (no library); 30.7% vs 22.6% (with library)",
+   "comparison": "text-only model vs multimodal model, without and with a library",
+   "setting": "RoboLab (Isaac Sim), the hardest of the five simulated families; DeepSeek-v4-flash's RoboLab runs stopped at the first 58 tasks",
+   "quote": "It wins without a library (23.1 against 18.3%) and with one (30.7 against 22.6% on the 58 tasks both completed), though not in best-of-3.",
+   "locator": "§5.2 Seeing Is Not the Bottleneck",
+   "denominator": {
+    "n_total": "105 RoboLab tasks (no-library comparison); 58 tasks both completed (with library)",
+    "n_valid": null,
+    "how_counted": "TEST success (Table 6; DeepSeek RoboLab runs stopped when the model was retired)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Perception is not the bottleneck: over 21,552 graded RoboLab episodes, the target's distance, rotation, and clutter barely predict success (correlation 0.04 in magnitude); what fails is the grasp.",
+   "metric": "correlation_geometry_vs_success",
+   "value": "0.04",
+   "comparison": null,
+   "setting": "21,552 graded RoboLab episodes, within-cell rank correlation between a layout's pass rate and the target's reach, lateral offset, yaw, or clutter",
+   "quote": "Over 21,552 graded RoboLab episodes, the target’s distance, rotation, and clutter barely predict success (correlation 0.04 in magnitude).",
+   "locator": "§5.2 Seeing Is Not the Bottleneck",
+   "denominator": {
+    "n_total": "21,552 graded RoboLab episodes",
+    "n_valid": null,
+    "how_counted": "within-cell rank correlation averaged in magnitude (Section 5.2; Appendix O)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The failing step is grasping: among episodes where the policy logged how wide the gripper was when it closed, the gripper had closed on air in 78% of failed episodes and in 18% of successful ones.",
+   "metric": "closed_on_air_share",
+   "value": "78% of failed episodes vs 18% of successful ones",
+   "comparison": "78% (failed) vs 18% (successful)",
+   "setting": "RoboLab episodes that logged gripper closing aperture (Section 5.2; Appendix O: under 5 mm)",
+   "quote": "In episodes where the policy logged how wide the gripper was when it closed, the gripper had closed on air in 78% of failed episodes and in 18% of successful ones.",
+   "locator": "§5.2 Seeing Is Not the Bottleneck",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "The seal leaks and agents used the openings without being asked: Opus parsed the object XML in 115 of 179 LIBERO runs and 552 of 1,015 LIBERO-PRO runs, and the scene USD in 1,533 of 1,743 RoboLab runs; Kimi-k3 read object XML in 284 of 1,260 non-RoboLab runs.",
+   "metric": "runs_reading_asset_files",
+   "value": "115/179, 552/1,015, 1,533/1,743 (Opus); 284/1,260 (Kimi-k3)",
+   "comparison": null,
+   "setting": "simulation campaigns, seal audit (Appendix A.9); reading static asset files was allowed by the protocol but a physical robot cannot read an object's geometry before acting",
+   "quote": "Opus parsed the object XML in 115 of 179 LIBERO runs and 552 of 1,015 LIBERO-PRO runs, and the scene USD in 1,533 of 1,743 RoboLab runs; Kimi-k3 read object XML in 284 of 1,260 non-RoboLab runs.",
+   "locator": "§A.9 Shortcuts the Agents Found",
+   "denominator": {
+    "n_total": "179 LIBERO / 1,015 LIBERO-PRO / 1,743 RoboLab runs (Opus); 1,260 non-RoboLab runs (Kimi-k3)",
+    "n_valid": null,
+    "how_counted": "runs in which the agent parsed static asset files"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Task text leaks into libraries: the post-LIBERO-PRO Opus library matched 10 of 40 LIBERO and 27 of 160 LIBERO-PRO instructions, so it could not be used to seed task-blind lineages.",
+   "metric": "instructions_matched_in_library",
+   "value": "10 of 40 (LIBERO), 27 of 160 (LIBERO-PRO)",
+   "comparison": null,
+   "setting": "audit of the libraries meant to seed task-blind self-exploration lineages (Appendix A.9); the post-LIBERO Opus library also quoted a hidden instruction word for word",
+   "quote": "and the post-LIBERO-PRO library matched 10 of 40 LIBERO and 27 of 160 LIBERO-PRO instructions, so we could not use it.",
+   "locator": "§A.9 Shortcuts the Agents Found",
+   "denominator": {
+    "n_total": "40 LIBERO and 160 LIBERO-PRO instructions",
+    "n_valid": null,
+    "how_counted": "instruction strings matched in the audited library"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "The harness ports to a second embodiment but skills do not transfer between robots: a Fable 5.1 agent learned to type random digits on a physical numpad at over five keys per second within 2.5 hours, and typed the first 100 digits of pi three times at 5.1 keys per second with one wrong digit in total.",
+   "metric": "typing_speed_keys_per_second",
+   "value": "5.1 keys/s; 1 wrong digit across three 100-digit runs",
+   "comparison": null,
+   "setting": "Sharpa Wave hand (22 joints) on a Flexiv arm, sharing no hardware with the two-arm rig, learned on this hand alone on hardware (Figure 12)",
+   "quote": "A Fable 5.1 agent learned to type random digits on a physical numpad at over five keys per second within 2.5 hours, and typed the first 100 digits of π\\pi three times at 5.1 keys per second with one wrong digit in total across the three runs (Figure 12);",
+   "locator": "§4.4 Figure 12",
+   "denominator": {
+    "n_total": "3 runs x 100 digits of pi",
+    "n_valid": "299 correct digits",
+    "how_counted": "scored evaluations (Figure 12)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Model spread widens with difficulty: without a library, the best and worst models are 23.8 points apart on robosuite and 43.6 on RoboLab; under LIBERO-RIG's hidden faults, the gap is 60.0 points.",
+   "metric": "best_worst_model_gap_points",
+   "value": "23.8 / 43.6 / 60.0 points",
+   "comparison": null,
+   "setting": "5 simulation LMs without a library, TEST success per family (Table 6); on LIBERO-RIG DeepSeek-v4.1-flash replaces DeepSeek-v4-flash",
+   "quote": "without a library, the best and worst models are 23.8 points apart on robosuite and 43.6 on RoboLab. Under LIBERO-RIG’s hidden faults, the gap is 60.0 points.",
+   "locator": "§5.1 Better LM, Better Robot",
+   "denominator": {
+    "n_total": "5 models x family tasks",
+    "n_valid": null,
+    "how_counted": "best-worst TEST-success gap per family"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Replication budget bounds distinguishable effects: three runs per condition, and replicate spread often exceeds the gap between neighboring models (e.g., two DeepSeek-v4-flash Lineage runs differed by 20.9 points).",
+   "quote": "Three runs per condition bound what we can distinguish, and replicate spread often exceeds the gap between neighboring models.",
+   "locator": "§A.8 Limitations"
+  },
+  {
+   "statement": "Budget-matched VLA comparisons on LIBERO, LIBERO-PRO, and RoboLab are one run each, and every physical result is one practice run per agent.",
+   "quote": "The budget-matched VLA runs on LIBERO, LIBERO-PRO, and RoboLab are one run each, and every physical result is one practice run per agent.",
+   "locator": "§A.8 Limitations"
+  },
+  {
+   "statement": "Physical runs start from an empty library, so the paper measures learning on hardware, not transfer from simulation to hardware.",
+   "quote": "The physical runs start from an empty library, so we measure learning on hardware, not transfer from simulation to hardware.",
+   "locator": "§A.8 Limitations"
+  },
+  {
+   "statement": "Each model runs through its own coding tool, so model comparisons are comparisons of model-and-tool pairs.",
+   "quote": "Each model runs through its own coding tool, so a model comparison is a comparison of model-and-tool pairs.",
+   "locator": "§A.8 Limitations"
+  },
+  {
+   "statement": "The sealed judge does not hide everything an agent can read; agents found and used seal openings (Section A.9).",
+   "quote": "The sealed judge protects runtime state, but it does not hide everything an agent can read (Section A.9).",
+   "locator": "§A.8 Limitations"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://github.com/Self-Evolving-Agentic-Robotics/SEAR",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear"
+ ]
+}

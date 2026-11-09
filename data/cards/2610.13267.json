@@ -1,0 +1,207 @@
+{
+  "arxiv_id": "2610.13267",
+  "title": "Forgetting is Not Always Bad: A Neuro-Inspired Memory Repair Mechanism for Poisoned LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": [
+    "v1"
+  ],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-task",
+    "carrier": "RAG long-term memory bank M of <key,value> pairs (historical query + solution) retrieved by DPR/REALM embedding similarity; each entry carries a dynamic retrieval weight w_i(t) that the defense attenuates or reinforces",
+    "operations_covered": [
+      "update",
+      "retention",
+      "retrieval",
+      "repair"
+    ]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Protects the integrity of a memory-augmented agent's long-term memory and downstream decisions against memory poisoning (dormant backdoor triggers and semantic-camouflage injection) while preserving benign task utility (availability); it can be weakened if the attacker has detailed knowledge of the internal probing mechanism. Judged by reduction of stage-wise/cumulative Attack Success Rate together with benign accuracy and task success rate under attack.",
+    "operationalized_as": "ASR-r/ASR-a/ASR-t (AgentPoison backdoor), cumulative ASR (MINJA injection), benign accuracy (ACC) under attack, Task Success Rate and Final Score in a multi-agent system, plus runtime and token-consumption overhead."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Insert a small number of poisoned <key,value> records into the agent memory bank (limited write access, or indirect injection through seemingly benign user queries)",
+      "Optimize trigger/key embeddings to maximize the poisoned record's retrieval likelihood into the top-K context (AgentPoison backdoor triggers)",
+      "Semantic camouflage aligning poisoned records with the agent's benign query distribution in embedding space (MINJA)",
+      "Black-box access to the agent core, which executes the malicious action with root-level permissions once the poisoned record is retrieved"
+    ],
+    "assumptions": [
+      "Only a small fraction of memory records are malicious; the majority remain benign",
+      "The attacker has no detailed knowledge of DREAM's internal perturbation-probe monitoring mechanism (probe-aware evasion is not considered)"
+    ],
+    "not_covered": [
+      "Probe-aware/adaptive attackers who optimize poisoned memories to remain stable under the perturbation probe",
+      "White-box attackers with full visibility into the defender's internal monitoring mechanism",
+      "Attack surfaces other than the memory bank (model weights, tools, prompts) "
+    ]
+  },
+  "intervention": {
+    "name": "DREAM (Dynamic Reactivation for Engram Attenuation in Memory)",
+    "mechanism_layer": "architecture",
+    "description": "A training-free, agent-intrinsic memory repair pipeline embedded in the memory system: (1) implicit reactivation by perturbing every memory embedding with weak isotropic Gaussian noise; (2) adaptive anomaly diagnosis via a multi-dimensional activation intensity score aggregating geometric stability, competitive retrieval probability, and semantic-coherence energy against a mean/std threshold; (3) functional forgetting modeled as a discrete-time dynamical system that exponentially decays suspicious memories' retrieval weights toward zero (Ebbinghaus-style decay) while reconsolidating benign ones via an online utility-consolidation signal — selective suppression without explicit deletion or parameter updates."
+  },
+  "controls": [
+    {
+      "name": "No Defense",
+      "purpose": "baseline"
+    },
+    {
+      "name": "Perplexity Filter (PPL)",
+      "purpose": "baseline"
+    },
+    {
+      "name": "LLM Auditor",
+      "purpose": "baseline"
+    },
+    {
+      "name": "fine-tuned Distil Classifier",
+      "purpose": "baseline"
+    },
+    {
+      "name": "A-MemGuard (consensus validation + dual-memory isolation)",
+      "purpose": "fair-comparison"
+    },
+    {
+      "name": "activation-intensity component ablation (p_ret / sim / E_coh)",
+      "purpose": "ablation"
+    },
+    {
+      "name": "noise-type ablation (Gaussian / uniform / sparse / anisotropic)",
+      "purpose": "ablation"
+    },
+    {
+      "name": "REALM vs DPR retrieval backbone",
+      "purpose": "ablation"
+    }
+  ],
+  "results": [
+    {
+      "claim": "Against AgentPoison backdoor attacks on EHRAgent (eICU) with GPT-5.4-mini and the DPR retriever, DREAM reduces the attack success rate by 97.86% relative to the undefended agent (Table 1: ASR falls from 100.00 to 2.14 while ACC rises from 70.83 to 85.03).",
+      "metric": "ASR (stage-wise) relative reduction",
+      "value": "97.86%",
+      "comparison": null,
+      "setting": "EHRAgent on eICU; AgentPoison backdoor; GPT-5.4-mini backbone; DPR retriever; undefended comparison",
+      "quote": "As reported on Table 1, (i) DREAM consistently and substantially suppresses ASR-r, ASR-t, and ASR-a. Specifically, when using GPT-5.4-mini, DREAM reduces the ASR by 97.86% on EHRAgent with eICU.",
+      "locator": "§5.2 Table 1",
+      "denominator": {
+        "n_total": "100.00（Table 1 中 No Defense 行的 ASR-r 基线水平，GPT-5.4-mini/eICU/DPR 列）",
+        "n_valid": "2.14（同一列中 DREAM 的残余 ASR-r）",
+        "how_counted": "97.86% 为相对削减 =（100.00 − 2.14）/100.00，分母即无防御基线 ASR 100.00（97.86 = 100.00 − 2.14，两个端点数字逐字见 Table 1）。注意：ASR 底层的测试查询/试次绝对数量论文未报告（正文仅称 averaged over multiple independent trials），故绝对试次分母不可得。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Against MINJA memory-injection attacks on EHRAgent (eICU), DREAM lowers cumulative ASR from 90.71% (no defense) to 1.60% on GPT-5.4-mini (the paired no-defense value 63.37% falls to 0.00%), while also improving benign ACC.",
+      "metric": "cumulative ASR (injection attack)",
+      "value": "1.60%",
+      "comparison": "90.71% -> 1.60%",
+      "setting": "EHRAgent on eICU; MINJA memory injection; GPT-5.4-mini and Claude-Haiku-4.5 backbones; DPR retriever",
+      "quote": "DREAM consistently achieves the lowest ASR across both backbones by reducing attack success rate of EHRAgent (eICU) from 90.71% and 63.37% under no defense to 1.60% and 0.00% on GPT-5.4-mini and Claude-Haiku-4.5, respectively.",
+      "locator": "§5.2 Table 2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under malicious memory injection in a collaborative multi-agent system (MISINFOTASK), DREAM attains the lowest average Final Score (6.038) and the highest average Task Success Rate of 92.96% among all compared defenses (no-defense TSR 70.69 in Table 3).",
+      "metric": "task success rate (TSR)",
+      "value": "92.96%",
+      "comparison": null,
+      "setting": "collaborative multi-agent system with malicious information injection (MISINFOTASK); baselines incl. A-MemGuard, LLM Auditor, ARGUS",
+      "quote": "We observe that DREAM achieves overwhelming performance with the lowest average Final Score of 6.038 and the highest average Task Success Rate of 92.96%.",
+      "locator": "§5.2 Table 3",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "In terms of deployment overhead, DREAM achieves up to a 2.13x runtime speedup and a 37.7% reduction in token consumption compared with A-MemGuard when answering a batch of 10 queries.",
+      "metric": "runtime speedup / token consumption reduction",
+      "value": "2.13x speedup; 37.7% token reduction",
+      "comparison": "vs A-MemGuard",
+      "setting": "batch of 10 queries; compared against PPL, LLM Auditor, Distil Classifier and A-MemGuard (Fig. 3)",
+      "quote": "In terms of runtime and token consumption, DREAM achieves up to a 2.13×\\times speedup and a 37.7% reduction in token consumption compared with A-MemGuard.",
+      "locator": "Abstract; §5.2 Fig. 3",
+      "denominator": {
+        "n_total": "74,666 tokens（A-MemGuard 在一批 10 queries 上的 token 消耗，即正文所述基线 token 范围 56,926–74,666 的上端）",
+        "n_valid": "46,484 tokens（DREAM 同一批 10 queries 的 token 消耗）",
+        "how_counted": "37.7% token 削减 = 1 − 46,484/74,666 = 37.74% → 37.7%，批大小 10 queries 逐字见正文。74,666 归因于 A-MemGuard 由算术确认：正文给出对 PPL/LLM Auditor/Distil Classifier/A-MemGuard 的 token 削减分别为 18.3%/27.1%/27.8%/37.7%，其中 56,926 与 18.3% 吻合（1−46,484/56,926=18.3%，PPL），74,666 与 37.7% 唯一吻合（1−46,484/74,666=37.7%）。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under AgentPoison backdoor attack, DREAM also improves benign utility: on Claude-Haiku-4.5 EHRAgent (eICU) accuracy increases from 45.83% (no defense) to 75.00%, and from 37.50% to 57.14% on MIMIC-III.",
+      "metric": "benign accuracy (ACC)",
+      "value": "75.00%",
+      "comparison": "45.83% -> 75.00%",
+      "setting": "AgentPoison backdoor; Claude-Haiku-4.5 backbone; EHRAgent on eICU and MIMIC-III; DPR retriever",
+      "quote": "For instance, the accuracy of the Claude-based EHRAgent (eICU) increases from 45.83% to 75.00%, and from 37.50% to 57.14% on MIMIC-III.",
+      "locator": "§5.2 Table 1",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Key ablation contrast: disabling the semantic-coherence energy term E_coh (keeping p_ret and sim) collapses the backdoor defense on EHRAgent (eICU), with ASR-r rising to 81.82% (full DREAM achieves 2.14% in Table 1).",
+      "metric": "ASR-r (ablation)",
+      "value": "81.82%",
+      "comparison": null,
+      "setting": "AgentPoison backdoor; EHRAgent eICU; GPT-5.4-mini; component ablation of the activation-intensity score (Table 4)",
+      "quote": "| ✓\\checkmark | ✓\\checkmark | ×\\times | 81.82 | 80.74 | 77.00 | 77.54 | 0.00 | 0.00 | 0.00 | 31.20 |",
+      "locator": "§5.2 Table 4",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Generality across retrieval backbones: with the REALM retriever instead of DPR (GPT-5.4-mini, AgentPoison, eICU), DREAM still cuts ASR-r/a/t from 100.00/100.00/99.46 to 2.14/2.14/1.60 and improves ACC from 74.80 to 78.07.",
+      "metric": "ASR-r/a/t (REALM retriever)",
+      "value": "2.14/2.14/1.60",
+      "comparison": "100.00/100.00/99.46 -> 2.14/2.14/1.60",
+      "setting": "AgentPoison backdoor; EHRAgent eICU; GPT-5.4-mini; REALM retriever (Appendix C)",
+      "quote": "On eICU, it reduces ASR-r/a/t from 100.00/100.00/99.46100.00/100.00/99.46 to 2.14/2.14/1.602.14/2.14/1.60, while also improving ACC from 74.8074.80 to 78.0778.07.",
+      "locator": "Appendix C Table 6",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "An attacker with detailed knowledge of DREAM's internal probing mechanism could optimize poisoned memories to remain stable under the probe and weaken the anomaly signal; such probe-aware attacks are not covered by current memory-poisoning threat models.",
+      "quote": "In principle, if an attacker had detailed knowledge of this internal probing mechanism, they could attempt to optimize poisoned memories to remain stable under the probe and thereby weaken the resulting anomaly signal.",
+      "locator": "Appendix A"
+    },
+    {
+      "statement": "Under open-ended reasoning (ReAct with REALM retriever), reasoning-stage attack success remains non-negligible (ASR-a 34.00), i.e., residual malicious signals can still propagate inside the reasoning chain even after retrieval is largely cleaned.",
+      "quote": "However, ASR-a remains non-negligible (34.0034.00), indicating that under open-ended reasoning, residual malicious signals can still propagate inside the reasoning chain even after retrieval has been largely cleaned.",
+      "locator": "Appendix C"
+    },
+    {
+      "statement": "Evaluation scope is limited; broader evaluations in more open-ended agent settings are left to future work.",
+      "quote": "Future work will focus on broader evaluations in more open-ended agent settings.",
+      "locator": "§6 Conclusion"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "appendix",
+      "figures"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "no_variance_reported",
+    "code_availability_claimed_no_url",
+    "minor_text_table_number_mismatch"
+  ]
+}

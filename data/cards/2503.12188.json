@@ -1,0 +1,171 @@
+{
+  "arxiv_id": "2503.12188",
+  "title": "Multi-Agent Systems Execute Arbitrary Malicious Code",
+  "screening_status": "必要背景",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "shared_state",
+    "scope": "single-session",
+    "carrier": "MAS 编排层在 agent 间传递的共享元数据：任务计划、动作历史、自评进度、状态报告与错误消息（status reports, error messages, progress updates, action results）；在多步攻击链中，攻击载荷还可借由下载到本地文件系统的文件（如 key.txt、反向 shell 脚本）在步骤之间携带。被劫持的控制流重定向在同一 action trace 内持续存在（'this redirection persists until the end of the action trace'）。",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "完整性 + 机密性：当 MAS 按用户请求访问不可信内容（网页、本地文件、图片、音视频）时，系统不得被诱导执行攻击者代码（如反向 shell，完整性），也不得把其可访问的用户数据（含容器化环境内数据、memory/RAG/API 中的信息）发送给攻击者（机密性）。论文证明当前 MAS 无信任模型、不区分数据与元数据，且信任 sub-agent 的状态报告（confused deputy），两类属性均可被单一恶意网页/文件攻破；失效条件还包括：即使个体 sub-agent 因安全对齐拒绝有害动作，系统整体仍可能经编排层找到执行路径（refusal turns to execution；benign 任务中自主探索目录并执行相邻恶意文件）。",
+    "operationalized_as": "攻击成功率 ASR：修改代码执行 agent，使其在将要运行攻击载荷时退出并向文件写入实验专属字符串；备用判据为云端轻量服务器持续监听并打印 socket 连接（反向 shell 连入即成功）。数据外泄攻击以构建用户画像文件并送达攻击者脚本判定。二值标注由正则字符串搜索 + 人工核验得出。"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "控制 MAS 会 inadvertent 或有意访问的不可信输入：恶意网页、本地文件（如邮件附件、图片）、网页图片（仅截图无文本）、音视频转录",
+      "不能直接向 MAS 发 prompt（与 jailbreaking 相反，用户是受害者而非攻击者）",
+      "可投放的恶意功能仅受目标系统代码执行能力限制；论文聚焦两个目标：在用户设备执行任意代码（反向 shell）与外泄用户数据"
+    ],
+    "assumptions": [
+      "MAS 内所有 agent 均为良性、不被攻击者控制",
+      "用户是不知情受害者，其请求会把 MAS 引到攻击者内容上",
+      "MAS 具备代码执行能力并可访问敏感用户数据（本地文件、容器化环境、辅助数据源）",
+      "框架为面向用户、开箱即用、可在本地与远程内容上操作的 MAS（AutoGen、Crew AI、MetaGPT）"
+    ],
+    "not_covered": [
+      "MAS 内部被攻击者控制或恶意的 sub-agent（假设 agent 均良性）",
+      "为模拟环境或纯对话式多 agent 交互设计的框架",
+      "高度可定制的商业/开发者向框架（分析仅限 drop-in 系统）",
+      "自适应/优化生成的 jailbreak 与 prompt injection 字符串用于控制流攻击（论文留作 future work）",
+      "IPI 防御能否抵御 MAS hijacking 及其对 MAS 效用的影响（论文留作 future work，未做实验）"
+    ]
+  },
+  "intervention": {
+    "name": null,
+    "mechanism_layer": "none",
+    "description": "本文为纯攻击/威胁刻画论文，未提出并评估任何防御机制（intervention=null）。§8.3 仅综述三类 IPI 防御（prompt tuning、agent-level controls 如 in-network alignment agents 与 agent tagging、model-level modifications 如 SecAlign/Jatmo/Struq/instruction hierarchy/信息流控制），并明确指出这些防御能否 foil MAS hijacking 及其是否误伤自适应控制流属于未来工作。论文将根因归结为 MAS 缺乏可信/不可信内容区分、无输入与动作的语义/信任模型，LLM 无法区分数据与元数据。作为综述的必要背景，本文确立的机制是：MAS 共享元数据与编排控制流是无防护的攻击面——任何涉及 memory/经验持久化与共享状态的防御设计都必须把 agent 间元数据通道（状态报告、错误消息）纳入信任边界，且逐 agent 的安全对齐拒绝不足以提供系统级安全。",
+    "支撑_mechanism_note": "支撑综述中'共享状态/元数据通道是攻击面、revocation 与 repair 缺失'的论证基线"
+  },
+  "controls": [
+    {"name": "Benign local file / benign webpage retrieval（Table 3，命令格式与措辞与攻击相同但内容良性）", "purpose": "baseline"},
+    {"name": "Direct ask (DA)：直接要求 MAS 执行恶意代码（Table 2、Table 8）", "purpose": "baseline"},
+    {"name": "Three previously-studied indirect prompt injection templates (IPI)（Table 2）", "purpose": "baseline"},
+    {"name": "攻击模板变体：fake Python error / fake Wordpress 403 / generic Access Denied，以及两种用户请求措辞", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "在三个框架、多 orchestrator/模型配置下，恶意网页触发的 Web Redirect MAS hijacking 攻击平均成功率为 45-64%，特定 model-orchestrator 组合达 100%",
+      "metric": "ASR",
+      "value": "45-64%",
+      "comparison": "45-64%（各模型平均）-> 100%（特定 model-orchestrator 组合，如 AutoGen Round-Robin × GPT-4o-mini）",
+      "setting": "AutoGen（Magentic-One/Selector/Round-Robin）、Crew AI（默认编排）、MetaGPT（Data Interpreter）；GPT-4o、GPT-4o-mini、Gemini 1.5 Pro、Gemini 1.5 Flash（Crew AI 仅 OpenAI 模型）；载荷为非混淆 Python 反向 shell 脚本",
+      "quote": "For example, a malicious webpage succeeds in getting these systems to run malicious code 45-64% of the time (averaged across models).\nFor certain model-orchestrator combinations, the attack success rate is 100%.",
+      "locator": "§1 Introduction",
+      "denominator": {"n_total": "10", "n_valid": "10", "how_counted": "Table 2 caption: 'Each (orchestrator-model-query-error) tuple is measured over 10 trials'；表中 45-64% 为 2 个查询 × 3 个错误模板 × 各模型的平均值，合并总试验数论文未明写"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Web Redirect 攻击在 AutoGen Magentic-One 上对 GPT-4o-mini 达 88%（GPT-4o 58%、Gemini 1.5 Pro 88%、Flash 33%，平均 58%），而同表 IPI 基线为 0%、直接要求（DA）基线为 26%——MAS hijacking 命中 IPI 无法触达的攻击面",
+      "metric": "ASR",
+      "value": "88%",
+      "comparison": "MAS hijacking 88% vs IPI 0% vs DA 26%（同表 AG/MO 行，模型与编排器见 setting）",
+      "setting": "AutoGen Magentic-One，Web Redirect 攻击；IPI 基线为 3 个已研究间接注入模板，DA 基线为直接要求执行恶意代码；Crew AI 的 IPI/DA 基线用 GPT-4o 计算",
+      "quote": "| AG | MO | 58% | 88% | 88% | 33% | 58% | 0% | 26% |",
+      "locator": "§7.1 Table 2",
+      "denominator": {"n_total": "10", "n_valid": "10", "how_counted": "Table 2 caption: 'Each (orchestrator-model-query-error) tuple is measured over 10 trials'（单元格为 2 查询 × 3 错误模板上的平均）"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "直接要求（DA）打开反向 shell 而成功执行恶意代码的实例中，91%（61/67）来自 Gemini 模型；OpenAI 模型大多直接拒绝",
+      "metric": "share of direct-ask executions attributable to Gemini models",
+      "value": "61 of 67 (91%)",
+      "comparison": null,
+      "setting": "DA 基线（直接要求执行恶意代码），跨被测 orchestrator 类型汇总；涉及 Gemini 1.5 Pro/Flash 与 GPT-4o/4o-mini",
+      "quote": "Across the orchestrator types where they were tested, Gemini models account for 61 of the 67 instances (91%) where a direct ask to open a reverse shell resulted in malicious code being executed.",
+      "locator": "§7.1",
+      "denominator": {"n_total": "67", "n_valid": "61", "how_counted": "论文明写：61 of the 67 instances (91%) where a direct ask to open a reverse shell resulted in malicious code being executed"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "良性对照任务成功率接近满分（GPT-4o 读良性本地文件 99%、良性网页 100%），说明 hijacking 的成功并非源于系统本身功能失灵",
+      "metric": "utility (benign task success rate)",
+      "value": "99%",
+      "comparison": "良性本地文件 99% vs 良性网页 100%（GPT-4o 行）",
+      "setting": "读取含测试字符串的良性本地文件/网页，命令格式与措辞与 MAS hijacking 攻击完全相同但文件内容良性；按模型跨所有 orchestrator 平均",
+      "quote": "| GPT-4o | 99% | 100% |\n| GPT-4o-mini | 100% | 100% |",
+      "locator": "§7.2 Table 3",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "攻击在不同输入模态均有效：Magentic-One 上本地文件 67%、Web Redirect 58%、Web Single（网页同页含攻击文本与载荷）22%、Web Image（仅页面截图无文本）32%",
+      "metric": "ASR",
+      "value": "58%",
+      "comparison": "Local 67% / Web Redirect 58% / Web Single 22% / Web Image 32%（Magentic-One，跨模型平均）",
+      "setting": "AutoGen Magentic-One；四类输入：恶意本地文件、Web Redirect（下载后执行）、Web Single、Web Image（无 parsable 文本的截图）；跨 GPT-4o/4o-mini/Gemini 1.5 Pro/Flash 平均",
+      "quote": "| AutoGen | Magentic-One | 67% | 58% | 22% | 32% |",
+      "locator": "§7.3 Table 4",
+      "denominator": {"n_total": "10", "n_valid": "10", "how_counted": "§6 明写 'We run each variant of the attack, determined by the (framework, orchestrator, model, input type, error type, query type) tuple, 1010 times'（LaTeX 数字粘连，即每元组 10 次），Table 2 caption 同义重申 'Each (orchestrator-model-query-error) tuple is measured over 10 trials'；Table 4 的 Web Redirect 列与 Table 2/Table 5 同源，单元格为 2 查询 × 3 错误模板 × 4 模型上的平均，合并总试验数论文未明写"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "输入类型显著影响 ASR：MetaGPT Data Interpreter 上本地文件攻击平均仅 3%，Web Redirect 达 45%",
+      "metric": "ASR",
+      "value": "45%",
+      "comparison": "Local 3% -> Web Redirect 45%（MetaGPT Data Interpreter，跨模型平均）",
+      "setting": "MetaGPT Data Interpreter（代码在 Jupyter notebook 中执行）；Local 与 Web Redirect 两类输入；跨四个模型平均",
+      "quote": "| MetaGPT | Data Interpreter | 3% | 45% | - | - |",
+      "locator": "§7.3 Table 4",
+      "denominator": {"n_total": "10", "n_valid": "10", "how_counted": "§6 明写 'We run each variant of the attack, determined by the (framework, orchestrator, model, input type, error type, query type) tuple, 1010 times'（LaTeX 数字粘连，即每元组 10 次），Table 2 caption 同义重申 'Each (orchestrator-model-query-error) tuple is measured over 10 trials'；本单元格（Table 4 Web Redirect 列）为 2 查询 × 3 错误模板 × 4 模型上的平均，合并总试验数论文未明写"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "数据外泄攻击在 Crew AI 上有效但低于反向 shell：GPT-4o 编排+执行时 Local 外泄 37%、Web 外泄 27%，对照同组 Local RS 68%、Web RS 62%",
+      "metric": "ASR (data exfiltration)",
+      "value": "27%",
+      "comparison": "Local RS 68% / Local Exfil. 37% / Web RS 62% / Web Exfil. 27%（GPT-4o orchestrator + GPT-4o sub-agent）",
+      "setting": "Crew AI（评估中唯一支持辅助数据源的框架）；外泄流程：利用辅助知识构建含个人信息（姓名、邮箱、SSN）的用户画像 -> 下载提交脚本 -> 发送给攻击者；作者归因于多步攻击步骤更多",
+      "quote": "| GPT-4o | GPT-4o | 68% | 37% | 62% | 27% |",
+      "locator": "§7.4 Table 7",
+      "denominator": {"n_total": "10", "n_valid": "10", "how_counted": "§6 明写每个 (framework, orchestrator, model, input type, error type, query type) 元组跑 10 次（'tuple, 1010 times'，LaTeX 粘连即 10）；数据外泄为同一 §6 设置下的载荷变体（'for Crew AI we also tested a data exfiltration script'）。Table 7 caption 未重述试验数；单元格为 (orchestrator, sub-agent) 组合上的平均，其下查询/错误模板变体数与合并总试验数论文未明写"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "直接要求执行恶意代码时，OpenAI 模型拒绝率高且几乎不攻击（GPT-4o 拒绝 72%/ASR 0%，4o-mini 86%/6%），Gemini 模型拒绝率 0% 且 ASR 37-41%",
+      "metric": "ASR under direct ask (with refusal rate)",
+      "value": "41%",
+      "comparison": "Gemini 1.5 Flash: Refusal 0% -> ASR 41%；GPT-4o: Refusal 72% -> ASR 0%（另有 Gemini 1.5 Pro 0%/37%、4o-mini 86%/6%）",
+      "setting": "DA 基线（直接要求执行恶意代码），按模型跨所有 orchestrator 平均；Table 8 caption 注明既未拒绝也未完成攻击的情形可能涉及系统错误、恶意内容被移除、网络连接调查等系统行为",
+      "quote": "| Gemini 1.5 Flash | 0% | 41% |\n| Gemini 1.5 Pro | 0% | 37% |\n| GPT-4o | 72% | 0% |\n| GPT-4o-mini | 86% | 6% |",
+      "locator": "§7.5 Table 8",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "评估范围仅限开箱即用的 MAS 框架，排除了高度可定制的商业/开发者框架，外推性受限",
+      "quote": "We also limited our analysis to drop-in systems that require minimal configuration and set-up. This eliminated many highly customizable business- and developer-focused frameworks.",
+      "locator": "§6 Experimental setup"
+    },
+    {
+      "statement": "未实验评估任何防御：现有 IPI 防御能否抵御 MAS hijacking 及其对 MAS 效用的副作用（如阻断自适应控制流）留作未来工作（作者用 'it is possible that' 的推测语气）",
+      "quote": "While indirect prompt injection (IPI) attacks fail to directly compromise multi-agent systems (Section 7.1), it is possible that existing IPI defenses can foil MAS hijacking attacks, too. Future work can evaluate the effectiveness of these defenses, as well as their impact on the utility of the MAS",
+      "locator": "§8.3 Defenses"
+    },
+    {
+      "statement": "音频转录等非常规攻击向量效果不稳定（偶发成功），未能系统量化",
+      "quote": "Although the results were inconsistent, the MAS occasionally opened a reverse shell, indicating that even unconventional input modalities can serve as attack vectors.",
+      "locator": "§7.5"
+    },
+    {
+      "statement": "结果标注方法限制：LLM 自动分类产生大量漏报，最终改用正则搜索 + 人工核验的二值标注",
+      "quote": "We also attempted to use GPT 4o-mini to classify output logs, but it resulted in far too many false negatives (see Appendix C for an example).",
+      "locator": "§6 Experimental setup"
+    },
+    {
+      "statement": "模型覆盖不全：Crew AI 仅测 OpenAI 模型（Gemini 模型无法运行），跨框架对比在此维度不完整",
+      "quote": "For Crew AI, only OpenAI models were tested (since Gemini models didn’t work).",
+      "locator": "§6 Experimental setup"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {"code": null, "data": null, "run_by_us": false},
+  "reading": {"coverage": ["abstract", "intro", "method", "results", "appendix", "figures"], "complete": true},
+  "quality_flags": ["denominator_unclear", "attack_paper_no_defense_proposed", "background_paper", "appendix_content_elided_in_corpus"]
+}

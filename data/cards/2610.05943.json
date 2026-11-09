@@ -1,0 +1,143 @@
+{
+ "arxiv_id": "2610.05943",
+ "title": "Runaway Reaction: When Benign Skills Compose into Malicious Behavior",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "skill",
+  "scope": "mixed",
+  "carrier": "Agent skills (packaged task instructions + executable scripts) distributed via public marketplaces (SkillHub, ClawHub) into an OpenClaw agent; the studied two-skill compositions are loaded and jointly executed within a single agent session, while the skill artifacts themselves persist and are shared across users in the repository",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "Composition-level safety: if every individual skill passes standalone security vetting (each deemed benign in isolation), their joint execution in one session must not realize target malicious behaviors (credential/SSH-key/DNS exfiltration, hidden RCE, persistent backdoor, supply-chain poisoning, config hijack, destructive file transform). The paper shows this property fails: standalone vetting does not imply composition safety, and the harm categories span confidentiality, integrity, and availability.",
+  "operationalized_as": "Attack Success Rate / trial-level harm rate: the SRC sandbox executes the composed skill pair and counts an attack successful only when the target environmental consequence is externally observed, not from the agent's textual response"
+ },
+ "threat_model": {
+  "adversary": "user",
+  "capabilities": [
+   "same access as an ordinary user: search the public skill repository, select and install skills, and provide the task input prompt",
+   "in the ACA setting, bounded additions/deletions/rewritings of the selected skills' instructions guided by sandbox execution feedback (RRS, up to 5 rounds with 5 candidate compositions per round)"
+  ],
+  "assumptions": [
+   "each selected skill is classified benign by the standalone vetting engine and shows no malicious behavior in isolated execution",
+   "agent parameters are fixed: the model is not modified, fine-tuned, or retrained",
+   "the adversary cannot tamper with the vetting engine, alter underlying tools, or grant the agent additional permissions",
+   "both DCA and ACA operate entirely within the existing permission envelope"
+  ],
+  "not_covered": [
+   "privilege escalation or granting new tool access/permissions to the model",
+   "compromise of the platform or vetting engine itself",
+   "compositions of more than two skills",
+   "cross-session persistence of attacker state",
+   "defenses or runtime detection during joint execution"
+  ]
+ },
+ "intervention": {
+  "name": "CRIME (Compositional Risk Induction via Multi-skill Execution): MPC + RRS + SRC",
+  "mechanism_layer": "content",
+  "description": "Attack framework. MPC (Malicious Plot Casting) decomposes a target malicious behavior into two complementary capability requirements and retrieves individually benign skill pairs from public repositories. For compositions that do not directly realize the target, RRS (Runaway Reaction Steering) iteratively applies bounded additions, deletions, or rewritings to the skill instructions guided by execution feedback, discarding any candidate whose constituent fails standalone vetting. SRC (Skill Reaction Chamber) executes compositions in an isolated sandbox and determines attack success from externally observable environmental consequences."
+ },
+ "results": [
+  {
+   "claim": "Unmodified benign skill pairs under DCA already realize target malicious behaviors under the facilitated prompt, with average trial-level harm rate 27.9% on DeepSeek-V4-Flash and 9.7% on GPT-4o-mini across eight cybersecurity behaviors.",
+   "metric": "trial-level harm rate",
+   "value": "27.9% / 9.7%",
+   "comparison": null,
+   "setting": "OpenClaw agent on DeepSeek-V4-Flash and GPT-4o-mini; 4,000-skill public market corpus; 70 pairs per behavior per model; facilitated prompt; sandbox execution (SRC)",
+   "quote": "| Average | 27.9 | 47.1 | 37.9 | 73.8 | 9.7 | 19.3 | 14.4 | 32.1 |",
+   "locator": "§6.2 Table 1, Average row",
+   "denominator": {
+    "n_total": "560 skill pairs (70 per behavior x 8 behaviors)",
+    "n_valid": null,
+    "how_counted": "Trial-level harm rate (%) under the facilitated prompt. Market corpus, 70 pairs per behavior. (per-pair trial count not stated)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Execution-feedback optimization (ACA refining both skills) strengthens initially ineffective compositions: average harm rate rises from 27.9% (DCA) to 73.8% on DeepSeek-V4-Flash and from 9.7% to 32.1% on GPT-4o-mini.",
+   "metric": "trial-level harm rate",
+   "value": "73.8%",
+   "comparison": "27.9% -> 73.8%; 9.7% -> 32.1%",
+   "setting": "OpenClaw agent on DeepSeek-V4-Flash and GPT-4o-mini; facilitated prompt; same 560 skill pairs; RRS up to 5 rounds, 5 candidates per round, SkillSafe as vetting constraint",
+   "quote": "| Average | 27.9 | 47.1 | 37.9 | 73.8 | 9.7 | 19.3 | 14.4 | 32.1 |",
+   "locator": "§6.2 Table 1, Average row",
+   "denominator": {
+    "n_total": "560 skill pairs (70 per behavior x 8 behaviors)",
+    "n_valid": null,
+    "how_counted": "Trial-level harm rate (%) under the facilitated prompt. Market corpus, 70 pairs per behavior."
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Skills optimized by RRS still largely pass standalone vetting, so individual skill inspection does not reflect composed risk: average pass rate 98.2% -> 93.8% under SkillSafe, 98.0% -> 97.1% under Cisco Skill Scanner, 98.2% -> 92.1% under CSC SkillScan (before -> after RRS).",
+   "metric": "vetting pass rate",
+   "value": "98.2% -> 93.8%",
+   "comparison": "SkillSafe 98.2% -> 93.8%; Cisco 98.0% -> 97.1%; CSC SkillScan 98.2% -> 92.1%",
+   "setting": "three standalone vetting engines (SkillSafe, Cisco Skill Scanner, Tencent CSC SkillScan) inspecting the skills from the 70 selected pairs per target behavior, before and after RRS optimization",
+   "quote": "| Average | 98.2 | 93.8 | 98.0 | 97.1 | 98.2 | 92.1 |",
+   "locator": "§6.5 Table 2, Average row",
+   "denominator": {
+    "n_total": "70 selected pairs per behavior (each pair's constituent skills evaluated)",
+    "n_valid": null,
+    "how_counted": "For each target behavior, we separately evaluate the skills from the 70 selected pairs."
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Capability-directed selection is what makes composition attacks work: under the Strict Benign prompt, MPC achieves average ASR 17.0% (DCA) / 52.3% (ACA both) versus Random 3.1% / 4.5% and Semantic 7.1% / 14.1%.",
+   "metric": "ASR",
+   "value": "17.0% / 52.3%",
+   "comparison": "MPC 17.0%/52.3% vs Random 3.1%/4.5% vs Semantic 7.1%/14.1%",
+   "setting": "Strict Benign prompt condition; DCA and ACA (refine both skills); each strategy constructs 70 skill pairs per behavior from the same public skill corpus",
+   "quote": "| Average | 17.0 | 52.3 | 3.1 | 4.5 | 7.1 | 14.1 |",
+   "locator": "§6.6 Table 3, Average row",
+   "denominator": {
+    "n_total": "70 skill pairs per behavior per strategy",
+    "n_valid": null,
+    "how_counted": "For each target behavior, each strategy constructs 70 skill pairs from the same public skill corpus."
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "RRS converts most initially ineffective compositions within budget: successful optimization for 86.2% of selected skill pairs on aggregate, at a mean cost of 42.1 added instruction tokens, 14.0 candidate compositions evaluated, and 2.6 rounds to success.",
+   "metric": "successful optimization rate",
+   "value": "86.2%",
+   "comparison": null,
+   "setting": "eight cybersecurity behaviors; RRS up to 5 optimization rounds with 5 candidates per round; SRC sandbox confirmation of the target consequence",
+   "quote": "| Aggregate | 86.2 | 42.1±6.342.1\\pm 6.3 | 14.0±7.014.0\\pm 7.0 | 2.6±1.12.6\\pm 1.1 |",
+   "locator": "Appendix B, Table S1, Aggregate row",
+   "denominator": {
+    "n_total": "selected skill pairs (70 per behavior)",
+    "n_valid": null,
+    "how_counted": "we record the proportion of selected Skill pairs for which RRS obtains a successful composition within the optimization budget"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": null,
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "limitations_not_stated",
+  "figure_numeric_data_absent_from_corpus",
+  "referenced_tables_4_and_4c_absent_from_corpus",
+  "appendix_c_representative_prompts_absent_from_corpus"
+ ]
+}

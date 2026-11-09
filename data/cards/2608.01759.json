@@ -1,0 +1,159 @@
+{
+ "arxiv_id": "2608.01759",
+ "title": "Benign Alone, Harmful Together: Exploiting Experience Composition in Self-Evolving LLM Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "experience",
+  "scope": "cross-session",
+  "carrier": "受害自演化代理的持久经验记忆（ReasoningBank 的 persistent reasoning memory；SE-Agent 的轨迹修订/重组经验）；经验条目形式为反思、程序性规则或可复用技能，由受害代理自身抽取机制 Φ 从轨迹蒸馏并写入持久记忆",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "自演化代理对安全敏感/有害查询的拒绝边界（safety boundary）应在良性经验跨会话累积与复用时保持。攻击在原子良性约束（每条提交任务与每条诱导经验孤立评估均为良性）下使该边界失效：目标阶段的有害遵从分数升高，Δharm = J_harm(q, M_n) − J_harm(q, M_0)，即持久记忆中孤立良性的经验被联合激活后削弱拒绝行为。",
+  "operationalized_as": "两个安全基准上的 ASR：JailbreakBench（100 条恶意提示）与 HarmBench（400 条有害行为）；由 LLM 评审（GPT-5.4-mini）按 1-5 打分，仅当评分=5 记为攻击成功，ASR=(1/N)Σ I[s_i=5]×100%（式10）；良性约束以 benignness 审计量化：对每条攻击阶段任务与诱导经验做二元判定后取平均，Ben.=(1/(2K))Σ[B(t_i)+B(e_i^a)]×100%（式11）"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "通过受害代理的任务接口提交良性攻击阶段任务（gray-box，task interface 交互）",
+   "对自身交互所蒸馏出的经验具有只读可观察能力（read-only observability of experiences from its own interactions）",
+   "基于观测到的实际经验闭环重规划（closed-loop replanning），自适应选择下一任务",
+   "在目标阶段基于完整交互历史改写最终查询（experience-aware target reformulation），在全新会话中激活累积经验"
+  ],
+  "assumptions": [
+   "受害代理为自演化代理：将轨迹蒸馏为持久经验并在后续任务中检索复用（ReasoningBank / SE-Agent）",
+   "经验跨会话持久，而前一阶段的交互历史在目标阶段的新会话中不可用",
+   "对手不能直接插入、删除或编辑记忆条目，也不能修改受害代理的系统提示或经验抽取机制 Φ",
+   "存在良性审计器 B(·) 可对每条任务与经验做孤立二元良性判定",
+   "LLM 评审（GPT-5.4-mini）能可靠判定有害遵从与良性"
+  ],
+  "not_covered": [
+   "针对良性经验组合攻击的防御或缓解机制（论文未提出或评估任何 defense）",
+   "被污染经验的撤销（revocation）与修复（repair）",
+   "跨用户/多用户共享经验记忆的场景",
+   "具备直接写记忆权限的对手（AgentPoison 式特权访问仅作为基线对比，非本文威胁模型）",
+   "良性审计器或 LLM 评审本身被规避/不可靠的情形"
+  ]
+ },
+ "intervention": {
+  "name": null,
+  "mechanism_layer": "none",
+  "description": "本文为攻击研究（EvoBreak 攻击 + BreakGym 目标合成 + 拒绝采样 SFT 与 Hint-guided GRPO 级联训练），未提出或评估任何防御/缓解机制；结论仅呼吁对持久经验做累积性安全评估而非孤立审计。"
+ },
+ "results": [
+  {
+   "claim": "在两受害骨干 × 两自演化框架 × 三预演化域 × 两安全基准的全部设置下，EvoBreak 的总体平均 ASR 达 86.12%，比最强基线 ReNeLLM 高 24.19 个百分点（条件：经 BreakGym 训练的 EvoBreak，攻击阶段任务与诱导经验均孤立良性）",
+   "metric": "ASR (%)",
+   "value": "86.12%",
+   "comparison": "超出最强基线 ReNeLLM 24.19 个百分点",
+   "setting": "受害骨干 GPT-5-mini 与 Llama-3.1-8B-Instruct；自演化框架 ReasoningBank 与 SE-Agent；预演化域 AIME/LiveCodeBench/MMLU-Pro；基准 JailbreakBench 与 HarmBench；攻击者仅任务接口交互+只读经验观察",
+   "quote": "First, EvoBreak consistently achieves the strongest attack performance across all settings. Its overall average ASR reaches 86.12%, outperforming the strongest baseline, ReNeLLM, by 24.19 percentage points.",
+   "locator": "§4.2 Main Results（Table 1 之上的正文）",
+   "denominator": {
+    "n_total": "每单元 100（JailbreakBench 恶意提示）/ 400（HarmBench 有害行为）条评测查询；总计 24 个设置单元（2 骨干 × 2 框架 × 3 域 × 2 基准）",
+    "n_valid": null,
+    "how_counted": "ASR=(1/N)Σ I[s_i=5]×100%（式10），N 为评测查询总数，成功仅当评审评分=5；86.12% 为 24 个设置单元 ASR 的总平均，结果为 5 次独立运行均值"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "在 Llama-3.1-8B-Instruct 受害者上，EvoBreak 于 12 个（框架×域×基准）组合的 ASR 介于 87.40–93.85，如 SE-Agent+数学预演化+JailbreakBench 为 90.60、SE-Agent+数学+HarmBench 为 93.85，全部高于同表最强基线",
+   "metric": "ASR (%)",
+   "value": "90.60",
+   "comparison": "同受害块（SE-Agent, Math 列）下区间 87.40–93.85；受害模型见 setting",
+   "setting": "Llama-3.1-8B-Instruct 受害者；ReasoningBank 与 SE-Agent；Math/Code/Reas. 三预演化域；JailbreakBench 与 HarmBench",
+   "quote": "| EvoBreak | 90.60 | 88.20 | 87.80 | 88.00 | 89.40 | 87.40 | 93.85 | 91.10 | 89.55 | 90.30 | 92.95 | 88.20 |",
+   "locator": "§4.2 Table 1（Llama-3.1-8B-Instruct 块，EvoBreak 行）",
+   "denominator": {
+    "n_total": "100（JailbreakBench 列）/ 400（HarmBench 列）条评测查询",
+    "n_valid": null,
+    "how_counted": "ASR=(1/N)Σ I[s_i=5]×100%（式10），5 次独立运行均值；行内 12 个数值对应 2 框架 × 3 域 × 2 基准"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "在 GPT-5-mini 受害者上，EvoBreak 于 12 个（框架×域×基准）组合的 ASR 介于 78.20–86.25（如 SE-Agent+数学+JailbreakBench 为 80.60），仍为同表各行中最强",
+   "metric": "ASR (%)",
+   "value": "80.60",
+   "comparison": "同块内区间 78.20–86.25",
+   "setting": "GPT-5-mini 受害者；ReasoningBank 与 SE-Agent；Math/Code/Reas. 三预演化域；JailbreakBench 与 HarmBench",
+   "quote": "| EvoBreak | 80.60 | 81.00 | 79.20 | 79.80 | 78.20 | 80.40 | 85.05 | 84.80 | 86.25 | 83.05 | 85.00 | 86.10 |",
+   "locator": "§4.2 Table 1（GPT-5-mini 块，EvoBreak 行）",
+   "denominator": {
+    "n_total": "100（JailbreakBench 列）/ 400（HarmBench 列）条评测查询",
+    "n_valid": null,
+    "how_counted": "ASR=(1/N)Σ I[s_i=5]×100%（式10），5 次独立运行均值"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "消融（JailbreakBench，Llama-3.1-8B-Instruct）：完整版 ASR 90.60/88.20/87.80/88.00/89.40/87.40；去掉经验条件化重规划降至 67.60/63.20/62.80/64.00/65.20/62.60；仅用改写查询（RF Query Only，无经验获取）进一步骤降至 31.20/27.80/28.40/26.40/28.00/30.20，说明攻击效力依赖多经验联合组合而非单一改写",
+   "metric": "ASR (%)",
+   "value": "90.60",
+   "comparison": "Full 90.60 -> w/o Replanning 67.60 -> RF Query Only 31.20（SE-Agent + Math 列）",
+   "setting": "Llama-3.1-8B-Instruct；SE-Agent 与 ReasoningBank；Math/Code/Reas. 预演化域；JailbreakBench",
+   "quote": "| w/o Replanning | 67.60 | 63.20 | 62.80 | 64.00 | 65.20 | 62.60 |\n| w/o Reformulation | 66.60 | 70.40 | 63.00 | 65.20 | 68.00 | 64.20 |\n| RF Query Only | 31.20 | 27.80 | 28.40 | 26.40 | 28.00 | 30.20 |\n| Full | 90.60 | 88.20 | 87.80 | 88.00 | 89.40 | 87.40 |",
+   "locator": "§4.4 Table 2（Ablation study of EvoBreak on JailbreakBench）",
+   "denominator": {
+    "n_total": "100（JailbreakBench 恶意提示）条评测查询",
+    "n_valid": null,
+    "how_counted": "ASR=(1/N)Σ I[s_i=5]×100%（式10），5 次独立运行均值"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "经验保留比例实验（RQ4）：保留的攻击诱导经验为空或仅一小部分时攻击成功率有限，随保留集合趋近完整而成比例上升并加速，表明效力来自多条经验的联合可用性而非单条决定性经验（数值仅在图 5，正文未给具体数）",
+   "metric": "ASR（保留比例曲线，Figure 5）",
+   "value": "定性：limited -> progressive -> accelerating（正文无数值）",
+   "comparison": null,
+   "setting": "SE-Agent 与 ReasoningBank；Llama-3.1-8B-Instruct（图 5 跨两框架）",
+   "quote": "As shown in Figure 5, attack success remains limited when no experience or only a small subset is available, but increases progressively and accelerates as the retained set approaches completion.",
+   "locator": "§4.6 Analysis of Experience Conditions, Figure 5",
+   "denominator": null,
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "良性性权衡（RQ1）：在 Llama-3.1-8B-Instruct 上跨框架与预演化域，EvoBreak 在两个基准上同时取得最佳攻击效力—良性性权衡（孤立良性的任务与经验），优于需暴露有害意图的查询级攻击与需特权写入的 AgentPoison（具体 benignness 数值仅在图 3，正文未给数）",
+   "metric": "ASR 与 Benignness 权衡（Figure 3）",
+   "value": "定性：best effectiveness–benignness trade-off（正文无数值）",
+   "comparison": null,
+   "setting": "Llama-3.1-8B-Instruct；SE-Agent 与 ReasoningBank；Math/Code/Reas. 预演化域；JailbreakBench 与 HarmBench",
+   "quote": "Figure 3 reports the average ASR and benignness on Llama-3.1-8B-Instruct across self-evolving frameworks and pre-evolution domains. EvoBreak achieves the best effectiveness–benignness trade-off on both benchmarks.",
+   "locator": "§4.3 Benignness of Attacks, Figure 3",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  }
+ ],
+ "limitations": null,
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "limitations_not_stated",
+  "figure_values_not_in_text",
+  "attack_only_no_defense_evaluated"
+ ]
+}

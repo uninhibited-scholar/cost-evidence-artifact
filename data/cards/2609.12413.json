@@ -1,0 +1,347 @@
+{
+ "arxiv_id": "2609.12413",
+ "title": "SoK: Rethinking Jailbreaking in the Era of Agentic AI: Attacks, Defenses, and Practical Considerations",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "SoK 系统化的对象是 agentic 执行管线各组件中可被对抗性内容持久化的状态：持久记忆（short-term/long-term/RAG，如 MINJA 注入后被存储并在后续交互中检索）、规划与推理轨迹（TRACE/CoT 劫持）、工具调用与外部动作（AgentHarm/STAC）、代理间通信消息（Agent Smith/ARCJ 传染式越狱），以及跨轮积累的攻击策略（AutoDAN-Turbo 的策略发现与检索）",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "核心安全属性是策略合规（safety-policy bypass）：论文将越狱定义为绕过显式模型级或代理级安全策略以诱导被禁止的生成、推理、存储、工具使用或执行；同时覆盖其衍生的机密性（data exfiltration）与完整性/权限（unauthorized action、goal hijacking）目标。中心主张：响应级安全不等于代理级安全——最终响应安全不保证规划、记忆、工具交互安全；评估须分离 native harmful-prompt safety、adversarial jailbreak robustness 与 agent-level security 三个层次，并联合考虑 over-refusal、utility、latency 与计算成本",
+  "operationalized_as": "安全–效用–效率框架（Fig.4）：ASR=FN/(TP+FN)、DSR、ORR=FP/(TN+FP)（Eq.1-2，GPT-5-mini 逐响应判定）、aggregate utility=(AR+RQ+Helpfulness)/3（Eq.4）、DeepEval Bias、推理时间/端到端延迟/推理 token/总 token；agent 级组件指标：unsafe planning (UP)、unsafe memory (UM)、poison retrieval (PR)、unsafe search input (USI)、unsafe task-tool interactions (UTI)（AgentHarm-chat，Tables 9-11）；综合分为模型内 min-max 归一化加权分（仅模型内可比）"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "主要考虑黑盒对手：可控制用户输入与外部供给内容（检索内容、记忆、工具输出、代理间消息），但不能修改可信系统提示词、模型参数或基础设施",
+   "也考虑更强白盒对手：可访问模型内部信息（参数/梯度/logits/隐表示）或防御信息",
+   "攻击目标覆盖最终响应越狱与组件级不安全行为（规划、记忆写入、工具调用、代理间传播）"
+  ],
+  "assumptions": [
+   "prompt injection 仅在绕过显式安全策略时计为 jailbreak；仅重定向已授权任务而不绕过策略者不在范围内",
+   "实验在固定代理架构的统一 LangGraph 评估框架内进行，tool model 固定为 Qwen3.5-4B，final models 为 Qwen3.5-4B 与 Llama-3.1-8B-Instruct，评审为 GPT-5-mini（Table 8 另加人工核验）",
+   "研究范围刻意分离系统化广度与实验深度：分类法覆盖规划/工具/记忆/多代理面，受控实验只针对代表性模型层推理时防御"
+  ],
+  "not_covered": [
+   "能修改系统提示词、模型参数或基础设施的内部攻击者（作为假设排除）",
+   "不以防绕过安全策略为目标的通用可靠性控制（明确排除在防御分类之外）",
+   "训练时投毒类攻击仅在分类法中列出（如 Universal Jailbreak Backdoor），未进入受控实验",
+   "闭源前沿大模型：受控实验仅用两个开源小模型，结论限定于该设置"
+  ]
+ },
+ "intervention": {
+  "name": "Agentic jailbreak 攻防分类法 + security–utility–efficiency 评估框架（Fig.2/Fig.3/Fig.4）",
+  "mechanism_layer": "architecture",
+  "description": "两层贡献：(1) 攻击分类法（Fig.2）按黑盒（user-agent、planning&reasoning、agent-tool、agent-memory、agent-agent 五个交互面）与白盒（梯度/搜索/表示感知优化）组织 116 种攻击；防御分类法（Fig.3）按被保护的架构层组织 63 种防御：model&reasoning（安全训练/输入过滤/内部状态与解码控制/输出分类校验修订）、context&state（CaMeL、A-MemGuard、SMSR）、planning&orchestration（ShieldAgent、AgentSpec）、tools&execution（Progent、AttriGuard）、inter-agent communication（AutoDefense、TrinityGuard）。(2) 在统一 LangGraph 代理框架内对 16 个代表性推理时防御做受控对比，主张从响应中心防御转向跨层、执行感知安全（保护 agent 状态、组件转换与外部动作）"
+ },
+ "results": [
+  {
+   "claim": "文献筛选规模：2022-2026 多源检索（最后更新 2026 年 8 月）筛出 271 篇攻击相关与 88 篇防御相关候选研究/方法",
+   "metric": "literature_screening_count",
+   "value": "271 and 88",
+   "comparison": null,
+   "setting": "SoK 自身的文献检索（Google Scholar/ACM DL/IEEE Xplore/ACL Anthology/arXiv/OpenReview + 前后向引文追踪）",
+   "quote": "This search identified 271 attack-related and 88 defense-related candidate studies or methods for screening.",
+   "locator": "§2.1 Literature Search",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "最终分类法覆盖 116 种不同 jailbreak 攻击与 63 种不同防御，横跨传统模型层技术与新兴 agentic 攻击面——这是该 SoK 的核心系统化产出",
+   "metric": "taxonomy_coverage",
+   "value": "116 attacks and 63 defenses",
+   "comparison": null,
+   "setting": "对保留文献按对抗访问、攻击面、目标组件、持久性、交互结构、优化机制、信任边界、防御阶段编码后得到",
+   "quote": "The resulting taxonomy contains 116 distinct jailbreak attacks and 63 distinct defenses, spanning traditional model-level techniques and emerging agentic attack surfaces.",
+   "locator": "§2.1 Literature Search",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "受控实验规模：统一 LangGraph 代理框架内基准测试 16 个代表性 jailbreak 防御，另设未防御 Vanilla 基线",
+   "metric": "evaluated_defenses",
+   "value": "16 representative jailbreak defenses",
+   "comparison": null,
+   "setting": "2x NVIDIA RTX A6000 (48GB)；tool model Qwen3.5-4B；final models Qwen3.5-4B 与 Llama-3.1-8B-Instruct；防御固定、架构不变以受控比较",
+   "quote": "Unless otherwise specified, Qwen3.5-4B serves as the router/tool model, while Qwen3.5-4B and Llama-3.1-8B-Instruct are evaluated as final-response models. We benchmark 16 representative jailbreak defenses together with an undefended Vanilla baseline.",
+   "locator": "§5.1 Experimental Setup",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "评估集构成：XSTest 含 250 条良性与 200 条有害提示，良性子集测 over-refusal/utility/bias，有害子集测 ASR",
+   "metric": "dataset_scale",
+   "value": "250 benign and 200 harmful",
+   "comparison": null,
+   "setting": "security-utility-efficiency 评估；AdvBench 仅用于对抗安全性评估",
+   "quote": "For security–utility–efficiency evaluation, we use XSTest, containing 250 benign and 200 harmful prompts.",
+   "locator": "§5.1 Experimental Setup",
+   "denominator": {
+    "n_total": "450 (250 benign + 200 harmful XSTest prompts)",
+    "n_valid": null,
+    "how_counted": "benign subset -> ORR/utility (ORR 百分比均为 1/250 的整数倍，如 2.40%=6/250)；harmful subset -> ASR（但 ASR 百分比非 1/200 整数倍，实际试次分母论文未说明）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "对抗鲁棒性评估：取 AdvBench 前 50 条有害指令，配 9 种代表性攻击（AutoDAN、PAIR、TAP、GCG、Cipher、DeepInception、CodeChameleon、ICA、Jailbroken）",
+   "metric": "adversarial_eval_scale",
+   "value": "50 harmful instructions per attack",
+   "comparison": null,
+   "setting": "每个防御 x 每种攻击 50 条指令；评审 GPT-5-mini + 人工核验（Table 8 题注）",
+   "quote": "50 harmful instructions from AdvBench with nine representative attacks: AutoDAN, PAIR, TAP, GCG, Cipher,",
+   "locator": "§5.1 Experimental Setup",
+   "denominator": {
+    "n_total": "50 instructions x 9 attacks = 450 attack queries per defense",
+    "n_valid": "50 per attack",
+    "how_counted": "每格为该攻击下 50 条指令的 ASR（均为 2% 的整数倍）；Avg. ASR 为九个攻击 ASR 的均值（验证：mean[76,22,40,0,40,42,62,2,22]=34.00）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "代理级评估：在 AgentHarm 基准上用 3 种攻击（TRACE 打规划、MINJA 打持久记忆、AgenticRed 自动演化提示）测最终 ASR 与组件级不安全行为",
+   "metric": "agent_level_eval_scope",
+   "value": "three attack methods (TRACE, MINJA, AgenticRed)",
+   "comparison": null,
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct，评审 GPT-5-mini；论文未说明所用 AgentHarm 查询数/试次分母",
+   "quote": "three attack methods: TRACE, MINJA, and AgenticRed. TRACE primarily targets planning, MINJA compromises",
+   "locator": "§5.1 Experimental Setup",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Qwen3.5-4B 上 Self-Reminder 综合分最高（86.8），SafeProbing 次之（85.0），Vanilla 也在前三（84.5，SafeDecoding 取整后同分）",
+   "metric": "overall_normalized_score",
+   "value": "86.8",
+   "comparison": "SafeProbing 85.0",
+   "setting": "XSTest，tool/final model 均 Qwen3.5-4B；min-max 归一化综合分（security=DSR+overall accuracy+1-ORR 等权，utility，efficiency 按 0.40/0.30/0.30 加权），仅模型内可比",
+   "quote": "For Qwen3.5-4B, Self-Reminder achieves the highest overall score (86.8), followed by SafeProbing (85.0) and Vanilla",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Qwen3.5-4B 上 Self-Reminder 把 ASR 从 3.67% 降到 1.01% 并取得最高 aggregate utility 81.62%，同时总响应时间略低于 Vanilla——安全增益相对原生对齐仅是边际的",
+   "metric": "ASR",
+   "value": "1.01%",
+   "comparison": "3.67% -> 1.01%; aggregate utility 81.62%",
+   "setting": "XSTest（Qwen3.5-4B，GPT-5-mini 评审）；Vanilla 基线 ASR 3.67%（Table 2），utility 对比 Vanilla 76.35%（Table 3）",
+   "quote": "it reduces ASR from 3.67% to 1.01%, achieves the highest aggregate utility (81.62%), and slightly reduces total response time relative to Vanilla.",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Llama-3.1-8B-Instruct 上排名反转为 Self-Eval 第一（97.1）> Vanilla（96.5）> ICD 与 SafeProbing 并列（96.2）；Self-Eval 效用最高 77.51%、总准确率 95.55%——最优防御是模型依赖的",
+   "metric": "overall_normalized_score",
+   "value": "97.1",
+   "comparison": "Vanilla 96.5; ICD and SafeProbing tied 96.2; utility 77.51%",
+   "setting": "XSTest，tool model Qwen3.5-4B、final model Llama-3.1-8B-Instruct（efficiency 只按 response time 0.60 / total tokens 0.40 加权，因无 reasoning token 计数）",
+   "quote": "For Llama-3.1-8B-Instruct, Self-Eval ranks first (97.1), followed by Vanilla (96.5), with ICD and SafeProbing tied after rounding (96.2). Self-Eval provides the highest utility (77.51%) and overall accuracy (95.55%), while maintaining latency and token consumption close to Vanilla.",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Llama 上 ICD 与 SafeProbing 的 ASR（2.01% 与 2.00%）仅略低于 Vanilla 的 2.51%——防御在强原生对齐模型上的边际安全增益很小",
+   "metric": "ASR",
+   "value": "2.01% and 2.00%",
+   "comparison": "2.51% (Vanilla)",
+   "setting": "XSTest 有害子集，Llama-3.1-8B-Instruct，GPT-5-mini 评审",
+   "quote": "ICD and SafeProbing obtain slightly lower ASR than Vanilla (2.01% and 2.00% versus 2.51%) while preserving high accuracy and relatively low over-refusal.",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "过度拒绝代价：Prompt Guard 与 Robust Aligned 在两个模型上均达 0% ASR，但拒绝全部良性 XSTest 提示，ORR 100%、utility 0%——低 ASR 可由全面拒绝伪造",
+   "metric": "ASR / over_refusal_rate",
+   "value": "0%",
+   "comparison": "yielding 100% over-refusal and 0% utility",
+   "setting": "XSTest，两个 final model（Qwen3.5-4B 与 Llama-3.1-8B-Instruct）；其低延迟部分源于直接终止良性请求",
+   "quote": "Prompt Guard and Robust Aligned achieve 0% ASR for both models, but reject all benign XSTest prompts, yielding 100% over-refusal and 0% utility.",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": {
+    "n_total": "ORR：250 条良性 XSTest 提示（100.00%=250/250，与 1/250 步长一致）；ASR：有害子集分母论文未说明",
+    "n_valid": "ORR 250/250 被拒；utility 0.00%（Table 3/6）",
+    "how_counted": "ORR=FP/(TN+FP)（Eq.2，full+partial refusal 计为 FP）；ASR=FN/(TP+FN)（Eq.1，GPT-5-mini 判定）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "计算开销代价：SmoothLLM 把 Qwen 响应时间推高到 824.84 s（Vanilla 72.44 s），RPO 把 Llama 响应时间推到 149.66 s、token 用量 3006.63",
+   "metric": "end_to_end_latency / token_cost",
+   "value": "824.84 s",
+   "comparison": "RPO on Llama: 149.66 s and 3006.63 tokens",
+   "setting": "XSTest；Qwen3.5-4B（SmoothLLM，Table 4）与 Llama-3.1-8B-Instruct（RPO，Table 7）",
+   "quote": "SmoothLLM increases Qwen response time to 824.84 s, while RPO increases Llama response time to 149.66 s and token usage to 3006.63.",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "对抗攻击下原生对齐远不够：Llama 上 Vanilla 对 9 种攻击的平均 ASR 达 34.00%，AutoDAN（76.00%）与 CodeChameleon（62.00%）最高",
+   "metric": "ASR",
+   "value": "34.00%",
+   "comparison": "AutoDAN 76.00%; CodeChameleon 62.00%",
+   "setting": "AdvBench 前 50 条有害指令 x 9 攻击，Llama-3.1-8B-Instruct，GPT-5-mini + 人工核验；对比 XSTest 非对抗有害子集 Vanilla 仅 2.51%",
+   "quote": "The Vanilla agent obtains an average ASR of 34.00%, with AutoDAN (76.00%) and CodeChameleon (62.00%) producing the highest attack success.",
+   "locator": "§5.3 Jailbreak Robustness in Agentic AI",
+   "denominator": {
+    "n_total": "每种攻击 50 条指令 x 9 种攻击",
+    "n_valid": "50 per attack",
+    "how_counted": "Avg. ASR = 九个每攻击 ASR 的均值（mean[76,22,40,0,40,42,62,2,22]=34.00，Table 8）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "鲁棒性强烈依赖攻击类型：ICD 把 GCG/Cipher/ICA 降到 0% ASR，但在 AutoDAN 下仍达 66.00%、CodeChameleon 下 46.00%——单攻击评测推不出鲁棒性",
+   "metric": "ASR",
+   "value": "0% (GCG, Cipher, and ICA)",
+   "comparison": "66.00% under AutoDAN and 46.00% under CodeChameleon",
+   "setting": "AdvBench（50 条/攻击），Llama-3.1-8B-Instruct，Table 8",
+   "quote": "For example, ICD reduces GCG, Cipher, and ICA to 0% ASR but reaches 66.00% under AutoDAN and 46.00% under CodeChameleon.",
+   "locator": "§5.3 Jailbreak Robustness in Agentic AI",
+   "denominator": {
+    "n_total": "每种攻击 50 条指令",
+    "n_valid": "50 per attack",
+    "how_counted": "每攻击 ASR = 成功越狱数/50（GPT-5-mini + 人工核验）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "AgenticRed 的组件级影响：相对 Vanilla，unsafe planning 从 26.00% 升至 35.14%，final ASR 从 13.46% 升至 25.00%",
+   "metric": "unsafe_planning_rate",
+   "value": "35.14%",
+   "comparison": "unsafe planning 26.00% -> 35.14%; final ASR 13.46% -> 25.00%",
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct（Vanilla：ASR 13.46%、UP 26.00%、UTI 75.00%、65 次工具调用）；试次分母未说明",
+   "quote": "planning increases from 26.00% to 35.14%, while final ASR rises from 13.46% to 25.00% (Table 9). MINJA directly",
+   "locator": "Table 9",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "MINJA 直接攻破记忆层：在所有评估条件下产生超过 91% 的 unsafe memory 与 100% 的 poison retrieval",
+   "metric": "unsafe_memory_rate",
+   "value": "more than 91% unsafe memory and 100% poison retrieval",
+   "comparison": "poison retrieval 100% across all evaluated conditions",
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct，Table 10（MINJA 条件：UM 93.18%、PR 100.00%、USI 97.96%；Vanilla PR 0.00%）；试次分母未说明",
+   "quote": "compromises the memory layer, producing more than 91% unsafe memory and 100% poison retrieval across all evaluated conditions (Table 10).",
+   "locator": "Table 10",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "TRACE 造成最强规划层攻破：unsafe planning 从 26.00% 升至 91.49%，而 final ASR 仅 11.54%——最终响应 ASR 会大幅低估中间组件的失陷",
+   "metric": "unsafe_planning_rate",
+   "value": "91.49%",
+   "comparison": "final ASR only 11.54%",
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct，Table 11（Vanilla UP 26.00%）；试次分母未说明",
+   "quote": "to 91.49%, despite a final ASR of only 11.54% (Table 11). This discrepancy shows that final-response ASR alone can substantially underestimate compromise within intermediate agent components.",
+   "locator": "Table 11",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "响应级防御留下中间态失陷：Self-Eval 在三种攻击下把 final ASR 降到 0%，但 MINJA 下 unsafe memory 仍达 95.65%、TRACE 下 unsafe planning 达 93.62%（且其延迟在防御中最高）",
+   "metric": "intermediate_compromise",
+   "value": "0%",
+   "comparison": "yet unsafe memory 95.65% under MINJA and unsafe planning 93.62% under TRACE",
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct，Tables 9-11；试次分母未说明",
+   "quote": "Self-Eval reduces final ASR to 0% under all three attacks, yet substantial intermediate compromise remains: unsafe memory reaches 95.65% under MINJA, and unsafe planning reaches 93.62% under TRACE.",
+   "locator": "§5.4 Impact of Agentic AI Components",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "防御的跨层削减与不一致：Erase-and-Check 把 AgenticRed ASR 从 25.00% 降到 7.69%、TRACE 从 11.54% 降到 1.92%；Self-Reminder 把 MINJA ASR 从 17.31% 降到 5.77%",
+   "metric": "ASR",
+   "value": "7.69%",
+   "comparison": "AgenticRed 25.00% -> 7.69%; TRACE 11.54% -> 1.92%; Self-Reminder on MINJA 17.31% -> 5.77%",
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct，Tables 9-11；试次分母未说明",
+   "quote": "Erase-and-Check reduces final ASR from 25.00% to 7.69% under AgenticRed and from 11.54% to 1.92% under TRACE, while Self-Reminder reduces MINJA ASR from 17.31% to 5.77%.",
+   "locator": "§5.4 Impact of Agentic AI Components",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "防御可反向恶化：ICD 把 AgenticRed ASR 降到 19.23%，却把 TRACE ASR 推高到 15.38%（Vanilla 11.54%）——防御效果攻击依赖且可能为负",
+   "metric": "ASR",
+   "value": "19.23%",
+   "comparison": "but TRACE ASR increases to 15.38%",
+   "setting": "AgentHarm-chat，Llama-3.1-8B-Instruct，Tables 9/11",
+   "quote": "reducing AgenticRed ASR to 19.23% but increasing TRACE ASR to 15.38%.",
+   "locator": "§5.4 Impact of Agentic AI Components",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "加防御未必改善整体系统：Vanilla 在两个模型上综合排名均进前三——现代模型的强原生安全对齐本身已提供实质性保护，防御增益是模型/攻击依赖的边际量",
+   "metric": "overall_ranking",
+   "value": "top three configurations for both models",
+   "comparison": null,
+   "setting": "XSTest 综合分（Qwen3.5-4B：Vanilla 84.5 列第 3；Llama-3.1-8B-Instruct：Vanilla 96.5 列第 2），仅模型内可比",
+   "quote": "top three configurations for both models, indicating that their native safety alignment already provides substantial",
+   "locator": "§5.2 Practical Trade-off Analysis",
+   "denominator": null,
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "作者自陈范围限制：系统化广度与实验深度分离——分类法覆盖规划/工具/记忆/多代理攻击与防御面，但受控实验仅针对代表性模型层推理时防御；目标不是声称这些防御提供完整代理级保护",
+   "quote": "Our scope separates systematization breadth from empirical depth. The taxonomy covers jailbreak-relevant attack and defense surfaces across planning, tools, memory, and multi-agent interaction, whereas the controlled experiments",
+   "locator": "§1 Introduction"
+  },
+  {
+   "statement": "综合分只在同一模型内可比：min-max 归一化是模型特定的，跨模型的分数不可直接比较（也意味着表 2-7 与表 5-7 的分值不能跨模型排名）",
+   "quote": "Because normalization is model-specific, scores are comparable only within each model.",
+   "locator": "§5.2 Practical Trade-off Analysis"
+  },
+  {
+   "statement": "组件级安全机制不等于端到端越狱防御：分类法把若干机制归入记忆/规划/工具/代理间通信是因为它们能遏制越狱引发的失陷，但许多并非原生的越狱防御，保护单一组件不能确立整个代理的安全",
+   "quote": "Component safeguards are not yet end-to-end jailbreak defenses.",
+   "locator": "§6 Open Challenges and Future Directions"
+  },
+  {
+   "statement": "当前评测（含本文）多考虑单次交互内的攻击，而部署中的代理在长轨迹上运行并随时间积累状态——自适应与持久对手仍然缺乏研究",
+   "quote": "Many evaluations consider attacks within a single interaction, whereas deployed agents operate over extended trajectories and accumulate state over time.",
+   "locator": "§6 Open Challenges and Future Directions"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "xstest_asr_percentages_not_integer_multiples_of_stated_200_harmful_prompts",
+  "agentharm_tables_9_11_trial_counts_not_stated",
+  "no_code_or_data_release_stated",
+  "no_appendix_in_corpus_ends_with_references_and_author_biographies",
+  "sok_necessary_background_results_are_the_sok_own_controlled_study_tables_2_11"
+ ]
+}

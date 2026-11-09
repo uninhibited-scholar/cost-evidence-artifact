@@ -1,0 +1,144 @@
+{
+ "arxiv_id": "2610.19422",
+ "title": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "cross-task",
+  "carrier": "防御者与攻击者均为微调后的模型策略（权重空间），不涉及持久记忆/技能库等外部状态载体",
+  "operations_covered": [
+   "update"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "多轮工具调用智能体在遇到注入式恶意观测时，应避免执行不安全动作；防御者需随攻击者演化而更新，而非固定在静态攻击集上",
+  "operationalized_as": "Agent-SafetyBench / AgentHarm / AgentDojo / MSB 上的 ASR 与 harm score，以及 ALFWorld/WebShop 任务效用"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "在多轮交互中向工具描述与环境观测注入恶意内容",
+   "针对演化中的防御者再适应攻击策略"
+  ],
+  "assumptions": [
+   "攻击者与防御者共享同一底座家族",
+   "攻击在训练回路内生成"
+  ],
+  "not_covered": [
+   "持久记忆/技能库作为攻击载体",
+   "跨会话状态驻留"
+  ]
+ },
+ "intervention": {
+  "name": "AgentSafeEvo（联合对抗训练 + 可学习性引导的任务加权）",
+  "mechanism_layer": "weight-space",
+  "description": "红队攻击者初始化后与防御者联合对抗训练：攻击者依据攻击结果反馈持续精炼，防御者从新生成的攻击中学习；任务权重按可学习性在攻防两侧分配"
+ },
+ "controls": [
+  {
+   "name": "Static-AT（静态对抗训练）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "原始模型 / SFT 攻击者 / 基础防御者",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "相对最强安全基线 Static-AT，在 Agent-SafetyBench 与 MSB 上同时降低 ASR",
+   "metric": "ASR",
+   "value": "31.01%→17.84%",
+   "comparison": "Agent-SafetyBench 31.01%→17.84%；MSB 38.64%→31.25%",
+   "setting": "四个安全基准，与 Static-AT 对照",
+   "quote": "Compared with Static-AT, the strongest safety baseline, it reduces ASR from 31.01% to 17.84% on Agent-SafetyBench and from 38.64% to 31.25% on MSB.",
+   "locator": "§4.3 Main Results",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "AgentDojo 上攻击成功率保持低位的同时任务效用上升",
+   "metric": "UA / ASR",
+   "value": "61.43%→66.52%（UA）；ASR 6.18%",
+   "comparison": null,
+   "setting": "AgentDojo",
+   "quote": "On AgentDojo, UA increases from 61.43% to 66.52% while ASR remains low at 6.18%.",
+   "locator": "§4.3 Main Results",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "攻击者在共演化中确实变强：对基础防御者的 ASR 从 SFT 攻击者的 55.81% 升到最终攻击者的 92.59%",
+   "metric": "ASR",
+   "value": "55.81%→92.59%",
+   "comparison": null,
+   "setting": "对基础防御者（base defender）的攻击成功率",
+   "quote": "Against the base defender, ASR increases from 55.81% for the SFT attacker to 92.59% for the final attacker.",
+   "locator": "§4.3 Main Results",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "防御者在共演化中确实变强：面对最终攻击者，ASR 从基础防御者的 92.59% 降到最终防御者的 49.82%",
+   "metric": "ASR",
+   "value": "92.59%→49.82%",
+   "comparison": null,
+   "setting": "对最终攻击者（final attacker）的防御效果",
+   "quote": "Against this final attacker, ASR decreases from 92.59% for the base defender to 49.82% for the final defender.",
+   "locator": "§4.3 Main Results",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "共演化攻击可迁移到未参与训练的模型：Llama3.3-70B 与 GPT-5 的 ASR 均显著上升",
+   "metric": "ASR",
+   "value": "43.7%→80.7%（Llama3.3-70B）；12.3%→22.5%（GPT-5）",
+   "comparison": null,
+   "setting": "跨模型迁移评测",
+   "quote": "For example, ASR increases from 43.7% to 80.7% on Llama3.3-70B [18] and from 12.3% to 22.5% on GPT-5 [32].",
+   "locator": "§4.3 Main Results",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "共演化同时带来任务能力提升（非安全-效用权衡）",
+   "metric": "ASR / accuracy",
+   "value": "ASR −8.10 / −5.75 pp；ALFWorld 30.89%→36.70%",
+   "comparison": null,
+   "setting": "Agent-SafetyBench、MSB、ALFWorld",
+   "quote": "ASR decreases by 8.10 and 5.75 percentage points on Agent-SafetyBench and MSB, respectively, while accuracy on ALFWorld increases from 30.89% to 36.70%.",
+   "locator": "§4.3 Main Results",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "防御与攻击都在权重空间演化，未涉及持久记忆/技能库等外部状态载体",
+   "quote": null,
+   "locator": null
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "intro",
+   "method",
+   "results"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "weight_space_not_persistent_state",
+  "denominator_unclear",
+  "manually_extracted_no_agent"
+ ]
+}

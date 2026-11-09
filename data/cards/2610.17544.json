@@ -1,0 +1,405 @@
+{
+ "arxiv_id": "2610.17544",
+ "title": "Many Steps into One: Reasoning Contraction and the Limits of Safe Memory Reuse for LLM Agents",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-task",
+  "carrier": "Contracted memories (macros): one-step operators compiled from a verified multi-step derivation, unified under 'reasoning contraction' across thought templates, skill libraries, agent memories and answer caches. Instantiated as (i) materialized anchor-to-answer relation-path tables reached through one routing call and stored paths re-executed as compiled plans in KQA-Stream, and (ii) verified programs reused as tools in CodeStream; each memory carries trust state (betting wealth / counter score) and is judged only by its own verified outcomes",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval",
+   "revocation",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "A contracted memory may answer in one step only while the risk of trusting a bad one (below break-even paired utility vs live reasoning, or stale after a fact change) stays below delta: delta-safety (Definition 1) requires that no epoch contains a fold (trust event) of a candidate that is bad in that epoch, and stale memories must be retired quickly once facts change. The property fails when counters mis-detect partial staleness (delay asymp A^0.373, never-retirement with probability >= 0.50/0.89), when evidence is carried across unannounced changes, or when the null (which depends on live reasoning) changes without a notice; availability (the share of queries that may skip reasoning, bounded by the certification load Theta) is the priced counterpart.",
+  "operationalized_as": "Share of at-risk epochs with a false certification / bad fold, <= delta (answer-only and standard scoring); bad folds per stream; stale answers per 10^4 queries; unretired share at stream end and restricted-mean detection delay (Kaplan-Meier) on matched stale episodes; false retirements per 10^4 healthy uses"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "Non-adversarial environment drift: synthetic KQA Pro fact edits replacing relation objects for f=0.25/0.6 of subjects (24 events x 3 sequences, correlated across templates sharing a relation), natural Wikidata temporal-qualifier changes 1992-2016 (median 3.3% of a template's answers per year), and code-domain requirement revisions plus re-enacted Python API changes",
+   "Changes may be partial (an edit corrupts only part of a template's instances, e.g. reliability 0.95->0.75) or total, announced or unannounced (notice fraction f down to 0), and live reasoning itself can change silently (15.7% of template-versions), shifting the certificate's null without any answer change",
+   "No adversary writes memory: candidates form only from verified live traces and memories go stale only through environment/requirement changes"
+  ],
+  "assumptions": [
+   "An exact verifier labels memory answers on audited queries (audit probability known and bounded below); only audited outcomes are informative in the base guarantees",
+   "Facts change at random (Poisson) times; audited outcomes are Bernoulli at the memory's current reliability within an epoch",
+   "Per-epoch delta-safety needs notices covering every change of the paired-utility null, including changes of live reasoning; without any change information, per-epoch safety is impossible on templates with alpha_i*r0 > delta (Proposition 24) and only post-change-evidence safety remains (Proposition 25)",
+   "Policies are non-anticipating; each template's epochs contain an audit with probability alpha_i"
+  ],
+  "not_covered": [
+   "Adversarial memory poisoning / shared multi-agent memory as an attack channel (named as future work and concurrent work; no attacker is modeled here)",
+   "Self-modifying memories and formation-aware limits (coverage depends on how often live agents produce a verifiable trace)",
+   "Noisy or LLM-judge verifiers, text memories, and a certificate built for the noisy paired channel (measured as negative result in D.2.3)",
+   "Transfer across correlated templates or macros a change does not affect (outside the limit's model)",
+   "Confidentiality/authority properties; real library drift staleness magnitudes"
+  ]
+ },
+ "intervention": {
+  "name": "Certified contraction: per-memory betting certificate + likelihood-ratio CUSUM retirement + restart/invalidate lifecycle",
+  "mechanism_layer": "execution",
+  "description": "An execution-time memory-trust lifecycle with formal (anytime-valid) guarantees. (1) Certification: a betting certificate on the paired utility U = C_live - C_macro + L*(Y_macro - Y_live) of shadow evaluations with inverse-propensity weights folds a memory when its wealth reaches 1/delta (level delta_j = 6*delta/(pi^2 j^2) per lifetime ledger index), needing no live-accuracy estimate. (2) Retirement: folded macros are monitored by a per-memory Bernoulli LR-CUSUM (h=7, alternative max(1-r*, q0+0.15)) whose likelihood-ratio scores make each memory the optimal detector of its own q0->q1 change. (3) Restarts and revocation: candidates restart their test at every edit notice (recommended deployment additionally invalidates and re-forms notified macros, so the detector is the safety net for missed notices); guarantees are per-epoch delta-safety via Ville's inequality and Proposition 23, with detector-triggered restarts (Proposition 25) when no edit log exists"
+ },
+ "controls": [
+  {
+   "name": "ExpeL-style counter (importance +/-1, delete at 0)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "ACE-style counter (helpful/harmful flag as retirement)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Fold once (no retirement; semantic-cache analogue)",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Plug-in SPRT detector (optimistic and standard)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "vCache-style semantic cache (re-implementation)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Compiled plan (re-executes stored path) with and without certificate",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Restart-only certificate vs recommended (invalidate+LR) vs ledger without restarts vs per-candidate levels",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Discard-on-alarm no-notice variant (own LR-CUSUM, no edit log)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Invalidation on notice without LR-CUSUM",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Failure condition (reuse without likelihood-ratio retirement): when facts behind a memory change, ExpeL-/ACE-style vote counters, given the same audited information as the certificate and with every edit notice missed, serve 7.0-13.5x more stale (wrong one-step) answers than certified memories on every one of five open LLMs; with notices ours serves none.",
+   "metric": "stale_answers_ratio",
+   "value": "7.0-13.5x",
+   "comparison": "counters vs certified memory (ours), same audits/queries/edits; with notices ours serves 0 stale answers",
+   "setting": "KQA-Stream multi-hop QA over edited KQA Pro facts; five open models (Qwen3-8B/4B, Granite-3.3-8B, Mistral-7B, OLMo-3-7B); 30 streams of 200k Zipf queries per model; delta=0.05; counters vs recommended deployment with all notices missed",
+   "quote": "As Remark 2 predicts, counters serve 7.07.0–13.5×13.5\\times more stale answers than ours on every model, even with every notice missed (Table 2).",
+   "locator": "6 Counters leave stale memories in service. Table 2",
+   "denominator": {
+    "n_total": "30 streams x 200k queries per model (stale answers per 10^4 queries; Table 2 rows 967/946 vs 72 for Qwen3-8B)",
+    "how_counted": "stale = wrong one-step answers that were right when the macro was formed; Table 2 and D.2.2"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Per-model absolute failure rates of counter-managed reuse on KQA-Stream: 294-967 stale answers per 10^4 queries (7-13x ours), 11-595 spurious (bad) folds per stream vs at most 1.7 for the certificate, and 10-35 false retirements per 10^4 healthy uses vs 1.8-3.4; their J20 loss is nonetheless statistically indistinguishable from ours because counters fold more and answer 28-76% of queries in one step.",
+   "metric": "stale_answers_per_10k_and_bad_folds_per_stream",
+   "value": "294-967 stale per 10^4 (7-13x ours); 11-595 bad folds/stream vs <=1.7",
+   "comparison": "counters 294-967 stale per 10^4 and 11-595 bad folds per stream vs ours: at most 1.7 bad folds",
+   "setting": "KQA-Stream main setting, five open models, 30 streams each (replays of recorded outcome tables); ours = betting + LR-CUSUM at per-candidate level",
+   "quote": "ExpeL- and ACE-style counters serve 294294–967967 stale answers per 10410^{4} queries (77–13×13\\times ours), fold 111111–595595 spurious macros per run (ours: at most 1.71.7), and have 1010–3535 false retirements per 10410^{4} (ours: 1.81.8–3.43.4)",
+   "locator": "D.2.2 Counters in the main setting. Table 8",
+   "denominator": {
+    "n_total": "30 streams of 200k queries per model per policy; stale per 10^4 queries, folds per stream",
+    "how_counted": "D.2 definitions; stale counts per 10^4 queries, bad folds counted per stream (Table 3/Table 8)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Failure condition (revocation): on the matched population of 156 stale episodes replayed open loop with identical audits, ExpeL-/ACE-style counters leave ~50%/47% of stale memories in service at stream end vs 1.9% for the likelihood-ratio CUSUM, need ~60x more folded uses to retire (restricted mean 4,069/3,949 vs 67; ratios 60.8x/59.1x with CIs excluding 1), and each unretired episode costs ~1,350 stale answers vs 38.5.",
+   "metric": "unretired_share_and_restricted_mean_detection_delay",
+   "value": "50% and 47% vs 2% unretired; 4,069/3,949 vs 67 uses",
+   "comparison": "ExpeL 50% / ACE 47% / LR-CUSUM 2% unretired; restricted mean delay 4,069 / 3,949 vs 67 uses",
+   "setting": "KQA-Stream, five models, 30 streams each; every macro folded by the restart-only certificate replayed open loop under each retirement rule with the same audit coins; Kaplan-Meier restricted to 10^4 folded uses",
+   "quote": "Counters leave 50% and 47% in service at stream end against 2% for the LR-CUSUM, with restricted mean delays of 4,069 and 3,949 uses against 67 (Figure 2); each episode costs counters about 1,350 stale answers, against 38.5.",
+   "locator": "6 Counters leave stale memories in service. Figure 2; D.3.2 Detection on a matched population (Table 12)",
+   "denominator": {
+    "n_total": "156 matched stale episodes (49 templates, 25 edited relations, 34 edit events, 3 sequences; 30 streams per model)",
+    "n_valid": "156",
+    "how_counted": "D.3.2: CIs 50.0% [38.2,62.8], 47.4% [36.3,60.2], 1.9% [0.0,4.7]; delay ratios 60.8x [44.7,87.1] and 59.1x [43.7,83.7]"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Theory (failure condition of unclipped counters): under partial staleness (post-change failure rate q1<1/2, e.g. an edit corrupting only part of a template's instances, reliability 0.95->0.75) credit banked while healthy is never spent, so ExpeL-/ACE-style unclipped counters never retire the stale memory with probability at least 0.89 (ExpeL) / 0.50 (ACE), and their worst-case detection delay is unbounded.",
+   "metric": "never_retired_probability_bound",
+   "value": "never retired w.p. >= 0.50 (ACE) / 0.89 (ExpeL) at reliability 0.95->0.75",
+   "comparison": "unclipped ExpeL/ACE counters: positive never-retirement probability and infinite worst-case delay",
+   "setting": "Theory: unclipped +/-1 counters (ExpeL importance start 2; ACE majority flag), Bernoulli outcomes, healthy rate q0, stale rate q1<1/2; Proposition 9, exact dynamic-programming check to 8 digits",
+   "quote": "Under partial staleness (q1<12q_{1}<\\tfrac{1}{2}) the stale memory is never retired with probability at least 1−2​q11-2q_{1} (ACE) or 1−(q1/(1−q1))21-(q_{1}/(1-q_{1}))^{2} (ExpeL), i.e. 0.500.50 and 0.890.89 for reliability 0.95→0.750.95\\to 0.75 (Proposition 9 in Appendix A).",
+   "locator": "Remark 2 and Proposition 9 (Appendix A); 3 Memory counters are change detectors",
+   "is_primary_result": true
+  },
+  {
+   "claim": "Theory (when counters fail to detect): every clipped counter is a CUSUM testing an implied change nobody chose; under partial staleness (reliability 0.95->0.75, failure rate 0.05->0.25) the symmetric +/-1 rule's worst-case detection delay grows as a power A^gamma of the false-alarm horizon with gamma=ln3/ln19=0.373, not logarithmically, and the likelihood-ratio learning rates (+7/-1) restore optimality.",
+   "metric": "detection_delay_scaling_exponent",
+   "value": "delay asymp A^0.373, not ln A",
+   "comparison": "symmetric counter delay grows as a power of the false-alarm horizon instead of logarithmically",
+   "setting": "Theory: clipped Hebbian/score-rule counters as Page CUSUMs; partial staleness q0=0.05 -> q1=0.25; gamma=ln3/ln19=0.373; verified empirically in Figure 1b and Appendix E.2",
+   "quote": "the phase diagram of counter maintenance (equal votes: delay ≍A0.373\\asymp A^{0.373}, not ln⁡A\\ln A",
+   "locator": "Contributions and what is new. Theorem 1",
+   "is_primary_result": true
+  },
+  {
+   "claim": "Theory (price of safe reuse): the certification load Theta = nu*ln(1/delta)/(p*KL) alone bounds how much reasoning any delta-safe memory can skip - every delta-safe policy leaves a share >= F_pi(Theta) of queries to multi-step reasoning, and a restarted SPRT attains it: its coverage gap matches F_pi(Theta) within [0.945,1.025] over 2,520 settings, i.e. safe contraction has a hard availability price set by change rate, risk, audit rate and verifier informativeness.",
+   "metric": "coverage_gap_vs_fundamental_limit",
+   "value": "M_SPRT/F_pi(Theta) in [0.945, 1.025] over 2,520 settings",
+   "comparison": "restarted SPRT coverage gap matches the fundamental limit F_pi(Theta)",
+   "setting": "Theory + dynamic programming over 2,520 settings of reliabilities, verifier noise, delta in [10^-32,0.03], audit and drift rates (Figure 1c); Theorem 3/Corollary 4, Zipf scaling kappa_s*Theta^(1-1/s)",
+   "quote": "the gap of the restarted SPRT, computed by dynamic programming for 2,520 settings of reliabilities, verifier noise, δ∈[10−32,0.03]\\delta\\in[10^{-32},0.03], audit and drift rates, has MSPRT/Fπ​(Θ)∈[0.945,1.025]M_{\\rm SPRT}/F_{\\pi}(\\Theta)\\in[0.945,1.025]",
+   "locator": "4 Reading the law. Figure 1c; Theorem 3",
+   "is_primary_result": true
+  },
+  {
+   "claim": "Safety of certified reuse: with restarts at edit notices, the recommended deployment makes no false certification (fold of a candidate bad under the certificate's own paired-utility null, answers scored alone) at delta<=0.1 - 0 of 5,779 at-risk epochs at delta=0.05 - and counting routing errors as wrong still only 0.26% of at-risk epochs have a bad fold at delta=0.05.",
+   "metric": "false_certification_rate_per_at_risk_epoch",
+   "value": "0 of 5,779 at-risk epochs (0 false certifications) at delta=0.05",
+   "comparison": "no false certification at any tested delta up to 0.1 (answer-only scoring)",
+   "setting": "KQA-Stream, five models, 150 streams pooled, answer-only scoring, recommended deployment (invalidate on notice + betting certificate with restarts + LR-CUSUM)",
+   "quote": "Scoring answers alone, as the certificate’s paired test does (Section D.4.1), ours makes no false certification (Section 5) at δ≤0.1 (0 of 5,779 at-risk epochs at δ=0.05)",
+   "locator": "6 Restarted certificates are safe in every epoch. D.5.2 The recommended deployment",
+   "denominator": {
+    "n_total": "5,779 at-risk epochs at delta=0.05 (0/5,814 at 0.01, 0/5,779 at 0.05, 0/5,758 at 0.1; D.5.2)",
+    "n_valid": "5,779",
+    "how_counted": "at-risk epoch = epoch with a candidate bad at some version under test; event = fold of a candidate bad under the certificate's own null"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Code domain (poison-free but real staleness): certified reuse folds a below-break-even candidate in only 12 of 946,678 epochs under test at delta=0.05 (1.3e-5, >1000x below delta), while ExpeL-/ACE-style counters fold one in 4.8-5.4% of their epochs under test and fold once in 3.7% - i.e. without certification, roughly 1 in 20 trust decisions on code memories is a bad fold.",
+   "metric": "bad_fold_rate_epochs_under_test",
+   "value": "12 of 946,678 epochs (counters 4.8-5.4%)",
+   "comparison": "ours folds a below-break-even candidate in 12 of 946,678 epochs vs counters 4.8-5.4% of their epochs under test",
+   "setting": "CodeStream (521 EvalPlus tasks, verified-program memories, requirement revisions + unannounced Python API edits), five models, 150 streams of 10^6 queries, delta=0.05",
+   "quote": "Ours folds a below-break-even candidate in 1212 of 946,678946{,}678 epochs under test (counters: 4.84.8–5.4",
+   "locator": "D.6 (c) Per-epoch false certification. CodeStream",
+   "denominator": {
+    "n_total": "946,678 epochs under test at delta=0.05 (ours); ExpeL 97,172, ACE 106,424",
+    "n_valid": "946,678",
+    "how_counted": "D.6(c): epoch under test = (task, version) with a candidate under test; bad fold = fold below break-even; Clopper-Pearson upper bound 2.2e-5"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Revocation design: when edit notices are missed (80%/50%/no edits announced), invalidation on notices alone serves 125/325/810 stale answers per 10^4 queries while invalidation + likelihood-ratio detector serves 13/28/66 - 9-12x fewer - so the detector is the necessary safety net wherever notices can be missed.",
+   "metric": "stale_answers_per_10k_missed_notices",
+   "value": "9-12x fewer stale answers (13/28/66 vs 125/325/810 per 10^4)",
+   "comparison": "invalidate-only 125/325/810 vs ours (invalidate+LR) 13/28/66 stale per 10^4 queries",
+   "setting": "KQA-Stream, five models pooled (150 streams), notices announced independently with probability f in {1,0.8,0.5,0}, same draws for all policies; Table 16",
+   "quote": "With 80%80\\%, 50%50\\% or no edits announced, invalidation alone serves 125125, 325325 and 810810 stale answers per 10410^{4} queries, ours 1313, 2828 and 6666 (Section D.4.2), 99–12×12\\times fewer: invalidation needs the detector wherever notices can be missed.",
+   "locator": "6 The detector matters exactly where notices fail. Table 16",
+   "denominator": {
+    "n_total": "150 streams (5 models x 30) of 200k queries; stale counted per 10^4 queries",
+    "how_counted": "Table 16 bottom: invalidate 124.5/324.5/809.6 vs ours 13.3/28.2/66.3"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Failure condition (reuse with no revocation at all): folding a verified candidate once and never retiring it (semantic-cache policy) serves 1,290 stale answers per 10^4 queries on Qwen3-8B after facts change; adding certification cuts this 20x and adding invalidation on notices to zero.",
+   "metric": "stale_answers_per_10k_no_retirement",
+   "value": "1,290 stale per 10^4; certification cuts 20x, invalidation to zero",
+   "comparison": "fold once 1,290 stale per 10^4 -> certification cuts this 20x -> invalidation to zero",
+   "setting": "KQA-Stream, Qwen3-8B, 30 streams of 200k queries, delta=0.05; Table 3 (fold once: 1,290 stale, 34 bad folds/stream)",
+   "quote": "Uncertified reuse (fold once) serves 1,2901{,}290 stale answers per 10410^{4} queries; certification cuts this 20×20\\times, invalidation to zero.",
+   "locator": "6 Certified contraction pays. Table 3",
+   "denominator": {
+    "n_total": "30 streams of 200k queries (stale answers per 10^4 queries)",
+    "how_counted": "Table 3 Stale column: fold once 1290, restart only 66, ours 0 (perfect notices)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Utility of safe reuse: on Qwen3-8B the recommended deployment raises accuracy from 0.379 (live always) to 0.648 with 21% fewer LLM calls, and certified compiled plans to 0.668, because a macro re-executes a verified derivation that live reasoning re-derives with errors; safe contraction here buys accuracy and cost, not only safety.",
+   "metric": "accuracy_and_call_cost",
+   "value": "0.379 -> 0.648 (21% fewer LLM calls); compiled plans 0.668",
+   "comparison": "live 0.379 -> ours 0.648 -> compiled plan + betting 0.668",
+   "setting": "KQA-Stream, Qwen3-8B, 30 streams of 200k queries; J20 loss 43.8 (live) -> 25.5 (ours) -> 24.1 (compiled plan)",
+   "quote": "On Qwen3-8B, ours raises accuracy from 0.379 (live) to 0.648 with 21% fewer LLM calls, and certified compiled plans to 0.668 (Table 3),",
+   "locator": "6 Certified contraction pays. Table 3",
+   "denominator": {
+    "n_total": "30 streams x 200k queries per cell (Table 6); accuracy is a descriptive mean over served answers",
+    "how_counted": "Tables 3 and 6; intervals are 95% template bootstrap over 300 templates; each instance-version decoded once (D.4.3 for decoding variance)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Across all five open models, safely certified KQA-Stream macros add 14-33 accuracy points over live reasoning, so the utility gain of contraction survives the safety machinery (per-model live accuracies 0.076-0.379, Table 6).",
+   "metric": "accuracy_gain_points_over_live",
+   "value": "14-33",
+   "comparison": "ours (recommended) vs live always, per-model accuracy gain in points",
+   "setting": "KQA-Stream main setting, five open models, 30 streams of 200k queries each (Table 6)",
+   "quote": "done safely, KQA-Stream’s symbolic macros add 1414–3333 points over live reasoning.",
+   "locator": "Contributions and what is new. Table 6",
+   "is_primary_result": true
+  },
+  {
+   "claim": "Code domain failure magnitude: with an exact verifier (unit tests) and memories that are verified programs, ExpeL/ACE counters serve 518/510 stale answers per 10^4 queries vs 10.1 for the certificate given the counters' information (per candidate, no notices) - 51x pooled and 35-73x on every model in step accounting (38-86x in LLM-call accounting); stale memories stay in service in 57-59% of their episodes.",
+   "metric": "stale_answers_ratio_code",
+   "value": "35-73x per model (51x pooled)",
+   "comparison": "counters vs the per-candidate certificate at 10.1 stale per 10^4 queries (51x pooled)",
+   "setting": "CodeStream, 521 EvalPlus tasks, five models, 150 streams of 10^6 queries, step accounting; staleness from requirement revisions (announced) and Python API edits (unannounced)",
+   "quote": "against 10.110.1 [8.88.8, 11.411.4] for the certificate with the counters’ information (per candidate): 51×51\\times pooled (95% intervals within [4343, 6060]) and 3535–73×73\\times on every model",
+   "locator": "D.6 (a) Counters leave stale memories in service. Table 21",
+   "denominator": {
+    "n_total": "150 streams of 10^6 queries (5 models x 10 seeds x 3 timelines); stale per 10^4 queries",
+    "how_counted": "D.6(a): 95% intervals ExpeL [471,567], ACE [463,561], per-candidate [8.8,11.4]; per-model CIs all lower bounds >= 25"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Price of safety on mild/partial natural changes (Wikidata temporal qualifiers 1992-2016, median 3.3% of a template's answers per year): counters make 149-207 bad folds per stream vs 0.1 and serve 3x more stale answers than restart only, yet are 3.5 points more accurate because folding pays when staleness is mild - the certification load Theta, not the detector, is what binds here.",
+   "metric": "bad_folds_per_stream_natural_edits",
+   "value": "149-207 bad folds/stream vs 0.1; 3x more stale; +3.5 points",
+   "comparison": "counters 149-207 bad folds and 3x stale vs restart only 0.1 bad folds; counters +3.5 accuracy points",
+   "setting": "Wikidata natural-edit timeline, four models (Qwen3-8B/4B, Granite-3.3-8B, Mistral-7B), 30 streams of 200k queries each, delta=0.05; Table 17",
+   "quote": "counters make 149149–207207 bad folds per stream against 0.10.1 and serve 3×3\\times more stale answers than restart only, yet are 3.53.5 points more accurate because folding pays when staleness is mild",
+   "locator": "6 Natural edits: safety holds, and mild staleness shows its price. Table 17",
+   "is_primary_result": true
+  },
+  {
+   "claim": "Natural-edit revocation: on real Wikidata changes the LR-CUSUM detects 1.1-1.6x faster than the best fixed weight, and counters leave 84% of the same matched stale memories in service at stream end vs 37% for the LR-CUSUM (70 of 142 matched episodes), so counter failure persists on non-adversarial, partial, real-world edits.",
+   "metric": "unretired_share_natural_edits",
+   "value": "counters leave 84% vs 37% of matched stale memories in service",
+   "comparison": "counters 84% vs LR-CUSUM 37% unretired at stream end",
+   "setting": "Wikidata temporal-qualifier timeline 1992-2016, four models, 30 streams each; matched-population replay as in D.3.2",
+   "quote": "the LR-CUSUM detects in 1.11.1–1.6×1.6\\times fewer uses than the best tested fixed weight, and counters leave 84%84\\% of the same stale memories in service against 37",
+   "locator": "6 Natural edits: safety holds, and mild staleness shows its price. D.4.4 Natural edits from Wikidata temporal qualifiers; D.5.3",
+   "denominator": {
+    "n_total": "70 of 142 stale episodes (those no rule retired before onset)",
+    "n_valid": "70",
+    "how_counted": "D.4.4/D.5.3 matched-population comparison; CIs 84.3% [46.3,100] vs 37.1% [4.5,55.3]; restricted-mean delay ratio 20.5x [13.2,72.9]"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Per-memory likelihood-ratio weights beat the best tested global failure:success weight on every model (1.3-5.9x fewer uses to detect staleness; significant on three of five), because healthy failure rates are heterogeneous across memories so no single global ratio is the optimal detector for all.",
+   "metric": "detection_delay_per_memory_vs_global_weight",
+   "value": "1.3-5.9x fewer uses to detect staleness",
+   "comparison": "per-memory LR-CUSUM vs best tested fixed global ratio (significant on three of five models)",
+   "setting": "KQA-Stream closed-loop learning-rate sweep, five models, 30 streams each, matched false retirements; Table 7 / D.3.6",
+   "quote": "(ii) Per-memory weights beat the best tested global one, as q0q_{0} varies: 1.31.3–5.9×5.9\\times fewer uses (significant on three of five models; Section D.3.6);",
+   "locator": "6 Detection follows the phase diagram. Table 7; D.3.6 Per-memory weights against the best fixed ratio",
+   "is_primary_result": false
+  },
+  {
+   "claim": "Code domain (failure condition of global weights): most stale memories never failed before the change (q0=0 in 86% of episodes), so the optimal weight is infinite; the per-memory LR-CUSUM leaves stale memories folded for 10x fewer uses than the best fixed weight at matched false retirements (7.6-11.4x per model, weights up to 5000:1), and retires perfect memories after a median 30 stale uses vs 874.",
+   "metric": "stale_exposure_ratio_matched_false_retirements",
+   "value": "10x fewer stale uses (7.6-11.4x per model)",
+   "comparison": "per-memory LR-CUSUM vs best fixed weight at matched false retirements (weights up to 5000:1)",
+   "setting": "CodeStream, five models, per-candidate certificate, threshold-swept fixed weights vs h=7 LR-CUSUM, matched false retirements; Table 22",
+   "quote": "the per-memory LR-CUSUM leaves them folded for 10×10\\times fewer uses than the best fixed weight at matched false retirements (7.67.6–11.4×11.4\\times per model, weights up to 5000:15000{:}1; Section D.6).",
+   "locator": "D.6 (b) Per-memory weights at matched false retirements. Table 22",
+   "is_primary_result": false
+  },
+  {
+   "claim": "Why certification must avoid estimating live accuracy: a plug-in SPRT whose break-even threshold uses a live-accuracy estimate folds a macro exactly at break-even with probability 0.34/0.25/0.08 with 20/100/1000 live labels (vs delta=0.05) - plugging an estimate into the null destroys the level, motivating the paired-utility betting certificate that needs no live-accuracy estimate.",
+   "metric": "false_fold_probability_plugin_sprt",
+   "value": "false-fold 0.34 / 0.25 / 0.08 at na=20/100/1000",
+   "comparison": "plug-in SPRT false-fold at break-even vs nominal delta=0.05",
+   "setting": "Theory/exact DP at a=0.9, (m-1)/L=delta=0.05, horizon 2000 uses (Table 4); empirical corroboration on Qwen3-8B 30 streams",
+   "quote": "At a=0.9a=0.9 and m−1L=δ=0.05\\frac{m-1}{L}=\\delta=0.05 it is 0.340.34, 0.250.25 and 0.080.08 for na=20n_{a}=20, 100100 and 10001000 (exact; Proposition 18).",
+   "locator": "Proposition 5 and Proposition 18 (Table 4); 5 The recipe: a certificate that needs no live accuracy",
+   "denominator": {
+    "n_total": "exact dynamic programming (not a sample); horizon 2000 uses",
+    "how_counted": "Proposition 18 / Table 4 exact false-fold probability at break-even"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Likelihood-ratio learning rates fix the counter: at healthy/stale failure rates 0.05/0.25 the weight rho=0.147 means a failure must weigh about 7 successes (not 1 as in ExpeL/ACE); +7/-1 scores detect in 41 and 54 uses at false-alarm horizons A of 1.6e5 and 3e6, 5.7x and 13x faster than the symmetric rule.",
+   "metric": "detection_delay_lr_weighted_scores",
+   "value": "ρ=0.147; +7/-1 detects in 41 and 54 uses",
+   "comparison": "+7/-1 likelihood-ratio scores vs the symmetric +/-1 rule",
+   "setting": "Theory/exact computation, Bernoulli LR-CUSUM, partial staleness q0=0.05 -> q1=0.25 (Figure 1b); Corollary 2",
+   "quote": "Under partial staleness (q0=0.05q_{0}=0.05, q1=0.25q_{1}=0.25), ρ=0.147\\rho=0.147: a failure must weigh about 77 successes, not 11 as in ExpeL and ACE. Scores +7/−1+7/{-1} detect in 4141 and 5454 uses at A",
+   "locator": "3 Corollary 2 (Likelihood-ratio learning rates). Figure 1b",
+   "is_primary_result": false
+  },
+  {
+   "claim": "Semantic-cache failure mode: a vCache-style cache that stores unverified live answers inherits live accuracy (0.08-0.38) no matter its threshold; removing its confidence band raises the cache hit rate to ~85% but accuracy falls below live and stale answers rise to 100-536 per 10^4 queries - unverified reuse trades correctness for coverage.",
+   "metric": "stale_answers_per_10k_unverified_cache",
+   "value": "hits ~85%; stale answers rise to 100-536",
+   "comparison": "with confidence band: accuracy equals live; without band: accuracy falls below live and stale answers rise",
+   "setting": "KQA-Stream, five models (re-implemented vCache, all-MiniLM-L6-v2 embeddings), 30 streams per model; Table 10",
+   "quote": "Removing the confidence band raises the hit rate to about 85%85\\%, but accuracy falls below live and stale answers rise to 100100–536536",
+   "locator": "D.2.4 A vCache-style semantic cache. Table 10",
+   "denominator": {
+    "n_total": "200k-query streams, 30 runs per cell over five models; hits = share of queries served from cache",
+    "how_counted": "D.2.4 plug-in variant (point estimate, no confidence band); stale per 10^4 queries"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Revocation boundary (when the safety condition itself can silently fail): 16% of template-versions change live reasoning unannounced (which shifts the paired-utility null without any answer change), yet none of the 9,835 answer-scored folds (22 of 8,294 under standard scoring) rests on a test spanning such a silent change - the per-epoch guarantee holds as measured, but its notice-coverage assumption is not automatic.",
+   "metric": "silent_null_change_frequency_and_spanning_folds",
+   "value": "16% of template-versions change live reasoning unannounced; none of 9,835 answer-scored folds spans one",
+   "comparison": null,
+   "setting": "KQA-Stream, three edit sequences x five models, delta=0.05, 150 streams per row (D.5.1 Table 18)",
+   "quote": "Although 16%16\\% of template-versions change live reasoning unannounced, none of the 9,8359{,}835 answer-scored folds (22 of 8,2948{,}294 under standard scoring) rests on a test spanning such a change (Section D.5.1).",
+   "locator": "6 Restarted certificates are safe in every epoch. D.5.1 When the null changes without a notice (Table 18)",
+   "denominator": {
+    "n_total": "107,496 template-versions (3 edit sequences, routed templates, 5 models)",
+    "n_valid": "16,827 silent live-trace changes (15.7%); 1,828 change live correctness",
+    "how_counted": "D.5.1 Table 18: template-versions with/without notice and silent live-reasoning change; folds whose test segment spans a flip"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Scope: results cover only memories whose answers an exact verifier checks (knowledge-base execution, unit tests); evidence from three domains and five open models of up to 8B parameters, so noisy/LLM-judge verifiers and larger models are out of scope.",
+   "quote": "Our results concern memories whose answers an exact verifier checks, such as knowledge-base execution or unit tests. The evidence comes from three domains and five open models of up to 8B parameters:",
+   "locator": "Limitations, Scope"
+  },
+  {
+   "statement": "Per-epoch safety requires change notices covering every change of the certificate's paired-utility null, including silent changes of live reasoning; the paper's notices cover answer changes only.",
+   "quote": "Per-epoch safety needs change notices that cover every change of the certificate’s paired-utility null, including changes of live reasoning; our notices cover answer changes (Section D.5.1).",
+   "locator": "Limitations, Scope"
+  },
+  {
+   "statement": "Theorems assume each audit reveals one verified outcome whose law is set by the memory's current reliability, and that facts change at random (Poisson) times; exact conditions in Appendices A-C.",
+   "quote": "The theorems assume that each audit reveals one verified outcome whose law is set by the memory’s current reliability, and that facts change at random times;",
+   "locator": "Limitations, Scope"
+  },
+  {
+   "statement": "Each instance-version is decoded once; sampling variance is measured only on a subset (D.4.3: seed SD <= 0.0044 per version, two seeds agree on 91.9% of final answers).",
+   "quote": "Each instance–version is decoded once; seed variance is measured on a subset (Section D.4.3).",
+   "locator": "Limitations, Scope"
+  },
+  {
+   "statement": "Code domain: re-enacted API edits break few programs and the paper claims no staleness magnitudes for real library drift; a version-specific-API benchmark would be needed.",
+   "quote": "but we claim no staleness magnitudes for real library drift; a benchmark with version-specific APIs would measure them.",
+   "locator": "D.6, Scope"
+  }
+ ],
+ "reproduction": {
+  "code": "Stated as released ('Prompts, seeds and scripts are in our code release'; checks/wuyang_check.py, checks/prop24_check.py, paper_figs/acl3_matched.py referenced); no URL in corpus",
+  "data": "KQA Pro (CC BY-SA 4.0), MuSiQue (CC BY 4.0), Wikidata (CC0), EvalPlus/MBPP/HumanEval; synthetic edit logs released (CC BY-SA 4.0 where derived from KQA Pro)",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "single_decoding_per_instance_version",
+  "utility_gain_benchmark_specific_per_authors"
+ ]
+}

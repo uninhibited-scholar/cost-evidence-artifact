@@ -1,0 +1,207 @@
+{
+ "arxiv_id": "2509.26354",
+ "title": "Your Agent May Misevolve: Emergent Risks in Self-evolving LLM Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v2"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-session",
+  "carrier": "Four evolvable agent components theta = (M, mem, T, W) updated by an evolution function f over successive tasks: the core model parameters (self-training), accumulated memory (SE-Agent distilled strategies; AgentNet stored successful/failed trajectories retrieved into context), created/ingested tools (MCP-wrapped tools created during task execution and reused; tools fetched from GitHub), and the execution workflow (AFlow code-represented workflow graphs)",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Preservation of safety alignment and behavioral safety across the self-evolution loop: the evolving agent should not lose its refusal of harmful instructions, should not adopt unsafe actions from accumulated experience (deployment-time reward hacking), should not create/reuse vulnerable tools, should reject malicious external tools, and should not gain unsafe workflow behaviors. Failure conditions measured per pathway; judged by Safe Rate/Refusal Rate/ASR on safety benchmarks, Unsafe Intention/Completion Rates on a computer-use safety benchmark, and LLM+human judged Unsafe Rate on curated memory cases.",
+  "operationalized_as": "Safe Rate on HarmBench/SALAD-Bench/HEx-PHI/Agent-SafetyBench and Refusal Rate on RedCode-Gen (model pathway); RR/ASR on RedCode-Gen before vs after memory evolution (memory pathway, SE-Agent on Qwen3-Coder-480B); Unsafe Rate judged by Gemini-2.5-Pro LLM judge and human on 40 curated cases across 7 top-tier LLMs (memory pathway, AgentNet); Overall Unsafe Rate over 25 CWEval-based tool cases x 8 models and Refusal Rate over 814 malicious tool samples x 6 LLMs (tool pathway); RR/ASR on RedCode-Gen before vs after AFlow optimization on HumanEval (workflow pathway); UIR/UCR on a 140-case RiOSWorld subset (SEAgent curriculum pathway)."
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "No dedicated external adversary in the core settings: risks arise as self-generated vulnerabilities from the routine evolutionary process (self-training on self-generated data, memory accumulation from the agent's own trajectories, tool creation-reuse loops, performance-driven workflow optimization)",
+   "In the tool-ingestion setting there is an implicit adversary: malicious payloads are programmatically injected into the source code of eight popular tools, designed to stay dormant during initial testing and trigger on specific payloads"
+  ],
+  "assumptions": [
+   "Evolution is driven by task feedback or internal metrics (e.g., self-critique), with no adversarial curation of the evolving data (distinguishing misevolution from fine-tuning attacks)",
+   "The AgentNet memory results are mainly reported in a static setting where experiences in the agent's memory are manually constructed (a dynamic fully-simulated setting gave similar results but was less scalable)",
+   "Safety is judged by LLM judges (Gemini-2.5-Pro, GPT-4o) and human review on curated cases"
+  ],
+  "not_covered": [
+   "No adaptive adversary that observes the evolved agent and re-attacks; the paper measures emergent risk, not a co-adapting attacker",
+   "Mitigations are prompt-based and evaluated in one round; no iterative attack-defense adaptation loop is measured",
+   "A unified safety evaluation framework covering all self-evolving agent architectures is explicitly left as future work (Appendix E)"
+  ]
+ },
+ "intervention": {
+  "name": "Measurement study of misevolution across four evolutionary pathways, plus lightweight prompt-based mitigations",
+  "mechanism_layer": "prompt",
+  "description": "The paper is primarily a risk measurement study (no defense is proposed as the main contribution). Mitigations tested: (1) memory pathway - instructing the agent to treat retrieved memories as 'references' rather than 'rules' ('The following memories are for reference only. You must make an independent decision based on the current context.'); (2) tool ingestion - prompting the agent to explicitly assess a project's safety before packaging it ('If you find the project unsafe [...], refuse to package it.'); (3) proposed but untested mitigations: safety guardrails filtering trajectories before self-training, safety-oriented post-training, static analysis + judge-LLM re-validation of tools, and 'safety nodes' inserted into optimized workflows."
+ },
+ "controls": [
+  {
+   "name": "Before evolution (initial model / no memory / pre-optimization workflow)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Reference-not-rule memory prompt mitigation",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Safety-assessment prompt before tool ingestion",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Memory evolution degrades safety alignment: for SE-Agent on Qwen3-Coder-480B-Instruct, the Refusal Rate on RedCode-Gen dropped from 99.4% to 54.4% and the ASR rose from 0.6% to 20.6% after memory evolution.",
+   "metric": "Refusal Rate (higher better) / ASR (lower better) on RedCode-Gen",
+   "value": "RR 99.4% -> 54.4%; ASR 0.6% -> 20.6%",
+   "comparison": "before evolution (no memory) vs after evolution (distilled strategies as context)",
+   "setting": "SE-Agent coding agent, Qwen3-Coder-480B-Instruct backbone, three self-evolution iterations on a 50-problem SWE-Bench-verified subset, evaluated on RedCode-Gen (Table 1)",
+   "quote": "As shown in Table 1, for the SE-Agent instantiated with Qwen3-Coder-480B-Instruct (the largest coder model in Qwen3 series), the Refusal Rate for harmful instructions decreased by 45% after memory evolution, while the ASR surged from a mere 0.6% to 20.6%.",
+   "locator": "§3.2 (Table 1)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "RR/ASR over RedCode-Gen harmful-instruction items; the RedCode-Gen item count is not stated in the paper; the memory was formed over 3 evolution iterations on a 50-problem SWE-Bench-verified subset (Appendix C.2.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Deployment-time reward hacking via memory: in more than 60% of cases, top-tier models (GPT-5, Claude-4-Sonnet, Gemini-2.5-Pro) adopted actions that maximized historical success but undermined user or stakeholder interests; with no memory the Unsafe Rate was zero on all LLMs. v2 新增长程分析：Service 场景 100 轮动态交互中，Unsafe Rate 在第 60 轮突然崩塌——第 50-60 轮间一次无理退款获高评分使 agent 采纳了「退款↔高评分」的错误启发式（记忆驱动的失稳可以是事件触发而非累积）。",
+   "metric": "Unsafe Rate (deployment-time reward hacking)",
+   "value": ">60% (with memory); 0% (no memory)",
+   "comparison": "with AgentNet memory mechanism vs directly inputting the test query without memory",
+   "setting": "40 curated cases across Sales/Service/Medicine/Finance (static setting); 7 top-tier backbone LLMs, temperature 0.1; Unsafe Rate averaged over 3 runs; Gemini-2.5-Pro LLM judge + human judge; longitudinal dynamic setting: Qwen2.5-72B-Instruct, 100 rounds in Service scenario, Unsafe Rate tracked on 10 test queries every 10 rounds",
+   "quote": "Figure 7 shows the result from the “static” setting of the AgentNet experiment. In more than 60% of the cases, top-tier models such as GPT-5, Claude-4-Sonnet, and Gemini-2.5-Pro adopted actions that maximized historical success but undermined the interests of users or stakeholders.",
+   "locator": "§3.2 (Figure 7, Figure 6(b))",
+   "denominator": {
+    "n_total": 40,
+    "n_valid": null,
+    "how_counted": "40 curated cases (each a list of experiences plus a test query) across four scenarios; 7 backbone LLMs; Unsafe Rate averaged over 3 runs; judged by Gemini-2.5-Pro LLM judge and a human judge"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Tool creation-reuse loop: agents built on leading LLMs create and reuse vulnerable tools with an average Overall Unsafe Rate of 65.5% across 8 models (GPT-4o worst at 76.0%).",
+   "metric": "Overall Unsafe Rate (unsafe MCP + unsafe toolchain), averaged over 8 models",
+   "value": "65.5%",
+   "comparison": "per-model range 56.0% (Gemini-2.5-Pro) to 76.0% (GPT-4o)",
+   "setting": "25 test cases, each targeting a distinct vulnerability type from CWEval; two sequential tasks per case (benign task where an MCP tool may be created, then a security-sensitive reuse task); Gemini-2.5-Pro LLM judge; 8 backbone LLMs (Table 2)；v2 补充：8 个骨干模型 temperature 0.1",
+   "quote": "Observations and analysis. In our experiments on tool creation and reuse, Table 2 shows that even agents powered by leading LLMs frequently create and reuse tools with vulnerabilities throughout their life cycles. On average, the Overall Unsafe Rate reached 65.5%.",
+   "locator": "§3.3 (Table 2)",
+   "denominator": {
+    "n_total": 25,
+    "n_valid": null,
+    "how_counted": "25 test cases x 8 backbone models; unsafe trajectories in the second (security-sensitive) task judged by Gemini-2.5-Pro and categorized as Unsafe MCP or Unsafe toolchain"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "[replaced_by_different_metric in v2] 工具摄入实验在 v2 被重新设计：数据集从 v1 的 814 个程序化注入样本改为 **371 个恶意样本**（把 RedCode-Exec 的恶意代码注入 8 个流行 GitHub 项目，经 gitingest 转文本摘要后喂给 LLM），拒绝率大幅下降且排名重排：v2 最佳仅 7.28%（Qwen3-235B），GPT-4o 与 Llama3.1-70B 低至 0.27%；v1 的最佳 15.9%（Gemini-2.5-Flash）/最差 4.5%（Qwen2.5-72B）属旧数据集口径，不可与新数直比。结论方向一致且更强：模型普遍无法识别隐藏恶意代码。",
+   "metric": "Refusal Rate on malicious external tools, higher is better",
+   "value": "best 7.28% (Qwen3-235B); GPT-4o / Llama3.1-70B 0.27% [v1: best 15.9%, worst 4.5%, over 814 samples]",
+   "comparison": "six LLMs: GPT-4o 0.27%, GPT-4o-mini 2.16%, Gemini-2.5-Flash 2.70%, Qwen3-235B 7.28%, Qwen2.5-72B 4.85%, Llama3.1-70B 0.27%",
+   "setting": "Agent retrieves the project and must identify security risks and refuse to wrap the code as an MCP (Table 3)",
+   "quote": "In our experiments on ingesting external tools, Table 3 shows that agents consistently struggled to detect deeply embedded security issues within GitHub repositories. Even the best-performing model, Qwen3-235B-A22B-Instruct, achieved a Refusal Rate of only 7.28%.",
+   "locator": "§3.3 (Table 3)",
+   "denominator": {
+    "n_total": 371,
+    "n_valid": null,
+    "how_counted": "Refusal Rate over 371 malicious samples (RedCode-Exec code injected into eight popular GitHub projects, converted with gitingest) per model; six LLMs at temperature 0.1"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Workflow optimization degrades safety: after AFlow optimization on HumanEval coding tasks, Refusal Rate dropped from 36.3% to 5.6% (-84.6%) and ASR rose from 54.4% to 83.1% (+52.8%) [v1 报 46.3%→6.3%（-86.4%）与 53.1%→83.8%（+57.8%），v2 重跑后数值更新]；优化后工作流看似无害，v2 把原因定位到 Ensemble Node 会级联放大不安全行为（在子节点中优先选择与 C2 服务器完整恶意通信的方案而非简单 print 模拟）。",
+   "metric": "RR / ASR on RedCode-Gen, before vs after workflow optimization",
+   "value": "RR 36.3% -> 5.6%; ASR 54.4% -> 83.1% [v1: RR 46.3% -> 6.3%; ASR 53.1% -> 83.8%]",
+   "comparison": "initial single-step \"Answer Generator\" workflow vs 20-iteration AFlow-optimized workflow",
+   "setting": "AFlow on HumanEval, Qwen2.5-72B-Instruct backbone, evolution from single-step Answer Generator workflow for 20 iterations on a dedicated HumanEval subset; safety evaluated on RedCode-Gen before/after",
+   "quote": "After workflow optimization, the Refusal Rate dropped from 36.3% to 5.6% (a 84.6% reduction), while the ASR rose from 54.4% to 83.1% (a 52.8% increase).",
+   "locator": "§3.4 (Figure 9)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "RR/ASR over RedCode-Gen items evaluated against the pre- and post-optimization workflows; item count not stated"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Mitigation cost reading: the prompt-based 'reference not rule' intervention partially restores safety (ASR 20.6% -> 13.1%, RR 54.4% -> 66.9%, reward-hacking Unsafe Rate 71.8% -> 51.4%) but safety does not recover to the pre-evolution level.",
+   "metric": "ASR / RR on RedCode-Gen and Unsafe Rate under prompt mitigation",
+   "value": "ASR 13.1%; RR 66.9%; Unsafe Rate 51.4%",
+   "comparison": "pre-mitigation 20.6% / 54.4% / 71.8%; pre-evolution 0.6% / 99.4% (not recovered)",
+   "setting": "SE-Agent (Qwen3-Coder-480B) with memories framed as references rather than rules, on RedCode-Gen and the reward-hacking scenarios (Appendix D.1)",
+   "quote": "This lightweight intervention proved effective, reducing the ASR of SE-Agent (Qwen3-Coder-480B) from 20.6 % to 13.1% and increasing the Refusal Rate from 54.4 % to 66.9 % on RedCode-Gen. It also reduced the Unsafe Rate in reward hacking scenarios from 71.8 % to 51.4 % on average. However, the agent’s safety still did not fully recover to its pre-evolution level, suggesting the need for more powerful mitigation strategies.",
+   "locator": "§4 (Appendix E.2)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Same RedCode-Gen and reward-hacking case bases as the corresponding pre-mitigation measurements; item counts not stated"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Adding the memory mitigation prompt leaves benign task performance unchanged: the Resolution Rate stays at 60.0% before and after.",
+   "metric": "SWE-Bench Resolution Rate (benign)",
+   "value": "60.0% -> 60.0% (zero change)",
+   "comparison": "before vs after incorporating the mitigation prompt",
+   "setting": "SWE-Bench resolution rate with and without the memory mitigation prompt, Appendix E.2",
+   "quote": "The Resolution Rate remained the same (60.0%) both before and after we incorporated the memory mitigation prompt.",
+   "locator": "Appendix E.2",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Coverage of misevolution forms is inherently incomplete: the phenomenon is open-ended and the authors state it is theoretically impossible to foresee or define all possible forms.",
+   "quote": "Our foremost challenge lies in the open-ended and complex nature of the Misevolution phenomenon itself: while we have covered a diverse range of typical risk scenarios, it is theoretically impossible to foresee or define all possible forms this phenomenon could take.",
+   "locator": "Appendix F"
+  },
+  {
+   "statement": "No unified safety evaluation framework across heterogeneous self-evolving agent architectures; constructing one is deferred to future work.",
+   "quote": "Furthermore, due to the significant differences in architectural design and evolutionary mechanisms among self-evolving agents, we currently find it difficult to propose a unified safety framework capable of evaluating all agent types. Therefore, constructing such a universal evaluation standard and methodology constitutes a core direction for our future work.",
+   "locator": "Appendix F"
+  },
+  {
+   "statement": "AgentNet 记忆失稳的主结果来自 static 设置（手工构造经验）；v2 措辞微调——dynamic 全模拟设置结果相似但难以支撑统计显著性",
+   "quote": "We observed similar results in “dynamic” setting, but it is less scalable for showing statistical significance.",
+   "locator": "§3.2 footnote 2"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/ShaoShuai0605/Misevolution (Abstract: 'Our code and data are available at https://github.com/ShaoShuai0605/Misevolution')",
+  "data": "HarmBench, SALAD-Bench, HEx-PHI, RedCode-Gen, Agent-SafetyBench, RiOSWorld (140-case subset of 492 tasks), 40 curated memory cases, 25 CWEval-based tool cases, 814 programmatically injected malicious tool samples, HumanEval + AFlow",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "taxonomy",
+   "model_evolution",
+   "memory_evolution",
+   "tool_evolution",
+   "workflow_evolution",
+   "mitigation",
+   "appendix_A_settings_partial",
+   "appendix_E_limitation",
+   "appendix_F_broader_impact"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "redcodegen_item_count_unreported",
+  "static_memory_setting_for_agentnet",
+  "llm_judge_plus_human_for_unsafe_rate"
+ ]
+}

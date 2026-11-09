@@ -1,0 +1,257 @@
+{
+ "arxiv_id": "2610.14515",
+ "title": "SEPM: Self-Evolving Procedural Memory Grounded in Task Graphs for Multi-Agent Collaboration",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "skill",
+  "scope": "cross-task",
+  "carrier": "版本化程序性记忆池 P：每条程序 S_i^(v) = (M_i 元数据[标题/描述/适用条件/上下文条件/排除条件/标签/版本号], Π_i 可执行步骤集, G_i 前置关系 DAG(V,E), W_i 条件警告及触发条件与支撑证据)；池内同时保留执行记录、候选程序、复现试验记录与被取代的历史版本，跨任务持久化于 run 级 SQLite 数据库（可用 TEAM_MEMORY_DB 覆盖，resumed run 从既有数据库/checkpoint 继续）；检索时按上下文条件/排除过滤后以 BM25+向量自适应加权取 Top-5（Eq.3，K=5）。任务级黑板与任务图随任务重置，跨任务存留的是程序池",
+  "operations_covered": ["formation", "update", "retention", "retrieval", "revocation", "repair"]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "纯性能论文、未做安全实验：论文维护的是程序记忆池的内容完整性——只有被执行证据验证的步骤/依赖（Eq.8: Hτ⊨u、Hτ⊨(u,w)；时间先后 alone 不构成前置关系）且通过安全/状态验证/因果归因/复现门控并净收益非负的候选，才能成为活动版本（Eq.9），无试验记录的候选不能晋升，失败试验计入均值；该性质支撑其自演化记忆更新机制（§4.4/B.5 试炼式晋升、B.6 原子版本更新），而非对外安全保证——作者在 Ethics Statement 中明示记忆与对齐机制不应被解释为安全或正确性保证",
+  "operationalized_as": "机制层：Eq.8 证据验证抽取（V+、E+）；Eq.9 晋升门控 G_safety∧G_state∧G_causal∧G_reproduction∧[ū(S′)≥0]，默认 safety-risk 阈值 0.50、causal 置信阈值 0.65、最少复现次数 1（B.5）；Eq.13/14 试验净收益（含失败试验，无试验记 -∞）；Eq.16 head 匹配的原子版本更新，被取代版本留史、检索只用活动版本。无安全实验、无安全指标"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "标准基准评测假设：任务、环境（ALFWorld/WebArena/OfficeBench/MultiAgentBench）与底层 LLM 非对抗，无记忆污染/投毒场景；黑板记录来自协作 agent 自身，证据按 authority tier（环境或官方状态 > 工具观测 > 验证工件 > agent 推断）分级（B.3）",
+   "每个 benchmark condition run 从空程序池开始，记忆内容仅由本 run 的执行经验形成；separate conditions 用独立数据库路径（C.2）"
+  ],
+  "not_covered": [
+   "无对手模型：不涉及对记忆池的污染/注入/投毒攻击，也不评估恶意或错误导出的程序被检索复用的后果",
+   "作者明示框架可能继承底层模型的偏见、不安全行为与事实错误，记忆与对齐机制不应被解释为安全或正确性保证（Ethics Statement）",
+   "不覆盖更开放的迭代式/隐式协调结构（§6 Limitations 自述）"
+  ]
+ },
+ "intervention": {
+  "name": "SEPM (Self-Evolving Procedural Memory)",
+  "mechanism_layer": "architecture",
+  "description": "以任务依赖图为共同表征、把多智能体在线协调与程序记忆演化耦合的记忆架构：(1) 检索与实例化——按上下文条件/排除过滤活动程序池，BM25+向量自适应加权取 Top-5（Eq.3），manager 把检索步骤绑定为任务图节点+agent 分配并保留前置关系与警告；(2) 结构化执行——共享黑板 B 记录结构化执行记录（assigned subtask/observation/action/result/error，Eq.4）并关联图节点，manager 维护已验证任务状态 Σ；(3) 分歧感知对齐——目标分歧 Dg（文本相似+task-conditioned goal-consistency judge，Eq.5，β=0.55、阈值 0.35）、计划分歧 Dp（节点动作不匹配+边对称差归一化，Eq.6，阈值 0.40）、状态冲突 Cs（合格证据值冲突，Eq.7/10/11，置信≥0.70）触发 manager 解决冲突并把修正传播给受影响 agent（含跨 agent handoff 的证据要求）；(4) 自演化记忆——任务完成后从验证过的节点/边抽取程序（Eq.8），新工作流建新程序、经验支持时修订或附加条件警告，池经创建/精化/特化/退休演化，受 success 与 cost utility 引导；候选须经试炼式晋升门控（安全/状态/因果/复现+净收益非负，Eq.9/12-14）并以原子版本更新提交（Eq.16）"
+ },
+ "controls": [
+  {"name": "No added memory (AutoGen / DyLAN host baseline)", "purpose": "baseline"},
+  {"name": "Generative Agents (Park et al., 2023)", "purpose": "baseline"},
+  {"name": "MetaGPT (Hong et al., 2024)", "purpose": "baseline"},
+  {"name": "G-Memory (Zhang et al., 2025a)", "purpose": "baseline"},
+  {"name": "Full w/o explicit graph (information-matched textual procedural memory control)", "purpose": "ablation"},
+  {"name": "Blackboard only / Blackboard + memory / Blackboard + alignment (component ablation)", "purpose": "ablation"}
+ ],
+ "results": [
+  {
+   "claim": "在 AutoGen 主机上，SEPM 相对无附加记忆基线把 ALFWorld/WebArena/OfficeBench 任务分分别提升 29.85/25.86/13.00 个百分点（Table 1：59.70→89.55、12.44→38.30、41.67→54.67）",
+   "metric": "task_score",
+   "value": "+29.85 / +25.86 / +13.00 pp",
+   "comparison": null,
+   "setting": "AutoGen 主机；主规划/任务执行/程序记忆模型与 goal-consistency judge 均为 gpt-5-mini（§5.1）；ALFWorld 134 / WebArena 812 / OfficeBench 300 任务，每任务条件评测一次（base seed 0，C.4）",
+   "quote": "Under AutoGen, it improves task scores over the no-added-memory baseline by 29.85, 25.86, and 13.00 percentage points, respectively.",
+   "locator": "Abstract; Table 1",
+   "denominator": {
+    "n_total": "134（ALFWorld）/ 812（WebArena）/ 300（OfficeBench）",
+    "n_valid": "与 n_total 相同（每任务计入一次）",
+    "how_counted": "C.3/C.4：每任务条件评测一次（base seed 0），取各基准评测管线返回的任务级分数在全部评测任务集上聚合；ALFWorld 用环境任务反馈（每任务最多 30 actions），WebArena 用 functional evaluator，OfficeBench 聚合 300 任务（exact/fuzzy 关键词匹配）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "AutoGen 下 SEPM 三个基准任务分为 89.55%/38.30%/54.67%，且在全部三个基准上超过信息等价的文本程序对照（对照保留程序内容、检索规则与上下文预算，仅把显式图换成文本前置描述）",
+   "metric": "task_score",
+   "value": "89.55% / 38.30% / 54.67%",
+   "comparison": null,
+   "setting": "AutoGen；gpt-5-mini；对照 Full w/o explicit graph 保留黑板、记忆、对齐、检索规则、上下文预算与更新机制，用文本表达前置关系并以文本引用做计划比较与修正传播（C.1）",
+   "quote": "Under AutoGen, SEPM achieves task scores of 89.55%, 38.30%, and 54.67% on ALFWorld, WebArena, and OfficeBench, respectively, outperforming the information-matched textual control on all three benchmarks.",
+   "locator": "§6 Conclusion",
+   "denominator": {
+    "n_total": "134（ALFWorld）/ 812（WebArena）/ 300（OfficeBench）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "同主表口径（C.3/C.4）：各基准评测管线的任务级分数聚合，每任务条件评测一次 base seed 0"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "SEPM 在全部六个基准设置（3 基准 × AutoGen/DyLAN）中取得最高任务分；相对每设置最强替代方法（ALFWorld 上 Generative Agents、WebArena/OfficeBench 上 G-Memory），AutoGen 下提升 3.73/8.00/4.67、DyLAN 下提升 2.99/4.31/4.66 个百分点",
+   "metric": "task_score (margin over strongest alternative)",
+   "value": "+3.73 / +8.00 / +4.67 pp (AutoGen); +2.99 / +4.31 / +4.66 pp (DyLAN)",
+   "comparison": null,
+   "setting": "AutoGen 与 DyLAN 两主机，gpt-5-mini；最强替代=Generative Agents（ALFWorld 85.82/65.67）、G-Memory（WebArena 30.30/25.49、OfficeBench 50.00/42.67），均见表 1",
+   "quote": "SEPM achieves the highest observed task score in all six benchmark settings (Table 1). Relative to the strongest alternative in each setting, it improves ALFWorld, WebArena, and OfficeBench by 3.73, 8.00, and 4.67 percentage points under AutoGen, and by 2.99, 4.31, and 4.66 points under DyLAN.",
+   "locator": "§5.2 Performance across Host Systems",
+   "denominator": {
+    "n_total": "每设置 134/812/300 任务（两主机同任务集）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.4：每任务条件评测一次（base seed 0）；差值为同一报告尺度上的百分点（C.4: Differences between displayed scores are reported in points on the same reporting scale）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "DyLAN 主机下 SEPM 任务分：ALFWorld 68.66 / WebArena 29.80 / OfficeBench 47.33，相对无记忆基线（53.73/14.90/33.33）提升 14.93/14.90/14.00 个百分点；DyLAN 绝对分仅出现于 Table 1",
+   "metric": "task_score (DyLAN)",
+   "value": "68.66 / 29.80 / 47.33",
+   "comparison": "+14.93 / +14.90 / +14.00 pp vs no-added-memory",
+   "setting": "DyLAN 主机（Liu et al., 2024）；gpt-5-mini；ALFWorld 134 / WebArena 812 / OfficeBench 300 任务",
+   "quote": "| SEPM | 68.66↑\\uparrow14.93 | 29.80↑\\uparrow14.90 | 47.33↑\\uparrow14.00 |",
+   "locator": "Table 1",
+   "denominator": {
+    "n_total": "134（ALFWorld）/ 812（WebArena）/ 300（OfficeBench）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.3/C.4：每任务条件评测一次（base seed 0），任务级分数聚合；表题注明 Boldface marks the highest score within each benchmark setting；箭头为相对同主机无记忆基线的百分点变化"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "把显式依赖图替换为信息等价的文本程序（保留程序内容与前置描述、检索规则与上下文预算不变）使任务分下降 17.16/8.13/12.34 个百分点，说明仅把依赖信息存进记忆不够，显式图结构及其上的前置检查/计划比较/修正传播操作是收益来源",
+   "metric": "task_score (graph vs textual control)",
+   "value": "-17.16 / -8.13 / -12.34 pp",
+   "comparison": "Full SEPM → Full w/o explicit graph（信息等价对照，差值为下降；对照绝对分语料未给出）",
+   "setting": "AutoGen；gpt-5-mini；同一 134/812/300 任务；该对照不引入额外任务信息或模型能力（§5.5/C.1）",
+   "quote": "Replacing explicit graphs with textual prerequisites reduces task scores by 17.16, 8.13, and 12.34 percentage points on ALFWorld, WebArena, and OfficeBench, respectively (Figure 5(a)).",
+   "locator": "§5.5 Explicit Graphs versus Textual Procedures",
+   "denominator": {
+    "n_total": "134 / 812 / 300（与主比较同任务集）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.4 每条件评测一次 base seed 0；与 Full SEPM 同报告尺度差值"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "仅加入共享黑板（任务依赖图+结构化执行记录）即提升任务分 9.70/15.27/3.33 个百分点，WebArena 收益最大——连续动作与变化 web 环境交互时维护公共执行状态尤其有用",
+   "metric": "task_score (component: blackboard)",
+   "value": "+9.70 / +15.27 / +3.33 pp",
+   "comparison": null,
+   "setting": "AutoGen；组件实验（Figure 5(b) 表）：No added components 59.70/12.44/41.67 → Blackboard only 69.40/27.71/45.00；每条件各跑一次（D.2）",
+   "quote": "The shared blackboard improves task scores by 9.70, 15.27, and 3.33 percentage points on ALFWorld, WebArena, and OfficeBench, respectively.",
+   "locator": "§5.4 Component Contributions",
+   "denominator": {
+    "n_total": "134 / 812 / 300",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.4 每条件评测一次 base seed 0；D.2 注明组件对比由显示分数计算、每条件一次运行"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在黑板基础上加入自演化程序记忆再提升 17.17/6.28/0.33 个百分点：ALFWorld 收益最大（可复用动作序列+前置关系的价值），OfficeBench 上仅程序复用几乎无增益——工作流可访问不等于可执行，执行依赖跨应用的协调状态变化",
+   "metric": "task_score (component: procedural memory)",
+   "value": "+17.17 / +6.28 / +0.33 pp",
+   "comparison": null,
+   "setting": "AutoGen；Blackboard only 69.40/27.71/45.00 → Blackboard + memory 86.57/33.99/45.33（Figure 5(b) 表）；每条件各跑一次（D.2）",
+   "quote": "Building self-evolving memory on this foundation yields an additional 17.17 points on ALFWorld, 6.28 on WebArena, and 0.33 on OfficeBench.",
+   "locator": "§5.4 Component Contributions",
+   "denominator": {
+    "n_total": "134 / 812 / 300",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.4 每条件评测一次 base seed 0；D.2 由显示分数计算的描述性对比"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在 Blackboard+memory 上再加分歧感知对齐使 OfficeBench 提升 9.34 个百分点（ALFWorld +2.98、WebArena +4.31）；对齐在场时记忆的 OfficeBench 边际增益由 0.33 升到 3.67 个百分点——可复用办公流程的价值部分依赖维持执行所需的共享状态（Table 5 交互对比 I=−9.71/−2.46/+3.34）",
+   "metric": "task_score (component: alignment; conditional gains)",
+   "value": "+9.34 OB / +2.98 AW / +4.31 WA; memory gain 0.33→3.67 OB with alignment",
+   "comparison": null,
+   "setting": "AutoGen；Blackboard + memory 86.57/33.99/45.33 → Full SEPM 89.55/38.30/54.67；Blackboard + alignment 82.09/34.48/51.00（Figure 5(b) 表）；每条件各跑一次（D.2）",
+   "quote": "Alignment changes this pattern. Adding it to Blackboard + memory improves OfficeBench by 9.34 points, compared with 2.98 on ALFWorld and 4.31 on WebArena. Conversely, the OfficeBench gain from memory increases from 0.33 points without alignment to 3.67 points with alignment.",
+   "locator": "§5.4 Component Contributions",
+   "denominator": {
+    "n_total": "134 / 812 / 300",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.4 每条件评测一次 base seed 0；Table 5（Appendix D.2）：Differences are computed from the displayed task scores，每条件一次运行、对比为描述性"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "ALFWorld（AutoGen）完整 134 任务评测中 SEPM 以 5.2M token 取得 89.55% 成功：相对无记忆基线（59.70% @ 4.4M tokens）token 仅增约 18.2%，任务成功提升 29.85 个百分点",
+   "metric": "task_score & token_cost",
+   "value": "89.55% @ 5.2M tokens; +18.2% tokens; +29.85 pp",
+   "comparison": null,
+   "setting": "AutoGen；ALFWorld 134 任务完整评测；token=输入+输出总和（C.5）",
+   "quote": "SEPM achieves 89.55% success using 5.2 million tokens over the 134 ALFWorld tasks (Figure 4(b)). Relative to no added memory, token consumption increases by approximately 18.2%, while task success improves by 29.85 percentage points.",
+   "locator": "§5.6 Cost analysis",
+   "denominator": {
+    "n_total": "134",
+    "n_valid": "134",
+    "how_counted": "C.3：134 ALFWorld tasks、每任务最多 30 actions；C.4：每任务条件评测一次 base seed 0；C.5：token 消耗为完整 134 任务评测的输入+输出总和，与 Table 1 同一 run 的任务分配对"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "相对两个记忆基线，SEPM 成功率分别高 3.73 与 5.97 个百分点、总 token 分别少约 7.1% 与 8.8%（ALFWorld, AutoGen）；MetaGPT token 更少但成功更低，代表另一种权衡",
+   "metric": "task_score & token_cost (vs memory baselines)",
+   "value": "+3.73 / +5.97 pts; -7.1% / -8.8% tokens",
+   "comparison": null,
+   "setting": "AutoGen；ALFWorld 134 任务；对照=Generative Agents 85.82% @ 5.6M、G-Memory 83.58% @ 5.7M、MetaGPT 78.36% @ 4.8M tokens（Table 1 与 C.5：totals 4.4/5.6/4.8/5.7/5.2M）",
+   "quote": "Compared with Generative Agents and G-Memory, SEPM improves success by 3.73 and 5.97 points while reducing total token consumption by approximately 7.1% and 8.8%, respectively.",
+   "locator": "§5.6 Cost analysis",
+   "denominator": {
+    "n_total": "134",
+    "n_valid": "134",
+    "how_counted": "同 §5.6/C.5 口径：完整 134 任务 ALFWorld 评测的输入+输出 token 总量与同一 run 任务分"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "框架效果强依赖执行与记忆模型的联合选择（12 备选端点+主配置，规划 agent 与 goal-consistency judge 固定）：三基准分数极差达 35.82/28.70/22.00 个百分点；Qwen3.5 由 2B 增至 27B 全基准提升而 0.8B 与 2B 相近——作者据此指出框架依赖模型执行程序指引与维护有用记忆的能力",
+   "metric": "task_score (model-sensitivity range)",
+   "value": "range 35.82 / 28.70 / 22.00 pp",
+   "comparison": null,
+   "setting": "AutoGen、主规划 agent 与 judge 固定为 gpt-5-mini；执行+程序记忆模型在 13 个端点上联合更换（Table 2：qwen3.5-0.8b 至 claude-opus-5）；最佳端点因基准而异（AW: deepseek-v4-flash-0731 93.28；WA/OB: gpt-5.6-terra 43.23/67.67）",
+   "quote": "Performance varies substantially with the joint execution-and-memory model, with score ranges of 35.82, 28.70, and 22.00 percentage points on ALFWorld, WebArena, and OfficeBench.",
+   "locator": "§5.3 Sensitivity to Execution and Memory Models",
+   "denominator": {
+    "n_total": "13 个端点 × 134/812/300 任务",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.1/C.4：每任务条件评测一次（base seed 0）；benchmark 任务、执行预算与评测器在各配置间保持不变；因执行与记忆管理同时更换，该实验测的是联合效应（§5.3 自述）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "MultiAgentBench（AutoGen）coding/research/database 三环境上 SEPM 取得各场景最高 TS 与 CS（Table 4 / Figure 1）：TS 69.09/78.37/77.03、CS 60.64/88.91/91.94，相对 G-Memory TS +4.89/+4.08/+7.30、CS +9.47/+11.14/+3.74",
+   "metric": "TS & CS (MultiAgentBench)",
+   "value": "TS 69.09 / 78.37 / 77.03; CS 60.64 / 88.91 / 91.94",
+   "comparison": "vs G-Memory TS 64.20 / 74.29 / 69.73; CS 51.17 / 77.77 / 88.20",
+   "setting": "AutoGen；gpt5.5-mini 执行 + claude-opus-5 评测；coding/research/database 各 100 任务，每任务最多 3 次迭代；温度 0.7（coding 0.1）；TS/CS 保留基准报告尺度，不并入三基准均值（C.3/C.4）",
+   "quote": "| G-Memory | 64.20 | 51.17 | 74.29 | 77.77 | 69.73 | 88.20 |\n| SEPM | 69.09 | 60.64 | 78.37 | 88.91 | 77.03 | 91.94 |",
+   "locator": "§D.1",
+   "denominator": {
+    "n_total": "100 × 3（coding/research/database 各 100 任务）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "C.3：We evaluate 100 tasks in each of the coding, research, and database environments；TS 量输出质量/正确性、CS 量沟通与规划，保留基准报告尺度；D.1 注明这些聚合分数描述互补结果而非建立因果"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "SEPM 将协作程序表示为可执行步骤的 DAG 与显式前置关系，面向任务依赖与相关执行状态可在交互中识别的工作流型协作；更开放、迭代式或协调结构不显式的设置不在该形式化覆盖内，作者把引入更丰富的时间与依赖表征列为扩展方向",
+   "quote": "The current SEPM implementation represents collaborative procedures as directed acyclic graphs of executable steps and explicit prerequisite relations. This formulation targets workflow-oriented collaboration in which task dependencies and relevant execution states can be identified during interaction.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "框架可能继承底层 LLM 的偏见、不安全行为与事实错误；作者明示其记忆与对齐机制不应被解释为安全或正确性保证",
+   "quote": "The framework may inherit biases, unsafe behavior, and factual errors from its underlying language models; its memory and alignment mechanisms should not be interpreted as guarantees of safety or correctness.",
+   "locator": "Ethics Statement"
+  },
+  {
+   "statement": "组件交互对比为描述性统计：每条件仅运行一次，交互对比 I 由显示的任务分计算，无方差/显著性信息",
+   "quote": "The contrast is descriptive and is computed from one run per condition.",
+   "locator": "§D.2"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/cookieApril/SEPM（摘要给出 codebase 链接；Reproducibility Statement 承诺公开实现、benchmark 适配器、实验配置与评测脚本，算法规格见附录 A-B.6）",
+  "data": "公开基准：ALFWorld（134 任务）、WebArena（812 任务）、OfficeBench（300 任务）、MultiAgentBench（coding/research/database 各 100 任务）（C.3）；无自建数据集",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "figures", "appendix"],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_safety_experiments（纯性能论文：safety_property.type=integrity 指机制层的记忆池完整性门控 Eq.8/9/12-16，未作为安全性质实验评估，作者明示不构成安全保证）",
+  "single_run_per_condition（C.4：每任务条件仅评测一次 base seed 0，无多种子/方差；D.2：组件交互对比为单次运行的描述性统计）",
+  "appendix_present_and_read_in_corpus（附录 A-B.6 方法细节、C.1-C.5 协议、D.1-D.2 补充结果均存在于语料并已通读；Figure 1-5/Algorithm 1 图体不在语料中，仅 [CAPTION] 文本与 §5.2 prose 数字）",
+  "latex_rendering_artifacts_in_corpus（正文数字存在排版粘连如 4.894.89、0.70.7、4.44.4；本卡引文均逐字复制且选自未受影响区间，干净数值取自表格行或去重 prose）"
+ ]
+}

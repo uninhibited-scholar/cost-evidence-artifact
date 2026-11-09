@@ -1,0 +1,209 @@
+{
+ "arxiv_id": "2610.14431",
+ "title": "MemForm: Benchmarking Memory Formation Poisoning in LLM Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Policy-based persistent memory (textual decision policies) formed by a LangChain/LlamaIndex memory agent from experience histories and committed via the terminal memory-write interface; a retrieval-only episodic store (embedding top-k retrieval) is additionally studied in Appendix B.2.",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "An agent's persistent memory, once formed from individually valid experiences, should preserve reference downstream behavior; adversarial manipulation of memory formation interfaces (committed content, supporting evidence, contextual scope, retained subset, consolidation order) must not flip downstream decisions to the poisoned target behavior. The property is judged to fail when poisoned memory induces the target behavior on queries the agent answers correctly both without memory and under clean memory.",
+  "operationalized_as": "ASR = |Q_atk|/|Q_elig| on eligible queries under paired clean/poisoned formation conditions with interface-specific controls; clean error rate (Err.) and Eligibility Coverage (EC) reported alongside."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Influence observable conditions affecting memory formation without modifying model parameters: experiences presented for learning, environmental feedback, tool outputs, interaction patterns (Evidence/Scope Poisoning)",
+   "Fabricate supporting records substituted into authentic experience histories of equal length (Evidence Poisoning)",
+   "Change which experiences are retained from a fixed candidate pool, realizable externally via event-completion timing under bounded retention (Selection Poisoning)",
+   "Change consolidation order of an identical retained experience multiset, realizable externally via arrival timing under an online updater (Path Poisoning)",
+   "Direct control over content committed at the terminal memory-write interface (Content Poisoning, stronger storage-access assumption)"
+  ],
+  "assumptions": [
+   "No access to model parameters; adversary acts through observable interaction points only (except Content Poisoning's storage access)",
+   "Timing-based realizations assume a fixed pool of already-successful external events plus specified retention, updating, and scheduling conditions",
+   "The same target model performs both memory consolidation and downstream decision making"
+  ],
+  "not_covered": [
+   "Attack cost or end-to-end attack success rate in deployed systems",
+   "Memory-dependent capability acquisition (queries not solvable without memory) and ineligible-query outcomes",
+   "Partial control over event timing, concurrent clean events, bounded scheduling delays, timing noise, uncertainty about retention window or update trigger",
+   "Memory architectures that do not instantiate the corresponding formation operations (e.g., Selection/Path Poisoning not instantiated in store-all retrieval-only memory)"
+  ]
+ },
+ "intervention": {
+  "name": "MemForm: controlled diagnostic benchmark of five memory-formation interfaces (Content, Evidence, Scope, Selection, Path Poisoning) plus evaluation of five defenses (Keyword Filter, LLM-Judge, Memory Sanitization, Task Shield, A-MemGuard)",
+  "mechanism_layer": "content",
+  "description": "A deterministic compiler instantiates paired clean/poisoned formation conditions within a shared bounded-policy scaffold: corrupting terminal write content, substituting fabricated evidence, changing contextual support for policy applicability, changing the retained subset under a fixed pool and budget, and reordering consolidation while preserving the experience multiset and updater. Defenses are then evaluated against the resulting ASR profile."
+ },
+ "results": [
+  {
+   "claim": "Across six LLMs under the primary LangChain implementation, macro-average ASR spans 35.2%-84.0% (multiple-choice) and 49.0%-87.1% (free-form), showing broad susceptibility at all five formation interfaces.",
+   "metric": "ASR",
+   "value": "35.2%-84.0% (multiple-choice); 49.0%-87.1% (free-form)",
+   "comparison": "macro-average ASR range across six models under the primary LangChain implementation",
+   "setting": "Six LLMs (GLM-5.2, GPT-5.6-Luna, Qwen3.8-Flash, Claude-Sonnet-5, Gemini-3.7-Flash, DeepSeek-V4-Flash), LangChain policy-based memory agent, MemForm benchmark, paired clean/poisoned formation",
+   "quote": "The descriptive macro-average ASR ranges from 35.2% to 84.0% for multiple-choice tasks and from 49.0% to 87.1% for free-form tasks.",
+   "locator": "§5.2 Table 1",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "ASR = |Q_atk|/|Q_elig| over eligible queries (reference behavior both without memory and under clean memory), determined separately per model, interface, and response format; exact per-cell query counts not stated in the main text"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With the retained experience multiset and updater held fixed, a designed poisoned consolidation order reduces reference-behavior preservation relative to random orders (DeepSeek 77.5% to 42.1%; Claude 83.5% to 62.4%), showing consolidation order alone can alter behavior.",
+   "metric": "reference_behavior_preservation",
+   "value": "77.5% -> 42.1% (DeepSeek); 83.5% -> 62.4% (Claude)",
+   "comparison": "random orders vs designed poisoned order on the same eligible queries",
+   "setting": "Path Poisoning diagnostic on DeepSeek-V4-Flash and Claude-Sonnet-5, main-evaluation eligible query sets, Figure 5",
+   "quote": "On the same eligible queries, random orders preserve reference behavior for 77.5% of DeepSeek cases and 83.5% of Claude cases, while the designed poisoned order reduces these rates to 42.1% and 62.4%, respectively.",
+   "locator": "§5.4 Figure 5",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Reference-target matches on the same main-evaluation eligible queries per model; exact counts not stated"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "A-MemGuard gives the largest macro-average ASR reduction (8.2 percentage points) but mainly at Path Poisoning (56.8% to 21.4%), while Selection Poisoning ASR slightly increases (68.9% to 69.9%), showing incomplete, interface-dependent mitigation.",
+   "metric": "ASR",
+   "value": "Path 56.8% -> 21.4%; Selection 68.9% -> 69.9%; macro-avg reduction 8.2 pp",
+   "comparison": "No Defense vs A-MemGuard",
+   "setting": "Defense evaluation on DeepSeek-V4-Flash, MemForm five interfaces, LangChain implementation",
+   "quote": "A-MemGuard yields the largest macro-average reduction of 8.2 percentage points, primarily through mitigation at Path Poisoning, where ASR falls from 56.8% to 21.4%. Its mitigation is limited on Evidence and Scope Poisoning, while Selection Poisoning ASR increases from 68.9% to 69.9%.",
+   "locator": "§5.3 Table 2",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "ASR over eligible queries; defense Err. computed on the fixed undefended eligible query set; exact counts not stated"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Task Shield attains the lowest ASR on Content, Evidence, Scope, and Selection Poisoning among evaluated defenses (macro-average ASR down 4.5 percentage points at 1.2% eligible error), yet its ASR stays above 60% on Evidence, Scope, and Selection Poisoning.",
+   "metric": "ASR",
+   "value": "macro-avg reduction 4.5 pp with 1.2% eligible error; residual ASR above 60% on Evidence/Scope/Selection",
+   "comparison": "No Defense vs Task Shield",
+   "setting": "Defense evaluation on DeepSeek-V4-Flash, MemForm five interfaces, LangChain implementation",
+   "quote": "Task Shield achieves the lowest ASR on Content, Evidence, Scope, and Selection Poisoning among the evaluated defenses, reducing the macro-average ASR by 4.5 percentage points with 1.2% eligible error. Nevertheless, its ASR remains above 60% on Evidence, Scope, and Selection Poisoning.",
+   "locator": "§5.3 Table 2",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "ASR over eligible queries; eligible Err. on the fixed undefended eligible query set; exact counts not stated"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Under Selection Poisoning, giving the agent the full candidate pool instead of the poisoned retained subset raises reference-behavior preservation from 28.8% to 96.2% (DeepSeek) and 47.6% to 93.7% (Claude), implicating retention choice rather than experience validity.",
+   "metric": "reference_behavior_preservation",
+   "value": "28.8% -> 96.2% (DeepSeek); 47.6% -> 93.7% (Claude)",
+   "comparison": "poisoned-subset memory vs full-pool memory on the same eligible queries",
+   "setting": "Selection Poisoning diagnostic on DeepSeek-V4-Flash and Claude-Sonnet-5, Figure 5",
+   "quote": "Access to the full pool raises reference behavior preservation from 28.8% to 96.2% for DeepSeek and from 47.6% to 93.7% for Claude.",
+   "locator": "§5.4 Figure 5",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Reference-target matches on the same main-evaluation eligible queries per model; exact counts not stated"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Path Poisoning susceptibility depends on the updater: on common eligible queries, batch replay nearly eliminates ASR (0.0% DeepSeek-V4-Flash, 1.7% Claude-Sonnet-5) while strict recency weighting raises it to 99.3% and 58.0%, versus 53.7% and 33.5% under incremental merge.",
+   "metric": "ASR",
+   "value": "incremental merge 53.7% / 33.5%; recency-weighted 99.3% / 58.0%; batch replay 0.0% / 1.7% (DeepSeek-V4-Flash / Claude-Sonnet-5)",
+   "comparison": "four update rules on the same fixed Path Poisoning cases and common eligible set",
+   "setting": "Appendix B.4 updater study, DeepSeek-V4-Flash and Claude-Sonnet-5, identical experiences and adversarial orders, only the consolidation procedure changed",
+   "quote": "DeepSeek-V4-Flash | 53.7 | 52.3 | 99.3 | 0.0 | | Claude-Sonnet-5 | 33.5 | 14.2 | 58.0 | 1.7",
+   "locator": "Appendix B.4 Table 18 (columns: incremental merge, full rewrite, recency-weighted, batch replay)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "ASR (%) on queries eligible under all four update rules (Table 18 caption); exact query count not stated"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Evidence Poisoning transfers beyond policy-based memory to a retrieval-only episodic store: among 219 eligible queries the agent produces the poisoned behavior on 110, an ASR of 50.2%, with forged records retrieved in every poisoned case.",
+   "metric": "ASR",
+   "value": "50.2%",
+   "comparison": null,
+   "setting": "Retrieval-only episodic memory (no policy consolidation), Evidence Poisoning positive transfer test, 233 evaluated cases, embedding-based retrieval",
+   "quote": "Among 219 eligible queries, the agent produces the poisoned behavior on 110, yielding an ASR of 50.2%.",
+   "locator": "Appendix B.2 Table 15",
+   "denominator": {
+    "n_total": "219 eligible queries (out of 233 evaluated cases)",
+    "n_valid": "110 queries with poisoned behavior",
+    "how_counted": "the agent produces the poisoned behavior on 110 of the 219 eligible queries"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On clean memory the defence introduces task errors where the undefended system makes none: No Defence has 0.0% error by construction, Task Shield 1.2% and A-MemGuard 2.4%.",
+   "metric": "error rate on clean memory",
+   "value": "No Defence 0.0%; Task Shield 1.2%; A-MemGuard 2.4%",
+   "comparison": "undefended baseline vs each defence on clean memory",
+   "setting": "clean-memory evaluation over five defences, Section 5.3, Table 2",
+   "quote": "Eligibility requires the undefended response under clean memory to match the reference behavior, so No Defense has 0.0% Err. by construction",
+   "locator": "Section 5.3, Table 2",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "MemForm measures susceptibility under controlled interventions, not attack cost or end-to-end success in deployed systems.",
+   "quote": "MemForm measures susceptibility under controlled interventions, not attack cost or end-to-end success in deployed systems.",
+   "locator": "§5.5"
+  },
+  {
+   "statement": "The bounded-policy scaffold and behavior-preservation metric do not exhaust poisoning objectives and exclude memory-dependent capability acquisition.",
+   "quote": "Although scenarios span multiple application domains, they do not exhaust poisoning objectives or decision structures.",
+   "locator": "Appendix B.10.3"
+  },
+  {
+   "statement": "Both evaluated implementations share a policy-based memory protocol, limiting generalization to architectures with substantially different memory operations.",
+   "quote": "The evaluated implementations share a policy-based memory protocol, which limits generalization to architectures with substantially different memory operations.",
+   "locator": "§5.5"
+  },
+  {
+   "statement": "The timing-based realizations of Selection and Path Poisoning assume fixed pools of already-successful events and do not evaluate the cost or success rate of inducing those experiences from scratch.",
+   "quote": "They assume a fixed pool of already successful external events and do not evaluate the cost or success rate of inducing the constituent experiences from scratch.",
+   "locator": "Appendix B.3"
+  },
+  {
+   "statement": "Batch replay nearly eliminates Path Poisoning only under the evaluated short-history setting; its scalability and utility trade-offs under longer histories remain unexamined.",
+   "quote": "In particular, Path Poisoning is updater-dependent; although batch replay nearly eliminates it under the evaluated short-history setting, its scalability and utility trade-offs under longer histories remain unexamined.",
+   "locator": "Appendix B.10.3"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_partially_read: A.1-A.4 prompt/validation details, B.1 Tables 12-13 numbers, B.8 CI tables and B.9 case examples were skimmed, not read line by line"
+ ]
+}

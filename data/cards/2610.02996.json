@@ -1,0 +1,202 @@
+{
+ "arxiv_id": "2610.02996",
+ "title": "Evolutionary Computation for Trustworthy AI: From Attacks and Defenses to Self-Evolving Era",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "被综述系统的持久载体（Table V 及 §VII）：memories、skills、workflows/scaffolds、safety harnesses/safeguards、可复用档案（verified harness archive、persistent Meta-Skills、adversarial skill library、verified defense memory）、attack-strategy pool、guardrail/defender 版本、训练数据与模型参数；综述本身不持久化任何状态（文献综合）。",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "综述聚焦 robustness、safety、security、privacy 与 EC 的交叉（§I、§II-A）：保护模型及更大范围 AI 系统（含工具使用、上下文、与环境交互轨迹）在输入/环境变化或被蓄意操纵下维持可靠、安全行为的能力；自演化场景下进一步保护更新过程本身，防止不安全记忆/脆弱工作流/对抗策略跨版本累积造成安全漂移。失效由任务级指标判定（ASR、jailbreak 成功、harmfulness、安全违规、任务性能下降等）。",
+  "operationalized_as": "§IV 归纳的两级口径——任务级：ASR、perturbation magnitude、query cost、harmfulness、refusal quality、safety violations、clean/robust accuracy、membership inference 成功率等；搜索级：hypervolume、archive coverage、QD score、fixed-budget/fixed-target 成本与收敛统计。"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "对已部署模型的黑盒查询访问（仅标签/分数/生成响应），受查询预算约束（§I、§IV）",
+   "构造并演化输入扰动、后门触发器、jailbreak 提示、对抗性 RAG 文档、agent 环境注入载荷（§V，转述 GenAttack/AutoDAN/DIGA/GARAG/Genesis 等）",
+   "训练时后门投毒与黑盒低频触发器搜索、联邦流量分类器的输入特定后门模式（§V-A.2，转述 LADDER/GABAttack）",
+   "基于置信度/查询反馈的模型反演与模型窃取（§V-A.3、§V-B.2，转述 MIRROR/Stealix）",
+   "攻击策略随防御状态协同演化、跨轮次保留于策略池（§VII-C，转述 DARWIN/EvoSafety）"
+  ],
+  "assumptions": [
+   "攻击者仅能获得黑盒反馈（预测标签、分数或生成响应），适应度由目标系统反馈评估",
+   "攻击/防御候选在给定查询/评估预算内迭代",
+   "自演化系统中被接受的更新会进入后续版本可见状态（继承假设，§II-A 公式化）"
+  ],
+  "not_covered": [
+   "综述明确指出 persistent memory、multi-agent interaction、embodied execution 等攻击面在进化攻击文献中仍 underexplored（§V-C）",
+   "未讨论 insider 威胁或多用户/权限滥用场景",
+   "除转述 SEVerA/SMC-ES 等验证方法外，未给出统一的形式化威胁模型或安全证明"
+  ]
+ },
+ "intervention": {
+  "name": "EC-centered unified framework（进化攻击 / 进化防御 / 可信自演化 AI 三方向综述；自演化侧提出 3S 机制框架）",
+  "mechanism_layer": "architecture",
+  "description": "综述本身不提出新防御机制。其梳理的机制横跨多层：EC 作为外环优化器搜索训练数据/提示（content）、模型结构与训练策略（architecture）、运行时防护与选择门控（execution），并以结构/语义/形式化行为约束限制自演化更新的可准入空间（formal，如 MermaidFlow/SEVerA）；本卡按其对自演化更新回路的主导干预层（约束可准入更新空间、组织更新-保留-继承结构）登记为 architecture。"
+ },
+ "results": [
+  {
+   "claim": "综述将 EC 在可信 AI 中的应用统一归纳为三个方向：进化攻击、进化防御、可信自演化 AI 系统（摘要定位句；正文并声称以统一进化视角连接此前分散的 trustworthy AI / EC / 自演化三条文献线）。",
+   "metric": "survey_scope",
+   "value": "three directions (evolutionary attacks / evolutionary defenses / trustworthy self-evolving AI)",
+   "comparison": null,
+   "setting": "文献综述（arXiv 语料为单版本全文）；覆盖 predictive、generative、agentic 三类目标系统的可信 AI 问题",
+   "quote": "This survey reviews how EC has been applied to trustworthy AI across three directions: evolutionary attacks, evolutionary defenses, and trustworthy self-evolving AI systems.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Table I 自评（Ours 行）：本综述在 trustworthy AI、EC-Centric、Trustworthy Self-Evolving AI 三个对照维度上均标注 ✓（完整覆盖），且对象列为 Predictive+Generative+Agentic 三类；对照的 14 篇既有综述无一同时覆盖三维（作者自评的比较性结论）。",
+   "metric": "survey_comparison_coverage",
+   "value": "full coverage on all three compared aspects",
+   "comparison": null,
+   "setting": "Table I 对照 14 篇既有综述（7 篇 trustworthy AI 综述 + 7 篇 EC-centric 综述）；本行为 Ours 自评行，✓ 表示 full coverage",
+   "quote": "Ours\nPredictive\nGenerative\nAgentic\n✓\n✓\n✓",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述给出的文献覆盖窗口为 2018–2026 年代表性工作，并提出 3S 框架：Search-Space-Constrained Exploration、Selection-Guided Refinement、Strategic Attack–Defense Co-Evolution（综述自身框架）。",
+   "metric": "coverage_window_and_framework",
+   "value": "2018-2026",
+   "comparison": null,
+   "setting": "Fig. 3 时间线：EC for Trustworthy AI 从进化攻击/防御到可信自演化 AI 的发展阶段图（作者绘制）",
+   "quote": "2018–2026 representative works on EC for Trustworthy AI: from Evolutionary Attacks and Defenses to Trustworthy Self-Evolving AI, culminating in the\n3S\nframework:",
+   "locator": "Fig. 3",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述按可信性介入更新回路的位置，将可信自演化组织为三个机制，分别回答三个问题：哪些更新可准入（search-space-constrained exploration）、哪些更新可保留（selection-guided refinement）、攻防交互如何影响后续演化（strategic attack–defense co-evolution）（综述自身分类框架）。",
+   "metric": "taxonomy_mechanisms",
+   "value": "three mechanisms",
+   "comparison": null,
+   "setting": "§VII 对可信自演化 AI 文献的组织框架；非实验结果，属综述综合",
+   "quote": "These three mechanisms correspond to three distinct questions: which updates are admissible, which updates can be retained, and how interactions between attackers and defenders influence subsequent evolution.",
+   "locator": "§VII",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述以“继承”作为自演化的界定标准：被接受的更新一旦影响后续系统版本可用的状态，即属于自演化（综述自身定义，据此划定其自演化方向的收录范围）。",
+   "metric": "definition_inheritance_criterion",
+   "value": "accepted change affects state available to subsequent system versions",
+   "comparison": null,
+   "setting": "§II-A Review Scope：综述对 trustworthy self-evolving AI 的收录界定",
+   "quote": "We thus use inheritance as the main distinction: an update becomes part of self-evolution when an accepted change affects the state available to subsequent system versions.",
+   "locator": "§II-A",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述指出自演化的持久性带来特有可信风险：不安全记忆、脆弱工作流、不可靠技能或对抗策略可能随时间累积，导致安全漂移或故障跨系统版本传播（综述自身风险综合，是其三机制框架的动机）。",
+   "metric": "risk_identification",
+   "value": "safety drift / cross-version failure propagation",
+   "comparison": null,
+   "setting": "§VII 开篇对自演化系统持久状态的定性风险判断（综述自身综合）",
+   "quote": "This persistence raises distinctive trustworthiness concerns, as unsafe memories, brittle workflows, unreliable skills, or adversarial strategies may accumulate over time, leading to safety drift or propagating failures across system versions",
+   "locator": "§VII",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述提出 EC 可信 AI 的两级评估框架：任务级度量进化产物（攻击、测试用例、模型、策略、防御）在 robustness、safety、privacy、task performance 相关指标上的达成度；搜索级另考察多样性、评估成本与收敛（综述自身评估方法学综合）。",
+   "metric": "evaluation_framework",
+   "value": "two complementary levels (task level + search level)",
+   "comparison": null,
+   "setting": "§IV Evaluation and Benchmarking；任务级指标如 ASR、harmfulness、refusal quality、clean/robust accuracy，搜索级指标如 hypervolume、archive coverage、QD score",
+   "quote": "Evaluating EC for trustworthy AI involves two complementary levels.\nAt the task level, evaluation measures how effectively an evolved attack, test case, model, policy, or defense achieves its intended objective, using metrics related to robustness, safety, privacy, and task performance.",
+   "locator": "§IV",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述对既有进化防御文献的模式归纳：EC 很少替代底层学习或安全机制，而是典型地作为外环优化器，围绕常规训练、架构设计、策略学习或运行时防护搜索防御性选择（综述自身综合结论）。",
+   "metric": "defense_design_pattern",
+   "value": "outer-loop optimizer pattern (qualitative)",
+   "comparison": null,
+   "setting": "§VI-E Discussion：对 §VI 所综述防御方法（训练数据/模型设计/训练优化/部署防护四类）的横断归纳",
+   "quote": "Across existing defenses, EC rarely replaces the underlying learning or security mechanism. Instead, it typically serves as an outer-loop optimizer that searches for defensive choices around conventional training, architecture design, policy learning, or runtime protection",
+   "locator": "§VI-E",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Table V 登记的自演化持久状态之一（转述 DARWIN 与 EvoSafety 的设计）：双侧都显式保留状态——攻击侧维持持续有效的 jailbreak 策略池，防御侧维护防御记忆，使攻防知识跨轮次累积而不必反复修改被保护模型。",
+   "metric": "persistent_state_taxonomy",
+   "value": "attack-strategy pool + defensive memory (persistent on both sides)",
+   "comparison": null,
+   "setting": "Table V：按可信性介入位置组织的代表性自演化机制与演化状态（转述被引工作 [35][166] 的状态设计，非本综述实验）",
+   "quote": "DARWIN; EvoSafety\n[\n35\n,\n166\n]\nAttack strategies and defensive state\nAttack-strategy pool and defensive memory",
+   "locator": "Table V",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述对 agentic 系统进化攻击文献现状的评估：该方向仍处早期，工作从演化注入内容进展到利用轨迹与环境级反馈，而持久记忆、多智能体交互与具身执行等攻击面仍未被充分探索（综述自身研究缺口判断）。",
+   "metric": "coverage_gap",
+   "value": "persistent memory / multi-agent interaction / embodied execution underexplored",
+   "comparison": null,
+   "setting": "§V-C Attacks on Agentic Systems 结尾的文献现状评估（综述自身综合）",
+   "quote": "Existing work shows a progression from evolving injected content to exploiting trajectory- and environment-level feedback, while persistent memory, multi-agent interaction, and embodied execution remain underexplored.",
+   "locator": "§V-C",
+   "denominator": null,
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "作者指出现有进化攻击研究的局限：攻击表现不只取决于进化算法，还取决于表示、适应度设计、反馈质量与查询预算；已有研究常同时变动多个因素，难以分离 EC 本身的贡献，需要与替代性黑盒搜索方法做更受控的比较（转述对象为领域内研究，非综述自身的实验局限）。",
+   "quote": "A key limitation, however, is that attack performance depends not only on the evolutionary algorithm but also on representation, fitness design, feedback quality, and query budget\n[\n128\n]\n. Existing studies often vary several of these factors simultaneously, making it difficult to isolate the contribution of EC itself.",
+   "locator": "§V-D"
+  },
+  {
+   "statement": "作者指出现有进化防御的局限：往往只搜索单一最终解（一个架构、策略、训练配置或防护），而模型面对不同数据分布、攻击类型与安全需求，对一种攻击有效的防御对另一种可能效果差（领域局限，属 §VIII 挑战之一）。",
+   "quote": "Existing evolutionary defenses often search for a single final solution, such as one architecture, policy, training configuration, or safeguard. However, a model may face different data distributions, attack types, and safety requirements.",
+   "locator": "§VIII-B"
+  },
+  {
+   "statement": "作者指出自演化 AI 的局限：进化更新往往只在产生它的有限任务集上评估，改进一个任务的更新未必迁移到其他任务，甚至可能损害原本处理良好的任务（领域局限，与 continual learning 的稳定性-可塑性权衡相关）。",
+   "quote": "evolutionary updates are often evaluated on only a limited set of tasks. An update that improves one task may not transfer to others and may even reduce performance on tasks that were previously handled well.",
+   "locator": "§VIII-C"
+  },
+  {
+   "statement": "作者指出现有基准的局限：可信 AI 与进化搜索常被分开评估，难以判断相似的安全收益是否以相当的搜索代价获得，需要统一基准在同等评估预算下联合评估任务级可信性与搜索级性能（领域局限）。",
+   "quote": "existing benchmarks often assess trustworthy AI and evolutionary search separately, making it difficult to determine whether similar safety gains are achieved with comparable search effort.",
+   "locator": "§VIII-D"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "survey_card_all_results_are_synthesis_not_experiments",
+  "no_quantitative_results_reported_in_survey_prose",
+  "no_secondhand_quantitative_numbers_found_in_corpus",
+  "limitations_are_field_level_not_survey_self",
+  "appendix_not_present_in_corpus",
+  "reading_complete_false_no_appendix_in_corpus"
+ ]
+}

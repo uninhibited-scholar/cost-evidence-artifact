@@ -1,0 +1,191 @@
+{
+  "arxiv_id": "2610.11188",
+  "title": "What to Admit and How to Present: Governing Persistent Memory in LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Top-k retrieved persistent-memory entries (user preferences, beliefs, facts) stored in a MemZero-style persistent-memory substrate (external surface) and pre-injected memory pools (development surface), injected into the generation prompt at query time",
+    "operations_covered": ["retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Retrieved persistent memories must not bend objectively answerable questions (sycophancy/misconception adoption), must not be used outside their permitted scope (cross-domain leakage), and must not override provided evidence (memory-evidence conflict), while beneficial personalization (applying appropriate stored preferences) should be preserved; the property fails under verbatim injection of retrieved memories and is judged per sample under governance arms that decide admission and presentation of memory content into the working context.",
+    "operationalized_as": "Per-sample binary failure rates judged by a single external LLM judge (GLM-5.2, temperature 0): MemSyco-Bench tasks ofj/csc/mec/pm (misconception adoption, out-of-scope use, misled-by-conflicting-memory, preference-not-used), and PersistBench dimensions (sycophancy, beneficial use, cross-domain leakage; official failure criterion judge score >=3 on a 1-5 rubric); paired exact McNemar tests with BH/Holm correction where preregistered; pooled external test n=1,199."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "Memories are benign, non-adversarial content written by the agent's own memory system; failures arise from ordinary verbatim injection, not attacks (paper contrasts its setting with adversarial state-contamination work)",
+      "Harm-inducing memories are topically relevant by construction, so relevance/similarity-based filtering may not separate them from beneficial ones",
+      "Memories are pre-injected/already stored; formation and storage-side admission are outside the intervention",
+      "The judge validly measures failure (human-checked on the development rubric, binary kappa=0.70, n=352)"
+    ],
+    "not_covered": [
+      "Adversarial memory poisoning or state contamination",
+      "Storage-side write admission / memory formation quality",
+      "Physical deletion, unlearning, or editing of stored content (intervention acts only at inference time, after retrieval, before generation)",
+      "Interaction with extended reasoning (thinking disabled in main runs)",
+      "External-surface generator breadth (single generator DeepSeek-V4-Pro externally)",
+      "Human validation of the external task rubrics"
+    ]
+  },
+  "intervention": {
+    "name": "Situated adjudication with factor-compiled admission (FC) and permission-semantic admission (PS), plus PN/CH sectioned renderings",
+    "mechanism_layer": "content",
+    "description": "Inference-time governance with no retraining and no edits to stored content. One batched adjudication call (DeepSeek-V4-Pro) sees the query, recent dialogue, benchmark-provided evidence, and all top-k memories together, and assigns attributes (kind, subject, epistemic status, temporality) but never action decisions. Deterministic policies compile attributes into eligibility and typed channels: FC assesses whole entries and maps factors (scope, subject match, role, epistemic support, temporal status, utility) to five typed channels with asymmetric fail-open/fail-closed rules; PS decomposes entries into typed units mapped to six permission categories (five permitted uses plus deny). Units compiled out are physically dropped from the generation prompt (absence, not annotation). The presentation lever renders the same admitted verdicts under two sectioned forms: permission-note headers (PN) vs information-type channel headers (CH)."
+  },
+  "controls": [
+    {"name": "Bare (verbatim injection)", "purpose": "baseline"},
+    {"name": "Gate (reimplemented query-conditioned gating, MemGate-style)", "purpose": "baseline"},
+    {"name": "NoMem ablation (no memory system)", "purpose": "negative-control"},
+    {"name": "Grouping-only control (section labels without adjudication)", "purpose": "ablation"},
+    {"name": "Budget-matched random-selection and relevance-ranking arms", "purpose": "fair-comparison"},
+    {"name": "Verdict-shared PN-vs-CH rendering experiment", "purpose": "ablation"},
+    {"name": "Annotated-memory arm (memories kept with per-memory influence annotations)", "purpose": "positive-control"}
+  ],
+  "results": [
+    {
+      "claim": "On the external MemSyco-Bench pooled test, adjudicated admission pipelines cut judged failure vs verbatim injection (PS -8.8pp, FC -6.7pp, both significant); the authors attribute the cuts to the adjudication-based pipelines as wholes, not to admission alone (PS-vs-FC pooled p=.066, not significant).",
+      "metric": "pooled judged failure rate",
+      "value": "46.2% -> 37.4% (PS); 46.2% -> 39.5% (FC)",
+      "comparison": "Bare 46.2% vs PS 37.4% vs FC 39.5%",
+      "setting": "External MemSyco-Bench, 4 tasks x 300 samples, generator DeepSeek-V4-Pro, judge GLM-5.2, paired exact McNemar vs Bare",
+      "quote": "Against verbatim injection, both admission designs cut judged harm on every safety-oriented task and in the pooled test: FC 46.2%→39.5%46.2\\%\\to 39.5\\% (−6.7-6.7pp, p=2.7×10−7p=2.7\\times 10^{-7}) and PS 46.2%→37.4%46.2\\%\\to 37.4\\% (−8.8-8.8pp, p=4.1×10−12p=4.1\\times 10^{-12}).",
+      "locator": "§5.2 Table 2 (pooled row)",
+      "denominator": {"n_total": "1200", "n_valid": "1199", "how_counted": "pooled external test concatenates per-sample binary failures across the four task criteria (n=1,199; 1,200 minus one missing judge score, excluded pairwise)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "The objective fact judgment (ofj) cell is the largest single effect: PS cuts misconception failure from 45.2% to 20.4% (-24.7pp) with answer accuracy rising from 56.2% to 75.9%.",
+      "metric": "ofj failure rate (misconception adoption)",
+      "value": "45.2% -> 20.4%",
+      "comparison": "misconception failure -24.7pp (p=7.6×10−19); answer accuracy 56.2% -> 75.9%",
+      "setting": "External MemSyco-Bench ofj task, DeepSeek-V4-Pro generator, GLM-5.2 judge, PS vs Bare (verbatim injection), paired exact McNemar",
+      "quote": "The task-matched objective-question cell is the largest single effect: 45.2%→20.4%45.2\\%\\to 20.4\\% (−24.7-24.7pp, p=7.6×10−19p=7.6\\times 10^{-19}), with answer accuracy rising 56.2%→75.9%56.2\\%\\to 75.9\\%.",
+      "locator": "§5.2 Table 2 (ofj row)",
+      "denominator": {"n_total": "300", "n_valid": "299", "how_counted": "ofj task, n=300 per cell; one ofj cell 299 after pairwise exclusion (Table 2 caption); accuracy estimates use the 299 valid paired observations"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Admission gains transfer across backbones on the development suite mainly via cross-domain leakage: Qwen3.7-Max improves 44.0%→14.5% (PN) / 18.0% (CH) and Kimi-K2.6 37.0%→22.5% / 22.0%, surviving BH correction.",
+      "metric": "cross-domain leakage failure rate (development)",
+      "value": "44.0% -> 14.5%",
+      "comparison": "Qwen3.7-Max PN 44.0%->14.5%, CH 18.0%; Kimi-K2.6 37.0%->22.5% / 22.0%",
+      "setting": "Development PersistBench cross-domain leakage dimension (n=200), four generators receive the same frozen PS adjudication outputs, paired exact McNemar vs Bare with BH correction",
+      "quote": "The cross-domain leakage dimension carries the transfer: Qwen3.7-Max improves 44.0%→14.5%44.0\\%\\to 14.5\\% (PN) / 18.0%18.0\\% (CH) and Kimi-K2.6 37.0%→22.5%37.0\\%\\to 22.5\\% / 22.0%22.0\\%.",
+      "locator": "§5.1 Table 1",
+      "denominator": {"n_total": "200", "n_valid": "200", "how_counted": "PersistBench cross-domain leakage dimension, n=200 after retrieval filtering (§4.1)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "A single-variable contrast isolating admission (presentation, generation prompt, judge, and phase-1 scores all fixed; only the injection set tightened by excluding memories with maximum influence score below 0.5) cuts development cross-domain failure from 42.5% to 25.0%, a further 17.5pp (paired exact McNemar p=1.6×10−4).",
+      "metric": "cross-domain failure rate (controlled admission-only contrast)",
+      "value": "42.5% -> 25.0%",
+      "comparison": null,
+      "setting": "Development surface cross-domain dimension, DeepSeek-V4-Pro, n=200, annotated-memory arm vs tightened-injection arm (supplement S5)",
+      "quote": "fails 42.5%42.5\\%. Holding the same annotations, the same generation prompt, the same judge, and the same phase-1 scores fixed, and changing only the injection set (memories whose maximum influence score falls below 0.50.5 are excluded from the generation prompt), failure falls to 25.0%25.0\\%",
+      "locator": "§5.4 (supplement S5 contrast)",
+      "denominator": {"n_total": "200", "n_valid": "200", "how_counted": "development surface cross-domain dimension (DeepSeek-V4-Pro, n=200; supplement S5), 59:24 discordant pairs"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Memory-evidence conflict (mec) is a residual failure: misleading rates remain 82.3-85.0% across the FC, PS, and rendering arms (85.7% under Gate, 91.7% under Bare), and only arms that remove memories from the context eliminate the effect (0% under NoMem); no tested governance wording repairs it.",
+      "metric": "mec misled rate",
+      "value": "82.3%-85.0%",
+      "comparison": "vs Gate 85.7% and Bare 91.7%; FC/PS/rendering arms all 82.3-85.0%",
+      "setting": "External MemSyco-Bench mec task (stored claim vs provided evidence), all governance arms plus Gate and NoMem ablation",
+      "quote": "On mec, misleading rates range from 82.3%82.3\\% to 85.0%85.0\\% across the FC, PS, and rendering arms, compared with 85.7%85.7\\% under Gate and 91.7%91.7\\% under Bare",
+      "locator": "§5.4 (Table 3/4 mec rows; also §6)",
+      "denominator": {"n_total": "300", "n_valid": "300", "how_counted": "mec task, n=300 per cell (Table 2 caption)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "The query-conditioned gating baseline (reimplemented MemGate-style relevance gate) improves the two scope-conflict tasks (csc -10.7pp, mec -6.0pp) but shows no statistically significant change in objective-question failure (45.2%→45.5%, p=1.0) and worsens personalization (+8.0pp); its pooled change is not significant (p=.08).",
+      "metric": "ofj failure rate (gating baseline)",
+      "value": "45.2% -> 45.5%",
+      "comparison": "csc -10.7pp; mec -6.0pp",
+      "setting": "External MemSyco-Bench, Gate arm (query-conditioned relevance gating, no adjudication) vs Bare, DeepSeek-V4-Pro generator, GLM-5.2 judge",
+      "quote": "Query-conditioned gating improves the two scope-conflict tasks (csc −10.7-10.7pp, mec −6.0-6.0pp, both p<.001p<.001) but shows no statistically significant change in objective-question failure (45.2%→45.5%45.2\\%\\allowbreak\\to 45.5\\%, p=1.0p=1.0)",
+      "locator": "§5.2 Table 2 (Gate column)",
+      "denominator": {"n_total": "300", "n_valid": "300", "how_counted": "ofj task, n=300 per cell (Table 2 caption)"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "Budget-matched controls (every arm receives exactly as many memory units per query as PS) attribute part of the external objective-fact gain to selection itself: at equal budget PS cuts objective-fact failure below a random-selection arm (23.3% vs 31.7%, Holm-adjusted p=.001) and a relevance-ranking arm (44.3%, p<.0001); the same controls show no significant selection advantage on the development surface (external extension not separately preregistered).",
+      "metric": "ofj failure rate (budget-matched arms)",
+      "value": "23.3% vs 31.7% (random) and 44.3% (relevance)",
+      "comparison": null,
+      "setting": "External MemSyco-Bench ofj, equal-budget arms (PS vs random-selection vs relevance-ranking), supplement S10; internal study preregistered, external extension not separately preregistered",
+      "quote": "at equal budget PS cuts objective-fact failure below both a random-selection arm (23.3%23.3\\% vs. 31.7%31.7\\%, Holm-adjusted p=.001p{=}.001) and a relevance-ranking arm (44.3%44.3\\%, adjusted p<.0001p{<}.0001)",
+      "locator": "§5.2 (budget-matched control, supplement S10)",
+      "denominator": {"n_total": "300", "n_valid": "300", "how_counted": "ofj task pairs, n=300 per cell (Table 2 caption)"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "Both admission pipelines overshoot on personalization, increasing pm failures (appropriate preferences left unapplied): FC 14.7%→22.3% and PS 14.7%→20.0%, with pm accuracy dropping 66.3%→57.0% (FC) and →60.3% (PS).",
+      "metric": "pm failure rate (preference not applied)",
+      "value": "14.7% -> 22.3% (FC); 14.7% -> 20.0% (PS)",
+      "comparison": null,
+      "setting": "External MemSyco-Bench pm task (personalized memory use), FC and PS vs Bare, DeepSeek-V4-Pro generator, GLM-5.2 judge",
+      "quote": "Both admission pipelines increase pm failures—appropriate preferences left unapplied—FC 14.7%→22.3%14.7\\%\\to 22.3\\% (p=.0022p=.0022) and PS 14.7%→20.0%14.7\\%\\to 20.0\\% (p=.0365p=.0365), with pm accuracy dropping 66.3%→57.0%66.3\\%\\to 57.0\\% (FC) and →60.3%\\to 60.3\\% (PS).",
+      "locator": "§5.5 (Table 2 pm row)",
+      "denominator": {"n_total": "300", "n_valid": "300", "how_counted": "pm task, n=300 per cell (Table 2 caption)"},
+      "is_primary_result": true
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "PS misses the preregistered effect-size gate: pooled improvement 8.8pp vs a >=10pp threshold, and pm accuracy -6.0pp beyond the permitted 3pp decrease.",
+      "quote": "The preregistered gate is not met. The PS gate demanded pooled improvement ≥10\\geq 10pp and no task accuracy drop >3>3pp; measured: 8.88.8pp (1.21.2pp below the threshold) and −6.0-6.0pp pm accuracy (beyond the permitted 33pp decrease).",
+      "locator": "§5.5"
+    },
+    {
+      "statement": "One backbone (GPT-OSS-120B) does not improve under the tested admission-plus-rendering configurations (elevated bare leakage 64%, no significant change), though a generation-time configuration cuts it, so the boundary is configuration-specific.",
+      "quote": "One backbone does not improve under the tested configurations. GPT-OSS-120B's elevated bare leakage (64%64\\%) shows no statistically significant change under the tested admission-plus-rendering configurations, PS+PN and PS+CH (64.0%→70.0%/69.0%64.0\\%\\to 70.0\\%/69.0\\%, p=.12p=.12/.20.20)",
+      "locator": "§5.5"
+    },
+    {
+      "statement": "Judge validity is human-checked only on the development rubric; no human validation was performed for the external task rubrics (single judge scores all arms).",
+      "quote": "No human validation was performed for the external task rubrics.",
+      "locator": "§4.2"
+    },
+    {
+      "statement": "Cross-backbone breadth exists only on the development surface; the external surface uses a single generator.",
+      "quote": "(iii) Cross-backbone breadth lives on the development surface; the external surface uses one generator.",
+      "locator": "§6 Threats to validity"
+    },
+    {
+      "statement": "Reasoning was disabled in main runs; the interaction of FC/PS with extended reasoning was not evaluated.",
+      "quote": "(iv) Reasoning was disabled where supported, and GPT-OSS-120B used the lowest available reasoning setting; the interaction of FC/PS with extended reasoning was not evaluated—an exploratory thinking-ON pilot for the precursor system appears in supplement S6.",
+      "locator": "§6 Threats to validity"
+    },
+    {
+      "statement": "A cross-batch gap is flagged: bare external runs precede governed runs by ~30 hours (identical judge protocol and frozen assets, preregistered as run-once).",
+      "quote": "Bare external runs precede governed runs by ∼\\sim30 hours (identical judge protocol and frozen assets, preregistered as run-once); we flag it.",
+      "locator": "§5.5"
+    },
+    {
+      "statement": "The adjudicator under-triggers on fine-grained situational permissions: a dedicated probe (180 paired queries, four arms, two backbones) finds no paired-success gain of PS over an equal-budget relevance arm or bare injection.",
+      "quote": "A dedicated probe (180180 paired queries spanning object-switch, context-switch, and opinion-use permissions; four arms; two backbones; supplement S9) finds no paired-success gain of PS over an equal-budget relevance arm or bare injection",
+      "locator": "§5.5 (supplement S9)"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": null,
+    "data": "Preregistration documents, per-sample binary labels for every arm, frozen adjudication and rendering assets, and an independent audit script are stated to be released with the paper (§4.4); not verified",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "figures"],
+    "complete": false
+  },
+  "quality_flags": [
+    "appendix_supplements_S2_S10_referenced_but_absent_from_corpus",
+    "corpus_numbers_latex_duplicated",
+    "external_budget_matched_and_probe_results_not_separately_preregistered"
+  ]
+}

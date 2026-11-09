@@ -1,0 +1,284 @@
+{
+ "arxiv_id": "2610.14488",
+ "title": "Names Are Not Objects: Object-Bound Confinement for Compromised AI Coding Agents",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "无研究对象侧的持久状态：ZTAC 是执行期隔离机制——每个 agent 会话启动一个 cell（进程树 + Ed25519 密钥对 + workspace，§4.1），broker 每请求实时解析-决策；审批 10 分钟过期、一次性使用（§4.7），provenance 缓存仅存内存、'lost on restart'（§7）。唯一跨重启持久的组件是 broker 的授权/审计哈希链日志（§4.8）与运营者编写的策略文件，但二者是防御基础设施的配置与台账，不是被研究的智能体持久状态，论文也不研究其生命周期。需区分：本文防御的威胁恰恰利用持久 workspace 文件（'The agent’s writes outlive its session'，§2——handoff 攻击把会被开发者工具在会话后执行的文件种进 workspace），但被防御对象 ≠ 研究对象，故不硬凑为持久状态。",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "对已被入侵的编码智能体做对象绑定禁锢（confinement），同时覆盖机密性、完整性与权限（authority）。五条性质：P1 complete mediation（cell 对文件/程序/网络的影响只能经 broker）；P2 object-level authorization（broker 在解析出的具体对象——路径+inode、程序+参数向量、端点——上决策，并在使用时校验到达的就是该对象）；P3 consistent confinement（broker 拉起的每个程序都受同一策略编译出的 Seatbelt profile 或更严格规则约束）；P4 bound approvals（审批绑定 cell+参数+解析对象+git 仓库状态，一次性、10 分钟过期）；P5 accountability（每个良构请求留下签名哈希链记录）。失效条件（作者自认）：把策略允许读取的数据编码进允许端点流量的外泄（2/74 攻击成功即此类）、ZTAC 之外进程并发改写 workspace、被 intent 文本说服的 reviewer、内核/沙箱逃逸与侧信道。判定方式：74 个脚本化攻击各配 ground-truth oracle（金丝雀串出现在响应/服务日志、workspace 外文件变化、仓库历史出现提交、workspace 外出现 marker 文件），oracle 触发即攻击成功。",
+  "operationalized_as": "74 个脚本化攻击（7 类）×5 配置（B0/B1/B2/Zbroker/ZTAC）+ 14 个消融；10 个已公开事件重放；目录交换竞速 10 试验/配置（Table 7）；broker 与 Seatbelt profile 在 52 个路径/访问用例上的一致性；良性效用：46 个单步操作 + 7 个端到端工作流（Table 5/8）；延迟微基准（Table 6）。"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "完全控制 cell 内一切：模型、agent 运行时、以及 agent 写或运行的任意代码——相当于 prompt injection 彻底成功（§3 Adversary：'The adversary controls everything inside a cell: the model, the agent runtime, and any code the agent writes or runs, as if a prompt injection had succeeded completely'）",
+   "会话开始前可在 cell 的 workspace 预置任意文件（含符号链接、硬链接、.git 内容），即投毒仓库（poisoned repository）",
+   "知道策略与所有 cell 的公钥；可让 cell 进程绕过 broker 直接行动（读写文件、开 TCP/UDP socket、spawn shell、改审批存储、截断审计日志、向 broker 发信号——10 个 direct 攻击）",
+   "可构造名称/对象别名（符号链接、硬链接、大小写别名、嵌套 bare 仓库、git 全局选项、pathspec 提交等）并主动制造 check-to-use 竞速（在 check 与 use 之间把目录换成符号链接）",
+   "只能通过 broker 展示的摘要与自由文本 intent 接触审批人（可借此说服，但无法直接接触 reviewer）"
+  ],
+  "assumptions": [
+   "可信组件：内核及其沙箱、broker 及其配置、写策略的运营者、答复审批请求的 reviewer；broker 拉起的程序不可信（运行于 exec sandbox）",
+   "P2 的成立前提：'provided nothing outside ZTAC changes the workspace during a request'（§3 Security properties）",
+   "prompt 由攻击者控制，因此 prompt-only 防御等价于 B0、不作为独立配置评测（§6.1 Configurations）",
+   "攻击脚本化而非模型生成：把'执行层失效'与'注入可靠性'分离（§6.1 Attacks and oracles）",
+   "单机 macOS 部署：Unix socket mode 0600，同用户任意进程都可连 socket，靠 Ed25519 签名认证区分 cell（§4.2）；Linux 移植（Landlock/seccomp/network namespace）未实现（§5）"
+  ],
+  "not_covered": [
+   "内核与沙箱逃逸；侧信道与隐蔽信道（§3 Out of scope）",
+   "把策略允许读取的数据编码进允许端点流量的外泄——剩余 2 个成功攻击（Base64 编码 / 分两半两次请求）正是此类（§6.2、§7）",
+   "因 agent 的 intent 文本而批准有害请求的 reviewer（说服类攻击）；reviewer 疲劳/准确率未研究（§7 The reviewer）",
+   "针对 broker 的拒绝服务（§3 Out of scope）",
+   "预先存在、不依赖任何 agent 行为就被开发者工具执行的文件（§3 Out of scope）",
+   "ZTAC 之外并发修改 workspace 的进程（如开发者的编辑器）——既不在 object-binding 论证内也不被硬链接检查覆盖（§7 What object binding relies on）；竞速试验只覆盖目录交换这一向量"
+  ]
+ },
+ "intervention": {
+  "name": "Zero-Trust Agent Cells (ZTAC)",
+  "mechanism_layer": "execution",
+  "description": "执行层禁锢架构，核心规则是'authorize the object that will be used, and use only the object that was authorized'。(1) Cell：deny-by-default 内核沙箱（Seatbelt）中的 agent 进程，只能加载运行时、读自己的密钥、连 broker 的一个 Unix socket，不能直接读 workspace、开网络、建进程；(2) Broker 六阶段：authenticate（Ed25519 签名 + nonce/replay log 落盘防重放）→ resolve（把请求解析为具体对象：文件按内核方式解析到 workspace 路径+inode，程序为绝对二进制+参数向量，URL 解析一次定端点）→ decide（26 条默认路径规则 glob + git 子命令两级白名单 + 前缀感知选项过滤 + 端点 host:port + 请求级 DLP 扫描）→ gate（需人审的进审批队列，审批绑定 cell/参数/解析对象/git 仓库状态，10 分钟过期、一次性）→ execute → record（签名哈希链审计）。(3) 一策略两执行点：同一路径规则按逆序编译进每个被拉起程序的 Seatbelt profile，profile 处处严于 broker（读规则连带禁写、禁删受限目录、无审批通道即拒绝），解释器只有在 exec sandbox 活跃时才放行；git 以固定 GIT_DIR/GIT_WORK_TREE 运行并钉死 14 项配置（无 hooks/fsmonitor/外部 diff 等）。实现为 3,164 行可信 Rust（不含测试与依赖）。"
+ },
+ "controls": [
+  {
+   "name": "B0：直接工具访问，无任何防御",
+   "purpose": "positive-control"
+  },
+  {
+   "name": "B1：工具允许列表（模拟部署 agent 默认权限模式：相对路径、git 子命令并集、host 白名单，无审批/解析/沙箱）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "B2：B1 + 模拟部署式命令沙箱（被拉起程序可读写 workspace、可建进程、无网络；agent 进程不受限）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Zbroker：去掉 cell 沙箱的完整 ZTAC broker（隔离 P1 complete mediation 的贡献）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "14 个消融：每次从 ZTAC 移除一个防御或两个重叠防御（Table 4）",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "完整 ZTAC 在 74 个脚本化攻击（含 10 个公开事件重放）下只放行 2 个攻击成功、14 个升级人工审批、58 个被阻断（Table 2 总行）；两个成功都是把密钥编码后发往策略允许的端点（模式扫描的原理性盲区）",
+   "metric": "attack_success_count",
+   "value": "2 succeeded; 14 escalated for review; 58 blocked",
+   "comparison": null,
+   "setting": "macOS 原型（Rust 3,164 行，Seatbelt）；cell A=攻击者/B=受害者双 workspace 环境；攻击脚本化、每个攻击配 ground-truth oracle（金丝雀/服务日志/仓库历史/marker 文件）",
+   "quote": "Full ZTAC lets 2 attacks succeed, escalates 14, and blocks 58. The two successes send the access key to the allowlisted sink after Base64 encoding and in two halves across two requests",
+   "locator": "§6.2 RQ1: Containment",
+   "denominator": {
+    "n_total": "74",
+    "n_valid": "74",
+    "how_counted": "§6.1: 'The suite contains 74 attacks: 15 on the file system, 21 through program execution, 8 that hand a file to a tool outside the cell, 9 on the network, 5 on the request protocol, 6 on approvals, and 10 in which the cell process acts directly'; 每攻击一个 oracle，invalid trial（harness 故障）在分析层剔除"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "防御对比：纯工具允许列表（B1，部署 agent 默认权限模式式配置）丢 66/74，加上部署式命令沙箱（B2）仍丢 56/74，ZTAC 只丢 2/74——说明部署现役机制与对象绑定禁锢之间的差距",
+   "metric": "attack_success_count",
+   "value": "B1 loses 66; B2 loses 56; ZTAC loses 2 and holds 14",
+   "comparison": "allowlist 66 -> allowlist+command sandbox 56 -> ZTAC 2",
+   "setting": "同上 74 攻击套件；B1 无审批/解析/沙箱，B2 加命令沙箱但 agent 进程不受限、沙箱不知道路径规则（§6.1 Configurations）",
+   "quote": "A tool allowlist loses 66 of them, and an allowlist combined with the kind of command sandbox that deployed agents use loses 56. ZTAC loses 2, both of which encode a secret into traffic to an allowed endpoint, and holds 14 for review",
+   "locator": "Abstract",
+   "denominator": {
+    "n_total": "74",
+    "n_valid": "74",
+    "how_counted": "同 §6.1 的 74 攻击分母（Table 2 总行：B0 74、B1 66、B2 56、Zbroker 12/13、ZTAC 2/14）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "10 个已公开事件重放：B1 全部 10 个失守；B2 只挡住 payload 需在沙箱内程序外行动的 4 个，仍失守 6 个（payload 是 workspace 内文件或经符号链接写入）；ZTAC 阻断 7 个、升级 3 个（编辑器任务、agent hook、嵌套 HEAD 写入），0 个成功",
+   "metric": "incident_replay_success_count",
+   "value": "B1 fails 10/10; B2 stops 4, fails 6; ZTAC blocks 7, holds 3",
+   "comparison": "B1: 10 fail; B2: 6 fail; ZTAC: 0 fail",
+   "setting": "重放 2025-2026 披露的 10 个事件机制（Table 3：Claude Code/Codex CLI/Copilot CLI/Cursor/Antigravity/六助手等受影响产品）；只复现机制、未运行受影响产品",
+   "quote": "B1 loses all 10. B2 stops 4, the ones whose payload runs in a spawned program and needs to act outside the workspace, and loses the 6 in which the payload is a file in the workspace or a write through a symlink. ZTAC blocks 7 and holds 3 for review",
+   "locator": "§6.2 RQ1: Containment",
+   "denominator": {
+    "n_total": "10",
+    "n_valid": "10",
+    "how_counted": "Table 3 列出 10 个事件重放，每行标注 B1/B2/ZTAC 结果（∙成功/∘升级/–阻断）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "去掉 cell 沙箱（Zbroker）后，所有经 broker 的攻击（除 2 个外泄）被挡住，但 10 个 direct 攻击全部成功——cell 进程可读 SSH 密钥与他 cell 文件、改审批存储给自己批 commit、截断审计日志、开 socket、spawn shell、向 broker 发信号；broker 只有在不可绕过时才是 reference monitor",
+   "metric": "attack_success_count",
+   "value": "loses all 10 direct attacks",
+   "comparison": null,
+   "setting": "Zbroker 配置 = 完整 broker 但 agent 进程不在内核沙箱内（隔离 P1 complete mediation 贡献的消融）",
+   "quote": "Zbroker{}_{\\text{broker}} blocks or escalates every attack that goes through the broker except the two exfiltration attacks discussed below, and loses all 10 direct attacks",
+   "locator": "§6.2 RQ1: Containment",
+   "denominator": {
+    "n_total": "10",
+    "n_valid": "10",
+    "how_counted": "套件中 10 个 direct 攻击（cell 进程绕过 broker 直接行动，Table 2 Direct 行 10 攻全成功）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "效用代价（操作级）：ZTAC 完成 46 个单步操作中的 43 个，产生 8 次审批提示；失败的 3 个是 run-subprocess、run-venv、run-read-env（进程创建被禁、venv 元数据受保护）；去掉 exec sandbox 后完成数跌至 35/46",
+   "metric": "operations_completed",
+   "value": "43 of 46 completed; 3 failed; 8 prompts",
+   "comparison": null,
+   "setting": "46 个 checked operations（单工具调用）于一个 Python 项目：文件编辑与敏感配置、git status/diff/staging/受审提交、Python 测试、JSON/SQLite/归档、HTTP 请求、子进程、venv 创建、经 Python 读环境配置；模拟 reviewer 全部批准并计数提示；对照：B0/B1/B2 均 46/46 完成、0 提示，Zbroker/ZTAC 43/46、8 提示（Table 5）",
+   "quote": "Full ZTAC completes 43 of 46 operations (Table 5), with 8 prompts, and fails 3. The failed operations are run-subprocess, run-venv, run-read-env",
+   "locator": "§6.5 RQ3: Utility",
+   "denominator": {
+    "n_total": "46",
+    "n_valid": "46",
+    "how_counted": "'The operation workload contains 46 checked operations, each a single tool call'（§6.5）；Table 5 caption：failed operations and workflows remain in the denominator"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "效用代价（工作流级）：7 个端到端工作流中 ZTAC 完成 4 个、失败 3 个（virtual-environment、subprocess-build、tracked-edit-commit-all），原因是进程创建被拒、venv 元数据受保护、commit -a 被有意不支持；显式 staging 后受审提交仍可完成",
+   "metric": "workflows_completed",
+   "value": "4 completed; 3 failed",
+   "comparison": null,
+   "setting": "7 个工作流（feature/test/commit、docs/test/commit、生成报告、受审编辑器配置、venv、子进程构建、编辑 tracked 文件后 git commit -a），每个从全新项目顺序运行、首个失败即停、需全部步骤与 oracle 通过；对照：B0/B1/B2 均 7/7 完成，Zbroker/ZTAC 4/7（Table 8）",
+   "quote": "Full ZTAC completes 4 and fails 3: virtual-environment, subprocess-build, tracked-edit-commit-all. Process creation is refused, virtual-environment metadata is protected, and commit -a is intentionally unsupported",
+   "locator": "§6.5 RQ3: Utility",
+   "denominator": {
+    "n_total": "7",
+    "n_valid": "7",
+    "how_counted": "'We separately provision 7 workflows, run each sequentially, and stop at its first failure'（§6.5）；Table 8 caption：failed workflows remain in the denominator"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "性能开销：无操作（ping）broker 请求中位延迟 4.0 ms（认证含同步 replay log 落盘占 3590 µs，是大头）；被拉起程序实测比不用 ZTAC 慢 8.5 ms（echo 541 µs→9.0 ms）到 18.4 ms（python3 8.0→26.4 ms）；cell 启动 11.0 ms vs 6.1 ms（每会话一次）",
+   "metric": "median_added_latency",
+   "value": "no-op median 4.0 ms; spawned +8.5 to +18.4 ms",
+   "comparison": null,
+   "setting": "Mac18,5 / Apple M6 / 24 GiB / macOS 27.0.1；每操作无子进程测 1,000-2,000 次、有子进程测 100-300 次，20 次预热，3 次独立运行取中位与 p99；audit 落盘同步在测量中关闭（replay log 始终同步）；逐操作对照（Table 6）：read 4 KiB 11 µs → 4.0 ms；write 4 KiB 4.0 → 7.1 ms；HTTP GET 62 µs → 4.0 ms；echo 541 µs → 9.0 ms；git status 2.5 → 12.0 ms；python3 8.0 → 26.4 ms",
+   "quote": "A no-op brokered request has a median latency of 4.0 ms, and the spawned programs we measured take 8.5 ms to 18.4 ms longer than without ZTAC.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "check-to-use 竞速（目录交换向量）：每配置 10 次全新 workspace 试验，只有同时移除 descriptor walk 与 fork ban 才 10/10 被交换成功，单独移除其一或都不移除均 0 成功——两个独立机制叠加才封死该向量，也是 ZTAC 自身缺陷 (3) 的回归证据",
+   "metric": "race_success_count",
+   "value": "10/10 with both removed; 0, 0, 0 otherwise",
+   "comparison": null,
+   "setting": "2.8 s 读窗口的目录交换竞速：脚本留下的后台进程在读发生时把 workspace 目录换成指向 home 的符号链接；10 次全新 workspace 试验/配置；Table 7 全表：B0 10/10；ZTAC、−Descriptor walk、−No process creation 均 0/10；−Descriptor walk + no fork 10/10",
+   "quote": "In 10 trials per configuration, the swap succeeds in 10 when both the descriptor walk and the fork ban are removed, and in 0, 0, and 0 when only the walk, only the fork ban, or neither is removed.",
+   "locator": "§6.4 Flaws found in our own implementation",
+   "denominator": {
+    "n_total": "10",
+    "n_valid": "10",
+    "how_counted": "Table 7：'Directory-swap race, 10 fresh-workspace trials per configuration. Each uses a 2.8 s read window'"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "RQ2 机制归因：审批层（approval tier）是最大单一贡献机制——移除后 18 个攻击转为成功（敏感读的别名、handoff 文件写入、未受审 commit/上传、审批伪造等），没有它策略认为敏感的每个请求都会直接运行",
+   "metric": "ablation_delta",
+   "value": "+18 attacks succeed when removed",
+   "comparison": null,
+   "setting": "14 个消融逐一从完整 ZTAC 移除一个（或一对重叠）防御，在 74 攻击套件上重测；Table 4 列出每个消融新成功的攻击名；其余消融增量（Table 4）：Rules in exec sandbox +7、Resolved classification +5、VCS guard+exec sandbox +5、Authentication +3、Strict egress +3、Freshness +2、Exec sandbox +2、Full-request DLP +2、Object-bound approvals +2、VCS guard +1、Descriptor walk +0、No process creation +0",
+   "quote": "The approval tier is the largest single contributor (18 attacks): without it, every request that the policy considers sensitive runs",
+   "locator": "§6.3 RQ2: Which mechanisms matter",
+   "denominator": {
+    "n_total": "74",
+    "n_valid": "74",
+    "how_counted": "Table 4 的 Δ 计数 = 74 攻击套件中'移除该防御后成功、保留时不成功'的攻击数"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "作者用攻击套件与代码审查在自己实现里发现并修复了 8 个缺陷（其中 7 个是 ZTAC 设计要防的那类 name/object gap：2 个审批-对象、1 个路径-文件、1 个目录内容-名字、1 个拼写-文件、1 个文件名-profile 文本、1 个一文件两名），每个都有回归测试——防御自身也在攻防迭代中修补",
+   "metric": "self_found_flaws_count",
+   "value": "eight flaws, all fixed in the evaluated system",
+   "comparison": null,
+   "setting": "构建攻击套件与代码审查过程中发现；8 个缺陷为 approval retargeting、stale repository state、directory swap、directory rename、case at creation、broken diff、sandbox-profile injection、hard links across enforcement points；另有 3 个类外缺口（worktree 提交形态、审批存储并发、重启后重放）一并修复",
+   "quote": "Building the suite and reviewing the code exposed eight flaws in ZTAC that the existing attacks did not detect. The evaluated system fixes all eight, and each has a regression test in the attack suite or, for the broken diff, in the benign workload.",
+   "locator": "§6.4 Flaws found in our own implementation",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "允许通道内的外泄防不住：ZTAC 管数据去哪、不管数据编码了什么；能读密钥又能发允许端点的 cell 总能编码外泄，剩余 2 个成功攻击即此类。关闭该通道需信息流跟踪或避免敏感数据与出口同 cell（lethal trifecta）。",
+   "quote": "ZTAC controls where data can go, not what it encodes. A cell that may read a secret and may post to an endpoint can send the secret in any encoding, as the two remaining successful attacks do.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "handoff 规则是枚举：只命名已知的消费者文件（编辑器任务、agent hook、git HEAD、venv 解释器）；其他工具若按自己的签名执行别的文件，规则不命名就不覆盖，清单要像凭据文件清单一样维护；Makefile 等由开发者下次构建触发的 handoff 任何规则都够不着，只能靠变更审查。",
+   "quote": "The rules for files that other tools run name the consumers we know: editor tasks, agent hooks, git’s HEAD, and virtual-environment interpreters. A tool that executes some other file, recognized by its own signature, is not covered until a rule names that file.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "对象绑定依赖的并发假设：写路径的 fstatat+renameat 是两个系统调用，仅因 broker 串行处理且 cell 进程不能建进程才等价原子；ZTAC 之外并发改 workspace 的进程（如开发者编辑器）既不被该论证也不被硬链接检查覆盖；程序与工作目录按路径绑定而非描述符；竞速试验只覆盖目录交换向量。",
+   "quote": "A process outside ZTAC that changes the workspace concurrently, such as the developer’s editor, is covered neither by this argument nor by the hard-link check.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "审批状态绑定的范围：git 绑定只哈希 HEAD、当前分支、packed refs 与 index；其余松散分支引用与全部工作树状态不在内，merge/reset/checkout/rebase 的审批不能给出同样的 reviewed-revision 保证。",
+   "quote": "Other loose branch references and all working-tree state are not included; approvals for merge, reset, checkout, or rebase therefore do not establish the same reviewed-revision guarantee.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "reviewer 环节未研究：46 个操作里 8 次提示，作者没有研究 reviewer 疲劳与准确率；实际部署需调规则（如 scratch 分支免审）。",
+   "quote": "We count 8 prompts in 46 operations and did not study reviewer fatigue or accuracy; a deployment would tune the rules, for example to allow commits on a scratch branch.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "平台与沙箱限制：profile 允许到处读文件元数据（泄露 workspace 外路径是否存在与大小）；未对 Seatbelt 本身做逃逸测试；禁进程创建很粗糙（构建工具需要子进程），放开需要保证所有子孙随请求终止（进程组做不到，cgroup 可以）。",
+   "quote": "Our profiles allow reading file metadata everywhere, which reveals whether a path outside the workspace exists and how large it is. We did not test Seatbelt itself for escapes.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "agent 集成未实测：用客户端库 + 脚本化请求评测，未接现成 agent 运行时；移植 agent 需把其工具换成 broker 调用、在 cell 内启动，模型流量成为被允许的出口。",
+   "quote": "We evaluated ZTAC with a client library and scripted requests, not with an off-the-shelf agent runtime.",
+   "locator": "§7 Discussion and Limitations"
+  },
+  {
+   "statement": "评测范围：端点按主机名匹配（解析到内网地址的名字可达）；不同 cell 请求在一把锁后串行；provenance 只存内存、重启即失；只用一个小的 Python 项目，B2 是对部署沙箱的近似而非直接运行它们；攻击套件覆盖 Table 1 的缺口类但不可能完备。",
+   "quote": "Provenance is held in memory and lost on restart. The evaluation uses one small Python project, and B2 approximates deployed sandboxes rather than running them.",
+   "locator": "§7 Discussion and Limitations"
+  }
+ ],
+ "counterexamples": [
+  {
+   "description": "2 个穿透 ZTAC 的攻击（net-dlp-encoded、net-dlp-split）：cell 把访问密钥 Base64 编码后发给策略允许的 sink 端点、或把密钥拆成两半分两次请求发送——都是'把策略允许读取的数据编码进允许端点流量'，模式扫描原理上拦不住；论文将其纳入套件正是为了标出保证的边界。",
+   "attacks": "net-dlp-encoded, net-dlp-split",
+   "outcome": "在全部 5 配置（含完整 ZTAC 与全部 14 消融）下都成功（Table 12 两行全 ∙）"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/dcommey/ztac",
+  "data": "同一仓库含攻击套件（含 oracle 与预测结果）、良性工作负载、experiments/run.sh 一键复现脚本与论文全部表格/图/数字的原始结果及分析脚本（Appendix B Open Science）",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "corpus_keeps_latex_markers_verbatim"
+ ]
+}

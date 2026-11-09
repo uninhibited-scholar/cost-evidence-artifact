@@ -1,0 +1,81 @@
+key,arxiv_id,class,author_label,model_label,agree,confidence,author_note
+C01,2610.13267,c1,numeric,qualitative,NO,high,ACC 45.83→75.00（eICU）/37.50→57.14（MIMIC）良性侧上升；2.13× 加速、token −37.7% 仅相对口径
+C01,2610.13267,c2,numeric,numeric,YES,high,ACC 45.83→75.00（eICU）/37.50→57.14（MIMIC）良性侧上升；2.13× 加速、token −37.7% 仅相对口径
+C01,2610.13267,c3,none,none,YES,high,ACC 45.83→75.00（eICU）/37.50→57.14（MIMIC）良性侧上升；2.13× 加速、token −37.7% 仅相对口径
+C01,2610.13267,c4,none,numeric,NO,high,ACC 45.83→75.00（eICU）/37.50→57.14（MIMIC）良性侧上升；2.13× 加速、token −37.7% 仅相对口径
+C02,2609.02265,c1,numeric,numeric,YES,high,胜率 71.5 vs 69.3、遵从率 83.5 vs 74.1 属良性侧；无任何资源开销数值
+C02,2609.02265,c2,none,none,YES,high,胜率 71.5 vs 69.3、遵从率 83.5 vs 74.1 属良性侧；无任何资源开销数值
+C02,2609.02265,c3,none,none,YES,high,胜率 71.5 vs 69.3、遵从率 83.5 vs 74.1 属良性侧；无任何资源开销数值
+C02,2609.02265,c4,none,none,YES,high,胜率 71.5 vs 69.3、遵从率 83.5 vs 74.1 属良性侧；无任何资源开销数值
+C03,2403.14720,c1,qualitative,qualitative,YES,high,仅 'minimal impact on task efficacy'、'no detrimental impact' 定性；ASR 数字属效果不属成本
+C03,2403.14720,c2,none,none,YES,high,仅 'minimal impact on task efficacy'、'no detrimental impact' 定性；ASR 数字属效果不属成本
+C03,2403.14720,c3,none,none,YES,high,仅 'minimal impact on task efficacy'、'no detrimental impact' 定性；ASR 数字属效果不属成本
+C03,2403.14720,c4,none,none,YES,high,仅 'minimal impact on task efficacy'、'no detrimental impact' 定性；ASR 数字属效果不属成本
+C04,2609.13734,c1,none,none,YES,high,每案例 28/19 ms 与 0.6 MB 为开销；Safe-F1 +2.6% 为良性侧误判改善；无任务准确率
+C04,2609.13734,c2,numeric,numeric,YES,high,每案例 28/19 ms 与 0.6 MB 为开销；Safe-F1 +2.6% 为良性侧误判改善；无任务准确率
+C04,2609.13734,c3,numeric,none,NO,high,每案例 28/19 ms 与 0.6 MB 为开销；Safe-F1 +2.6% 为良性侧误判改善；无任务准确率
+C04,2609.13734,c4,none,none,YES,high,每案例 28/19 ms 与 0.6 MB 为开销；Safe-F1 +2.6% 为良性侧误判改善；无任务准确率
+C05,2610.29784,c1,numeric,none,NO,high,Brier 0.135→0.122 为良性侧；工具调用 32→18（−44%）、30→34 为调用资源；本文无攻击设定
+C05,2610.29784,c2,numeric,none,NO,high,Brier 0.135→0.122 为良性侧；工具调用 32→18（−44%）、30→34 为调用资源；本文无攻击设定
+C05,2610.29784,c3,none,none,YES,high,Brier 0.135→0.122 为良性侧；工具调用 32→18（−44%）、30→34 为调用资源；本文无攻击设定
+C05,2610.29784,c4,none,none,YES,high,Brier 0.135→0.122 为良性侧；工具调用 32→18（−44%）、30→34 为调用资源；本文无攻击设定
+C06,2609.08747,c1,none,none,YES,medium,仅 'computationally inexpensive' 定性；accuracy 91.7% 是水平值，按规则①不算 c1
+C06,2609.08747,c2,qualitative,none,NO,medium,仅 'computationally inexpensive' 定性；accuracy 91.7% 是水平值，按规则①不算 c1
+C06,2609.08747,c3,none,none,YES,medium,仅 'computationally inexpensive' 定性；accuracy 91.7% 是水平值，按规则①不算 c1
+C06,2609.08747,c4,none,none,YES,medium,仅 'computationally inexpensive' 定性；accuracy 91.7% 是水平值，按规则①不算 c1
+C07,2610.14515,c1,numeric,none,NO,high,任务分数 +29.85 点；520 万 token/134 任务（≈3.88 万/任务）、+18.2%
+C07,2610.14515,c2,numeric,none,NO,high,任务分数 +29.85 点；520 万 token/134 任务（≈3.88 万/任务）、+18.2%
+C07,2610.14515,c3,none,none,YES,high,任务分数 +29.85 点；520 万 token/134 任务（≈3.88 万/任务）、+18.2%
+C07,2610.14515,c4,none,none,YES,high,任务分数 +29.85 点；520 万 token/134 任务（≈3.88 万/任务）、+18.2%
+C08,2610.19422,c1,numeric,numeric,YES,high,ALFWorld 30.89→36.70；全文无延迟/token/内存数据
+C08,2610.19422,c2,none,none,YES,high,ALFWorld 30.89→36.70；全文无延迟/token/内存数据
+C08,2610.19422,c3,none,none,YES,high,ALFWorld 30.89→36.70；全文无延迟/token/内存数据
+C08,2610.19422,c4,none,none,YES,high,ALFWorld 30.89→36.70；全文无延迟/token/内存数据
+C09,2610.07935,c1,numeric,numeric,YES,high,良性分 76.6→76.7/76.9；过拒 1.2→0.8/1.6；rollout 数 1/2/4/8 是数据量不是算力
+C09,2610.07935,c2,none,none,YES,high,良性分 76.6→76.7/76.9；过拒 1.2→0.8/1.6；rollout 数 1/2/4/8 是数据量不是算力
+C09,2610.07935,c3,numeric,numeric,YES,high,良性分 76.6→76.7/76.9；过拒 1.2→0.8/1.6；rollout 数 1/2/4/8 是数据量不是算力
+C09,2610.07935,c4,none,none,YES,high,良性分 76.6→76.7/76.9；过拒 1.2→0.8/1.6；rollout 数 1/2/4/8 是数据量不是算力
+C10,2610.22959,c1,none,numeric,NO,low,摘录被截断成半句+裸数字（86.3/85.9/84.3…无表头）；ASR 62.3/28.2/49.3 属攻击侧
+C10,2610.22959,c2,none,none,YES,low,摘录被截断成半句+裸数字（86.3/85.9/84.3…无表头）；ASR 62.3/28.2/49.3 属攻击侧
+C10,2610.22959,c3,none,none,YES,low,摘录被截断成半句+裸数字（86.3/85.9/84.3…无表头）；ASR 62.3/28.2/49.3 属攻击侧
+C10,2610.22959,c4,none,numeric,NO,low,摘录被截断成半句+裸数字（86.3/85.9/84.3…无表头）；ASR 62.3/28.2/49.3 属攻击侧
+C11,2610.28364,c1,none,none,YES,high,延迟 293–404 ms（批量 37 ms）；FPR 0.026、不匹配 0.085、仅CC 0.038、Prompt-Guard 0.690
+C11,2610.28364,c2,numeric,numeric,YES,high,延迟 293–404 ms（批量 37 ms）；FPR 0.026、不匹配 0.085、仅CC 0.038、Prompt-Guard 0.690
+C11,2610.28364,c3,numeric,numeric,YES,high,延迟 293–404 ms（批量 37 ms）；FPR 0.026、不匹配 0.085、仅CC 0.038、Prompt-Guard 0.690
+C11,2610.28364,c4,none,none,YES,high,延迟 293–404 ms（批量 37 ms）；FPR 0.026、不匹配 0.085、仅CC 0.038、Prompt-Guard 0.690
+C12,2610.07258,c1,numeric,numeric,YES,high,复用率 95.8→82.6（合成）/81.5（TPC-H）为良性侧代价；最坏 0.66→13.82 μs 为开销
+C12,2610.07258,c2,numeric,numeric,YES,high,复用率 95.8→82.6（合成）/81.5（TPC-H）为良性侧代价；最坏 0.66→13.82 μs 为开销
+C12,2610.07258,c3,none,numeric,NO,high,复用率 95.8→82.6（合成）/81.5（TPC-H）为良性侧代价；最坏 0.66→13.82 μs 为开销
+C12,2610.07258,c4,none,none,YES,high,复用率 95.8→82.6（合成）/81.5（TPC-H）为良性侧代价；最坏 0.66→13.82 μs 为开销
+C13,2609.01222,c1,none,none,YES,high,无资源数据；误报数 0（Codex 28/30）与 1（Gemini 38/42）属良性被误标
+C13,2609.01222,c2,none,none,YES,high,无资源数据；误报数 0（Codex 28/30）与 1（Gemini 38/42）属良性被误标
+C13,2609.01222,c3,numeric,numeric,YES,high,无资源数据；误报数 0（Codex 28/30）与 1（Gemini 38/42）属良性被误标
+C13,2609.01222,c4,none,none,YES,high,无资源数据；误报数 0（Codex 28/30）与 1（Gemini 38/42）属良性被误标
+C14,2610.02861,c1,none,none,YES,high,"原文显式：'We do not report attack-success rates, latency, or cost overheads'"
+C14,2610.02861,c2,none,qualitative,NO,high,"原文显式：'We do not report attack-success rates, latency, or cost overheads'"
+C14,2610.02861,c3,none,none,YES,high,"原文显式：'We do not report attack-success rates, latency, or cost overheads'"
+C14,2610.02861,c4,none,none,YES,high,"原文显式：'We do not report attack-success rates, latency, or cost overheads'"
+C15,2608.25776,c1,none,none,YES,high,良性误报 47%（单点无基线）；ASPR 34.6→1.3 属效果；无资源数据
+C15,2608.25776,c2,none,none,YES,high,良性误报 47%（单点无基线）；ASPR 34.6→1.3 属效果；无资源数据
+C15,2608.25776,c3,numeric,none,NO,high,良性误报 47%（单点无基线）；ASPR 34.6→1.3 属效果；无资源数据
+C15,2608.25776,c4,none,numeric,NO,high,良性误报 47%（单点无基线）；ASPR 34.6→1.3 属效果；无资源数据
+C16,2401.07612,c1,none,numeric,NO,medium,仅 4 条摘录且多截断；ASR 0% 属效果，效用侧完全空白
+C16,2401.07612,c2,none,none,YES,medium,仅 4 条摘录且多截断；ASR 0% 属效果，效用侧完全空白
+C16,2401.07612,c3,none,none,YES,medium,仅 4 条摘录且多截断；ASR 0% 属效果，效用侧完全空白
+C16,2401.07612,c4,none,none,YES,medium,仅 4 条摘录且多截断；ASR 0% 属效果，效用侧完全空白
+C17,2610.17544,c1,none,none,YES,high,撤销延迟比 131–155× 经复核属检测延迟、非撤销动作代价，c4 判 none；无 token/GPU/能耗
+C17,2610.17544,c2,none,numeric,NO,high,撤销延迟比 131–155× 经复核属检测延迟、非撤销动作代价，c4 判 none；无 token/GPU/能耗
+C17,2610.17544,c3,none,none,YES,high,撤销延迟比 131–155× 经复核属检测延迟、非撤销动作代价，c4 判 none；无 token/GPU/能耗
+C17,2610.17544,c4,none,numeric,NO,high,撤销延迟比 131–155× 经复核属检测延迟、非撤销动作代价，c4 判 none；无 token/GPU/能耗
+C18,2610.31446,c1,none,none,YES,medium,校验成本 1.219（单位未定义）、0.059→1.213、−33.9% 为开销；任务成功 73.91% 为水平值，c1 判 none
+C18,2610.31446,c2,numeric,numeric,YES,medium,校验成本 1.219（单位未定义）、0.059→1.213、−33.9% 为开销；任务成功 73.91% 为水平值，c1 判 none
+C18,2610.31446,c3,none,numeric,NO,medium,校验成本 1.219（单位未定义）、0.059→1.213、−33.9% 为开销；任务成功 73.91% 为水平值，c1 判 none
+C18,2610.31446,c4,none,none,YES,medium,校验成本 1.219（单位未定义）、0.059→1.213、−33.9% 为开销；任务成功 73.91% 为水平值，c1 判 none
+C19,2608.01558,c1,none,none,YES,medium,综述/立场型，仅引用 AgentPoison 的 0.1% 投毒率；无任何代价数值
+C19,2608.01558,c2,none,none,YES,medium,综述/立场型，仅引用 AgentPoison 的 0.1% 投毒率；无任何代价数值
+C19,2608.01558,c3,none,none,YES,medium,综述/立场型，仅引用 AgentPoison 的 0.1% 投毒率；无任何代价数值
+C19,2608.01558,c4,none,none,YES,medium,综述/立场型，仅引用 AgentPoison 的 0.1% 投毒率；无任何代价数值
+C20,2610.21405,c1,none,none,YES,high,只报删除后残余可恢复率（39–76%、43–51% 等），属撤销效果而非代价
+C20,2610.21405,c2,none,none,YES,high,只报删除后残余可恢复率（39–76%、43–51% 等），属撤销效果而非代价
+C20,2610.21405,c3,none,none,YES,high,只报删除后残余可恢复率（39–76%、43–51% 等），属撤销效果而非代价
+C20,2610.21405,c4,none,numeric,NO,high,只报删除后残余可恢复率（39–76%、43–51% 等），属撤销效果而非代价

@@ -1,0 +1,241 @@
+{
+ "arxiv_id": "2609.02265",
+ "title": "CAPTURE: Disentangling Preference Drift from Memory Poisoning in Personalized LLM Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Graph-structured multi-timescale preference ledger over a vector store (BGE-m3 embeddings) with stable/contextual/transient layers carrying base decay rates gamma_s=0.01, gamma_c=0.1, gamma_g=0.5 per day, plus quarantine (non-retrievable pending nodes with rate 0.135/day, floor 0.15) and a continuous-time gate belief (neural ODE, latent dim 256) that decides the six memory actions; every ledger node is user-visible, revisable, and deletable.",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Two properties. (1) Integrity of the persisted user-preference memory: the agent must accept genuine preference revisions (adherence) while rejecting adversary-injected claims (poisoning resistance), with any rule reading only recency and provenance provably bounded below (Theorem 2). This advantage holds under fixed-policy attack but degrades under an adaptive attacker with released weights, where Capture is no longer reliably separated from a provenance filter. (2) Policy compliance: a global safety constraint on outputs sits outside the personalization loop and cannot be lowered by anything written into memory; removing it triples safety attack success.",
+  "operationalized_as": "Response-level attack success (Poison ASR) on contamination tracks, defined as the injected claim becoming retrievable and causing an eligible response to follow the injected preference (Appendix E), with no external rubric; the Safety column (attack success on track T4) is scored under HarmBench with StrongREJECT within 1.4 points on every method (Appendix C) and XSTest supplying the false refusal column. Also in Table 1: genuine-update adherence rate, active-memory false-admission rate on T2, and refusal rate; adaptive and independently authored ASR in Table 2."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "controls at least one channel the agent reads: a retrieved document, a shared file, or a tool response",
+   "observes the visible transcript with its timestamps and source labels",
+   "knows the defense, including architecture, algorithm, hyperparameters, and released adapter weights (Kerckhoffs principle)",
+   "writes grammatical, plausible claims, which excludes surface anomaly detection",
+   "adaptive variant: 32-candidate paraphrase search maximizing P(add)+P(revise)-P(quarantine)-P(clarify), scored on 16 shadow-state particles replayed through a local copy of the released weights, under similarity and length constraints",
+   "same-origin family: plants a claim in an external document that the user later pastes into the conversation (user-mediated laundering), so the event carries the user channel label"
+  ],
+  "assumptions": [
+   "adversary cannot modify weights, read the private ledger, or observe the gate's current belief or random seeds (Assumption 4)",
+   "adversary cannot directly impersonate an authenticated user and cannot corrupt the answer returned by a clarifying question",
+   "the genuine-update law P_g does not depend on the adversary policy alpha, secured by the matched split construction of Appendix A.6",
+   "clarification channel is a binary symmetric channel with error epsilon (Assumption 5); measured answer accuracy on D-PrefGuard is 92% (epsilon=0.08)"
+  ],
+  "not_covered": [
+   "weight-level poisoning (system is text-only)",
+   "direct impersonation of an authenticated user",
+   "corruption of clarifying-question answers",
+   "slow attacks asserting a small shift repeatedly across many turns (acknowledged as not solved)",
+   "multimodal inputs and subgroup claims from the 40-participant study"
+  ]
+ },
+ "intervention": {
+  "name": "Capture",
+  "mechanism_layer": "architecture",
+  "description": "A learned authenticity gate treats update authenticity as a latent variable: a neural ODE evolves a continuous-time belief between irregularly spaced events (discrete GRU update on arrival) and chooses among six memory actions (retain, add, scope, revise, quarantine, clarify), asking the user when action entropy exceeds a threshold. Hypotheses are written into a graph-structured ledger stratified into stable/contextual/transient timescales with per-layer decay; contradictory stable beliefs require repeated high-confidence evidence, and uncertain claims are quarantined (non-retrievable, decay to eviction unless corroborated). A safety-bounded selector scores N=8 candidates with a safety threshold fixed outside the memory loop, and a counterfactual removal audit measures the causal influence of cited nodes, down-weighting non-influential ones at retrieval."
+ },
+ "controls": [
+  {
+   "name": "Provenance-only",
+   "purpose": "baseline"
+  },
+  {
+   "name": "StateMem (explicit supersession tracking)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Recency RAG",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Sup. Transformer-delta-t (identical six-class supervision, flat versioned memory)",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Oracle-memory (sees true latent state and attack label)",
+   "purpose": "positive-control"
+  }
+ ],
+ "results": [
+  {
+   "claim": "On D-PrefGuard's 480 held-out episodes from 96 users, Capture reaches 71.5% win rate, above 69.3% for a supervision-matched Transformer and 66.1% for the strongest heuristic, while holding fixed-policy poisoning to 11.5% and adhering to 83.5% of genuine updates.",
+   "metric": "win_rate (blinded pairwise LLM judge vs unpersonalized backbone)",
+   "value": "71.5%",
+   "comparison": "71.5% vs 69.3% (supervision-matched baseline) and 66.1% (strongest heuristic)",
+   "setting": "D-PrefGuard 480 held-out test episodes from 96 users; mean over Qwen3-8B-Instruct and Llama-3.1-8B-Instruct backbones and 3 training seeds; fixed-policy attacker",
+   "quote": "On 480 held-out episodes from 96 users, Capture reaches a 71.5% win rate against 69.3% for a baseline given identical supervision and 66.1% for the strongest heuristic, holds fixed-policy poisoning to 11.5%, and adheres to 83.5% of genuine updates.",
+   "locator": "Abstract; Table 1 (Sec 5)",
+   "denominator": {
+    "n_total": "480 held-out episodes from 96 users",
+    "n_valid": null,
+    "how_counted": "Abstract: 'On 480 held-out episodes from 96 users'; Table 1 caption: each cell the mean over both response backbones and three seeds"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Under fixed-policy attack, Capture beats Provenance-only on all three axes at once: lower poisoning, higher genuine-update adherence, and lower benign false admission.",
+   "metric": "poison_ASR / genuine-update adherence / false-admission rate",
+   "value": "11.5%",
+   "comparison": "poison 11.5% vs 20.0%; adherence 83.5% vs 74.1%; false admission 8.9% vs 19.6%",
+   "setting": "D-PrefGuard held-out test episodes; fixed-policy contamination (T3 tracks) vs Provenance-only memory-layer injection defense",
+   "quote": "On those, Capture holds fixed-policy poisoning to 11.5% against 20.0% for Provenance-only while adhering to 83.5% of genuine updates against that baseline’s 74.1%, and admits 8.9% of benign non-updates against its 19.6%.",
+   "locator": "Sec 1; Sec 5 Q1; Table 1",
+   "denominator": {
+    "n_total": "192 poisoning attempts / 132 genuine updates in the held-out episodes",
+    "n_valid": null,
+    "how_counted": "Figure 1 caption: 'Bars are user-level bootstrap 95% intervals over the 132 genuine updates and 192 poisoning attempts in the held-out episodes.'"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "An adaptive attacker with the released weights more than doubles attack success against Capture (same-origin rising to 38.1%), at which point Capture is no longer reliably separated from Provenance-only on security (paper reports both numbers).",
+   "metric": "adaptive_ASR (response-level attack success)",
+   "value": "24.7%",
+   "comparison": "11.5% -> 24.7% under adaptive attack; same-origin 38.1%",
+   "setting": "Adaptive attacker: 32-candidate paraphrase search, shadow-state particle scoring through a local copy of the released weights, similarity and length constrained, on the held-out test partition",
+   "quote": "It more than doubles attack success against Capture, from 11.5% to 24.7%, with same-origin rising to 38.1%, transfers to the other learned gate almost as well, and barely moves the heuristic baselines, which expose no gradient.",
+   "locator": "Sec 5 Q5; Table 2; Appendix E",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "On same-origin contamination (user-mediated laundering where the attacker's sentence carries the user channel label), Capture holds attack success to 17.5% while the provenance filter collapses to 43.6%, the regime Theorem 1 identifies.",
+   "metric": "ASR (same-origin contamination family)",
+   "value": "17.5%",
+   "comparison": "Capture 17.5% vs Provenance-only 43.6% on same-origin track",
+   "setting": "Same-origin contamination family of T3 on the held-out test split; gap significant per Appendix C",
+   "quote": "Provenance-only reaches 43.6% attack success on the same-origin track against 17.5% for Capture",
+   "locator": "Appendix C F1; Table 7 (Appendix I); Sec 5 Q2",
+   "denominator": {
+    "n_total": "Per-family same-origin episode count for the held-out test split is not stated in the corpus; 160 same-origin episodes is the whole-T3-track figure across all splits (test split: 96 users, one T3 episode per user)",
+    "n_valid": null,
+    "how_counted": "Appendix D: 'the track holds 160 indirect-injection, 160 poisoned-summary, and 160 same-origin episodes' is the whole-track (all-splits) composition, while 'Splits are by user, with 288 users and 1,440 episodes for training, 96 and 480 for development, 96 and 480 for test' with one episode per track per user; 'T3 episodes carry one to three attempts each'; Table 7 per-family attack-success figures are test-split numbers (their equal-weighted mean reproduces Table 1's test-only Poison column)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Most of Capture's improvement over heuristics is explained by supervision; the architecture (ODE gate + timescale ledger) contributes the remaining 2.2 win-rate points and 4.4 poisoning points over a supervision-matched Transformer.",
+   "metric": "win_rate and poison_ASR gap vs supervision-matched Transformer",
+   "value": "2.2 win-rate points, 4.4 poisoning points",
+   "comparison": "Capture vs Sup. Transformer-delta-t given identical six-class labels, extractor, clarification channel, selector, and safety scorer",
+   "setting": "D-PrefGuard held-out test; supervision-matched Transformer baseline with explicit log(1+delta t) input writing into a flat versioned memory",
+   "quote": "A baseline trained on identical supervision closes most of the gap to the heuristics, leaving 2.2 points of win rate and 4.4 of poisoning attributable to the architecture rather than the labels.",
+   "locator": "Sec 1; Sec 5 Q4; Table 1",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "The learned authenticity gate carries the security result almost entirely: removing it costs 22.0 points of poisoning resistance and 0.15 regret, and removing provenance a further 14.0 points.",
+   "metric": "poison_ASR delta (component ablation)",
+   "value": "22.0 points",
+   "comparison": "+22.0 pp without gate; +14.0 pp without provenance",
+   "setting": "Component ablation on D-PrefGuard test split (Table 6), deltas against the full system",
+   "quote": "The gate carries the security result almost entirely, costing 22.0 points of poisoning resistance and 0.15 regret, and provenance a further 14.0, so the two are complementary, the empirical counterpart of Theorem 3.",
+   "locator": "Sec 5 Q3; Table 6 (Appendix G)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "The architecturally separate safety bound is load-bearing for policy compliance: removing it leaves ledger promotion unchanged, raises adherence by 4.0, and triples safety attack success.",
+   "metric": "safety_ASR (T4) / genuine-update adherence",
+   "value": "safety attack success triples when the safety bound is removed",
+   "comparison": "adherence +4.0 without safety bound, ledger promotion unchanged",
+   "setting": "Component ablation on D-PrefGuard test split (Table 6); safety column is attack success on track T4",
+   "quote": "Removing the safety bound raises adherence by 4.0 while leaving ledger promotion unchanged, confirming adherence is output-level, and triples safety attack success.",
+   "locator": "Sec 5 Q3; Table 6 (Appendix G)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "On 240 independently authored attacks from twelve external red-teamers with no access to the authors' templates, Capture reaches 18.3% attack success, above its 11.5% under the own generator but still the lowest of any method tested.",
+   "metric": "independent_ASR",
+   "value": "18.3%",
+   "comparison": "18.3% (independent attacks) vs 11.5% (own generator)",
+   "setting": "240 attacks by twelve external red-teamers (80 per family), evaluated against 96 test users; method ordering preserved",
+   "quote": "On 240 attacks from twelve external red-teamers with no access to our templates, Capture reaches 18.3%, above our own generator’s 11.5% and still the lowest of any method tested",
+   "locator": "Sec 5 Q5; Table 2; Appendix E",
+   "denominator": {
+    "n_total": "240 attacks",
+    "n_valid": null,
+    "how_counted": "Appendix E: twelve red-teamers each produced 20 accepted attacks, 80 per family, evaluated against 96 test users"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Ablating either component of the defence costs benign adherence: timescale separation is worth 5.4 points and probing 3.6 points on a benign task.",
+   "metric": "genuine-update adherence (benign)",
+   "value": "5.4 points (timescale separation), 3.6 points (probing)",
+   "comparison": "with vs without each component, and 83.5% vs a 74.1% baseline",
+   "setting": "Section 5 Q3 and Table 6, benign adherence",
+   "quote": "Timescale separation is worth 5.4 points of adherence and probing 3.6.",
+   "locator": "Section 5, Q3; Table 6",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Capture is text-only and does not address weight-level poisoning; the clarification budget is tuned on the authors' own data.",
+   "quote": "Capture is text-only and does not address weight-level poisoning, and the clarification budget is tuned on our data.",
+   "locator": "Sec 8"
+  },
+  {
+   "statement": "D-PrefGuard is synthetic and validated only on a 300-episode subset, so absolute numbers are relative comparisons rather than deployment estimates.",
+   "quote": "D-PrefGuard is synthetic and validated on a 300-episode subset, so absolute numbers are relative comparisons rather than deployment estimates.",
+   "locator": "Sec 8"
+  },
+  {
+   "statement": "External validity is only partially established: HorizonBench trajectories are simulated even where annotations are human, and 40 participants support an effect estimate but no subgroup claim.",
+   "quote": "HorizonBench reduces that without removing it, since its trajectories are simulated even where annotations are human, and 40 participants supports an effect estimate but no subgroup claim.",
+   "locator": "Sec 8"
+  },
+  {
+   "statement": "Under adaptive attack the security advantage does not withstand: poisoning success doubles and a provenance filter is then marginally the more secure of the two.",
+   "quote": "since an adaptive attacker doubles poisoning success and a provenance filter is then marginally the more secure of the two",
+   "locator": "Sec 1"
+  },
+  {
+   "statement": "The impossibility result constrains only rules measurable in the recency-provenance view, says nothing about a heuristic reading a third fixed feature, and depends on Assumption 4 granting the adversary the visible transcript.",
+   "quote": "Theorem 2 constrains only σ⁡(φ)\\sigma(\\varphi)-measurable rules, says nothing about a heuristic reading a third fixed feature, and depends on Assumption 4 granting the adversary the visible transcript.",
+   "locator": "Sec 8"
+  }
+ ],
+ "reproduction": {
+  "code": "Supplementary material: source code, D-PrefGuard construction scripts, and trained adapter weights, promised public release",
+  "data": "D-PrefGuard construction scripts in supplementary; attack payload generator available on request to researchers with institutional affiliation (tiered release)",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "denominator_unclear: adaptive-attack ASR (24.7%) attempt count not stated in Table 2 or Appendix E (the 32-candidate paraphrase search is the per-attack optimization pool, not an attempt count; '192 poisoning attempts' in Figure 1 covers fixed-policy contamination only; Appendix E 'Using the same adaptive attempts for both methods' gives no count)",
+  "corpus_contains_latex_duplication_artifacts (e.g. 'p=0.011p=0.011'); quotes chosen to avoid affected spans"
+ ]
+}

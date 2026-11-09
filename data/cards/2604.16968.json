@@ -1,0 +1,152 @@
+{
+  "arxiv_id": "2604.16968",
+  "title": "On Safety Risks in Experience-Driven Self-Evolving Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "experience",
+    "scope": "cross-task",
+    "carrier": "外部经验记忆 M={E1,...,En}（LLM 权重保持固定）：AWM 从历史轨迹归纳可复用 workflow 存入固定记忆（离线）；ReasoningBank 在部署中持续维护蒸馏出的 reasoning strategy 条目并增量更新（在线）；评测时按相关性检索（top-3）注入 prompt",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "policy-compliance",
+    "statement": "保护对象是 agent 的安全拒绝边界（对有害任务的 refusal）。失效条件：仅从良性任务积累并复用经验（backbone 权重不变）即可侵蚀该边界，使 agent 在高风险/有害场景从拒绝转向执行；经验条数越多风险越大；拒绝型经验可缓解 ASR 上升但引起对良性输入的过度拒绝（安全-效用权衡）。判定依据：ASR 在 BrowserART / Agent-SafetyBench(web 子集) / SafeAgentBench 有害子集上自进化前后的变化，以及良性任务成功率（过度拒绝侧）；危害类别覆盖欺诈点击、伪造身份、网络攻击、信息泄露、可用性破坏与家庭具身物理危害。",
+    "operationalized_as": "Attack Success Rate (ASR) 前后对比，GPT-4o 自动评判（论文称与人工标注强相关但未报告一致率数字）；辅以良性任务 task success rate 衡量 over-refusal；类别级 ASR 分解（Figures 1, 6-10）；长度匹配 prompt 扩充对照（Table 3）与 Integrated Gradients 归因（Figure 4）用于因果验证"
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "无对抗者：风险完全由良性经验的形成-存储-检索-复用回路自发产生；所有经验来自良性任务（AWM 离线：812 个 WebArena 任务；ReasoningBank 在线：Reddit 子集 106 任务；具身：269 个良性任务）",
+      "LLM backbone 权重固定，自进化仅通过外部经验记忆实现，行为漂移可归因于记忆的构建、检索与利用而非参数学习",
+      "安全评测任务与经验积累环境不相交（BrowserART/Agent-SafetyBench/SafeAgentBench 有害子集仅用于评测，避免数据泄露）",
+      "RQ3 中有害任务经验的形态（refusal-only / execution-only / mixed）由作者显式人工控制注入（每环境 50 个有害任务），并非自然发生"
+    ],
+    "not_covered": [
+      "未研究任何对抗性攻击者（如经验记忆投毒、prompt injection、恶意经验注入或跨用户共享被污染经验）",
+      "未覆盖多智能体交互、多模态输入等真实部署环境多样性",
+      "未研究超过 800 步的长期/无限期自进化动力学",
+      "未提出或评测任何防御/干预机制（仅呼吁未来工作）",
+      "GPT-4o 判官的评判偏差未量化报告"
+    ]
+  },
+  "intervention": {
+    "name": null,
+    "mechanism_layer": "none",
+    "description": "本文为诊断性研究，未提出并评测任何干预机制；仅在讨论中呼吁：选择性经验过滤与内容控制、受控的记忆规模、动态记忆调度策略、长期安全监控与 memory intervention（§5、Appendix D.3/D.6、§Limitation）"
+  },
+  "results": [
+    {
+      "claim": "AWM 离线自进化下，7 个 LLM backbone 在全部 3 个安全基准上 ASR 一致上升（仅用良性任务经验、权重不变）：如 GPT-4o 在 BrowserART 上 37.0→50.0（↑35.1%），DeepSeek-V3.2 在 SafeAgentBench 上 24.5→36.4（↑48.6%）",
+      "metric": "ASR (%)",
+      "value": "37.0 -> 50.0",
+      "comparison": "37.0 -> 50.0 (+35.1%); 24.5 -> 36.4 (+48.6%)",
+      "setting": "AWM 离线自进化（经验来自 812 个 WebArena 良性任务 / SafeAgentBench 269 个良性任务）；GPT-4o、Claude-4.5-Sonnet、DeepSeek-V3.2、Qwen3-8B/14B/32B/235B-A22B 共 7 个 backbone；评测 BrowserART / Agent-SafetyBench(web 子集) / SafeAgentBench 有害子集；GPT-4o 自动判分",
+      "quote": "| GPT-4o | 37.0 | 50.0(↑35.1%) | 56.9 | 63.6(↑11.8%) | 21.2 | 29.0(↑36.8%) |\n| Claude-4.5-Sonnet | 17.0 | 23.0(↑35.3%) | 34.6 | 37.7(↑9.0%) | 30.1 | 39.0(↑29.6%) |\n| DeepSeek-V3.2 | 48.0 | 61.0(↑27.1%) | 39.7 | 42.5(↑7.1%) | 24.5 | 36.4(↑48.6%) |",
+      "locator": "§3.2 Table 1",
+      "denominator": {
+        "n_total": "BrowserART 100 harmful behaviors; Agent-SafetyBench(web) 657 test cases; SafeAgentBench hazardous 269 tasks",
+        "n_valid": "同左",
+        "how_counted": "Appendix B.1/B.2：'It consists of 100 diverse browser-related harmful behaviors'；'the web-based interaction subset, which contains 657 test cases'；'a disjoint set of hazardous tasks (269 tasks)'；ASR=有害任务被执行的比例"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Qwen3-32B 在 ReasoningBank 在线自进化超过 800 步（仅良性经验）后，Agent-SafetyBench 上 ASR 从约 52% 升至 55% 以上且不回落，说明退化是渐进累积的行为边界漂移而非随机波动",
+      "metric": "ASR",
+      "value": "52% -> over 55%",
+      "comparison": null,
+      "setting": "Qwen3-32B；ReasoningBank 在线自进化于 WebArena Reddit 子集（106 个良性任务，>800 步）；安全评测 Agent-SafetyBench（GPT-4o 判分）",
+      "quote": "We observe a monotonic degradation in safety over time: the Attack Success Rate (ASR) increases from approximately 52% to over 55%, and this elevated unsafe behavior persists through the remainder of the evolution.",
+      "locator": "Appendix D.3 Figure 12",
+      "denominator": {
+        "n_total": "657",
+        "n_valid": "657",
+        "how_counted": "Agent-SafetyBench web-based interaction subset contains 657 test cases (Appendix B.1)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "长度匹配对照实验证明退化由经验语义内容而非上下文长度驱动：仅扩充系统指令（不含经验内容）时 ASR 基本停留在进化前水平，而注入经验内容使 ASR 大幅上升——GPT-4o 在 BrowserART 上 37.0→51.0（经验）vs 38.0（扩充指令），DeepSeek-V3.2 48.0→64.0 vs 49.0",
+      "metric": "ASR (%)",
+      "value": "37.0 -> 51.0",
+      "comparison": "37.0 -> 51.0 (experience) vs 37.0 -> 38.0 (prompt expansion); 48.0 -> 64.0 vs 48.0 -> 49.0",
+      "setting": "ReasoningBank 在线自进化，BrowserART；GPT-4o / Claude-4.5-Sonnet / DeepSeek-V3.2 等 backbone；对照用 GPT-4o 扩写系统指令以匹配经验引入的 token 长度，总 prompt 长度不变",
+      "quote": "| GPT-4o | 37.0 | 51.0 | 38.0 |\n| Claude-4.5-Sonnet | 17.0 | 22.0 | 17.0 |\n| DeepSeek-V3.2 | 48.0 | 64.0 | 49.0 |",
+      "locator": "§4.3 Table 3",
+      "denominator": {
+        "n_total": "100",
+        "n_valid": "100",
+        "how_counted": "BrowserART 由 100 个 harmful behaviors 构成（Appendix B.1）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "经验注入导致的 safe→unsafe 翻转案例中，主因是敏感执行（Sen-Exe）与标准执行（Sta-Exe），Format Recovery 占少数：GPT-4o 在 BrowserART 上 45.0/50.0/5.0，Claude-4.5-Sonnet 36.4/54.5/9.1——良性经验主要强化“如何执行”而非“何时拒绝”",
+      "metric": "dominant-cause distribution (%)",
+      "value": "45.0 / 50.0 / 5.0",
+      "comparison": null,
+      "setting": "3 名受薪标注者对 flip cases 人工归因（每例判一个主因）；BrowserART 与 SafeAgentBench；7 个 backbone；ReasoningBank 在线自进化",
+      "quote": "| | Sen-Exe | Sta-Exe | Format |\n| BrowserART |\n| GPT-4o | 45.0 | 50.0 | 5.0 |\n| Claude-4.5-Sonnet | 36.4 | 54.5 | 9.1 |",
+      "locator": "§4.1 Table 2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "检索经验条数越多不安全行为越高：具身环境（SafeAgentBench，Qwen3-14B）中检索 7 或 9 条经验一致差于 1 或 3 条，说明即使单条经验无害，数量本身即可通过累积执行信号放大风险",
+      "metric": "ASR (unsafe response rate)",
+      "value": "7 or 9 entries worse than 1 or 3",
+      "comparison": null,
+      "setting": "ReasoningBank，SafeAgentBench 具身环境，Qwen3-14B，自进化过程中周期性评测（Figure 14）；主文 §4.2 在 Agent-SafetyBench(web)+GPT-4o 上有同样趋势（Figure 3）",
+      "quote": "Specifically, agents retrieving 7 or 9 entries consistently perform worse than those retrieving fewer (1 or 3), with an observable and persistent gap throughout self-evolving steps.",
+      "locator": "Appendix D.6 Figure 14",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "在真实部署式自进化（良性+有害任务经验混合）中，积累有害任务的 execution-only 经验使 ASR 在整个在线自进化过程中持续上升——执行型经验在决策中被反复复用，逐渐将 agent 偏向不安全动作",
+      "metric": "ASR",
+      "value": "sustained increase in ASR throughout online self-evolution (qualitative)",
+      "comparison": null,
+      "setting": "GPT-4o；ReasoningBank 在线自进化；Web 环境混入从 Agent-SafetyBench 抽样的 50 个有害任务经验（execution-only / refusal-only / mixed 三种人工控制形式）；评测 BrowserART；具身环境与其余 backbone 结果在 Appendix D.8",
+      "quote": "As shown in Figure 5(a), accumulating execution-only experience from harmful tasks leads to a sustained increase in ASR throughout online self-evolution.",
+      "locator": "§5 Figure 5(a)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "混入拒绝型经验（单独或与执行型交错）可显著抑制 ASR 上升，但伴随良性输入上任务成功率明显下降（over-refusal），暴露自进化 agent 的安全-效用根本权衡",
+      "metric": "ASR & benign task success rate",
+      "value": "ASR rise substantially suppressed; benign task success notably declined (over-refusal)",
+      "comparison": null,
+      "setting": "同 RQ3 设置：GPT-4o，Web 环境（BrowserART ASR / WebArena Reddit 子集任务成功率），50 个有害任务经验按 refusal-only / mixed 形式混入；Figure 5(a)(b)",
+      "quote": "As shown in Figure 5(a), incorporating refusal behaviors into the memory, either in isolation or interleaved with execution traces, substantially suppresses the rise in ASR.",
+      "locator": "§5 Figure 5(a)(b)",
+      "denominator": null,
+      "is_primary_result": true
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "评测基准集合有限，可能无法覆盖真实部署环境的多样性（尤其是多智能体交互与多模态输入场景）",
+      "quote": "However, these benchmarks may not fully capture the diversity of real-world deployment environments, especially those involving multi-agent interactions or multi-modal inputs.",
+      "locator": "§Limitation"
+    },
+    {
+      "statement": "受算力约束，自进化步数有限（最多 800 步）；真实部署可能远超此范围，无限期经验积累下的安全动力学及是否出现新失效模式仍属开放问题",
+      "quote": "due to computational constraints, our experiments study self-evolving agents over a finite number of self-evolution steps (up to 800 steps).",
+      "locator": "§Limitation"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "llm_judge_only",
+    "figure_only_numeric_results",
+    "no_code_or_data_release_stated"
+  ]
+}

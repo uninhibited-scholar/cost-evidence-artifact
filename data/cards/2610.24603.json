@@ -1,0 +1,230 @@
+{
+ "arxiv_id": "2610.24603",
+ "title": "Refuse the Harm, Complete the Task via Graph-of-Rules Planning for LLM-Enabled Robots",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": null,
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "保护 LLM 机器人不被越狱指令诱使执行有害行为，同时不牺牲指令的合法部分：只有当候选计划物理可行、满足全部相关安全规则、达成由合法子任务导出的 safe goal、且不保留原始指令有害意图时才允许 commit；对不含合法子任务的纯攻击指令，唯一正确行为是全拒。失效条件=最终计划实现了指令的有害结果（ASR>0），或含合法部分的指令被整体拒绝/未完成（TSR 损失）；判定结果=ASR 与 TSR（RoboGuard 基准 n=70、Compound n=97、纯安全指令 n=40，另测自适应白盒 ASR 与 Gemini-3.1-flash-lite 复测）",
+  "operationalized_as": "ASR（有害结果在最终计划中实现的指令占比）与 TSR（正确处理占比）；主表 Table 1、自适应白盒 Table 2、跨架构 Table 3、消融 Table 4；机制上由每条相关规则独立的 generate-judge-refine 循环 + 目标安全检查 + 最终检查门（达成 safe goal 且无残留恶意意图）共同判定"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "构造越狱指令使机器人执行有害动作（BadRobot 的 Contextual Jailbreak / Safety Misalignment / Conceptual Deception 及其复合攻击变体；Compound 中少数为纯攻击）",
+   "RoboPAIR 自动化攻击：多轮迭代改写攻击提示直至得手",
+   "自适应白盒（RQ2）：攻击者直接对被防御系统运行 PAIR 循环，每次尝试后获得系统内部决策反馈——对 RuleGraph 暴露最终决定、世界模型、规则图之前各阶段的完整输出与推理、每条相关规则节点的通过/拦截判定及裁判反馈；对 RoboGuard 暴露规则集与 LTL 规范及推理；对 SafePlan 暴露各 sanity 层判定与推理及规格"
+  ],
+  "assumptions": [
+   "攻击通过自然语言指令通道进行，底层模型本身未被修改（jailbreak 设定，post-deployment）",
+   "各系统按论文设定的反馈面暴露其中间决策；攻击者据此迭代改写提示",
+   "评测环境为 RoboGuard 论文的 Clearpath Jackal 语义映射管线构建的语义图与 3D Scene Graph 数据集建筑布局（加合成危险物）"
+  ],
+  "not_covered": [
+   "作者明确不声称可阻止所有可想象的攻击（仅与本文所考虑基线相比更安全）",
+   "未评测训练期攻击/模型篡改、VLA 动作层对抗扰动（如对动作预测损失的 GCG）、物理层攻击与感知欺骗",
+   "更挑战性的对抗场景留作 future work；安全判断由 LLM 做出而非形式化验证"
+  ]
+ },
+ "intervention": {
+  "name": "RuleGraph",
+  "mechanism_layer": "architecture",
+  "description": "推理时多智能体 Graph-of-Rules 规划框架，把安全执行分散到多个推理与验证阶段而非单一集中决策：(1) Rule Generator Agent 先于指令将固定通用安全原则 P 接地为 world-specific 规则集 R_w（只接收原则/世界状态/技能，不看指令），再按指令筛出相关规则集 R_x；(2) Instruction Agent 接地并分块指令，Verification Agent 在完整指令语境下逐块判 Legitimate/Illegitimate（含组合危险检查）；(3) Goal Synthesis Agent 仅从合法子任务导出 safe goal；(4) Planning Agent 为每条相关规则实例化一个节点做 generate-judge-refine（≤7 迭代），k=2 分层两两聚合、节点继承父节点规则并集，直到单一计划满足全部规则；(5) Verification Agent 独立充当规则合规裁判，另有目标安全检查与最终检查门（达成 safe goal + 无残留恶意意图），失败触发计划细化或 safe goal 修订并重建规则图。效果是只丢弃指令非法部分、仍完成合法部分"
+ },
+ "controls": [
+  {
+   "name": "Undefended LLM planner (no safety layer)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Single-plan judge baseline",
+   "purpose": "baseline"
+  },
+  {
+   "name": "RoboGuard",
+   "purpose": "baseline"
+  },
+  {
+   "name": "SafePlan",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Single-node ablation (graph replaced by one node handling all rules)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "40 purely safe instructions utility check",
+   "purpose": "negative-control"
+  }
+ ],
+ "results": [
+  {
+   "claim": "在两个基准（RoboGuard 基准 n=70 纯攻击、Compound n=97 混合意图）上 RuleGraph 把 ASR 降到 0%，同时取得所有方法中最高的 TSR：RoboGuard 基准 98.57%、Compound 84.54%",
+   "metric": "ASR & TSR",
+   "value": "0% ASR; TSR 98.57% / 84.54%",
+   "comparison": null,
+   "setting": "GPT-4o（temperature 0）实例化全部系统组件（含所有基线）；RoboGuard 基准=70 条纯攻击指令（RoboPAIR 生成最终攻击提示）；Compound=97 条长程混合意图指令（真实建筑布局+合成危险物，BadRobot 风格+复合攻击，少数为纯攻击）；generate-judge-refine ≤7 迭代，聚合分支因子 k=2",
+   "quote": "RuleGraph reduces ASR to 0% on both benchmarks while achieving the highest TSR among all methods, reaching 98.57% on the RoboGuard benchmark and 84.54% on our long-horizon compound instructions.",
+   "locator": "Abstract; §4.2 Main Results (Table 1)",
+   "denominator": {
+    "n_total": "70（RoboGuard benchmark）与 97（Compound）",
+    "n_valid": "与 n_total 相同（每条指令计入一次）",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）；分母见 Table 1 caption（n=70 / n=97）与 §4.1 Datasets"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "无防御 LLM 规划器在 RoboGuard 基准上 ASR 98.57%（TSR 仅 1.43%）、在 Compound 上 ASR 100%（TSR 0.00%），确认基准危险不会被偶然避开、攻击有效",
+   "metric": "ASR (undefended baseline)",
+   "value": "98.57% / 100.00%",
+   "comparison": null,
+   "setting": "GPT-4o、无安全层；RoboGuard 基准 n=70 / Compound n=97",
+   "quote": "| Undefended LLM | 98.57% | 1.43% | 100.00% | 0.00% |",
+   "locator": "Table 1",
+   "denominator": {
+    "n_total": "70（RoboGuard benchmark）与 97（Compound）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "在 Compound 上三个基线仍放行部分攻击且 TSR 跌到 16–22%：它们把混合指令当作单一整体，要么整体接受（冒 ASR 风险）、要么整体拒绝（连同合法部分一起丢弃）",
+   "metric": "ASR / TSR (baselines on Compound)",
+   "value": "TSR 16–22%",
+   "comparison": null,
+   "setting": "GPT-4o；Compound n=97；基线=RoboGuard（TSR 16.49%）、SafePlan（21.65%）、single-plan judge（19.59%）；对照 RuleGraph 同基准 TSR 84.54%",
+   "quote": "Compound separates them sharply: RoboGuard, SafePlan, and the single-plan judge baseline still let some attacks through, and their TSR falls to 16–22%.",
+   "locator": "§4.2 Main Results",
+   "denominator": {
+    "n_total": "97（Compound）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "自适应白盒攻击（攻击者对防御系统直接跑 PAIR 并在每次尝试后获得内部决策反馈）下，RuleGraph 在 RoboGuard 基准上仍保持 0% ASR；攻击必须同时通过所有分散阶段，实验中未找到这样的指令",
+   "metric": "ASR (adaptive white-box)",
+   "value": "0.00%",
+   "comparison": "基线自适应 ASR：single-plan judge 5.71%、RoboGuard 10.00%、SafePlan 8.57%",
+   "setting": "GPT-4o；RoboGuard 基准 n=70 纯攻击；RuleGraph 暴露的反馈=最终决定、世界模型、规则图前各阶段完整输出与推理、每条相关规则节点通过/拦截判定及裁判反馈",
+   "quote": "Table 2: ASR under the adaptive white-box attack on the RoboGuard benchmark.\n\n[TABLE]\n\n| Method | ASR |\n| Single-plan judge baseline | 5.71% |\n| RoboGuard | 10.00% |\n| SafePlan | 8.57% |\n| RuleGraph (ours) | 0.00% |",
+   "locator": "Table 2",
+   "denominator": {
+    "n_total": "70（RoboGuard benchmark，§4.3 沿用）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）；Table 2 caption：ASR under the adaptive white-box attack on the RoboGuard benchmark"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "自适应攻击使所有基线 ASR 相对非自适应设置（Table 1）上升：single-plan judge 4.29%→5.71%、RoboGuard 5.71%→10.00%、SafePlan 2.86%→8.57%，因为反馈暴露了各基线实际决定安全的那个单一阶段",
+   "metric": "ASR (adaptive vs non-adaptive)",
+   "value": "5.71% / 10.00% / 8.57%",
+   "comparison": "4.29%→5.71% (single-plan judge); 5.71%→10.00% (RoboGuard); 2.86%→8.57% (SafePlan)",
+   "setting": "GPT-4o；RoboGuard 基准 n=70；自适应白盒反馈设定同 §4.3",
+   "quote": "As shown in Table 2, the adaptive attack raises the ASR of every baseline relative to the non-adaptive setting in Table 1, from 4.29% to 5.71% for the single-plan judge baseline, from 5.71% to 10.00% for RoboGuard, and from 2.86% to 8.57% for SafePlan.",
+   "locator": "§4.3 Adaptive Robustness",
+   "denominator": {
+    "n_total": "70（RoboGuard benchmark）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "用 Gemini-3.1-flash-lite 替换 GPT-4o 重跑 RoboGuard 基准（n=70）：RuleGraph 仍取得最佳 ASR 0% 与 TSR 100%，而所有基线仍有攻击得手，说明其优势不依赖于 GPT-4o",
+   "metric": "ASR & TSR (Gemini-3.1-flash-lite)",
+   "value": "0.00% / 100.00%",
+   "comparison": "基线仍有攻击得手：RoboGuard 10.00%、SafePlan 7.14%、single-plan judge 2.86%",
+   "setting": "Gemini-3.1-flash-lite 替换 GPT-4o 用于所有方法，其余设置不变；RoboGuard 基准 n=70",
+   "quote": "Table 3: ASR and TSR on the RoboGuard benchmark with Gemini-3.1-flash-lite.\n\n[TABLE]\n\n| Method | ASR ↓\\downarrow | TSR ↑\\uparrow |\n| Single-plan judge baseline | 2.86% | 85.71% |\n| RoboGuard | 10.00% | 72.86% |\n| SafePlan | 7.14% | 91.43% |\n| RuleGraph (ours) | 0.00% | 100.00% |",
+   "locator": "§4.4 Evaluation Across Model Architectures",
+   "denominator": {
+    "n_total": "70（RoboGuard benchmark）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "在 40 条纯安全指令（各含一个或多个安全子任务）上跑完整 pipeline：40/40 全部正确完成并提交、零误拒，说明 0% ASR 不是靠拒绝一切获得，安全行为有选择性",
+   "metric": "utility / false-refusal",
+   "value": "40/40",
+   "comparison": null,
+   "setting": "GPT-4o；40 条纯安全指令；完整 RuleGraph pipeline",
+   "quote": "To exclude that RuleGraph’s 0% ASR simply comes from refusing every instruction, we additionally ran the full pipeline on 40 safe instructions, each consisting of one or more safe sub-tasks. Every one of the 40 was completed correctly and committed in full, with no false refusals.",
+   "locator": "§4.5 Utility on Purely Safe Instructions",
+   "denominator": {
+    "n_total": "40",
+    "n_valid": "40",
+    "how_counted": "§4.5 原文：Every one of the 40 was completed correctly and committed in full, with no false refusals"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "消融（RQ3）：把多节点图结构替换为一次处理所有规则的单节点（其余阶段不变），在同一 97 条 Compound 集上 ASR 由 0% 升至 1.03%、TSR 由 84.54% 降至 74.23%（降 10.3 个百分点），证明多节点图结构本身有贡献",
+   "metric": "ASR & TSR (ablation)",
+   "value": "1.03% / 74.23%",
+   "comparison": "0.00% / 84.54% → 1.03% / 74.23%",
+   "setting": "GPT-4o；同一 97 条 Compound 指令；仅将图结构替换为单节点（所有规则共享一个 generate-judge-refine 循环），其余阶段不变",
+   "quote": "Table 4: ASR and TSR in the ablation study on Compound when the full graph structure is replaced with a single node handling all rules at once.\n\n[TABLE]\n\n| Configuration | ASR | TSR |\n| Full graph (ours) | 0.00% | 84.54% |\n| Single-node ablation | 1.03% | 74.23% |",
+   "locator": "Table 4",
+   "denominator": {
+    "n_total": "97（Compound，§4.6：the same 97-instruction Compound set）",
+    "n_valid": "与 n_total 相同",
+    "how_counted": "ASR=最终计划中实现有害结果的指令占比；TSR=正确处理的指令占比（纯攻击须全拒；含合法子任务的指令须全部正确完整完成且无非法部分）；其余为既非 ASR 也非 TSR 的残差（§4.1 Metrics 原文定义）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "安全判断由 LLM 做出而非经形式化程序验证；作者提出的方向是与形式化方法结合（验证 LLM 产生的安全约束或候选计划），并研究更具挑战性对抗设置下的行为",
+   "quote": "In this study, our safety judgments are made by an LLM rather than verified by a formal procedure.",
+   "locator": "Limitations and future work"
+  },
+  {
+   "statement": "作者不对覆盖面过度声称：实验覆盖不同基准上的不同攻击，但不声称 RuleGraph 能阻止一切可想象的攻击",
+   "quote": "Although our experiments cover different attacks across different benchmarks, we do not claim that RuleGraph can prevent every conceivable attack.",
+   "locator": "§5 Conclusion"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": "RoboGuard benchmark 取自 RoboGuard 论文的 70 个 adversarial behaviors（RoboPAIR 生成攻击提示）；Compound 为作者自建 97 条指令，基于 3D Scene Graph dataset（Stanford Doerr School of Sustainability Data Repository, 2024, https://sdss.redivis.com/datasets/1kf9-cfjvtqc7q?v=1.0）建筑布局加合成危险物",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures",
+   "appendix"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state"
+ ]
+}

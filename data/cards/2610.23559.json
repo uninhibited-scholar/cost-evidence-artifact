@@ -1,0 +1,159 @@
+{
+ "arxiv_id": "2610.23559",
+ "title": "An Interactive GraphRAG Workspace for Reifying, Auditing, and Steering Conversational AI Memories",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "CognitiveCanvas 把多会话对话记忆物化为持久可操纵的知识对象：混合神经符号属性图存储（含 Neo4j concept graph）中的 Hierarchical Semantic Fact-Graph HSFG(M)=⟨G,F,A⟩ —— 开发者目标/阻塞 Goal 向量、实体关系 Fact triples（如 (:FastAPI)-[:USES]->(:AsyncSession)）、逐字保留的可执行 Code artifacts（schemas、API routes、configurations），以 2D 画布交互卡片呈现，供跨会话多跳 GraphRAG 检索与 1-click 原位更新",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "保护复用的对话记忆/技术上下文的时序完整性（temporal integrity）：当软件包、API 与框架约定随时间演变时，持久化记忆不得因 temporal drift 被\"静默投毒\"（LLM 盲目接受过时配置与弃用语法，产生自信的代码幻觉）。失效条件 = 记忆相对当前日历时间过时而未被察觉；论文用时变危险函数 V(M_i,t_now)=exp(-λ_d·max(0,t_now−t_anchor−δ_d))·(1−Φ(M_i))（λ_software=0.015 day^-1，90 天宽限期）建模记忆随时效的衰减，并以 Stale 徽章标记失效记忆。判定结果 = temporal hallucination 率（Table I：31.2%/28.7% → 4.2%）与 citation faithfulness（→94.3%）",
+  "operationalized_as": "Table I 三条件（Commercial / Flat-Vector RAG / CognitiveCanvas）对照下的 Temporal Hallucinations 率与 Citation Faithfulness；机制上由 60+ regex 预筛 + 日历锚定 LLM-as-a-Judge 复核触发 Stale 徽章与 1-click self-correction，NLI 置信热图与双向引用徽章作为接地证据"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无攻击者参与：失效模式是自然 temporal drift（软件包/API/框架约定随时间演变）导致的上下文过时与幻觉，而非恶意投毒",
+   "Stage 2 的日历锚定 LLM-as-a-Judge 校验被假设为可信的复核者，能正确判定记忆是否过时"
+  ],
+  "not_covered": [
+   "任何对抗性场景：恶意记忆投毒、提示注入、对抗性经验注入等均未建模（本文威胁模型中没有对手）",
+   "多开发者/跨用户共享工作区下的权限与信任问题（multi-developer collaborative canvas 仅列为 future work）",
+   "记忆撤销（revocation）/删除生命周期未涉及"
+  ]
+ },
+ "intervention": {
+  "name": "CognitiveCanvas",
+  "mechanism_layer": "architecture",
+  "description": "交互式 GraphRAG 工作区（架构层干预）：把对话记忆从易逝文本日志变为持久、可操纵、被审计的知识对象。(1) HSFG 层次语义事实图（Goal/Fact/Code 三元存储）替代线性聊天日志与有损摘要，支持跨会话多跳 GraphRAG 遍历；(2) Continuous Temporal Drift Auditor（60+ regex 高速预筛 + 日历锚定 LLM 复核）对持久记忆做时序完整性审计，Stale 徽章 + 1-click self-correction 原位重构代码并更新知识图谱；(3) Spatial-Symbolic Prompt Compiler（SSPC）把 2D 直接操纵手势（Voronoi 聚类、节点缩放、synthesis 边）编译为 HIGHLIGHT/GROUP/OBSCURE 注意力指令注入提示"
+ },
+ "results": [
+  {
+   "claim": "HSFG 蒸馏把 Token Overhead（10 Pairs）从 Commercial 的 5,210 / Flat RAG 的 2,140 降到 405 tokens，即 92.2% token 缩减，同时保持代码逐字可复现（100% token syntax fidelity）",
+   "metric": "token_overhead",
+   "value": "405 (−92.2%)",
+   "comparison": "5,210 (Commercial) / 2,140 (Flat RAG) → 405",
+   "setting": "代表性 10 轮调试对话、10 对话对；HSFG=45(G)+120(F)+240(A)=405 tokens（式2）；三条件对照：线性多轮聊天 Commercial、Flat-Vector RAG、CognitiveCanvas",
+   "quote": "| Token Overhead (10 Pairs) | 5,210 | 2,140 | 405 (−-92.2%) |",
+   "locator": "Table I",
+   "denominator": {
+    "n_total": "5,210 raw tokens（代表性 10 轮调试对话；Table I 行标注以 10 Pairs 计）",
+    "n_valid": "405 tokens（HSFG 蒸馏后）",
+    "how_counted": "1 − 405/5210 ≈ 92.2%；论文原话 'achieving a 92.2% token reduction while maintaining exact code reproducibility'（§II-B）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "Multi-Hop Recall@3 在 CognitiveCanvas 下达 89.6%，高于 Flat RAG 的 52.1% 与 Commercial 的 38.4%（较 Flat RAG +37.5 个百分点）",
+   "metric": "Multi-Hop Recall@3 (%)",
+   "value": "89.6%",
+   "comparison": "52.1% (Flat RAG) / 38.4% (Commercial) → 89.6% (+37.5%)",
+   "setting": "24 名从业者被试内实验（12 全栈工程师/6 研究者/6 系统设计师），Latin square 三条件，三类知识任务（全栈架构重构/科学综合/后勤规划）；Recall@3 的查询集与计数方式论文未说明",
+   "quote": "| Multi-Hop Recall@3 | 38.4% | 52.1% | 89.6% (+37.5%) |",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "Temporal Hallucinations 从 Flat RAG 的 28.7% 降至 4.2%（正文报 p<0.0001），相对下降 85.4% —— 即 temporal drift 引起的上下文投毒幻觉被大幅抑制（本文与记忆完整性最相关的结果）",
+   "metric": "temporal_hallucination_rate (%)",
+   "value": "4.2%",
+   "comparison": "31.2% (Commercial) / 28.7% (Flat RAG) → 4.2% (−85.4%)",
+   "setting": "24 名从业者被试内实验、Latin square 三条件、三类知识任务；该百分比按何种评测单元（查询/回答数）计数，论文未说明",
+   "quote": "| Temporal Hallucinations | 31.2% | 28.7% | 4.2% (−-85.4%) |",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "Citation Faithfulness 达 94.3%，高于 Flat RAG 的 66.8% 与 Commercial 的 54.0%",
+   "metric": "citation_faithfulness (%)",
+   "value": "94.3%",
+   "comparison": "66.8% (Flat RAG) / 54.0% (Commercial) → 94.3% (+27.5%)",
+   "setting": "24 名从业者被试内实验、Latin square 三条件；引用忠实度按何种单元计数，论文未说明",
+   "quote": "| Citation Faithfulness | 54.0% | 66.8% | 94.3% (+27.5%) |",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "平均任务完成时间 13.8 分钟，比 Flat RAG 的 21.2 分钟快 34.9%",
+   "metric": "task_time (minutes)",
+   "value": "13.8",
+   "comparison": "28.4 (Commercial) / 21.2 (Flat RAG) → 13.8 (−34.9%)",
+   "setting": "24 名从业者被试内实验、三类知识任务、Latin square 三条件",
+   "quote": "| Task Time (Minutes) | 28.4 | 21.2 | 13.8 (−-34.9%) |",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "NASA-TLX 认知负荷从 Commercial 的 68.4 / Flat RAG 的 54.2 降至 32.6（正文报 p<0.0001）",
+   "metric": "NASA-TLX workload (/100)",
+   "value": "32.6",
+   "comparison": "68.4 (Commercial) / 54.2 (Flat RAG) → 32.6 (−41.3%)",
+   "setting": "24 名从业者被试内实验、Latin square 三条件；量表 /100",
+   "quote": "| NASA-TLX Workload (/100) | 68.4 | 54.2 | 32.6 (−-41.3%) |",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "UMUX-Lite 可用性 88.4/100，高于 Flat RAG 的 72.8 与 Commercial 的 61.5",
+   "metric": "UMUX-Lite usability (/100)",
+   "value": "88.4",
+   "comparison": "72.8 (Flat RAG) / 61.5 (Commercial) → 88.4 (+15.6)",
+   "setting": "24 名从业者被试内实验、Latin square 三条件；量表 /100",
+   "quote": "| UMUX-Lite Usability (/100) | 61.5 | 72.8 | 88.4 (+15.6) |",
+   "locator": "Table I",
+   "denominator": null,
+   "is_primary_result": true,
+   "_match": "exact"
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Stage 2（LLM-as-a-Judge）时序校验延迟 600–1200 ms，是作者自述的性能限制",
+   "quote": "Current limitations include: (1) Stage 2 temporal verification latency (600–1200 ms); and (2) lack of direct visual AST rendering inside cards.",
+   "locator": "§IV-B Limitations"
+  },
+  {
+   "statement": "卡片内缺少直接可视化 AST 渲染；后台预审计与内嵌语法高亮仅为进行中的 future work",
+   "quote": "Background pre-auditing and embedded syntax highlighting represent active future work.",
+   "locator": "§IV-B Limitations"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "appendix_not_in_corpus"
+ ]
+}

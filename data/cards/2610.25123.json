@@ -1,0 +1,206 @@
+{
+  "arxiv_id": "2610.25123",
+  "title": "Memories That Outlive Their Reasons: Dependency-Tethered Memory for Tool-Using LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Store of atomic plain-sentence records (fact records + check records with object_id and version, verdict true/false/null) written by a bounded LLM writer after each session and served as a system-prompt section at live requests; Tether adds a derived_from field (exact parent versions) to check records, used only internally at read time and never shown to the agent.",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "An agent acting on memory must not publish an object whose transitive support has failed elsewhere in the store, even though every stored record was true when written. Observation 1 is one-directional: when the failure notice and the dependent verdict do not share a retrieval window (no record about the failed ancestor in the window), no window-local reader can distinguish stale from sound, and this condition holds for most affected candidates (Flat publishes 645 of 657 such check-free candidates). A shared window rarely suffices either: with a record about the failed ancestor in the window, Flat still publishes 199 of 318, so unsafe publication is not restricted to the no-shared-window case.",
+    "operationalized_as": "Unsafe publication rate = share of live-request candidates published while pass_t(v) is false, stratified by distance d to the nearest failed ancestor (d>=1 = downstream), on the Fallout benchmark under a reuse instruction; verification checks per candidate/request measure the cost side."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "No attacker, no hallucinated fact, no corrupted record: every memory record is accurate when written; failure arises from environment change (revoked keys, retracted datasets, rotations) that invalidates old verdicts non-locally.",
+      "Failures are announced in advisories that name only the failed root object, sometimes mentioned only in passing, sometimes discovered only by the agent's own check.",
+      "Dependencies are stated in dialogue (pasted build logs / SBOMs), in the main setting in the same session as the verdict, in Fallout-Split in a session of their own.",
+      "The memory writer and the reader each see only a bounded window (k=10 retrieved records), never the whole store.",
+      "The verification tool returns pass/fail only, never the reason; all model roles use one backbone (gpt-6-luna; Qwen3.5-27B, Qwen3.5-35B-A3B, DeepSeek-V4.1-Flash as alternatives)."
+    ],
+    "not_covered": [
+      "Memory poisoning and untrusted content entering memory (explicitly out of scope: 'Our failure involves no untrusted source')",
+      "Adversarial users, insiders, or the model itself as attacker",
+      "Dependencies the writer would have to infer rather than read as stated text (synthetic worlds state relations explicitly)",
+      "Long-horizon cost of over-withdrawal beyond the version trigger (histories too short)"
+    ]
+  },
+  "intervention": {
+    "name": "Tether (dependency-tethered memory)",
+    "mechanism_layer": "provenance",
+    "description": "Tether keeps the flat fact-memory representation and adds one field to check records: derived_from, the exact object versions the verdict rests on, written by the same bounded writer at verdict time while the dependency is local in the transcript. At read time a model-free reachability pass over the whole store (not just the window) serves any passing verdict as null (unsettled) if anything it transitively derives from is recorded failing, is null, or has a higher version on record; withdrawal only lowers (true -> null, never false). The agent reads the same record fields, retrieved the same way, and never sees the edges."
+  },
+  "controls": [
+    {"name": "Always-verify (empty memory)", "purpose": "baseline"},
+    {"name": "Flat (atomic records, Tether without edges; same writer prompt minus one paragraph, same retrieval)", "purpose": "ablation"},
+    {"name": "A-Mem", "purpose": "fair-comparison"},
+    {"name": "Graphiti", "purpose": "fair-comparison"},
+    {"name": "Mem0", "purpose": "fair-comparison"},
+    {"name": "Global flush / mention flush (coarse invalidation over Flat stores)", "purpose": "ablation"},
+    {"name": "Random mixture of Flat and always-verify (mixing curve)", "purpose": "baseline"},
+    {"name": "Whole-store window for writer and/or reader", "purpose": "ablation"},
+    {"name": "Perfect (gold) edges replacing recorded edges", "purpose": "positive-control"},
+    {"name": "Edge perturbation (drop/spurious with probability p)", "purpose": "negative-control"}
+  ],
+  "results": [
+    {
+      "claim": "On Fallout-Mixed under the reuse condition, an agent reading a fact memory of atomic records (Flat) publishes 62% of candidates whose failure lies upstream (d>=1), even though every record was true when written.",
+      "metric": "unsafe_publication_rate_d>=1",
+      "value": "62%",
+      "comparison": null,
+      "setting": "gpt-6-luna as writer and live agent; Fallout-Mixed (60 worlds, 720 live requests, 2,903 candidates), reuse instruction",
+      "quote": "an agent reading a memory of atomic facts publishes 62% of the objects whose failure lies upstream, each backed by a record that was true when written",
+      "locator": "Abstract; Table 1 (Flat d>=1 = .619)",
+      "denominator": {
+        "n_total": "1,364",
+        "n_valid": null,
+        "how_counted": "candidates at distance d>=1 from nearest failed ancestor in Fallout-Mixed live requests (Sec 6.2: Flat published 844 of them unsafe)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "With relations stated alongside their verdicts, Tether publishes 0.3% of upstream-failing objects across the three domains while spending 37% fewer verification calls than checking everything.",
+      "metric": "unsafe_publication_rate_d>=1",
+      "value": "0.3%",
+      "comparison": "37% fewer verification calls than always-verify",
+      "setting": "gpt-6-luna; Fallout-Mixed (3 domains), reuse condition",
+      "quote": "Tether publishes 0.3% of upstream-failing objects across three domains when relations are stated with their verdicts, with 37% fewer verification calls than checking everything",
+      "locator": "Abstract; Table 1 (Tether d>=1 = .003)",
+      "denominator": {
+        "n_total": "1,364",
+        "n_valid": null,
+        "how_counted": "candidates at d>=1 in Fallout-Mixed live requests; 37% is relative to always-verify's 4.05 checks per request"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Tether reduces downstream unsafe publications from 844 (Flat) to 4 out of the 1,364 candidates at d>=1 on Fallout-Mixed (reuse).",
+      "metric": "unsafe_publication_count_d>=1",
+      "value": "4 of 1,364 candidates (Tether) vs 844 (Flat)",
+      "comparison": "844 -> 4",
+      "setting": "gpt-6-luna; Fallout-Mixed, reuse condition",
+      "quote": "With Tether, 4 of the 1,364 candidates at d≥1d\\geq 1 are published while failing, against 844 for Flat",
+      "locator": "Sec 6.2",
+      "denominator": {
+        "n_total": "1,364",
+        "n_valid": null,
+        "how_counted": "candidates at d>=1 in Fallout-Mixed (reuse) live requests, same recorded histories for both memories"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Overall the Tether agent spends 2.54 checks per request (37% fewer than always-verify's 4.05) and publishes 0.5% failing candidates.",
+      "metric": "verification_cost_and_unsafe_rate_all",
+      "value": "2.54 checks per request; 37% fewer than always-verify's 4.05; 0.5% of candidates published failing",
+      "comparison": "always-verify: 4.05 checks per request",
+      "setting": "gpt-6-luna; Fallout-Mixed (720 requests, 2,903 candidates), reuse condition",
+      "quote": "Overall the agent with Tether spends 2.54 checks per request, 37% fewer than the 4.05 of always-verify, and publishes 0.5% failing candidates.",
+      "locator": "Sec 6.2; Table 1",
+      "denominator": {
+        "n_total": "2,903 candidates (0.5% unsafe share); 4.05 always-verify checks per request (baseline of the 37%)",
+        "n_valid": null,
+        "how_counted": "checks counted per live request (one unit per item_check call); unsafe share over all candidates in Fallout-Mixed (reuse)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Published memory systems split: Mem0 relies on memory and publishes 42% of upstream-failing objects; A-Mem and Graphiti publish 9% but only by re-verifying most candidates (0.83-0.86 checks per candidate), which limits their savings.",
+      "metric": "unsafe_publication_rate_d>=1_and_checks_per_candidate",
+      "value": "Mem0 42%; A-Mem and Graphiti 9%; A-Mem/Graphiti 0.83-0.86 checks per candidate",
+      "comparison": null,
+      "setting": "gpt-6-luna; Fallout-Mixed, reuse condition; A-Mem, Graphiti, Mem0 with their own write paths",
+      "quote": "A-Mem and Graphiti re-verify most candidates (0.83–0.86 checks per candidate), which limits their savings, yet publish 9% of upstream-failing objects; Mem0 relies on memory more and publishes 42%.",
+      "locator": "Abstract; Sec 6.3; Table 1",
+      "denominator": {
+        "n_total": "1,364 candidates at d>=1 on Fallout-Mixed (reuse); checks per candidate over 2,903 candidates",
+        "n_valid": null,
+        "how_counted": "share of upstream-failing candidates published while failing; checks are item_check calls per candidate"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Coarse invalidation is no substitute for edges: flushing every verdict on any failure is as safe as Tether but costs 32% more checks.",
+      "metric": "verification_cost",
+      "value": "32% more checks than Tether (equally safe)",
+      "comparison": null,
+      "setting": "gpt-6-luna; Fallout-Mixed, reuse; global-flush baseline over Flat stores",
+      "quote": "Flushing every verdict on any failure is as safe as Tether but costs 32% more checks.",
+      "locator": "Abstract; Sec 6.3 (global flush 0.3% at d>=1, 0.83 checks per candidate vs Tether 0.63)",
+      "denominator": {
+        "n_total": "checks per candidate on Fallout-Mixed (reuse): global flush 0.83 vs Tether 0.63",
+        "n_valid": null,
+        "how_counted": "item_check calls per candidate; the 32% is the excess over Tether's per-candidate checks"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The safety gain depends on capturing dependencies: when relations arrive in sessions apart from their verdicts (Fallout-Split), Tether's downstream unsafe publication rate rises to 9.4-22.1%; a weak writer that misses edges loses safety the same way.",
+      "metric": "unsafe_publication_rate_d>=1",
+      "value": "9.4-22.1%",
+      "comparison": null,
+      "setting": "gpt-6-luna; Fallout-Split (20 worlds, 959 candidates, 451 at d>=1), reuse condition; relations stated one session before or two after the verdict",
+      "quote": "when relations arrive in sessions apart from their verdicts, Tether’s downstream unsafe publication rate rises to 9.4–22.1%, and a weak writer that misses edges loses safety in the same way.",
+      "locator": "Abstract; Sec 6.6; Table 3 (Tether .006/.094/.221)",
+      "denominator": {
+        "n_total": "451 candidates at d>=1 of 959 on Fallout-Split",
+        "n_valid": null,
+        "how_counted": "share of d>=1 candidates published while failing under the reuse condition, by relation timing (same/before/after)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The mechanism is window locality, not carelessness: among stale-true candidates Flat decides without a check, the agent publishes 645 of the 657 for which no record about the failed ancestor is in the window (exactly Observation 1's indistinguishable case).",
+      "metric": "unsafe_decisions_without_ancestor_record",
+      "value": "645 of 657",
+      "comparison": null,
+      "setting": "gpt-6-luna; Fallout-Mixed, reuse; candidates served a stale true verdict by Flat and decided without a check",
+      "quote": "When no record about the failed ancestor is in the window, it publishes 645 of 657 of them: this is exactly the indistinguishable case of Observation 1.",
+      "locator": "Sec 6.1",
+      "denominator": {
+        "n_total": "657",
+        "n_valid": null,
+        "how_counted": "candidates served a stale true verdict that the Flat agent decided on from memory alone, with no record about the failed ancestor in its window"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Fallout's worlds are synthetic and state dependency relations explicitly; dependencies a writer would have to infer are not tested.",
+      "quote": "Fallout’s worlds are synthetic, and their dependency relations are stated explicitly in pasted records; dependencies that a writer would have to infer are not tested.",
+      "locator": "Sec 8"
+    },
+    {
+      "statement": "Tether depends on a capable writer: relations stated away from the verdict are partly lost, weaker models also miss failures mentioned in passing, and an agent that checks nearly everything is then safer.",
+      "quote": "Tether depends on a capable writer: relations stated away from the verdict are partly lost (Section 6.6), weaker models also miss failures mentioned in passing (Section 6.5), and an agent that checks nearly everything is then safer.",
+      "locator": "Sec 8"
+    },
+    {
+      "statement": "Over-withdrawal is not tested beyond the version trigger, whose cost recurs at every read; histories are too short to measure that cost over long horizons.",
+      "quote": "Over-withdrawal is not tested beyond the version trigger (Section 6.2), whose cost recurs at every read of an older version that stays in use; our histories are too short to measure that cost over long horizons.",
+      "locator": "Sec 8"
+    },
+    {
+      "statement": "Histories are recorded by a single model, published baselines run on only three of four backbones, and session time is modelled from calls rather than measured.",
+      "quote": "Histories are recorded by one model, and the published baselines run on three of our four backbones. Session time is modelled from calls, not measured (Table 9).",
+      "locator": "Sec 8"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "https://github.com/xiaoqi-7/tether-fallout (generator, three datasets, prompts, content-addressed cache of every model call; 'Every number in this paper replays exactly from the cache')",
+    "data": "Fallout-Core / Fallout-Mixed / Fallout-Split released with the generator",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": []
+}

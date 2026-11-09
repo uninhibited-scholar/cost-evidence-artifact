@@ -1,0 +1,236 @@
+{
+ "arxiv_id": "2609.34385",
+ "title": "Just-In-Time Agent Memory with Runtime Agentic Research",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "mixed",
+  "carrier": "Memorizer 构建的层级化 workspace page-store：原始 session 以 source file 形式完整保留（'keeps raw files as complete, path-traceable evidence'，§2.2），外加逐 session memo 与逐目录 README 等轻量导航摘要；离线一次构建、按 session 增量更新，之后跨查询复用（'This cost is incurred once, after which the resulting workspace is reused across queries'，§4.5）。范围=mixed：跨 session 累积（H={s1..sT} 有序 session 序列，语料含 30–50 sessions）+ 跨查询/跨任务复用同一 workspace。",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "论文不以任何安全属性为目标：评估的是记忆密集任务表现（F1/准确率）与构建/服务成本（时间、token、动作轮数），未定义或测量 authority/confidentiality/integrity/policy-compliance/availability 任一保护目标，也没有攻击者、攻击或失效后果实验。对综述的作用（必要背景）：完整刻画了持久记忆对象（hierarchical workspace page-store）的生命周期机制——formation（离线 Memorizer 将累积历史构建为层级 workspace）、update（'supports both batch construction from existing histories and incremental updates when new sessions are appended'，§2.2）、retention（原始 session 完整保留为 path-traceable evidence）、retrieval（Researcher 运行时 open/search/browse 迭代探索并按请求组装带 source provenance 的上下文）——即记忆投毒/记忆篡改类攻击-防御机制所作用的对象与流程；论文本身不评估任何此类机制。",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "历史/记忆语料默认良性可信：Memory-Gym 构建与校验只考虑质量标准（evidence support、answer uniqueness、leakage-free、task consistency、coverage/completeness/faithfulness），不考虑对抗性注入（§3.1.2、Appendix A.3）",
+   "评测去污染假设：'the Memory-Gym training corpora have no overlap with the evaluation benchmarks in terms of users, conversations, sessions, queries, answers, or supporting evidence'（Appendix A.1 evaluation contamination control）",
+   "检索器（BM25+BGE-M3）、browse 与最终作答模型（未训练的 Qwen3.5-4B）在训练与评测间保持固定，动作预算默认 20 轮（Appendix B.1）"
+  ],
+  "not_covered": [
+   "记忆投毒或对 workspace 内 session/memo/README 的对抗性篡改",
+   "存储记忆的隐私、机密性与撤销（revocation 未实现）",
+   "检索/浏览工具链的提示注入与安全性",
+   "恶意 client agent 或对抗性请求分布；全文未定义对手能力"
+  ]
+ },
+ "intervention": {
+  "name": "JAM (Just-In-Time Agent Memory)：Memorizer（离线层级 workspace）+ Researcher（运行时 agentic research），经 Memory-Gym 数据 + verified-trajectory SFT + Hint-guided GRPO 训练",
+  "mechanism_layer": "architecture",
+  "description": "把 agent 记忆从 Ahead-of-Time 请求无关压缩改为 Just-In-Time 查询条件化上下文构建：离线 Memorizer 在层级 page-store 中完整保留原始历史并维护 memo/README 导航摘要；在线 Researcher 以 thinking–exploration–reflection 循环调用 open/search/browse 迭代探索 workspace，按请求组装带 source provenance 的上下文（§2）。非安全机制：作为持久记忆对象的机制背景收录，支撑综述中 what_persists=memory 的 formation/update/retention/retrieval 操作定义。"
+ },
+ "controls": [
+  {
+   "name": "Vanilla LLM / RAG / A-MEM / Mem0 / MemoryOS / LightMem（同 Qwen3.5-4B 骨干）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "MEM1-7B / MemAgent-14B / Memory-R1-PPO / Memory-R1-GRPO",
+   "purpose": "baseline"
+  },
+  {
+   "name": "w/o Training / w/o Hint / w/o Memorizer / w/o Researcher / w/o BM25 / w/o Embedding",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Flat Raw Store（=w/o Memorizer：同原始历史、同训练 Researcher/检索器/作答模型/预算，仅去掉 memo+层级组织+README 导航）",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "监督来源对照：MemAgent data / Memory-R1 data / SH only / MH only / SU only（同框架同骨干，全 SFT-only）",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "主结果：在 LoCoMo/LongMemEval/NarrativeQA/HotpotQA 四个长上下文与记忆密集基准上，训练后的 JAM（Qwen3.5-4B）取得 LoCoMo 总分 F1 52.09、LongMemEval 准确率 65.20、NarrativeQA F1 45.72、HotpotQA 224k 设置 F1 58.69；论文自述在多数设置上超过 7B–14B 训练记忆基线（Table 1：MemAgent LoCoMo OA 46.13、LME 55.20），并全面高于 AOT 式系统。",
+   "metric": "LoCoMo overall F1 / LongMemEval accuracy / NarrativeQA F1 / HotpotQA F1",
+   "value": "52.09 / 65.20 / 45.72 / 58.69",
+   "comparison": null,
+   "setting": "JAM（Qwen3.5-4B 骨干，BM25+BGE-M3，20 轮动作预算）；Table 1 JAM 行列序：LoCoMo SH/MH/TE/OD/OA=55.14/40.21/62.59/25.12/52.09，LME=65.20，NAQA=45.72，HotpotQA 56k/112k/224k=64.56/59.28/58.69；各基准评测集大小未在语料中给出",
+   "quote": "Our Method JAM\nwith training\nQwen3.5-4B\n55.14\n40.21\n62.59\n25.12\n52.09\n65.20\n45.72\n64.56\n59.28\n58.69",
+   "locator": "§4.1 Table 1（Our Method JAM 行）",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "效率-质量权衡：与训练型 agentic 基线 MemAgent 相比，JAM 把查询时延从 58.08 s 降到 13.81 s（降 76.2%），同时 F1 从 46.13 提到 52.09——比轻量一次性记忆系统花更多计算换显著更高答案质量，同时保持远快于 MemAgent。",
+   "metric": "query latency (s) / LoCoMo F1",
+   "value": "query latency 13.81 s（76.2% reduction）; F1 52.09",
+   "comparison": "vs MemAgent: latency 58.08 s → 13.81 s; F1 46.13 → 52.09",
+   "setting": "LoCoMo wall-clock 延迟；JAM（Qwen3.5-4B）vs MemAgent-14B",
+   "quote": "Compared with the trained agentic baseline\nMemAgent, JAM reduces query latency from 58.08 s to 13.81 s (76.2%)\nwhile improving F1 from 46.13 to 52.09.",
+   "locator": "§4.5",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "时延降幅由引文原话 'reduces query latency from 58.08 s to 13.81 s (76.2%)' 直接给出；F1 为 LoCoMo 总分（Table 1 同值 52.09 vs 46.13）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "跨域迁移：在训练与适配均未使用任何 LongCodeQA 样本的前提下（代码域不在 Memory-Gym 六域内），Memory-Gym 训练把 Researcher 在 LongCodeQA 上的总体准确率从未训练的 54.08% 提到 SFT 后 65.67%、SFT+RL 后 75.54%，且 64K/128K/256K 子集一致改善。",
+   "metric": "accuracy（LongCodeQA overall）",
+   "value": "54.08% → 65.67% → 75.54%",
+   "comparison": "untrained 54.08% vs SFT-only 65.67% vs SFT+RL 75.54%",
+   "setting": "LongCodeQA 233 queries（64K=76、128K=92、256K=65，Appendix B.2）；hints 仅训练期使用",
+   "quote": "LongCodeQA examples for training or adaptation. As shown in\nTable\n3\n, overall accuracy increases from\n54.08% for the untrained Researcher to 65.67% after SFT and 75.54%\nafter the full SFT+RL pipeline. Improvements are consistent across the\n64K, 128K, and 256K subsets.",
+   "locator": "§4.3 Table 3（分母见 Appendix B.2）",
+   "denominator": {
+    "n_total": "233",
+    "n_valid": null,
+    "how_counted": "Accuracy is reported for each context-length subset, while the overall score is computed over all 233 queries rather than as the unweighted mean of the three subset scores"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "受控对照（同原始历史、同训练 Researcher、同检索器/作答模型/预算）：层级 workspace 组织相对 Flat Raw Store 把 LoCoMo F1 从 49.06 提到 52.09，同时把在线时延从每查询 17.11 s 降到 13.81 s、平均研究轮数从 3.57 降到 3.16；Appendix B.3 另给出在线 token 从 8,174.29 降到 6,720.61。",
+   "metric": "LoCoMo F1 / online latency (s/query) / avg research rounds",
+   "value": "LoCoMo F1 49.06 → 52.09",
+   "comparison": "online latency 17.11 s → 13.81 s per query; average research rounds 3.57 → 3.16",
+   "setting": "LoCoMo；Flat Raw Store = Table 4 的 w/o Memorizer 变体（去掉 memo、层级组织与 README 导航）",
+   "quote": "that hierarchical workspace organization improves both effectiveness and\nonline efficiency: it improves LoCoMo F1 from 49.06 to 52.09 while\nreducing online latency from 17.11 to 13.81 seconds per query and average\nresearch rounds from 3.57 to 3.16",
+   "locator": "§4.4（详表 Appendix B.3 Table 8）",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "离线构建成本：JAM 每 workspace 构建需 79.53 s，低于 A-MEM（200.42 s）与 Mem0（90.67 s），高于 MemoryOS（41.36 s）与 LightMem（6.82 s）；该成本一次性，构建后 workspace 跨查询复用。",
+   "metric": "offline workspace construction wall-clock time（s/workspace）",
+   "value": "79.53 s per workspace",
+   "comparison": "A-MEM 200.42 s; Mem0 90.67 s; MemoryOS 41.36 s; LightMem 6.82 s",
+   "setting": "LoCoMo；一次性离线成本 vs 各 AOT 式记忆系统",
+   "quote": "JAM requires 79.53 s to construct a workspace, lower than A-MEM\n(200.42 s) and Mem0 (90.67 s), but higher than MemoryOS (41.36 s) and\nLightMem (6.82 s).",
+   "locator": "§4.5",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Memory-Gym 规模：28,276 个候选实例中 16,794 个通过任务特定质量校验（59.4%）——本卡所登记持久记忆对象的训练数据来源规模。",
+   "metric": "validation pass rate（Memory-Gym 候选实例）",
+   "value": "16,794 of 28,276 (59.4%)",
+   "comparison": null,
+   "setting": "Memory-Gym 四阶段管线（anchor discovery → task-dependent session expansion → instance instantiation → validation and filtering）；校验含 answer uniqueness、evidence support、无答案泄漏，摘要类另查 coverage/completeness/faithfulness",
+   "quote": "Of\n28,276\n28{,}276\ncandidates,\n16,794\n16{,}794\npassed validation (\n59.4\n%\n59.4\\%\n).\nA manual audit of 200 retained instances found that\n95.0\n%\n95.0\\%\nmet all applicable quality criteria.",
+   "locator": "§3.1.2",
+   "denominator": {
+    "n_total": "28,276",
+    "n_valid": "16,794",
+    "how_counted": "Of 28,276 candidates, 16,794 passed validation (59.4%)（通过任务特定质量校验的候选数 / 全部生成候选数）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "人工质量审计：从 16,794 个保留实例中抽样 200 个（134 单跳/多跳 + 66 摘要），190 个满足全部适用质量标准，通过率 95.0%（95% Wilson CI 91.0%–97.3%）；双标注者仲裁后计数。",
+   "metric": "human audit pass rate（全部适用质量标准）",
+   "value": "190 of 200 (95.0%; Wilson CI 91.0%–97.3%)",
+   "comparison": null,
+   "setting": "两名主标注者盲评 + 第三人仲裁；标准含 evidence support、answer uniqueness、leakage-free、task consistency、coverage、completeness、faithfulness（criterion 级通过率 95.5%–99.5%，Table 6）",
+   "quote": "Overall, 190 of the 200 instances satisfy all applicable criteria, yielding a 95.0% pass rate with a 95% Wilson confidence interval of 91.0%–97.3%.",
+   "locator": "Appendix A.4 Table 6",
+   "denominator": {
+    "n_total": "200",
+    "n_valid": "190",
+    "how_counted": "Overall, 190 of the 200 instances satisfy all applicable criteria, yielding a 95.0% pass rate"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "监督来源对照（固定 JAM 框架与骨干、全部 SFT-only）：Memory-Gym 全混合监督取得 LoCoMo 50.70 / LME 60.20 / NAQA 41.59 / HotpotQA 52.08，优于单任务族中最强的 SU only（49.43 / 59.80 / 40.94 / 50.86）；论文自述其在四个基准上全部优于未训练 Researcher、三个基准上为最强监督来源。",
+   "metric": "LoCoMo F1 / LME accuracy / NAQA F1 / HotpotQA F1（SFT-only 变体）",
+   "value": "50.70 / 60.20 / 41.59 / 52.08",
+   "comparison": "SU only: 49.43 / 59.80 / 40.94 / 50.86",
+   "setting": "固定 JAM + Qwen3.5-4B；对照训练数据：w/o SFT、MemAgent data、Memory-R1 data、SH only、MH only、SU only、Memory-Gym（Table 2）",
+   "quote": "SU only\n49.43\n59.80\n40.94\n50.86\nMemory-Gym\n50.70\n60.20\n41.59\n52.08",
+   "locator": "§4.3 Table 2（SU only 行与 Memory-Gym 行）",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "运行时行为（默认 20 轮上限）：预算主要充当探索余量而非固定推理成本——至少 82.80% 的查询在 LoCoMo/LongMemEval/NarrativeQA 上五轮内终止；HotpotQA 探索更长（仅 43.83% 五轮内终止、P90 14 轮），预算耗尽率 0%–4.70%。",
+   "metric": "share of queries stopping within 5 rounds / budget exhaustion rate",
+   "value": "HotpotQA: 43.83% stop within five rounds; P90 14 rounds; budget exhaustion 0%–4.70%",
+   "comparison": null,
+   "setting": "四个主基准、fully trained JAM Researcher、最大 20 轮动作预算；耗尽查询按 20 轮计入统计（Table 9：LoCoMo 95.58%/0.00%、LongMemEval 82.80%/0.40%、NarrativeQA 84.00%/0.00%、HotpotQA 43.83%/4.70%）；各基准查询总数未在语料中给出",
+   "quote": "HotpotQA requires longer exploration, with only 43.83% terminating\nwithin five rounds and a P90 of 14 rounds, compared with 4–8 on the\nother benchmarks. Budget exhaustion remains rare, ranging from 0% to\n4.70% across benchmarks.",
+   "locator": "Appendix B.4 Table 9",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "LLM-judge 复评（GPT-4o-mini，temperature 0，判定 CORRECT/WRONG，准确率=判 CORRECT 比例）：同一评审协议下 JAM 在三个基准上准确率最高，较该组最强基线分别提升 12.54、20.00、11.20 个百分点（Table 11：LoCoMo 79.16 vs MemAgent 66.62；NarrativeQA 68.00 vs RAG 48.00；HotpotQA 69.79 vs MemAgent 58.59）。",
+   "metric": "LLM-judge accuracy gain（percentage points）",
+   "value": "+12.54 / +20.00 / +11.20 percentage points",
+   "comparison": null,
+   "setting": "GPT-4o-mini judge（temperature 0）评 LoCoMo/NarrativeQA/HotpotQA；LongMemEval 不复评（主指标已是 accuracy）；Memory-R1-PPO/GRPO 行为原论文数字复述，仅作参考、不在同一评审管线内",
+   "quote": "Compared with the strongest baseline in this group,\nJAM improves accuracy by 12.54, 20.00, and 11.20 percentage points on\nLoCoMo, NarrativeQA, and HotpotQA, respectively.",
+   "locator": "Appendix B.6 Table 11",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "范围局限：Memorizer 在 Researcher 训练期间固定不训练；论文明确未研究 Memorizer 微调或 Memorizer–Researcher 联合优化，B.7 实验只隔离 Memorizer 模型选择的敏感性（且更大骨干无一致下游收益）。",
+   "quote": "We do not study\nMemorizer fine-tuning or joint Memorizer–Researcher optimization; this\nexperiment isolates sensitivity to the Memorizer model choice.",
+   "locator": "Appendix B.7"
+  },
+  {
+   "statement": "停止语义局限：20 轮预算耗尽并不意味着该查询答错；正向充分性判断只是内部停止决策，不保证证据完整恢复。",
+   "quote": "The 20-round cap therefore\nbounds exploration cost but does not imply that an exhausted query is\nincorrect; likewise, a positive sufficiency assessment is an internal\nstopping decision rather than a guarantee of complete evidence recovery.",
+   "locator": "Appendix B.4"
+  },
+  {
+   "statement": "误差分析外推局限：4.0% 仅指被抽样拒绝池中有效实例的占比，不能外推为全量候选中被管线误拒的比例。",
+   "quote": "The 4.0% figure refers specifically to valid instances within the sampled rejected pool, rather than to the proportion of all valid candidates rejected by the pipeline.",
+   "locator": "Appendix A.4 Table 7"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://github.com/VectorSpaceLab/general-agentic-memory",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures",
+   "appendix"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_safety_experiments",
+  "denominator_unclear",
+  "background_paper_no_adversary（adversary=none 为合法取值；capabilities 留空）",
+  "figures_present_as_captions_only_in_corpus（Figure 1–7 仅标题级描述，无渲染图像可核）",
+  "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim（§3.1.2 校验句在语料中形如 '59.4 %' 后跟 '59.4\\%'、'16,794 16{,}794'，PDF 排版粘连；引文按语料逐字复制）",
+  "benchmark_eval_n_not_stated（Table 1/9/11 成绩与百分比的每基准评测集大小语料未给出，对应条目 denominator=null）"
+ ]
+}

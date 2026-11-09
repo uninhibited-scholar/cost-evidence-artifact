@@ -1,0 +1,271 @@
+{
+ "arxiv_id": "2610.00366",
+ "title": "What Should an Agent Remember? Disentangling Retention from Retrieval in Bounded-Memory Evaluation",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "single-session",
+  "carrier": "有界记忆缓冲区（容量 K）中的事实条目：合成环境为流式到达的 \"The slot is value.\" 事实串（10 facts + 2 queries 的 episode，d=0.3 干扰项同形不加标记），SQuAD 变体为目标段落的答案句 + 无关段落句子填充到 10 句；保留规则在线决定哪些条目存活（recency/random/frequency/type-oracle/unbounded），查询时选择规则对存活条目排序并暴露 top-k=3（recency/random/query(Jaccard)/dense(MPNet 768-d)/oracle）。论文明示这是 bounded streaming memory，不是跨会话长期记忆",
+  "operations_covered": [
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "本文不研究安全性质：无攻击者、无保密性/完整性/授权属性。它保护的是评测效度（measurement validity）——一个有界记忆基准的召回数字必须能归因到正确的机制：保留（retention）与检索/选择（selection）是两个不同时刻、不同信息条件下的决策，必须固定访问（access）分别比较，且 recall ≤ retention rate 构成任何选择规则的算术上界。其'失效形式'是基准层面的：访问不对称、查询模板缺陷、干扰项字面标记等附带属性会制造虚假优势（如混合格对比 +68.7pp 中 +53.2pp 其实来自访问自由而非 query awareness）",
+  "operationalized_as": "因子分解（固定访问只变选择 = +15.5pp；固定选择只变访问 = +53.2pp；混合格 = +68.7pp）+ 保留上限核验（50 个合成格与 25 个 SQuAD 格中无任何选择规则超过其行的 retention rate；MPNet dense 相对 lexical/oracle 选择器差 +0.00pp [+0.00,+0.00]）+ 319 个失败全为 eviction 的机制分类"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无攻击者模型：论文研究的是良性基准构造缺陷（最强方法可在查询时重排全史而最弱方法只见有界缓冲、查询模板缺目标 token、干扰项带字面标记）如何制造误导性结果，而非对抗行为",
+   "环境假设：每 episode 为 10 facts + 2 queries，查询指向均匀采样的非干扰项事实；保留规则永不看查询（query-independent），选择规则可在查询时感知查询；K=5、k=3 为主格",
+   "SQuAD 重跑只改变 episode 来源（300 题、真实问题、普通英文干扰项），保留/选择规则、指标与 bootstrap 原样调用"
+  ],
+  "not_covered": [
+   "对抗性记忆操纵（投毒、提示注入、恶意撤销/篡改记忆条目）完全不在范围内",
+   "跨会话/长期记忆：'Our \"delay\" is positional distance within a stream, not elapsed time or cross-session persistence: this is bounded streaming memory, not long-term memory'（§6）",
+   "更强选择器（如 cross-encoder reranker）未测，作者仅论证 ceiling 论证适用于任何 selector",
+   "未训练的线性写入门（write-gate）被排除而未报告：无 held-out split 且奖励来自 answer key（§6）"
+  ]
+ },
+ "intervention": {
+  "name": "Factorial streaming-recall benchmark: retention rule × selection rule, access held fixed, retention rate reported beside recall",
+  "mechanism_layer": "none",
+  "description": "本文是评测方法学论文，不提出记忆架构或防御干预（明言 'We contribute to the evaluation layer rather than proposing a memory architecture; our object of study is what a bounded-memory benchmark measures'）。它把有界记忆评测重构为保留规则×选择规则的因子设计，所有格共用同一批 300 个种子 episode，并排报告 recall 与作为上界的 retention rate。对综述而言它不对应任何机制层，但为记忆安全机制（撤销、保留策略、检索门控）的效果测量提供归因框架：被驱逐的记忆任何检索器都无法找回"
+ },
+ "results": [
+  {
+   "claim": "在合成流式回忆基准（K=5、k=3、informative queries、600 queries/cell）中，此前评测采用的混合格对比（unbounded+query vs recency+recency）报告 +68.7pp 的'query-aware 优势'，而固定访问后同对照只剩 +15.5pp——混合格对比报告的不是它表面上的对照",
+   "metric": "required-fact recall delta (pp)",
+   "value": "+68.7pp",
+   "setting": "合成基准，unbounded+query vs recency+recency（即先前评测的结构），informative queries，300 seeded episodes",
+   "quote": "Holding access fixed, query-aware selection buys + 15.5 +15.5 percentage points (pp) of required-fact recall (95% CI [ + 12.8 , + 18.2 ] [+12.8,+18.2] ), whereas the mixed-cell contrast used by an earlier version of this evaluation reports + 68.7 +68.7 pp [ + 65.2 , + 72.0 ] [+65.2,+72.0]",
+   "locator": "Abstract",
+   "comparison": "+15.5pp when access is held fixed",
+   "denominator": {
+    "n_total": "600 queries per cell",
+    "n_valid": "600",
+    "how_counted": "'the fraction of queries whose target fact appears among the k exposed items' (§3); all cells use the same 300 seeded episodes (600 queries), percentile bootstrap over 2,000 resamples of episodes"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "分解：固定访问只变选择给 +15.5pp，固定选择只变访问给 +53.2pp——头部效应的四分之三是'重排基线已丢弃材料'的自由（access），而非 query awareness",
+   "metric": "required-fact recall delta (pp)",
+   "value": "+15.5pp (selection at matched access)",
+   "setting": "合成基准 K=5 k=3 informative queries；recency+recency 为参照",
+   "quote": "fixing access at a bounded buffer and varying only selection gives + 15.5 +15.5 pp [ + 12.8 , + 18.2 ] [+12.8,+18.2] ; fixing selection and varying only access gives + 53.2 +53.2 pp [ + 49.7 , + 56.8 ] [+49.7,+56.8]",
+   "locator": "§4.1 RQ1",
+   "comparison": "+53.2pp from access alone",
+   "denominator": {
+    "n_total": "600 queries per cell",
+    "n_valid": "600",
+    "how_counted": "'the fraction of queries whose target fact appears among the k exposed items' (§3); all cells use the same 300 seeded episodes (600 queries), percentile bootstrap over 2,000 resamples of episodes"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "保留上限（retention ceiling）：768 维 MPNet dense 检索器对 recall 的改变为 +0.00pp [+0.00,+0.00]（对照 lexical 与 oracle 选择器，有界/无界保留皆然），且全部 50 个格中没有任何选择规则超过其行的 retention rate——recall 精确等于 retention rate，剩余失败全是 eviction",
+   "metric": "recall delta vs retention rate (pp)",
+   "value": "+0.00pp [+0.00,+0.00]",
+   "setting": "合成基准，bounded 与 unbounded retention，768-d MPNet (all-mpnet-base-v2) vs Jaccard lexical 与 oracle selector",
+   "quote": "a 768-dimensional MPNet retriever changes recall by + 0.00 +0.00 pp [ + 0.00 , + 0.00 ] [+0.00,+0.00] against both the lexical rule and an oracle selector, under bounded and unbounded retention alike, and across all 50 cells no selection rule exceeded its row’s retention rate.",
+   "locator": "§4.1 RQ1",
+   "denominator": {
+    "n_total": "600 queries per cell",
+    "n_valid": "600",
+    "how_counted": "'the fraction of queries whose target fact appears among the k exposed items' (§3); all cells use the same 300 seeded episodes (600 queries), percentile bootstrap over 2,000 resamples of episodes"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "延迟导致的驱逐不可被检索防御：recency 保留下 recall 随目标后的事实数（0-2/3-5/6-9）从 100% 跌到 58.5% 再到 0.0%；type-oracle（过滤干扰项）把悬崖推迟到 31.2% 但不能消除——查询到达时事实已被逐出，任何打分器都无法排序不存在的东西",
+   "metric": "required-fact recall (%)",
+   "value": "100% -> 58.5% -> 0.0% (recency retention)",
+   "setting": "合成基准 K=5 k=3 informative queries，query-aware selection（各行为 oracle-equivalent），delay 桶 n=188/159/253",
+   "quote": "recency retention yields 100 % → 58.5 % → 0.0 % 100\\%\\to 58.5\\%\\to 0.0\\% across delays of 0 0 2 2 , 3 3 5 5 , and 6 6 9 9 facts, and type-oracle retention 100 % → 97.5 % → 31.2 %",
+   "locator": "§4.2 Table 3",
+   "comparison": "type-oracle: 100% -> 97.5% -> 31.2%",
+   "denominator": {
+    "n_total": "600 queries in 3 delay buckets",
+    "n_valid": "188/159/253",
+    "how_counted": "Table 3 caption: n=188/159/253 queries per bucket (0-2 / 3-5 / 6-9 facts after target)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "预算扫描：recency 保留 + query 选择下 recall 随 K=2,3,5,10,20 上升 22.7→31.3→46.8→100→100；K≤k=3 时选择规则完全失效（保留的都已被暴露），query-aware 检索器只在缓冲大于检索预算时才可能起作用",
+   "metric": "required-fact recall (%)",
+   "value": "22.7% -> 46.8% -> 100% across K=2 -> 5 -> 10",
+   "setting": "合成基准，recency retention + query-aware selection，K∈{2,3,5,10,20}，informative queries",
+   "quote": "Recall under recency retention with query-aware selection rises 22.7 → 31.3 → 46.8 → 100 → 100 22.7\\to 31.3\\to 46.8\\to 100\\to 100 across K ∈ { 2 , 3 , 5 , 10 , 20 } K\\in\\{2,3,5,10,20\\} (Table 2 , Fig. 1 a).",
+   "locator": "§4.2 Table 2",
+   "denominator": {
+    "n_total": "600 queries per cell",
+    "n_valid": "600",
+    "how_counted": "'the fraction of queries whose target fact appears among the k exposed items' (§3); all cells use the same 300 seeded episodes (600 queries), percentile bootstrap over 2,000 resamples of episodes"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "基准附带属性可制造虚假优势：把干扰项加字面前缀标记（原 generator 的做法）在 uninformative queries 下把 query-aware 规则的 recall 抬高 +9.8pp（unbounded）/ +9.0pp（bounded），其余规则全部不变——打分器检测的是标记而非匹配查询",
+   "metric": "uninformative-query recall delta (pp)",
+   "value": "+9.8pp (unbounded)",
+   "setting": "合成基准 uninformative queries（查询不含任何事实 token），distractor 加 literal marker 前缀 vs unmarked",
+   "quote": "Re-marking distractors with a literal prefix, as the original generator did, raises uninformative-query recall for the query-aware rule by + 9.8 +9.8 pp [ + 7.7 , + 12.2 ] [+7.7,+12.2] unbounded and + 9.0 +9.0 pp [ + 7.0 , + 11.3 ] [+7.0,+11.3] bounded, leaving every other rule unchanged (Table 6",
+   "locator": "§4.3 Table 6",
+   "comparison": "+9.0pp (bounded)",
+   "denominator": {
+    "n_total": "600 queries per cell",
+    "n_valid": "600",
+    "how_counted": "'the fraction of queries whose target fact appears among the k exposed items' (§3); all cells use the same 300 seeded episodes (600 queries), percentile bootstrap over 2,000 resamples of episodes"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "更强检索器放大而非抵抗伪影：uninformative queries 下 dense 不塌缩到 recency（42.0% vs 31.5% 随机水平），看似从嵌入提取信号，实则暴露条目中 0.0% 是干扰项（基率 30%）——它先按基准的潜在类型结构过滤干扰项，再在 7 个相关事实中随机挑（3/7=42.9% 预测，42.0% 观测）",
+   "metric": "required-fact recall (%) / distractor exposure",
+   "value": "42.0% (dense, uninformative queries)",
+   "setting": "合成基准 uninformative queries，dense (MPNet) selection，K=5",
+   "quote": "Under uninformative queries it does not collapse onto recency , reaching 42.0 % 42.0\\% against a 31.5 % 31.5\\% chance level, readable as embeddings extracting signal where lexical overlap cannot. They do not: 0.0 % 0.0\\% of the items it exposes are distractors, against a 30 % 30\\% base rate.",
+   "locator": "§4.3 RQ3",
+   "comparison": "31.5% chance level; 0.0% distractors exposed vs 30% base rate",
+   "denominator": {
+    "n_total": "600 queries (uninformative-query grid)",
+    "n_valid": null,
+    "how_counted": "'It filters distractors from the benchmark’s latent type structure, then picks at random among the 7 relevant facts: 3 / 7 = 42.9 % 3/7=42.9% predicted, 42.0% observed' (§4.3)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "recall 预测答案正确性：无记忆时 FLAN-T5-large 得 0.0%（任务确实需要记忆）；有界 agent（K=5、query selection）recall 47.3%、答对 36.3%；全上下文 73.7%、只给目标事实 74.7%——9 个无关事实只损失 1.0pp，瓶颈是记忆不是上下文噪声",
+   "metric": "answer accuracy (%) (normalized exact match)",
+   "value": "36.3% (answer acc. at recall 47.3%)",
+   "setting": "FLAN-T5-large，greedy decoding，normalized exact match，300 queries/condition，同一批 seeded episodes",
+   "quote": "A bounded agent ( K = 5 K{=}5 , query selection) recalls the target for 47.3 % 47.3\\% of queries and answers 36.3 % 36.3\\% correctly; full context scores 73.7 % 73.7\\% and the required fact alone 74.7 % 74.7\\% , so nine irrelevant facts cost 1.0 1.0 pp and the bottleneck is memory, not context noise.",
+   "locator": "§4.4 Table 7",
+   "comparison": "full context 73.7%; required fact alone 74.7%",
+   "denominator": {
+    "n_total": "300",
+    "n_valid": "300",
+    "how_counted": "Table 7 caption: '300 queries per condition drawn from the same seeded episodes, normalized exact match'"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "有界 agent 的 63.7% 失败率分解为 52.7pp（事实从未到达模型，记忆失败）+ 12.7pp（到达但答错）：六分之五的失败是记忆失败——这把 recall 作为主指标合法化（Acc|present 仅在 70.7-74.7% 间变动）",
+   "metric": "failure rate decomposition (pp)",
+   "value": "52.7pp of 63.7pp failure rate is memory (fact never arrived)",
+   "setting": "FLAN-T5-large + bounded agent (K=5, query selection)，300 queries",
+   "quote": "The bounded agent’s 63.7 % 63.7\\% failure rate splits into 52.7 52.7 pp where the fact never arrived and 12.7 12.7 pp where it arrived and the model erred anyway: five in six failures are memory failures.",
+   "locator": "§4.4 RQ4",
+   "comparison": "12.7pp answering errors (five in six failures)",
+   "denominator": {
+    "n_total": "300",
+    "n_valid": "300",
+    "how_counted": "Table 7 caption: '300 queries per condition drawn from the same seeded episodes, normalized exact match'"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "失败机制分类：有界 agent（recency retention, query selection）的全部 319 个失败都是 eviction（目标未在保留中存活）；displacement 与 similarity confusion 均为零；换成 query-independent 选择器新增 93 个 displacement 失败——query awareness 消除了选择阶段失败模式，但对主导的驱逐模式毫无作用",
+   "metric": "failure mode classification (count)",
+   "value": "319/319 evictions (displacement 与 similarity confusion 均为零)",
+   "setting": "合成基准 K=5，bounded agent（recency retention + query selection），全部失败逐条分类",
+   "quote": "All 319 failures are evictions. Displacement and similarity confusion account for zero. Swapping in a query-independent selector on the same streams adds 93 displacement failures, so query awareness removes the selection-stage failure mode outright while leaving the dominant one untouched.",
+   "locator": "§4.5 RQ5",
+   "comparison": "+93 displacement failures with a query-independent selector",
+   "denominator": {
+    "n_total": "600 queries (bounded-agent cell; recall 46.8% at K=5, Table 1)",
+    "n_valid": "319 failures",
+    "how_counted": "'We classify every failure of the bounded agent (recency retention, query selection) into memory-specific categories: eviction, displacement, similarity confusion' (§4.5)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "中心结论在真实文本上成立：在 SQuAD v1.1 dev 的同一网格（300 题，K=5，k=3）上保留上限在全部 25 个格成立——任何地方都没有选择规则超过其行的 retention rate",
+   "metric": "retention ceiling violations (count)",
+   "value": "25/25 cells without violation",
+   "setting": "SQuAD v1.1 dev 300 题，5 保留规则 × 5 选择规则，段落切句、答案句为目标、无关段落句子填充到 10 句",
+   "quote": "The retention ceiling holds in all 25 cells: no selection rule anywhere exceeds its row’s retention rate (Table 8 ).",
+   "locator": "§5 Table 8",
+   "denominator": {
+    "n_total": "25 cells (5 retention × 5 selection)",
+    "n_valid": "25",
+    "how_counted": "no selection rule anywhere exceeds its row's retention rate (Table 8)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "SQuAD 上固定访问的 query awareness 价值 +20.3pp，高于合成基准的 +15.5pp——符合查询不再是模板时的预期；但仍有界不超过 retention ceiling",
+   "metric": "required-fact recall delta (pp)",
+   "value": "+20.3pp [+15.7,+25.0]",
+   "setting": "SQuAD v1.1 dev，matched access（有界缓冲内只变选择），K=5 k=3",
+   "quote": "Query awareness at matched access is worth + 20.3 +20.3 pp [ + 15.7 , + 25.0 ] [+15.7,+25.0] , more than the + 15.5 +15.5 pp we measured synthetically",
+   "locator": "§5 Table 8",
+   "comparison": "+15.5pp (synthetic benchmark)",
+   "denominator": {
+    "n_total": "300 questions (SQuAD v1.1 dev)",
+    "n_valid": "300",
+    "how_counted": "Table 8 caption: recall (%) of the answer-bearing sentence, 300 questions from SQuAD v1.1 dev, K=5, k=3"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "不迁移的是 dense-vs-lexical 零结果：真实文本上 dense 确实胜过 Jaccard（unbounded +6.0pp，有界缓冲 +1.7pp）——合成环境中的精确等价是 generator 的属性（informative query 与目标 token 精确匹配），不是普遍事实；但 dense 仍只能到达 ceiling，不能越过它",
+   "metric": "recall delta dense vs Jaccard (pp)",
+   "value": "+6.0pp [+3.0,+9.3] (unbounded retention)",
+   "setting": "SQuAD v1.1 dev 300 题，dense (MPNet) vs query (Jaccard) selection",
+   "quote": "On real text the dense retriever genuinely beats Jaccard, by + 6.0 +6.0 pp [ + 3.0 , + 9.3 ] [+3.0,+9.3] with unbounded retention and + 1.7 +1.7 pp [ + 0.3 , + 3.3 ] [+0.3,+3.3] under a bounded buffer.",
+   "locator": "§5 Table 8",
+   "comparison": "+1.7pp [+0.3,+3.3] under a bounded buffer",
+   "denominator": {
+    "n_total": "300 questions (SQuAD v1.1 dev)",
+    "n_valid": "300",
+    "how_counted": "Table 8 caption: recall (%) of the answer-bearing sentence, 300 questions from SQuAD v1.1 dev, K=5, k=3"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "主环境是合成的、单 episode 且很小（10 facts, 2 queries），为让选择在 informative queries 下精确可解而构造（故有 100% 上限）；§5 反驳了这一反对意见的最强形式，但两个环境都仍是单轮回忆而非多会话 agent 记忆——隔离了保留，但也意味着数字'界定'而非'估计'选择在真实语料上的贡献；若有改写、部分重叠或多跳查询，matched-access 的 query-awareness 效应可能大于测得的 +15.5pp",
+   "quote": "The main environment is synthetic, single-episode and small (10 facts, 2 queries), built so selection is exactly solvable under informative queries, hence the 100% ceilings; § 5 rebuts the strongest form of that objection but both environments are still single-turn recall rather than multi-session agent memory.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "'delay' 是流内位置距离而非经过时间或跨会话持久化：这是有界流式记忆，不是长期记忆",
+   "quote": "Our “delay” is positional distance within a stream, not elapsed time or cross-session persistence: this is bounded streaming memory, not long-term memory.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "答案正确性检验（§4.4）只用一个小模型、单一 prompt 与贪心解码，只确立 recall 在该设置下跟踪答案正确性，不刻画任何具体 agent 的行为",
+   "quote": "the answer-accuracy check of § 4.4 uses a single small model with one prompt and greedy decoding, so it establishes that recall tracks answer correctness in this setting rather than characterizing how any particular agent would behave.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "仓库中一个未训练的线性写入门被排除而未报告：它没有 held-out split 且奖励来自 answer key",
+   "quote": "We excluded rather than reported an untrained linear write-gate in the repository: it has no held-out split and its reward comes from the answer key.",
+   "locator": "§6 Limitations"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "no_appendix_in_corpus"
+ ]
+}

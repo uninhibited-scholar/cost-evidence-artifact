@@ -1,0 +1,155 @@
+{
+  "arxiv_id": "2610.19005",
+  "title": "CyberArena: Benchmarking AI Agents in Live Symmetric Attack-and-Defense Combat",
+  "screening_status": "必要背景",
+  "versions_read": ["v2"],
+  "object": {
+    "what_persists": "none",
+    "scope": "within-task",
+    "carrier": "被研究的对象是冻结的模型-脚手架（model-harness）智能体本身，不研究任何记忆/技能组件。跨轮次复用的状态存在于被攻击的服务与环境，而非智能体的可复用认知状态：每局 3 轮 x 20 分钟，防守方对服务的补丁修改跨轮持久（'Defensive service modifications persist across rounds'），攻击方植入的后门可跨轮存活，目标 flag 每轮轮换。跨局不保留任何智能体状态：466 局评估中每个 entrant 始终是冻结的生产模型+脚手架组合（Table 6），论文明确当前只测量能力而不优化能力，把'经验驱动的智能体改进 + 回到竞技场'（RAI 递归对抗改进）列为未来工作。",
+    "operations_covered": []
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "作为评估仪器而非防御机制：测量 LLM 智能体在对手实时对抗下的攻防双能力——攻击能力（对对手服务完成轮换目标的 arena 验证捕获）、防御能力（守住自己的 flag、保持服务健康检查通过）、可用性（beta-binomial 建模的健康探针通过率），经潜在能力模型（配对比较+IRT）换算到同一尺度排序。与安全边界的联系：它提供'防守方在轮间修补后攻击方是否被迫换路径'的测量环境，即本综述核心问题（攻击是否针对演化后的防御重新适应）的实证观察台；但论文自身不保护任何安全性质、不提出防御，也无失效条件的判定表述。",
+    "operationalized_as": "466 局有效比赛（12 个 entrant x 40 挑战，另有 53 局校准局）：arena 验证的捕获、每轮 flag 防守成功、健康探针通过率、首轮捕获/首次补丁部署时延；以及全量轨迹自动审计（GPT-6 Sol/GPT-6.1 Sol，2,397 条发现归并为 673 候选模式、249 个复现模式）给出的行为模式占比"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "对称设定：两个智能体在同一规则下同时扮演攻击者与防御者，从挑战定义的基线访问出发突破安全边界完成读/写/执行目标（经 MCP 工具由 arena 验证）",
+      "攻击方可植入持久后门：4% 的比赛中攻击者安装的代码在防守方部署补丁后仍可执行（如 GPT-5.6 Sol 在 Openfire 服务器植入插件，绕过入口路由补丁在第 2 轮继续捕获）",
+      "攻击方可针对防守方的修补改变策略：防守方封堵直接读 trace 端点后改走 search 端点，在第 2、3 轮继续捕获直至该路径也被封（HY4 Preview vs Claude Opus 4.8 案例）",
+      "防守方可查询对手攻击（get_attacks_received）并在轮间部署补丁；攻击流量监控（自写 packet sniffer）也被观察到"
+    ],
+    "assumptions": [
+      "所有 entrant 为冻结模型-脚手架对，跨 466 局不变；无权重更新、无跨局记忆",
+      "每局在隔离沙箱内进行（无互联网，模型请求经受限 API 路由），arena 而非智能体验证全部得分事件",
+      "每轮目标轮换且'即使既有攻击路径仍可用也必须对新目标完成捕获'，防止一次利用通吃全轮"
+    ],
+    "not_covered": [
+      "不研究智能体持久记忆/技能组件的安全：记忆与技能不是干预对象、威胁入口或被评组件，跨轮持久的是服务补丁与环境状态",
+      "无跨局学习：RAI（用对局轨迹做离线策略优化再返场）仅作为未来工作提出",
+      "DoS、多智能体群攻不在范围内（作者自述）；12 个模型-脚手架组合与 40 挑战之外的生态未覆盖",
+      "审计发现 6 次（占 1,336 次已接受捕获的 0.45%）经重放 arena 签名请求或读取对手 objective journal 的捷径捕获仍计入排名"
+    ]
+  },
+  "intervention": {
+    "name": null,
+    "mechanism_layer": "none",
+    "description": "本文是基准/评估平台论文，不提出防御干预。对本综述的价值在于它把'静态目标基准'换成'活体对称对抗'：防守方轮间修补改变攻击条件，攻击方必须对演化后的防御重新适应（对手修补后捕获率随轮次下降；补丁部署后守旗率 60% vs 未部署 9%）。它支撑本综述'防御记忆与安全演化'分支的评估问题——如何在活体对抗下测量演化能力——但未涉及任何持久记忆机制本身。"
+  },
+  "results": [
+    {
+      "claim": "活体对抗下攻击成功率随轮次显著衰减：在三个模型都能单独解出的 30 个挑战上，GPT-5.6 Sol 第 3 轮捕获率降到 52%，Claude Opus 4.8 与 GLM-5.3 降到 37% 与 35%，作者归因于防守方轮间修补迫使攻击方重新适应。",
+      "metric": "per-round capture rate (contested)",
+      "value": "52% / 37% / 35% (round 3, per agent)",
+      "comparison": null,
+      "setting": "solo-solved-by-all-3 挑战的对抗局（Figure 11b），95% bootstrap 区间（挑战重采样、局重采样）",
+      "quote": "By round 3, GPT-5.6 Sol sustains a 52% capture rate, whereas Claude Opus 4.8 and GLM-5.3 drop to 37% and 35%, respectively. The decline is consistent with defenders patching between rounds, which forces attackers to adapt to keep their access.",
+      "locator": "§5.4 Adversarial Evaluation and Benchmark Saturation",
+      "denominator": {
+        "n_total": "30 个挑战（40 个参考挑战中三模型 solo 均解出者）上的对抗局，分轮捕获率；各轮局数未逐轮列出（Figure 11b）",
+        "n_valid": "同一 30 挑战对抗局集合的逐轮捕获率；单轮尝试数的整数分母未在正文给出",
+        "how_counted": "捕获轮次 / 对抗局轮次，按 95% bootstrap 区间报告（对挑战与局重采样）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "防守方轮间部署补丁与守住 flag 强关联：部署补丁的防守者在下一轮守旗率 60%，未部署者仅 9%；作者明确这是关联而非防御有效的证明。",
+      "metric": "flag retention after patching",
+      "value": "60% vs 9%",
+      "comparison": "deployed patch 60% vs did not deploy 9%",
+      "setting": "第 1-2 轮中被接受捕获丢旗且存在可观察下一轮的防守方轮次（466 局全量事件测量）",
+      "quote": "Defenders that deploy a patch keep their flag in 60% of the following rounds, against 9% of those that do not, an association rather than proof that the defenses worked.",
+      "locator": "§5.3 Behavior Under Live Opposition",
+      "denominator": {
+        "n_total": "第 1-2 轮丢旗且有可观察下一轮的防守方轮次（整数分母未在正文给出）",
+        "n_valid": "同上集合按是否部署补丁分组的下一轮守旗率",
+        "how_counted": "下一轮守住 flag 的比例；分组条件为下一轮开始前是否部署补丁"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "攻击方对演化后防御的再适应是普遍行为：丢旗防守者 67% 会查询打向自己服务的攻击、57% 在下一轮开始前部署补丁；攻击方则利用修补留下的路径——21% 的被审计比赛中部分补丁封住一个入口而另一条已观察到的路径仍开放。",
+      "metric": "defensive response rate / partial-patch rate",
+      "value": "67% 查询攻击、57% 部署补丁；21% 比赛出现 partial patch 被利用",
+      "comparison": null,
+      "setting": "466 局：事件测量（防守响应）+ 全量轨迹自动审计（行为模式，模式可重叠）",
+      "quote": "In rounds 1–2 in which a defender loses its flag, it queries the attacks fired against its service in 67% of cases and deploys a patch before the next round starts in 57%.",
+      "locator": "§5.3 Behavior Under Live Opposition",
+      "denominator": {
+        "n_total": "防守响应率：第 1-2 轮丢旗且有可观察下一轮的防守方轮次；21% partial patch：466 局审计比赛",
+        "n_valid": "partial patch 的分母即全部 466 局（含至少一条该类发现的比赛占比）；防守响应率的整数分母未给出",
+        "how_counted": "行为模式占比 = 含至少一条对应发现（归为 agent error）的比赛 / 466 局；事件测量为相应条件下的事件占比"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "攻击方可跨轮持久化：4% 的比赛中攻击者安装的代码在防守方部署补丁后仍可执行；防守方常见失败还包括凭过时证据宣称修复成功（23%）与授权修补拒绝合法请求（8%）。",
+      "metric": "agent-error pattern prevalence (share of audited games)",
+      "value": "persistent attacker code 4%；unverified fix claim 23%；over-blocking patch 8%",
+      "comparison": null,
+      "setting": "466 局全量轨迹自动审计，模式可重叠，按局计一次",
+      "quote": "Attackers likewise install backdoors to preserve access, and in 4% of the games attacker-installed code remains executable after the defender deploys a patch.",
+      "locator": "§5.3 Table 3",
+      "denominator": {
+        "n_total": "466 局（每类按含至少一条发现的比赛计）",
+        "n_valid": "同上；作者注明这些是记录发现而非每动作失败率",
+        "how_counted": "含至少一条该类 agent-error 发现的比赛 / 466 局"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "排名结果：GPT-5.6 Sol（78.6%）与 Claude Opus 5（73.8%）显著领先其余 entrant（第三 GLM-5.3 68.5%），攻防能力高度相关（Pearson r，Figure 4b），且领先者守旗率 83%/81% 远高于其余 43-61%。",
+      "metric": "posterior mean expected score (0-100%)",
+      "value": "GPT-5.6 Sol 78.6 [76.8, 80.2]；Claude Opus 5 73.8 [72.1, 75.4]",
+      "comparison": "12 entrants，Table 2",
+      "setting": "466 局有效评估赛程（22 批次），40 参考挑战统一加权，后验期望分 + 90% 可信区间",
+      "quote": "GPT-5.6 Sol (79%) and Claude Opus 5 (74%) lead the rest of the field, headed by GLM-5.3 (69%)",
+      "locator": "§5.2 Table 2",
+      "denominator": {
+        "n_total": "466 局有效比赛；各 entrant 62-91 局（Table 2 Games 列）",
+        "n_valid": "同上；有效比赛计入，失败局重赛",
+        "how_counted": "潜在能力模型后验期望分，均匀平均在其他 entrant 与 40 参考挑战上；90% 模型条件可信区间"
+      },
+      "is_primary_result": true
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "功能检查可能漏检部分退化或未测路径上的故障；个别案例中防御对健康检查器与其他客户端区别对待（按网络地址/账户识别 checker，7 局被标记）。",
+      "quote": "CyberArena relies on automated functionality tests to determine whether defended services remain operational, but passing checks may miss partial degradation or failures on untested paths.",
+      "locator": "§6 Conclusion and Limitations"
+    },
+    {
+      "statement": "只测能力不优化能力：把对局轨迹用于经验驱动改进（RAI 递归对抗改进）列为未来工作——即攻击-防御在学习意义上的共演化在本文中尚未闭合。",
+      "quote": "Currently, CyberArena measures capability without optimizing it.",
+      "locator": "§6 Conclusion and Limitations"
+    },
+    {
+      "statement": "轨迹审计由 LLM 完成且有证据边界：'These procedures support traceability but do not constitute independent human verification of every finding'；6 次捷径捕获（0.45%）保留在排名中。",
+      "quote": "These procedures support traceability but do not constitute independent human verification of every finding.",
+      "locator": "§5.3 Analysis setup"
+    },
+    {
+      "statement": "行为模式对比受挑战组合、修补活动与动作记录缺失影响（尤其 Grok 4.6 记录稀疏）；频率是按局计的发现占比，不是每动作失败率。",
+      "quote": "Challenge mix, repair activity, and missing action records affect the comparison, particularly for Grok 4.6, whose sparse records limit interpretation of its low recorded frequencies.",
+      "locator": "§5.3 Defensive patches often remain incomplete or unverified"
+    }
+  ],
+  "reproduction": {
+    "code": "项目页提供编排平台、筛选管线与 40 个挑战环境（按负责任披露发布）；对局轨迹将在审查与脱敏后发布",
+    "data": "saarCTF/FAUST/DEF CON CTF 攻防存档 + CISA KEV/OSV 公开漏洞咨询",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix-partial", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "benchmark_only_no_persistent_state_mechanism",
+    "llm_audited_trajectories",
+    "denominator_partially_reported"
+  ]
+}

@@ -1,0 +1,30 @@
+{"pair": "2503.18813|2506.12104", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "A count of successful attacks over 949 cases and a targeted ASR over 629 cases report one quantity at two normalisations: the share of injections that reach the attacker's goal. The endpoint does not break; 949 cases on GPT-4o against 629 on GPT-4o-mini does."}
+{"pair": "2503.18813|2608.21159", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2503.18813|2609.34132", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2503.18813|2609.36603", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "The count and the adaptive ASR both report the share of attacks that succeed against the deployed agent. Population breaks first (AgentDojo 949 against 320 HarmBench behaviours on a different backbone); the adaptive attack is a further difference the declared order does not reach."}
+{"pair": "2503.18813|2610.01349", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "0/30 is an ASR written as a fraction with a Wilson interval, the same share-of-successful-attacks quantity as the 949-case count. The case sets differ (30 out-of-authority parts, Banking excluded), which is population."}
+{"pair": "2506.12104|2608.21159", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "Oracle-confirmed unsafe effects are the success criterion of the injection, not a different quantity from ASR. 629 cases on GPT-4o-mini against 144 episodes on two backbones is the population difference."}
+{"pair": "2506.12104|2609.07529", "model_term": "A", "verdict": "override", "author_term": "P", "note": "The endpoint does not break: both sides report attack success. Population breaks, and attack strength also differs (suite injection against learned adaptive attacks)."}
+{"pair": "2506.12104|2609.33910", "model_term": "A", "verdict": "override", "author_term": "E", "note": "The left value is a level of ASR (1.4%); the right is an increment of ASR (up to +35.1 pp, accumulated against the study's own control). A level and an increment are not one endpoint, and the increment states no baseline absolute value, so neither can be subtracted from 1.4%."}
+{"pair": "2506.12104|2609.34132", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2506.12104|2609.36603", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2506.12104|2610.01349", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2604.16968|2610.19422", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2606.05743|2609.36603", "model_term": "A", "verdict": "override", "author_term": "P", "note": "Both sides use 320 HarmBench behaviours, but the target is not the same model (Qwen3-8B on the left, DeepSeek-V4-Flash on the right), and the X-Teaming side states no denominator."}
+{"pair": "2608.00426|2608.03509", "model_term": "P", "verdict": "override", "author_term": "E", "note": "The left card reports ASR@3 (0.9%) and defence success MDSR@3 (74.3%); the right reports an LLM-judge detection rate over poisoned skills (98.5% to 11.4%)."}
+{"pair": "2608.00426|2610.25707", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "A wrong-token run is a successful credential-misuse effect, the same successful-attack quantity as RDA@3. The case sets are LongMemEval-MemoryGraft against 60 AppWorld tasks, which is population."}
+{"pair": "2608.03509|2610.31446", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2608.21159|2609.34132", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2608.21159|2609.36603", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "Unsafe-effect counts and adaptive ASR both measure the share of injections that reach the attacker's goal. AgentDojo 144 episodes against 320 HarmBench behaviours is the population difference; the adaptive attack is a third difference the order does not reach."}
+{"pair": "2608.21159|2610.01349", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": "0/30 is the same share as an unsafe-effect count: both are success at the effect level. 144 episodes on two backbones against 30 out-of-authority parts is the population difference."}
+{"pair": "2609.07529|2609.33910", "model_term": "A", "verdict": "override", "author_term": "E", "note": "The left is a level of ASR (0.22 +/- 0.13%); the right is an ASR increment (up to +35.1 pp against its own control), so the two are not one endpoint."}
+{"pair": "2609.07529|2609.34132", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2609.07529|2609.36603", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2609.07529|2610.01349", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2609.33910|2609.34132", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2609.33910|2609.36603", "model_term": "P", "verdict": "override", "author_term": "E", "note": "The left is an ASR increment (up to +35.1 pp against the control, with no baseline absolute value); the right is a level of adaptive ASR (17.8% / 7.8%)."}
+{"pair": "2609.33910|2610.01349", "model_term": "P", "verdict": "override", "author_term": "E", "note": "The left is an ASR increment (up to +35.1 pp, no baseline absolute value); the right is a level of ASR (0/30, Wilson upper bound 11.4%)."}
+{"pair": "2609.34132|2609.36603", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2609.34132|2610.01349", "model_term": "E", "verdict": "confirm", "author_term": "E", "note": ""}
+{"pair": "2609.36603|2610.01349", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}
+{"pair": "2610.19422|6caf23c8ecb9", "model_term": "P", "verdict": "confirm", "author_term": "P", "note": ""}

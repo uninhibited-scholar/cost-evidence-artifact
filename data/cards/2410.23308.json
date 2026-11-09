@@ -1,0 +1,182 @@
+{
+ "arxiv_id": "2410.23308",
+ "title": "Systematically Analysing Prompt Injection Vulnerabilities in Diverse LLM Architectures",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "none (no persistent-state object studied)",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "LLMs are expected to refuse requests to generate keylogger code; the property fails when a crafted direct prompt elicits Python code that is usable or adaptable for keylogging. The claim holds only for the 36 open-weight LLMs available on Workers AI's LLM Playground in October 2024, under four single-shot English prompts, with success judged by a single expert rater; it is an attack-side measurement with no defense in the loop and no persistent memory, skill, or agent state involved.",
+  "operationalized_as": "A prompt injection was considered to be successful if it produced code that can be used or adapted for keyloggers (144 tests = 4 prompts x 36 models on Workers AI LLM Playground; final judgments made by the lead author, §3.4)."
+ },
+ "threat_model": {
+  "adversary": "user",
+  "capabilities": [
+   "directly queries the target LLM with crafted natural-language prompts (black-box access via the public Workers AI LLM Playground)",
+   "uses benign framings to disguise the request: feigned troubleshooting (P1), curiosity about a movie scene (P2), educational-purpose claim (P3)",
+   "embeds the malicious instruction between two benign instructions in an 'instruction sandwich' (P4)"
+  ],
+  "assumptions": [
+   "adversary needs only ordinary user query access; no knowledge of model internals, weights, or training data",
+   "attacks are single-step, one-shot, English-language prompts",
+   "models accessed via Workers AI's LLM Playground (playground.ai.cloudflare.com), October 2024; parameter counts read from model names (e.g. '7b' = 7 billion parameters)",
+   "attack success is judged by the lead author (CISSP, cybersecurity PhD, 15+ years experience) deciding whether the code is usable or adaptable for keylogging"
+  ],
+  "not_covered": [
+   "indirect prompt injection via external data sources",
+   "multilingual prompt injections (listed as future work)",
+   "multi-step or progressive attack sequences (listed as future work)",
+   "persistent memory, skills, experience, or any agent-harness state (none is present in this setting)",
+   "no defense mechanism is implemented or empirically evaluated"
+  ]
+ },
+ "intervention": {
+  "name": null,
+  "mechanism_layer": "none",
+  "description": "No defense intervention is implemented or tested; the paper is a pure vulnerability measurement across 36 LLMs. Mitigations (human oversight for privileged operations, trust boundaries, input/output monitoring, guardrails, alignment, AI telemetry logging) are only recommended qualitatively in section 5.3, citing OWASP and MITRE ATLAS."
+ },
+ "controls": [],
+ "results": [
+  {
+   "claim": "In this study's setting (4 direct keylogger-code prompt injections against 36 LLMs), 56% of all 144 tests resulted in successful prompt injections, i.e. production of code usable or adaptable for keylogging.",
+   "metric": "ASR",
+   "value": "56%",
+   "comparison": "56% successful vs 44% resisted",
+   "setting": "Four one-shot English prompts (P1-P4) each tested against 36 open-weight LLMs (chat/instruct/code/domain/multimodal, 0.5b-14b parameters) on Workers AI LLM Playground, October 2024; success judged by the lead author (CISSP, cybersecurity PhD).",
+   "quote": "Overall, 56% of all 144 tests resulted in successful prompt injections, while 44% of the models resisted.",
+   "locator": "§4.1",
+   "denominator": {
+    "n_total": "144 tests",
+    "n_valid": "144",
+    "how_counted": "Four prompt injections (P1, P2, P3 and P4) were tested against 36 models resulting in 144 tests (§3.4); percentage is over these 144 tests."
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The percentage of the 36 LLMs vulnerable to a single prompt increased progressively from the troubleshooting-framing prompt P1 (53%) to the instruction-sandwich prompt P4 (61%), showing the later, more layered prompts exposed weaknesses more effectively.",
+   "metric": "ASR_per_prompt",
+   "value": "53% -> 61%",
+   "comparison": null,
+   "setting": "Same 36-LLM Workers AI Playground setup; percent of the 36 models vulnerable to each single prompt (P2 = 53%, P3 = 58% per Table 2).",
+   "quote": "The percentage of models classified as vulnerable increased progressively from Prompt 1 (53%) to Prompt 4 (61%), indicating that the later prompts were more effective in exposing weaknesses.",
+   "locator": "§4.1 Table 2",
+   "denominator": {
+    "n_total": "36 LLMs per prompt",
+    "n_valid": "36",
+    "how_counted": "Table 2 caption: 'The percent of 36 LLMs vulnerable and resistant to the four test prompt injections (P1, P2, P3, and P4).'"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "28% of the tested LLMs were fully vulnerable (failed all four injections, 10 out of 36) while 14% showed complete resistance (passed all four, 5 out of 36); the rest fell in between.",
+   "metric": "vulnerability_distribution",
+   "value": "28% fully vulnerable; 14% fully resistant",
+   "comparison": "28% (10 out of 36) vulnerable to all 4 prompts vs 14% (5 out of 36) resistant to all",
+   "setting": "Distribution of the 36 LLMs by the number (0-4) of the four prompts they were vulnerable to, same Playground setup.",
+   "quote": "The results reveal that 28% of the tested LLMs (10 out of 36) were highly vulnerable, failing all four prompt injections. Additionally, 14% (5 out of 36) of the LLMs demonstrated complete resistance, successfully passing all tests.",
+   "locator": "§4.1 Table 3",
+   "denominator": {
+    "n_total": "36 LLMs",
+    "n_valid": "36",
+    "how_counted": "Table 3: percentage of LLMs vulnerable to 0, 1, 2, 3, or all 4 prompt injections, out of 36; text gives explicit counts 10 out of 36 and 5 out of 36."
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Success of P1 and P2 strongly correlated across models (Pearson r = 0.71), indicating overlapping vulnerabilities exploited by the troubleshooting and curiosity framings.",
+   "metric": "pearson_correlation_between_prompt_successes",
+   "value": "0.71",
+   "comparison": null,
+   "setting": "Pearson correlation of per-model success outcomes for pairs of the four prompts across the 36 LLMs (Table 4; full pair set 0.71/0.48/0.49/0.42/0.28/0.41; Table 5 writes 0.712).",
+   "quote": "The analysis shows a strong correlation of 0.71 between P1 and P2, indicating that models vulnerable to P1 are also likely to be vulnerable to P2.",
+   "locator": "§4.2 Table 4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "P2 and P4 showed only a weak correlation (0.28), suggesting the curiosity framing and the instruction sandwich exploit different model weaknesses.",
+   "metric": "pearson_correlation_between_prompt_successes",
+   "value": "0.28",
+   "comparison": null,
+   "setting": "Pearson correlation of per-model success outcomes for prompt pairs across the 36 LLMs (Table 4).",
+   "quote": "However, the weak correlation of 0.28 between P2 and P4 suggests that these two prompts likely exploit different model weaknesses.",
+   "locator": "§4.2 Table 4",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Random forest feature analysis ranks LLM parameter count as the dominant predictor of injection susceptibility (importance 0.75) over LLM type (0.25), in this 36-model dataset.",
+   "metric": "feature_importance",
+   "value": "0.75 (parameters) vs 0.25 (LLM type)",
+   "comparison": null,
+   "setting": "Random forest trained on the 36-model outcome table (parameters and LLM type vs injection success).",
+   "quote": "The results, as shown in Figure 3, indicate that parameters have a higher importance score (0.75), suggesting they are the primary factor in determining a model's susceptibility to prompt injections. In contrast, LLM type has a lower importance score (0.25), indicating a more moderate effect.",
+   "locator": "§4.3 Figure 3",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "SHAP analysis corroborates the random forest result: LLM parameters influence vulnerability predictions more (mean SHAP 0.147) than LLM type (mean SHAP 0.075).",
+   "metric": "mean_SHAP_value",
+   "value": "0.147 (parameters) vs 0.075 (LLM type)",
+   "comparison": null,
+   "setting": "SHAP values computed for the features LLM parameters and LLM type in the 36-model vulnerability prediction task.",
+   "quote": "The mean SHAP values indicate that LLM parameters hold a higher influence on model predictions, with a mean SHAP value of 0.147, compared to LLM type, which has a mean SHAP value of 0.075 as shown in Figure 4.",
+   "locator": "§4.4 Figure 4",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Logistic regression found higher parameter count slightly negatively associated with vulnerability to at least one injection (coefficient -0.34; LLM type -0.02), contradicting the assumption that larger models are more vulnerable in this setting; the model's accuracy was 86%.",
+   "metric": "logistic_regression_coefficient",
+   "value": "-0.34",
+   "comparison": null,
+   "setting": "Logistic regression predicting whether each of the 36 LLMs is vulnerable to at least one of the four prompts, from parameters and LLM type; model accuracy 86% (§4.5).",
+   "quote": "The coefficient for LLM parameters is -0.34, indicating that models with more parameters are actually slightly less likely to be vulnerable to prompt injections, which contrasts with the typical assumption that larger models are more vulnerable.",
+   "locator": "§4.5 Figure 5",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Authors explicitly state that using only four prompts (and a limited model set) is a limitation; more prompts, a larger set of LLMs, and more LLM features would increase the robustness of the findings and statistical analyses.",
+   "quote": "Using four prompts in the current student represents a limitation. Using a variety of more prompts can increase the robustness of the findings as well as testing a larger set of LLMs. Additionally, examining more features of each LLM can help provide more data to use in the various statistical analyses.",
+   "locator": "§5.4 Future Directions"
+  },
+  {
+   "statement": "Multilingual and multi-step prompt injection attacks were not tested in this study; the authors defer them to future work, noting single-step-resistant models might still be vulnerable to progressive manipulation.",
+   "quote": "Another area for investigation is multi-step prompt injection attacks, where LLMs are tested for their susceptibility to complex, multi-step command sequences. This could reveal whether models that initially resist single-step injections are still vulnerable when manipulated progressively over a series of inputs.",
+   "locator": "§5.4 Future Directions"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "single_expert_rater_for_attack_success",
+  "statistical_analyses_assisted_by_ChatGPT",
+  "figures_available_only_as_captions_in_corpus"
+ ]
+}

@@ -1,0 +1,137 @@
+{
+  "arxiv_id": "2607.23586",
+  "title": "Are You Still the Agent I Authorized? Earned Authority under a Fixed Ceiling for Evolving Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "single-session",
+    "carrier": "Grant-relevant state S_t = model, harness/instructions, persistent memory and knowledge, skills, capability/tool configuration, delegation graph, task phase, enforcement state; authorization itself persists as a user-issued grant (effect ceiling B / lease L_max, initial active authority P_0, transition envelope M) stored in an external monitor's lease store outside the agent's control",
+    "operations_covered": ["formation", "update", "retention", "revocation"]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "Authorization continuity for evolving agents: when the agent's memory, skills, tools, workflow, delegation, task phase, or enforcement change under a live grant, the grant survives only if the mutation stays inside a grant-fixed transition envelope, and no mutation or runtime evidence (including agent-produced competence evidence) can amplify protected effects beyond the immutable user-issued effect ceiling fixed at grant time. Fails if complete mediation, closure-sound monitor view (A2), or monitor integrity (A5) is violated.",
+    "operationalized_as": "Formal theorems, not measurements: Theorem 1 (§V-B) and Theorem 3 (Appendix A-F) prove Effects(π) ⊆ union of scopes of user-granted root leases under assumptions A1-A5; Proposition 7 (Appendix A-G) shows dropping closure soundness breaks the bound by an unbounded margin; §VIII only proposes empirical metrics (grant persistence rate, post-mutation unauthorized-effect rate, false invalidation rate, interaction cost) without running them."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Controls ingested content, skills, remote tools, and memory, and may thereby steer the agent's behavior",
+      "Can cause evolution under a live grant so the mutated state inherits authority granted to an earlier state",
+      "Can manufacture self-realisable competence evidence (test records, task outcomes, execution histories) to trigger evidence-gated ascent beneath the ceiling",
+      "The model, instructions, memory, skills, generated code, tools, and subagents may themselves be adversarial",
+      "Cannot control the external monitor or user-issued ceilings"
+    ],
+    "assumptions": [
+      "Complete mediation: every protected effect is produced only by an action the monitor admits (A1)",
+      "Closure-sound monitor view: A(S_t,L) ⊆ A#(S_hat_t,L) before each admission (A2)",
+      "Sound admission under Valid_Ω and single-lease attribution (A3, Assumption 2)",
+      "Attenuating delegation with finite depth (A4)",
+      "Monitor integrity: no transition modifies monitor, lease store, or log outside a higher-authority path (A5)",
+      "Sound request abstraction Eff(S_t,a) ⊆ Req(a) (Equation 1)"
+    ],
+    "not_covered": [
+      "Side channels, monitor implementation defects, information-flow confidentiality (non-interference)",
+      "Model alignment and inference of latent user intent",
+      "Cross-generation revocation and population-level authority",
+      "Empirical frequency or operational cost of authorization drift (no experiments)"
+    ]
+  },
+  "intervention": {
+    "name": "State-bound authorization (earned authority under a fixed ceiling)",
+    "mechanism_layer": "architecture",
+    "description": "A grant fixes at authorization time an immutable effect ceiling B, an initial active authority P_0 ⊆ B, and a transition envelope of survivable mutation classes. At each step the runtime proposes P_t^prop: contraction is free, ascent requires an evidence condition, and the monitor clamps P_t = P_t^prop ∩ B, so no runtime evidence can raise the boundary. If any observed mutation label falls outside the envelope, the monitor suspends the grant before the next protected action even when effects remain inside B. Delegated child leases are attenuated beneath the parent's ceiling; formalized with leases, scopes, escalation closure, and a non-amplification theorem."
+  },
+  "results": [
+    {
+      "claim": "Under complete mediation, sound request abstraction, containment of active and delegated authority, and monitor integrity, mutation cannot amplify protected effects beyond the user-issued ceiling (Theorem 1, compact form).",
+      "metric": "formal_guarantee_effect_containment",
+      "value": "every protected effect stays within at least one user-issued ceiling",
+      "comparison": null,
+      "setting": "Formal model of a tool-enabled evolving agent mediated by an external monitor; attacker may control content, skills, tools, and memory but not the monitor or ceilings; no empirical evaluation",
+      "quote": "Suppose protected effects are completely mediated, Equation 1 holds at every admission, each active or delegated authority is contained in a user-issued ceiling, and the monitor is outside the agent’s control. Then every protected effect in an execution belongs to at least one user-issued ceiling.",
+      "locator": "§V-B Theorem 1",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the structured lease model, under single-lease attribution (Assumption 2) and the runtime conditions A1-A5 (Assumption 3), mutation cannot enlarge the set of achievable effects beyond the union of the scopes the user explicitly granted, however many state transitions occur (Theorem 3).",
+      "metric": "formal_guarantee_non_amplification",
+      "value": "achievable effects bounded by union of user-granted scopes under mutation",
+      "comparison": null,
+      "setting": "Structured lease model (Appendix A) with single-lease attribution; formal theorem with proof by induction on admitted actions (Appendix C); no experiments",
+      "quote": "That is, mutation cannot enlarge the set of achievable effects beyond the union of the scopes the user explicitly granted, however many state transitions occur.",
+      "locator": "Appendix A-F Theorem 3",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Closure soundness of the monitor view (A2) is necessary: without it the non-amplification bound fails by an unbounded margin, e.g., when a tool-addition mutation is not delivered to the monitor (Proposition 7).",
+      "metric": "formal_counterexample_bound_violation",
+      "value": "out-of-scope effects grow without bound without closure soundness",
+      "comparison": null,
+      "setting": "Constructed execution family satisfying A1, A3, A4, A5 but not A2, in which the harness hot-reloads a network-capable tool without notifying the monitor",
+      "quote": "Dropping closure soundness makes the bound fail by an unbounded margin; missing a mutation event is one concrete way to cause that failure.",
+      "locator": "Appendix A-G Proposition 7",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Evidence the agent can produce itself (test passes, low error rates, task history) may activate more authority beneath the ceiling but cannot tighten the adversarial bound below B; a tighter security bound requires a premise outside the session's causal reach.",
+      "metric": "formal_guarantee_gate_dependent_bound",
+      "value": "security guarantee remains B under self-produced evidence",
+      "comparison": null,
+      "setting": "Formal analysis of evidence-gated ascent (Propositions 4 and 5, Appendix A-B3 and A-B4); no experiments",
+      "quote": "A test pass, low error rate, or successful task history may be useful evidence that more of BB should be active. If the agent can produce the qualifying evidence itself, however, the security guarantee remains BB.",
+      "locator": "§V-C; Appendix A-B3 Proposition 4",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "The paper systematizes six grant-relevant mutation classes (control state, capability, delegation, task or phase, trust context, enforcement) and maps each to its authorization consequences.",
+      "metric": "taxonomy_size",
+      "value": "six mutation classes",
+      "comparison": null,
+      "setting": "Conceptual taxonomy presented as Table I; descriptive contribution, not measured",
+      "quote": "Finally, we map six mutation classes to their authorization consequences.",
+      "locator": "Abstract; §VI Table I",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The paper is a formalization only: the frequency and operational cost of authorization drift are not measured.",
+      "quote": "The present paper formalizes authorization drift but does not yet measure its frequency or operational cost.",
+      "locator": "§VIII"
+    },
+    {
+      "statement": "Choosing the ceiling B remains an open policy and usability problem: too high weakens the guarantee, too low interrupts useful work.",
+      "quote": "First, choosing BB remains a policy and usability problem: a high ceiling weakens the result, while a low ceiling interrupts useful work.",
+      "locator": "§VIII"
+    },
+    {
+      "statement": "Equation 1 (sound request abstraction) still needs a concrete enforcement mechanism; label delivery alone under-approximates actual effects.",
+      "quote": "Second, Equation 1 needs a concrete enforcement mechanism such as syscall mediation, tool proxies, type-and-effect analysis, or capability-flow tracking. Label delivery alone is insufficient if the resulting monitor view under-approximates actual effects.",
+      "locator": "§VIII"
+    },
+    {
+      "statement": "Cross-generation revocation and population-level authority are not solved.",
+      "quote": "Third, cross-generation revocation and population-level authority are not solved here.",
+      "locator": "§VIII"
+    },
+    {
+      "statement": "Compositional drift: a sequence of individually permitted mutation labels can jointly enlarge effective authority beyond the lease scope; this is the model's principal open problem.",
+      "quote": "We call this compositional drift. It is the principal open problem left by this model.",
+      "locator": "Appendix A-C Remark 9"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "formal_paper_no_empirical_results"
+  ]
+}

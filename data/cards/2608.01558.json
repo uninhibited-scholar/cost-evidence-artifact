@@ -1,0 +1,105 @@
+{
+ "arxiv_id": "2608.01558",
+ "title": "Securing Agentic AI: From Per-Action Checks to Trajectory Assurance",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "智能体长期记忆/RAG 检索库；跨推理步与跨会话演化的执行上下文与系统状态（如 A2A 共享 contextId）；第三方工具定义/元数据与技能文档（SKILL.md、editor rules files）",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "核心安全性质是行为轨迹层面的 policy-compliance：一串各自被允许的动作不得共同违反治理标准定义的系统级不变量（状态条件化时序性质，如 5G 公共安全切片恢复窗口、FHIR 观察窗口），即行为须保持在 governing standards 规定的 behavioral envelope 内；该性质无需对抗输入即可失效，由执行轨迹而非单个动作判定。同时覆盖记忆/上下文/工具接口的 integrity（prompt injection、记忆投毒、rug pull）、confidentiality（上下文外泄，如 EchoLeak）与 availability（denial-of-wallet、MoE 专家失衡 DoS）。",
+  "operationalized_as": "论文未做实验；提出以\"可验证行为不变量\"操作化：运行时校验演化中的执行轨迹满足由治理标准导出的系统级行为约束（\"verify that evolving execution trajectories satisfy system-level behavioral constraints, establishing safety over the lifetime of an execution rather than at individual decision points\"，§5），并将上下文所有权、能力 attestation 等作为协议级可验证不变量（§3）"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "在检索通道（网页、文档、数据库、邮件）植入可被智能体当作指令的内容；EchoLeak/CVE-2025-32711 证明可无用户交互外泄 M365 Copilot 敏感上下文",
+   "向智能体记忆/知识库注入少量投毒条目实现后门（AgentPoison：poisoning rate below 0.1%，良性表现不变）",
+   "发布恶意 MCP 工具服务器、在工具元数据嵌入指令，或 rug pull——被信任后静默替换工具定义且客户端不复验",
+   "供应链投毒：postmark-mcp 正常十五个版本后单行代码窃取外发邮件；SKILL.md/editor rules 文件可隐藏指令",
+   "在 A2A 中以有效 contextId 附着他人上下文、读取累积历史、投毒后续任务而不触发任务级控制；自声明 Agent Card 能力骗取敏感任务并返回伪造产物",
+   "跨委托链重放无发送方约束的中继凭据",
+   "构造 token 序列操纵模型路由：迫使成本膨胀升级，或降级到更弱对齐模型实现 jailbreak-by-downgrade",
+   "在 MoE 模型内部压制安全关键专家、经跨批次路由依赖泄露 prompt、经专家失衡触发 DoS",
+   "prompt infection 使恶意指令在多智能体间自我复制传播；零点击 GenAI 蠕虫在宿主应用间扩散"
+  ],
+  "assumptions": [
+   "智能体上下文中数据与指令缺乏可靠分离，非信任内容可影响推理并外溢为下游动作",
+   "工具/模型/包在部署时一次性信任，此后行为不被持续验证（信任非静态）",
+   "A2A 身份仅在传输层建立、不跨委托跳传播；Agent Card 能力自声明、无 attestation 或 challenge-response",
+   "现有运行时防护为无状态、逐动作策略，不建模系统状态沿长轨迹的演化",
+   "轨迹级违规（5G 调度/FHIR 出院例）在无任何对抗输入时也会发生",
+   "部署环境受显式成文的治理约束（organizational policies、regulatory requirements、technical standards）"
+  ],
+  "not_covered": [
+   "本文为 vision paper，不提出完整解决方案，无任何防御实现或实验评估",
+   "对模型与推理层级的跨联邦妥协，现有协议级防御无形式化保证（论文指出但未解决）",
+   "路由组件（权重、训练数据、决策阈值）的 provenance 现有框架不覆盖（论文指出但未给出方案）",
+   "LLM-to-formal-spec 编译器无法保证 completeness、consistency 或对治理标准的 faithfulness",
+   "审计机制未标准化、非强制，且引入隐私与成本权衡，未解决"
+  ]
+ },
+ "intervention": {
+  "name": "Trajectory assurance / behavioral trajectory containment（愿景级提议，无实现）",
+  "mechanism_layer": "formal",
+  "description": "论文主张从逐动作检查转向轨迹保证：在运行时校验演化中的执行轨迹是否满足由治理标准导出的系统级状态条件化行为不变量（区别于现有无状态 runtime guards、不锚定治理策略的 formal-spec 编译器与概率监控），使安全成为智能体全生命周期上可验证的属性；并要求把上下文所有权、能力 attestation（§3）、路由 policy artifact 的可验证编译（§4）与端到端审计性（§6）作为架构/协议层的可验证不变量。论文本身不含机制实现或评测。"
+ },
+ "results": [],
+ "limitations": [
+  {
+   "statement": "作者明示本文为 vision paper，不提出完整解决方案，仅识别根本挑战与研究机会",
+   "quote": "As a vision paper, our goal is not to propose complete solutions but to identify fundamental challenges and research opportunities they create.",
+   "locator": "§1"
+  },
+  {
+   "statement": "论文指出现有安全机制均未锚定治理策略、无法检测未见但被禁止的轨迹，且强制仅限单智能体、不适用于跨智能体违规（对现有方法的局限，为本文核心论证）",
+   "quote": "However, none of these approaches are grounded in governing policies, leaving them unable to detect unseen but prohibited trajectories. Moreover, enforcement remains single-agent, which makes those unsuitable for multi-agent settings where violations emerge from cross-agent interactions.",
+   "locator": "§5"
+  },
+  {
+   "statement": "现有智能体可见性/审计机制既未标准化也非强制，并引入隐私与成本权衡",
+   "quote": "However, these mechanisms are neither standardized nor mandatory, and they introduce privacy and cost tradeoffs.",
+   "locator": "§6"
+  }
+ ],
+ "counterexamples": [
+  {
+   "description": "5G 调度智能体逐步降级公共安全切片优先级：每次重分配均通过局部检查，却错过强制恢复窗口——逐动作检查全部通过而轨迹级违规，且无对抗输入",
+   "quote": "For example, a 5G scheduling agent can progressively deprioritize a public-safety slice, each reallocation passing local checks, yet miss the mandated recovery window (3GPP, 2024).",
+   "locator": "§5"
+  },
+  {
+   "description": "临床智能体加速多个本身合理的出院决策，违反 FHIR 护理路径定义的累计观察窗口——同类无对抗输入的轨迹级违规",
+   "quote": "Likewise, a clinical agent can accelerate several justified discharge decisions while violating the aggregate observation window defined by a FHIR care pathway (HL7 International, 2023).",
+   "locator": "§5"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "no_original_experiments",
+  "no_denominators_applicable_no_percentages_extracted"
+ ]
+}

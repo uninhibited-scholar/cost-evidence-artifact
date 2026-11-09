@@ -1,0 +1,111 @@
+{
+ "arxiv_id": "2610.02920",
+ "title": "HASTE: Evolving Agent Harnesses Against Emerging Attacks Using Sparse Evidence",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "cross-task",
+  "carrier": "agent harness（安全规格 + 约束执行层）作为可演化持久工件；每轮由规格生成与攻击用例生成对抗互促后更新",
+  "operations_covered": [
+   "formation",
+   "update"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "面对稀疏威胁情报（简报、少量攻击样例）描述的新兴攻击，harness 应自动演化出对应安全约束，而不是等待人工改写",
+  "operationalized_as": "Agent-SafetyBench (ASB) 与 STAC 上的 ASR，以及任务成功率 SHR"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "新兴攻击，仅以简报/少量样例形式可见",
+   "在 harness 每次更新后继续探测残留弱点"
+  ],
+  "assumptions": [
+   "威胁证据稀疏",
+   "适配与最终评估使用不同 judge"
+  ],
+  "not_covered": [
+   "持久语义记忆载体",
+   "跨用户共享状态"
+  ]
+ },
+ "intervention": {
+  "name": "HASTE（规格生成 × 攻击用例生成的对抗互促，驱动 harness 演化）",
+  "mechanism_layer": "architecture",
+  "description": "多智能体框架：阶段 1 由稀疏证据生成安全规格；阶段 2 在规格引导下演化 harness；阶段 3 用新生成的攻击用例探测更新后仍存的安全弱点，结果回灌前两阶段"
+ },
+ "controls": [
+  {
+   "name": "LlamaFirewall / Qwen3Guard / Safiron / TS-Guard / TS-Flow / SafeHarness",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Meta-Harness（同用例）",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Haste_blind（无观测样例）",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "无观测样例的 Haste_blind 仍有防护能力：ASB 平均 ASR 35.75、STAC 29.12，ASB 上 SHR 49.81",
+   "metric": "ASR / SHR",
+   "value": "ASR 35.75 (ASB) / 29.12 (STAC)；SHR 49.81 (ASB)",
+   "comparison": null,
+   "setting": "四个 backbone、两种证据形式",
+   "quote": "Without access to observed examples, Hasteblind\\textsc{Haste}_{\\mathrm{blind}} achieves an average ASR of 35.75 on ASB and 29.12 on STAC, while attaining an SHR of 49.81 on ASB.",
+   "locator": "§4.2 Main Results",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "持续优化测试用例是必要的：两个 Haste 变体若复用第一轮用例，ASR 与 SHR 的退化都大于使用固定通用规格",
+   "metric": "ASR / SHR 退化",
+   "value": "定性方向（退化更大）",
+   "comparison": null,
+   "setting": "消融：复用首轮用例 vs 固定通用规格",
+   "quote": "(2) For both Haste variants, reusing the first-iteration cases leads to larger degradations in both ASR and SHR than using a fixed generic specification, highlighting the importance of continually optimizing test cases to expose residual vulnerabilities.",
+   "locator": "§4.2 Main Results",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "主表（Table 1）结果以表格形式给出，本次仅抽取正文可逐字引用的两条结论；表内逐格数字未抽取",
+   "quote": null,
+   "locator": null
+  },
+  {
+   "statement": "演化对象是 harness（配置/约束层），非语义记忆",
+   "quote": null,
+   "locator": null
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "table_results_not_extracted",
+  "denominator_unclear",
+  "manually_extracted_no_agent"
+ ]
+}

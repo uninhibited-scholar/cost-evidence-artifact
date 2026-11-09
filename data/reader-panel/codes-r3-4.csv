@@ -1,0 +1,27 @@
+key,c1,c2,c3,c4,quote_c1,quote_c2,quote_c3,quote_c4
+2610.04083,qualitative,none,none,none,,,,
+2610.04195,none,numeric,none,none,,Applying deterministic post-retrieval ownership gating (M3) adds roughly 1.4 ms of mean latency per query,,
+2610.05943,none,none,none,none,,,,
+2610.07258,numeric,numeric,none,none,"the governance cost is a 1313–1414 percentage-point reuse reduction, i.e., roughly 13 additional query executions per 100 requests","lineage-gated retrieval trades at most 13.82​μ13.82\,\mus in absolute terms for the safety guarantee of Theorem 1",,
+2610.07309,none,none,none,none,,,,
+2610.07639,numeric,none,qualitative,none,NI reduced ASR by 56.3 pp with a 24.5 pp utility loss.,,,
+2610.07645,none,none,none,none,,,,
+2610.07935,numeric,none,qualitative,none,at a notable cost for benign utility (AgentHarm benign drops from the base model’s 76.6 to 66.8),,,
+2610.09008,none,numeric,none,none,,"At online batch size one, one diagnostic takes 24.83 ms median/26.42 ms p95 and 5.89 GiB peak memory.",,
+2610.09832,none,none,none,none,,,,
+2610.11008,none,none,none,none,,,,
+2610.11188,numeric,none,none,none,"Both admission designs increase missed-personalization failures on the personalization task (FC +7.6+7.6pp, PS +5.3+5.3pp, both significant)",,,
+2610.11270,none,none,none,none,,,,
+2610.11781,none,none,none,none,,,,
+2610.13227,none,numeric,none,none,,SkillRelayGuard averages 27.3K tokens and 91.5 seconds per case,,
+2610.13267,none,numeric,qualitative,none,,"DREAM achieves the lowest overall cost among all evaluated methods, requiring only 178.42178.42s of runtime and 46,48446{,}484 tokens.",,
+2610.14431,none,none,none,none,,,,
+2610.14488,numeric,numeric,none,none,"It completes 43 of 46 benign operations, with 8 approval prompts, and 4 of 7 workflows.",The price is 4.0 ms per brokered request and 3 of 7 workflows,,
+2610.14515,none,numeric,none,none,,"Relative to no added memory, token consumption increases by approximately 18.2%, while task success improves by 29.85 percentage points.",,
+2610.14836,none,none,none,none,,,,
+2610.17544,none,numeric,none,none,,in LLM calls it costs 0.290.29 more per query,,
+2610.17659,numeric,none,none,none,"NPO yields a larger forget-set reduction of 22.9%22.9\%, but also reduces retain-set by 15.8%",,,
+2610.17719,none,numeric,none,numeric,,the receipts for this build cost about $0.30,,"they are wrong about two thirds of the time, almost always by keeping content that no longer re-derives"
+2610.18052,none,none,qualitative,numeric,,,,"no system passes more than 1.5% of forget requests end to end, and most pass none at all."
+2610.18792,none,none,none,none,,,,
+2610.19005,none,none,numeric,numeric,,,A related pattern is the over-blocking patch (8%): a repair that closes unauthorized access but also rejects legitimate requests.,in 4% of the games attacker-installed code remains executable after the defender deploys a patch.

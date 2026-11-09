@@ -1,0 +1,258 @@
+{
+ "arxiv_id": "2609.13734",
+ "title": "PolicyMem: Geometric Policy Memory for LLM Governance",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "cross-session",
+  "carrier": "几何策略记忆 M_T={(t_p, U_p)}：每条自然语言策略经共享 subspace compiler 编译为 governance 空间中的低秩正交子空间基 U_p（r_s=8, d_g=256 的 memory slot），与策略文本地址成对持久化；槽位为当前策略配置物化、更新间缓存、部署期可固定不变，配置变更时重跑同一写操作刷新；co-trained 记忆仅 0.6 MB（Table 5）",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "保护 LLM 响应对已配置自然语言策略集的合规性（unsafe behavior 治理）：assessor 基于逐策略投影能量证据给出 safe/unsafe 交付判定，仅 safe 判定允许交付；违规响应经 TopK 归因映射回自然语言策略反馈驱动重写，重写由同一 assessor+记忆复检，至多 B 轮仍违规则回退固定拒绝。边界条件：论文限定英文 query-response 与 detect-rewrite-verify 工作流（Limitations）；覆盖分数可分性不意味着单一校准阈值可跨 taxonomy 统一迁移（§C.1）。",
+  "operationalized_as": "五基准（BT/WGM/Aeg/Bin/SRL）上的 Safe-F1/Unsafe-F1（检测）、mAP（策略归因）、LLM-judge Safety/Information/Helpfulness + Overall good-rewrite rate（重写，judge=OpenAI o3）、max-energy coverage AUROC（含 leave-one-taxonomy-out 泛化）"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "论文未建模具体对手；评估对象为五个安全治理基准中的不安全 query-response（WildGuardMix 含 vanilla 与 adversarial prompts），单标签/多标签不安全响应均覆盖"
+  ],
+  "assumptions": [
+   "治理策略可以自然语言枚举配置（各基准 14/13/20/11/19 条 policy slots，co-trained 并集 77 条）",
+   "assessor/rewriter 与策略记忆自身可信（未考虑针对治理器的攻击）",
+   "英文 query-response 文本模态；检测与验证共享同一配置记忆"
+  ],
+  "not_covered": [
+   "针对 PolicyMem 治理器自身的对抗/逃避攻击",
+   "策略记忆投毒或篡改",
+   "多语言与多模态治理（Limitations 明示为 future work）",
+   "真实世界分布漂移下的鲁棒性（Limitations 明示为 future work）",
+   "跨用户/隐私维度"
+  ]
+ },
+ "intervention": {
+  "name": "PolicyMem（closed-loop detect-rewrite-verify governor）",
+  "mechanism_layer": "architecture",
+  "description": "将策略执行外置为可复用的操作化记忆架构：memory writer 把自然语言策略编译为低秩子空间槽位；query-response 对经共享适配编码器读出逐策略投影能量 e∈[0,1]^N_T，verdict 模块只接收证据概要的置换不变 7 维摘要（不接收 query-response 原文与策略名/描述），使几何记忆读取成为强制决策接口而非事后解释；TopK 高能槽位映射回策略文本反馈条件化 rewriter 重写，重写经同一 assessor+配置记忆复检，safe 即交付、超预算 B 轮则固定拒绝。"
+ },
+ "controls": [
+  {
+   "name": "Qwen2.5-3B raw backbone (prompted)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Qwen2.5-72B (prompted)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "NeMo Guardrails + Claude-Sonnet-4.5 (programmable guardrail)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Learning-based guards (WildGuard, GuardReasoner, Llama Guard 3, MD-Judge, Nemotron-Safety-Reasoning, NeMoGuard-ContentSafety, Granite Guardian)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Agent/retrieval-memory baselines (Mem0, A-Mem, Class-RAG, RAR)",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Anchor-based MLP detector replacing low-rank subspaces + projection-energy read",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "PolicyMem 3B Specialist 在五个安全基准上取得最佳平均检测性能：avg Safe-F1 0.9238、avg Unsafe-F1 0.8874（Table 1 全表两列均为最佳）",
+   "metric": "Safe-F1 / Unsafe-F1 (5-benchmark avg)",
+   "value": "0.9238 / 0.8874",
+   "comparison": null,
+   "setting": "Qwen2.5-3B 骨干 governor，Specialist 设置（每 taxonomy 单独训练，0.5B/3B 两种规模）；基准 BeaverTails/WildGuardMix/Aegis 2.0/BingoGuard/SafeRLHF，官方测试集",
+   "quote": "| PolicyMem (Specialist) | 3B | 0.8409 | 0.9533 | 0.8910 | 0.9813 | 0.9527 | 0.9238 | 0.8771 | 0.7438 | 0.8850 | 0.9742 | 0.9569 | 0.8874 |",
+   "locator": "Table 1",
+   "denominator": {
+    "n_total": "BT 3,021 / WGM 1,709 / Aeg 813 / Bin 1,658 / SRL 16,419（官方测试集规模，Table 4）",
+    "n_valid": null,
+    "how_counted": "每类 F1=2TP/(2TP+FP+FN) 在官方测试集上计算（§B.3.3 Eq.22），Avg. 为五基准均值；各类 TP/FP/FN 计数未报告"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "相对最强基线（WildGuard，avg Safe-F1 0.9004 / Unsafe-F1 0.8633），3B Specialist 将平均 Safe-F1/Unsafe-F1 分别相对提升 2.6%/2.8%（由 Table 1 均值导出）",
+   "metric": "relative improvement, avg Safe-F1 / avg Unsafe-F1",
+   "value": "+2.6% / +2.8%",
+   "comparison": null,
+   "setting": "Table 1 五基准平均；对比 17 个基线（prompted LLM、programmable guardrails、learning-based guards、memory baselines）中的最强者",
+   "quote": "All PolicyMem configurations outperform the strongest baseline on both average Safe-F1 and Unsafe-F1. The 3B specialist improves the two metrics by 2.6% and 2.8%, respectively.",
+   "locator": "§4.2 Unsafe Behavior Detection",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "相对提升：以最强基线的五基准平均 F1 为分母导出（Table 1，WildGuard avg Safe-F1 0.9004 / avg Unsafe-F1 0.8633）；论文原话 'The 3B specialist improves the two metrics by 2.6% and 2.8%, respectively.'；样本级 n 未报告"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "相对最强检索/代理记忆基线，3B Specialist 平均 Safe-F1/Unsafe-F1 分别提升 28.1%/32.7%：外置操作化策略记忆显著优于把策略当被动文本检索的通用记忆",
+   "metric": "relative improvement vs memory baselines, avg Safe-F1 / avg Unsafe-F1",
+   "value": "+28.1% / +32.7%",
+   "comparison": null,
+   "setting": "Table 1 五基准平均；memory 基线为 Class-RAG/RAR/Mem0/A-Mem（Table 1 中 avg Safe-F1 0.6741-0.7213、avg Unsafe-F1 0.4831-0.6687 区间）",
+   "quote": "Relative to the strongest retrieval- or agent-memory baseline, the 3B specialist improves average Safe-F1 by 28.1% and Unsafe-F1 by 32.7%.",
+   "locator": "§4.2 Unsafe Behavior Detection",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "相对提升：论文原话 'Relative to the strongest retrieval- or agent-memory baseline'——分母为最强记忆基线（RAR/Class-RAG）的五基准平均 F1（Table 1）；样本级 n 未报告"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "通用代理记忆反而有害：Mem0 与 A-Mem 的平均 Unsafe-F1 较 raw Qwen2.5-3B 骨干（0.6403）分别下降 24.6% 与 20.9%——仅存储/检索策略信息不足以治理，策略状态须经 enforcement-oriented read 直接参与决策",
+   "metric": "relative drop in avg Unsafe-F1 (memory baselines vs raw backbone)",
+   "value": "-24.6% / -20.9%",
+   "comparison": null,
+   "setting": "Table 1 五基准平均；Mem0 avg Unsafe-F1 0.4831、A-Mem 0.5066 vs raw Qwen2.5-3B 0.6403",
+   "quote": "Moreover, Mem0 and A-Mem reduce average Unsafe-F1 by 24.6% and 20.9%, respectively, compared with the raw 3B backbone.",
+   "locator": "§4.2 Unsafe Behavior Detection",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "相对下降：论文原话 'compared with the raw 3B backbone'——分母为 raw Qwen2.5-3B 骨干的平均 Unsafe-F1（Table 1 avg 0.6403）；样本级 n 未报告"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "策略归因：PolicyMem mAP 平均 0.8632，大幅优于最强 prompted 基线 Qwen3-8B 的 0.5872，多标签设置增益更显著——投影能量坐标保留了策略级证据而非仅二元判定",
+   "metric": "mAP (policy attribution, avg)",
+   "value": "0.8632",
+   "comparison": "0.5872 (Qwen3-8B) -> 0.8632 (PolicyMem)",
+   "setting": "WGM/Bin 单标签与 BT/Aeg/SRL 多标签（保留各基准原生标注结构，§B.3.3）；基线为 prompted Qwen2.5-3B/Qwen3-4B/Qwen3-8B",
+   "quote": "| Qwen3-8B | 0.5630 | 0.6928 | 0.5115 | 0.5177 | 0.6511 | 0.5872 | | PolicyMem | 0.8097 | 0.8826 | 0.8648 | 0.8633 | 0.8954 | 0.8632 |",
+   "locator": "Table 2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "安全重写：3B PolicyMem rewriter 在全部五基准取得最佳 Safety/Helpfulness/Overall，0.5B 恒居第二（BT Overall 0.8707 vs 同块最佳基线 Qwen3-8B 0.6982）；重写器仅在 BT+WGM 训练仍迁移到未见 taxonomy",
+   "metric": "Overall good-rewrite rate (LLM-as-a-judge, BT)",
+   "value": "0.8707",
+   "comparison": "0.4253 (Qwen2.5-3B) -> 0.8707 (PolicyMem 3B)",
+   "setting": "重写器仅在 BeaverTails+WildGuardMix 训练、五基准评估；单次纠正 pass（B=1）；judge=OpenAI o3；Overall=安全∧信息保留∧（适用时）帮助性≥3 的联合通过率而非分数均值（§B.3.3 Eq.23）",
+   "quote": "| BT | Qwen2.5-3B | 2.6636 | 3.7842 | 2.1991 | 0.4253 | | Qwen3-4B | 2.9879 | 3.7357 | 2.3923 | 0.5309 | | Qwen3-8B | 3.5678 | 3.6555 | 2.5755 | 0.6982 | | PolicyMem (0.5B) | 3.8171 | 3.6469 | 2.7459 | 0.7790 | | PolicyMem (3B) | 3.9071 | 3.7432 | 3.1533 | 0.8707 |",
+   "locator": "Table 3",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Overall 为 |D|（每个评估目标一条去重改写）上的通过率（§B.3.3 Eq.23）；|D| 未报告"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "跨 taxonomy 泛化（leave-one-taxonomy-out）：分布内 macro AUROC 0.958，移除目标 taxonomy 全部策略槽位后仍保持 0.930——策略记忆捕获可跨 taxonomy 复用的策略结构",
+   "metric": "macro AUROC (max-energy coverage detection)",
+   "value": "0.958 (in-dist) / 0.930 (held-out)",
+   "comparison": null,
+   "setting": "对每个 taxonomy T：governor 仅用其余四个 taxonomy 训练、移除 T 的策略槽位、在 T 测试集上以 threshold-free coverage score κ=max_p e_p 检测（co-trained governor）",
+   "quote": "PolicyMem achieves an averaged macro AUROC of 0.958 in distribution and retains 0.930 under this held-out setting.",
+   "locator": "§4.5 Generalization Study",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "AUROC 按 held-out taxonomy 分别计算（§B.3.3 Eq.24）；各 taxonomy 的 n+/n− 未报告"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "detect-rewrite-verify 闭环快速收敛：首轮重写即被 assessor 判 safe 的比例 99.1%，三轮内累计 ≥99.9%，仅 0.1% 触发回退拒绝（重写器未见过的 Aeg/Bin/SRL 收敛相似）",
+   "metric": "assessor-safe rate (bounded rewrite-verify loop)",
+   "value": "99.1% / 99.9% / 0.1%",
+   "comparison": null,
+   "setting": "pooled feedback setting；每轮以 frozen assessor+同一配置记忆复检；残留 TopK 策略反馈条件化下一轮；预算 B 轮后固定拒绝回退",
+   "quote": "first rewrite is certified safe by the assessor for 99.1% of cases, and the cumulative assessor-safe fraction reaches at least 99.9% within three rounds. Only 0.1% of cases remain flagged throughout the retry budget and trigger the fallback refusal.",
+   "locator": "§C.3 Rewriting-Verification Loop Dynamics",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Figure 8 题注论文原话 'Left: cumulative fraction of initially flagged responses certified safe by the assessor after each rewrite round.'——分母为初始被标记响应，n 未报告"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "效率：非自回归治理读出使小骨干可行——3B governor 平均 Unsafe-F1 0.88 @ 28 ms/case，0.5B 达 0.87 @ 19 ms，两变体均优于被评测的 7B-8B 安全守卫与 prompted 72B LLM",
+   "metric": "avg Unsafe-F1 / per-case latency",
+   "value": "0.88 @ 28 ms (3B) / 0.87 @ 19 ms (0.5B)",
+   "comparison": null,
+   "setting": "co-trained governor，A100 GPU，检测阶段不含重写（§C.4 Figure 9）",
+   "quote": "The 3B governor achieves the highest average Unsafe-F1 of 0.88 at 28 ms per case, while the 0.5B variant reaches 0.87 at only 19 ms. Despite their smaller backbones, both variants outperform the evaluated 7B-8B safety guards and the prompted 72B LLM.",
+   "locator": "§C.4 Efficiency Analysis",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "部署存储：co-trained 策略记忆仅 0.6 MB（每策略一个低秩子空间，占用随策略数而非语料规模增长），对比检索/代理记忆基线 418–493 MB（论文正文报告 697–822× 缩减）",
+   "metric": "policy memory storage footprint",
+   "value": "0.6 MB",
+   "comparison": "418–493 MB (RAR/Class-RAG/Mem0/A-Mem)",
+   "setting": "co-trained 语料上的记忆存储成本（§C.4 Table 5）",
+   "quote": "| RAR Buonocore and Parimbelli (2025) | 418 MB | | Class-RAG Chen et al. (2024) | 463 MB | | Mem0 Chhikara et al. (2025) | 442 MB | | A-Mem Xu et al. (2026) | 493 MB | | PolicyMem | 0.6 MB |",
+   "locator": "Table 5",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "关键消融：把低秩子空间+投影能量读出替换为策略锚表示上的直接 MLP 检测器，co-trained Unsafe-F1 从 0.8799 降至 0.7765（论文报告 10.34 点绝对差）——几何组织与匹配读出是必要决策接口，仅策略编码不足",
+   "metric": "Unsafe-F1 (ablation: anchor-MLP vs geometric subspace read)",
+   "value": "0.7765 -> 0.8799",
+   "comparison": null,
+   "setting": "co-trained 设置（§C.5）",
+   "quote": "This anchor-based variant achieves an Unsafe-F1 of 0.77650.7765, compared with 0.87990.8799 for the default co-trained PolicyMem.",
+   "locator": "§C.5 Ablation and Parameter Study",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "范围限定：仅英文 query-response 治理、detect-rewrite-verify 工作流；多语言/多模态治理、更广部署设置与真实分布漂移下的鲁棒性留待未来工作",
+   "quote": "In this paper, for PolicyMem and the baselines, we focus on English query-response governance within a detect-rewrite-verify workflow. Future work may extend PolicyMem to multilingual and multimodal governance and broader deployment settings, and further study its robustness under real-world distribution shift.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "覆盖分数的可分性不意味着单一校准阈值可跨 taxonomy 统一迁移（对阈值化部署的警示）",
+   "quote": "This analysis demonstrates the separability of the coverage score, but does not imply that a single calibrated threshold transfers uniformly across all taxonomies.",
+   "locator": "§C.1 Additional Safety Detection Performance"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "corpus_numeric_duplication_artifact",
+  "percent_improvements_derived_from_table_1_averages_no_sample_n_stated",
+  "loop_convergence_and_loto_population_sizes_not_stated",
+  "no_code_or_data_release_stated"
+ ]
+}

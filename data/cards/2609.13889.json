@@ -1,0 +1,180 @@
+{
+  "arxiv_id": "2609.13889",
+  "title": "When Malicious Instructions Persist: Persistent Memory Poisoning Attack on Harness-Based Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Persistent memory of harness-based agents (OpenClaw, Claude Code); a conditional malicious rule is written into memory via a memory-writing instruction embedded in benign external sources (text, image, PDF) and is retrieved in a later session when the trigger task appears",
+    "operations_covered": ["formation", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Persistent memory of a harness-based agent must not incorporate instructions originating from untrusted external content (memory integrity), and stored rules must not be activated to disclose user or task private information (confidentiality); the property fails when an embedded memory-writing instruction gets stored (ISR) and is later triggered to leak private data in the same or a later session (S-ASR / C-ASR), while benign task completion should be preserved (Utility).",
+    "operationalized_as": "Four metrics defined in §3.4: ISR (malicious rule written into persistent memory), S-ASR (privacy leakage within the injection session), C-ASR (privacy leakage in a new session), Utility (benign QA task completed correctly under attack)."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Publishes crafted external sources (text, image, or PDF) that look benign but embed a three-part payload: transition sentence, memory-writing instruction, conditional malicious rule",
+      "Controls payload placement (middle of the source) and linguistic style (first-person, user-like expression)",
+      "Controls an attacker-owned account (e.g., email address) that receives the leaked private information"
+    ],
+    "assumptions": [
+      "Victim is a harness-based agent (OpenClaw or Claude Code) with persistent memory, deployed in a user-controlled local environment",
+      "The user will eventually feed the attacker-crafted external source to the agent for a benign question-answering task",
+      "The agent may treat the embedded instruction as a user requirement or preference and write it into persistent memory",
+      "A later benign workspace task (email, calendar, shared document, or form) will satisfy the conditional rule's trigger condition"
+    ],
+    "not_covered": [
+      "Attacker querying the victim agent or observing its outputs (explicitly excluded by the threat model)",
+      "Attacker access to the user device, persistent memory, system prompts, or runtime configuration (explicitly excluded)",
+      "Direct poisoning of memory, knowledge bases, or fine-tuning data, and direct interaction with the victim agent (prior backdoor settings, out of scope)",
+      "Cross-user or shared-memory propagation; evaluation is single-user, local workspaces",
+      "Defenses beyond a prompt-level reminder; no memory revocation or repair mechanism is studied"
+    ]
+  },
+  "intervention": {
+    "name": "Sandwich-style prompt defense (targeted safety reminder placed before and after the user prompt)",
+    "mechanism_layer": "content",
+    "description": "A prompt-level defense inspired by Schulhoff (2024): in the injection phase the reminder instructs the agent not to save rules from external sources into persistent memory without explicit user confirmation; in the trigger phase it requires explicit confirmation before performing actions that may disclose information based on stored rules. The full instruction text is in Appendix D. It reduces memory injection in many settings but provides little protection once memory is already poisoned."
+  },
+  "results": [
+    {
+      "claim": "Across all settings, PMPA poisons persistent memory of harness-based agents with average ISR/C-ASR of 73.7%/55.5% on OpenClaw and 66.9%/81.7% on Claude Code, while preserving benign task performance.",
+      "metric": "ISR / C-ASR (average over settings)",
+      "value": "OpenClaw ISR 73.7%, C-ASR 55.5%; Claude Code ISR 66.9%, C-ASR 81.7%",
+      "comparison": null,
+      "setting": "OpenClaw and Claude Code; backbone LLMs DeepSeek-V4-Flash, DeepSeek-V4-Pro, Qwen3-Max; external sources (text/image/PDF) built from MMLU/ARC/CommonsenseQA/SocialIQA QA items; four workspace trigger scenarios; attacker only publishes external sources",
+      "quote": "Evaluations on OpenClaw and Claude Code show that PMPA can poison persistent memory and reveal severe risks of privacy leakage, with average ISR and C-ASR of 73.7%/55.5% on OpenClaw and 66.9%/81.7% on Claude Code.",
+      "locator": "§5 Conclusion (also Abstract)",
+      "denominator": {
+        "n_total": "360 injection samples per agent x backbone LLM setting (120 source contents x 3 input modalities); 3 backbone LLMs averaged per agent",
+        "n_valid": null,
+        "how_counted": "§3.4/附录B 逐字：'30 original QA instances' x 4 场景 payload = '120 source contents'，再 x 3 模态 = '360 injection samples'；每 sample 为 (external source, trigger prompt) 样本对，故 ISR 分母=全部 injection trials、C-ASR 分母=全部 cross-session trials，各 360/设置。Table 1 各格数值均符合 1/360 粒度（如 77.5%=279/360）。均值复现验证：OpenClaw ISR (75.6+77.5+68.1)/3=73.7、C-ASR (75.8+60.0+30.8)/3=55.5；Claude Code ISR (69.7+69.4+61.7)/3=66.9、C-ASR (92.5+82.5+70.0)/3=81.7，与摘要/结论完全一致。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Per-setting ISR spans 61.7%-77.5% and C-ASR spans 30.8%-92.5%, so the malicious rule is written into persistent memory with high probability and keeps affecting agent behavior across sessions.",
+      "metric": "ISR range / C-ASR range across agent-backbone settings",
+      "value": "ISR 61.7%-77.5%; C-ASR 30.8%-92.5%",
+      "comparison": null,
+      "setting": "Claude Code and OpenClaw, three backbone LLMs each, aggregated over three input modalities and four trigger scenarios (Table 1)",
+      "quote": "ISR ranges from 61.7% to 77.5%, indicating that the malicious rule can be written into persistent memory with a relatively high probability. C-ASR ranges from 30.8% to 92.5%, showing that poisoned memory can continue to affect agent behavior across sessions.",
+      "locator": "§4.1 Table 1",
+      "denominator": {
+        "n_total": "360 injection samples per agent x backbone LLM cell (120 source contents x 3 input modalities)",
+        "n_valid": null,
+        "how_counted": "Table 1 caption 逐字 'aggregated over three input modalities and four trigger scenarios'：每格（agent x backbone）= 4 场景 x 30 QA 实例 x 3 模态 = 360 个 injection/cross-session trials。区间端点均符合 1/360 粒度：77.5%=279/360；30.8% 与 92.5% 乘以 360 亦均为整数。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The attack does not disrupt the benign task: Utility stays above 80% in all evaluated settings.",
+      "metric": "Utility",
+      "value": "above 80% in all settings",
+      "comparison": null,
+      "setting": "All agent x backbone x modality x trigger-scenario settings summarized in Table 1",
+      "quote": "Moreover, Utility remains above 80% in all settings. This shows that PMPA can achieve clear attack effects without significantly disrupting the benign question-answering task.",
+      "locator": "§4.1",
+      "denominator": {
+        "n_total": "360 injection trials per agent x backbone LLM cell (120 source contents x 3 input modalities)",
+        "n_valid": null,
+        "how_counted": "§3.4 逐字定义 Utility 为 'the ratio of correctly answered QA tasks to all injection trials'；每格分母 = 120 source contents x 3 模态 = 360。Table 1 六个 Utility 值（80.9-93.3）均 >80 且符合 1/360 粒度，与 'above 80% in all settings' 相符。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Poisoned memory persists through benign use: C-ASR shows no consistent decrease even after five intervening benign interactions.",
+      "metric": "C-ASR@i (cross-session ASR after i benign interactions)",
+      "value": "no consistent decrease; several settings keep high C-ASR after five benign interactions",
+      "comparison": null,
+      "setting": "DeepSeek-V4-Flash backbone on Claude Code and OpenClaw; calendar/email/shared-document/form trigger scenarios",
+      "quote": "The results show no consistent decrease in C-ASR as the number of benign interactions increases. Several settings still maintain high attack success rates after even five benign interactions.",
+      "locator": "§4.2 Table 5",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "The sandwich-style prompt defense sharply reduces memory injection, e.g., ISR drops from 65.6% to 2.2% for image input on Claude Code.",
+      "metric": "ISR before vs after defense",
+      "value": "2.2% (from 65.6%)",
+      "comparison": "65.6% -> 2.2%",
+      "setting": "Sandwich-style prompt defense, calendar scenario, Claude Code, image input, aggregated over three backbone LLMs",
+      "quote": "65.6\\rightarrow 2.2~(-63.4)",
+      "locator": "§4.3 Table 6",
+      "denominator": {
+        "n_total": "30 calendar-payload QA instances x image modality per backbone LLM, aggregated over three backbone LLMs = 90 injection trials",
+        "n_valid": null,
+        "how_counted": "Table 6 caption 逐字 'Results are aggregated over three backbone LLMs'，场景固定 calendar、模态 image：每 backbone 30 个 QA 实例（逐字 '30 original QA instances'）x 1 模态 = 30 samples，3 个 backbone 合计 90 trials。Table 6 全表数值均为 1/90 的整数倍：65.6=59/90、2.2=2/90（论文未把 90 写成计数；90 由 30 x 3 与表格粒度唯一确定）。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Once persistent memory is poisoned, the prompt-level defense gives little protection: C-ASR remains unchanged at 96.7% for image input on Claude Code.",
+      "metric": "C-ASR before vs after defense",
+      "value": "96.7% (unchanged)",
+      "comparison": "96.7% -> 96.7%",
+      "setting": "Sandwich-style prompt defense, calendar scenario, Claude Code, image input, aggregated over three backbone LLMs",
+      "quote": "96.7\\rightarrow 96.7~(0.0)",
+      "locator": "§4.3 Table 6",
+      "denominator": {
+        "n_total": "30 calendar-payload QA instances x image modality per backbone LLM, aggregated over three backbone LLMs = 90 cross-session trials",
+        "n_valid": null,
+        "how_counted": "同 Table 6（caption 逐字 'aggregated over three backbone LLMs'）；每 sample 为 (external source, trigger prompt) 对（§3.4 逐字），C-ASR 分母=全部 cross-session trials = 90。96.7=87/90，防御前后均为 87/90（Δ=0.0 逐字）。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Plain text is the strongest carrier: text modality achieves the highest attack metrics on both agents, with OpenClaw text ISR close to 100%.",
+      "metric": "ISR by input modality",
+      "value": "close to 100% (text ISR, OpenClaw)",
+      "comparison": null,
+      "setting": "Text vs image vs PDF external sources on Claude Code and OpenClaw (Table 2)",
+      "quote": "Overall, plain text modality achieves the highest attack metrics on both agents. On OpenClaw, the ISR of text input is close to 100%, and its S-ASR is also clearly higher than those of image and PDF inputs.",
+      "locator": "§4.1 Table 2",
+      "denominator": {
+        "n_total": "120 text external-source samples per backbone LLM (30 QA instances x 4 scenario payloads, each rendered as text), 3 backbone LLMs averaged",
+        "n_valid": null,
+        "how_counted": "逐字 'This produces 120 source contents'，且每个 content 均转为 text 版本 → 每 backbone 的 text injection trials = 120。Table 2 无 backbone 列，为 3 个 backbone 的均值；验证：OpenClaw 三模态 ISR 均值 (54.5+67.2+99.4)/3=73.7，恰复现摘要 OpenClaw 平均 ISR；99.4 符合每 backbone 1/120（合并 1/360）粒度。"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The cross-session attack works across diverse workspace tasks; the calendar scenario reaches C-ASR of 96.7% and 87.8% on the two agents.",
+      "metric": "C-ASR by trigger scenario",
+      "value": "calendar C-ASR 96.7% and 87.8%",
+      "comparison": null,
+      "setting": "Email/calendar/shared-document/form trigger scenarios on Claude Code and OpenClaw (Table 3)",
+      "quote": "The calendar scenario achieves high cross-session attack performance on both agents, with C-ASR values of 96.7% and 87.8%.",
+      "locator": "§4.1 Table 3",
+      "denominator": {
+        "n_total": "30 calendar-payload QA instances x 3 input modalities per backbone LLM, 3 backbone LLMs averaged",
+        "n_valid": null,
+        "how_counted": "calendar 场景每 backbone 样本 = 30 QA 实例（逐字 '30 original QA instances'）x 3 模态（逐字 'three input modalities'）= 90 个 cross-session trials；Table 3 无 backbone 列，为 3 个 backbone 的均值。粒度验证：96.7=87/90（Claude Code）、87.8=79/90（OpenClaw），均为 1/90 的整数倍（90 由 30 x 3 确定，论文未写成计数）。"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The explanation for the text vs image/PDF attack gap is authors' speculation ('possible reason') rather than an empirically isolated cause.",
+      "quote": "One possible reason for this performance gap across input modalities is that plain text can directly enter the agent’s task context. Image and PDF inputs usually require an additional parsing step and tool call.",
+      "locator": "§4.1"
+    },
+    {
+      "statement": "Authors defer broader evaluation to future work (more settings and backbone models) and acknowledge no effective defense against already-poisoned memory or privacy leakage is yet provided.",
+      "quote": "For future work, we will further evaluate PMPA across broader settings and more backbone models to assess its performance. We will also explore more effective defense methods against persistent-memory poisoning and privacy leakage.",
+      "locator": "§5 Conclusion"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "limitations_not_stated"
+  ]
+}

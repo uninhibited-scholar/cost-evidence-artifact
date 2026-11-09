@@ -1,0 +1,27 @@
+key,c1,c2,c3,c4,quote_c1,quote_c2,quote_c3,quote_c4
+2607.19351,none,numeric,numeric,numeric,,its lightweight footprint (∼3{\sim}3GB VRAM) allows the GenPRM to run concurrently alongside the backbone LLM,"Without EWC, FPR grows from 4.2%4.2\% to 11.8%11.8\% across phases",M3 restoring performance within 5–8 rounds
+2607.23586,qualitative,qualitative,qualitative,none,,,,
+2607.27080,none,none,qualitative,qualitative,,,,
+2608.00426,numeric,none,none,none,"both backbones lose 1.5 points on MMLU, and gemma also loses 1.4 points on LongMemEval",,,
+2608.01558,none,none,none,none,,,,
+2608.01679,none,none,numeric,none,,,"0.6% dangerous upgrades, and 0.7% over-restrictions",
+2608.01759,none,none,none,none,,,,
+2608.03509,none,none,qualitative,numeric,,,,80.0% of skill-mediated attacks persist after deleting the original poisoned records
+2608.05563,none,none,none,none,,,,
+2608.06984,none,none,none,none,,,,
+2608.09732,none,none,none,none,,,,
+2608.12851,numeric,none,none,qualitative,SafeEvolve cuts C-ASR by 17.3 points but also costs 12.7 points of C-Util,,,
+2608.15012,none,numeric,none,none,,SysField achieves zero-dropout log collection at 2.1% system overhead,,
+2608.21159,numeric,numeric,none,numeric,benign utility changed by −43.8-43.8 percentage points,The unoptimized protected median is 3930.8 ms above ambient,,Exceptional response-loss and certified no-effect recovery average 10.0 s and 14.5 s
+2608.25776,numeric,none,numeric,none,reduces benign helper-copying by at most 11.711.7 percentage points,,produces up to 47%47\% false positives on the library,
+2608.27299,none,none,none,none,,,,
+2609.01222,none,numeric,numeric,none,,CoRA additionally performs differential testing across three launches,reports 1 false positives,
+2609.01836,numeric,none,none,qualitative,"pooled legitimate action rate falls by 26.4 points in procurement, 16.0 in cybersecurity, and 17.8 in finance",,,
+2609.01852,none,none,none,qualitative,,,,
+2609.02265,none,numeric,none,qualitative,,Capture therefore costs 17% more tokens per turn than StateMem,,
+2609.05339,none,none,none,numeric,,,,Qwen reconstructs 34 of 48 histories at the 90% threshold for a median cost of roughly $0.76
+2609.07529,none,numeric,qualitative,none,,Attacker SFT and Defender SFT each use two eight-GPU nodes,,
+2609.08258,none,none,qualitative,numeric,,,,The output filter reduces the rate only to 18.1%18.1\%
+2609.08444,none,numeric,none,none,,| SafeMem | 9425.40 | 17.62 |,,
+2609.08747,none,none,qualitative,none,,,,
+2609.12413,numeric,numeric,numeric,none,yielding 100% over-refusal and 0% utility,"CA SmoothLLM increases Qwen response time to 824.84 s, while RPO increases Llama response time to 149.66 s and token usage to 3006.63","reject all benign XSTest prompts, yielding 100% over-refusal",

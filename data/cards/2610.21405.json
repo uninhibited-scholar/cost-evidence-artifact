@@ -1,0 +1,168 @@
+{
+  "arxiv_id": "2610.21405",
+  "title": "MemCut: Every Secret Leaves a Trail in the Long-Term Memory of LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "External text memory objects traceable to source turns in long-horizon multi-session conversations: raw turns (Turn RAG), whole sessions (Session RAG), raw turns under daily summaries (MemoryBank), topical narrative rewrites (Nemori), and offline-consolidated summaries (LightMem)",
+    "operations_covered": ["formation", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "confidentiality",
+    "statement": "When a user asks an agent to forget a secret, the secret must become unrecoverable from surviving memory, not merely invisible to the system's own retrieval; deleting the disclosure fails this property when dispersed evidence objects that never state the secret still jointly imply it, measured by residual recovery and the hidden-risk share.",
+    "operationalized_as": "Two recovery metrics on a four-choice question (decline allowed), same reader model: native recovery through the system's own retrieval, and residual recovery given all surviving objects traced to annotated disclosures or evidence; hidden-risk share = (Res-Nat)/Res as a lower bound on residual successes missed by native retrieval."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "query the assistant after deletion through its native retrieval (native recovery reader)",
+      "directly read all surviving memory objects derived from the secret's evidence or disclosure (residual recovery reader)",
+      "use a different query or retriever than the deletion request"
+    ],
+    "assumptions": [
+      "the user's deletion request is granted and executed as object deletion with source-turn closure",
+      "every memory object is traceable to its source turns, so deletion by closure is well-defined",
+      "one write model writes memory, scores deletion candidates, and answers questions, as in a deployed assistant",
+      "text-only external memory; facts have author-annotated evidence trails and sufficient sets"
+    ],
+    "not_covered": [
+      "multimodal and parametric memory (unlearning/model editing)",
+      "naturally occurring evidence structures in deployment (frequency of such trails unknown)",
+      "dedicated erasure methods that expand candidate coverage or change memory indexing (only reference baselines reusing native retrieval/write components are evaluated)",
+      "downstream utility loss and unrelated content removed through closure",
+      "adaptive adversaries beyond the fixed four-choice reader protocol"
+    ]
+  },
+  "intervention": {
+    "name": "MemCut benchmark with three reference deletion baselines (S0 disclosure deletion, S1 retrieval-ranked cleanup, S2 LLM-guided cleanup)",
+    "mechanism_layer": "content",
+    "description": "Evaluation, not a defense: S0 deletes the disclosure and all objects derived from it; S1 builds a twenty-turn candidate pool from one retrieval query and deletes its ten highest-ranked turns; S2 reranks the same twenty candidates with the write model and deletes its top ten. All operations are anchored to source turns and delete by closure; neither cleanup sees annotations."
+  },
+  "controls": [
+    {"name": "S0 (disclosure deletion)", "purpose": "baseline"},
+    {"name": "S1 (retrieval-ranked cleanup)", "purpose": "baseline"},
+    {"name": "S2 (LLM-guided cleanup)", "purpose": "baseline"},
+    {"name": "Pre-deletion recovery (Table 7, Full)", "purpose": "positive-control"},
+    {"name": "Zero-recovery controls: best single evidence turn / evidence+disclosure removed / question alone", "purpose": "negative-control"}
+  ],
+  "results": [
+    {
+      "claim": "Across five memory designs and four write models, LLM-guided cleanup (S2) that deletes ten of twenty retrieval candidates on top of the disclosure still leaves 39-76% residual recovery, i.e. the secret remains recoverable from surviving memory.",
+      "metric": "residual recovery (%)",
+      "value": "39–76%",
+      "comparison": null,
+      "setting": "5 memory designs (Turn RAG, Session RAG, MemoryBank, Nemori, LightMem) x 4 write models (DeepSeek-V4.1-Flash, Qwen3.8-Flash, GLM-5.3-Flash, MiMo-V2.5); all 456 facts; pool 20, budget 10",
+      "quote": "S2 asks an LLM to choose among the same twenty candidates, allowing it to select evidence ranked below the top ten. It lowers residual recovery by another 7–17 points, to 39–76%.",
+      "locator": "§5.2 (Tables 3-4)",
+      "denominator": {"n_total": "456", "n_valid": "456", "how_counted": "Tables 3-4 caption: 'all 456 facts'; 'Each fact is evaluated on a fresh copy of the store' (§4.3)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Deleting only the disclosure (S0) mainly reduces visibility: native recovery drops sharply (in Turn RAG from 91-95% to 57-60%) while residual recovery from surviving evidence stays at 85-99%.",
+      "metric": "residual recovery (%) after S0",
+      "value": "85–99%",
+      "comparison": "Turn RAG native recovery 91–95% -> 57–60%",
+      "setting": "5 memory designs x 4 write models, all 456 facts, disclosure deletion with closure",
+      "quote": "Disclosure deletion (S0) initially appears effective. Native recovery drops by 12–50 points, in Turn RAG from 91–95% to 57–60%, so the assistant answers fewer questions correctly. Residual recovery nevertheless stays at 85–99%.",
+      "locator": "§5.1",
+      "denominator": {"n_total": "456", "n_valid": "456", "how_counted": "Tables 3-4 caption: 'all 456 facts'"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Retrieval-ranked cleanup (S1: delete top ten of a twenty-turn pool) leaves 48-86% residual recovery even though ten deletions suffice to remove every annotated evidence turn, including 59-62% in Turn RAG which stores raw turns and derives nothing.",
+      "metric": "residual recovery (%) after S1",
+      "value": "48–86%",
+      "comparison": "Turn RAG (verbatim store, no derivation): 59–62%",
+      "setting": "5 memory designs x 4 write models, all 456 facts, S1 cleanup",
+      "quote": "After S1, residual recovery remains at 48–86%, although ten deletions could remove every annotated evidence turn of any fact. Turn RAG stores raw turns and derives nothing, ruling out survival through summaries, but its residual recovery remains at 59–62%.",
+      "locator": "§5.2",
+      "denominator": {"n_total": "456", "n_valid": "456", "how_counted": "Tables 3-4 caption: 'all 456 facts'"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Deletion increases the hidden-risk share: in Turn RAG it goes from 5-9% before deletion to 39-42% after S0 and 76-82% after S2, and it ends above one half in 14 of the 20 configurations, so native answers suggest successful forgetting while surviving evidence still yields the secret.",
+      "metric": "hidden-risk share (%) = (Res-Nat)/Res",
+      "value": "76–82% after S2",
+      "comparison": "5–9% (before deletion) -> 39–42% (after S0) -> 76–82% (after S2)",
+      "setting": "Turn RAG and all 20 configurations (5 memory designs x 4 write models), all 456 facts",
+      "quote": "In Turn RAG the hidden-risk share goes from 5–9% before deletion to 39–42% after S0 and 76–82% after S2, and across all 20 configurations it ends above where it started, above one half in 14 of them",
+      "locator": "§5.3 (Tables 3-4, 8)",
+      "denominator": {"n_total": "456 facts per configuration; 20 configurations", "n_valid": "456", "how_counted": "Tables 3-4 caption: 'all 456 facts'; Hid. computed as (Res-Nat)/Res per configuration"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the subset sweeps, widening the candidate pool from twenty to sixty at a fixed budget of ten lowers S2 residual recovery by 12.5-23.9 points, more than extra budget achieves.",
+      "metric": "residual recovery reduction (points)",
+      "value": "12.5–23.9 points lower",
+      "comparison": null,
+      "setting": "Sweep subset of 144 facts (EP01-05); Turn RAG, MemoryBank, LightMem; DeepSeek and Qwen write models",
+      "quote": "In the sweep subset, widening the pool from twenty to sixty at budget ten lowers reported S2 residual recovery by 12.5–23.9 points.",
+      "locator": "§6.1 Budget (Table 9, Appendix B.3)",
+      "denominator": {"n_total": "144", "n_valid": "at least 114 of the 144 facts in every cell", "how_counted": "Table 9 caption: 'The sweeps run on the 144 facts of EP01–05 ... Percentages are over completed runs: 98.9% of those planned'"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Deleting the entire twenty-candidate pool lowers residual recovery by at most 6.5 points versus S2 at budget ten, identifying candidate coverage (reach), not selection, as the main bottleneck of the evaluated cleanup baselines.",
+      "metric": "residual recovery reduction (points)",
+      "value": "at most 6.5 points",
+      "comparison": null,
+      "setting": "Sweep subset of 144 facts (EP01-05); three memory systems; DeepSeek and Qwen write models",
+      "quote": "In Table 9, whole-pool deletion lowers residual recovery by at most 6.5 points versus S2 at budget ten. These subset sweeps identify candidate coverage as the main bottleneck within the evaluated cleanup baselines.",
+      "locator": "§6.1 Choice",
+      "denominator": {"n_total": "144", "n_valid": "at least 114 of the 144 facts in every cell", "how_counted": "Table 9 caption: sweeps on the 144 facts of EP01-05, percentages over completed runs"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Derivation strength does not consistently predict what survives: after S2, MemoryBank (lightest derivation) retains the most residual recovery (72-76%) while Turn RAG retains 41-46% and LightMem (strongest derivation) 39-43%, tracking the evidence each system's pool reaches.",
+      "metric": "residual recovery (%) after S2",
+      "value": "MemoryBank 72–76%; Turn RAG 41–46%; LightMem 39–43%",
+      "comparison": "highest residual in MemoryBank (lightest derivation) vs Turn RAG and LightMem",
+      "setting": "5 memory designs x 4 write models, all 456 facts, S2 cleanup",
+      "quote": "Although LightMem has the strongest derivation, its residual recovery resembles Turn RAG's (39–43% against 41–46%). MemoryBank has the lightest derivation and the highest residual recovery (72–76%), alongside lower candidate coverage (3.0 evidence turns against 4.5 in Turn RAG and LightMem).",
+      "locator": "§6.2 Derivation",
+      "denominator": {"n_total": "456", "n_valid": "456", "how_counted": "Tables 3-4 caption: 'all 456 facts'"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "Across the 132 settings of the two sweeps, residual recovery falls almost linearly with the mean number of annotated evidence turns a setting removes per fact, about 13 points per turn, so removing more evidence strongly predicts lower residual recovery.",
+      "metric": "residual recovery per evidence turn removed",
+      "value": "about 13 points per turn",
+      "comparison": null,
+      "setting": "132 distinct sweep settings: both strategies (S1/S2), three memory systems, DeepSeek and Qwen write models, 144-fact subset",
+      "quote": "Across the 132 distinct settings of the two sweeps (both strategies, three systems, two write models), residual recovery falls almost linearly with the mean number of annotated evidence turns a setting removes per fact, by about 13 points per turn (R2=0.95R^{2}=0.95).",
+      "locator": "Appendix B.3, 'One quantity behind both sweeps' (also §6.1 Reach)",
+      "denominator": {"n_total": "132 settings", "n_valid": "132 settings over completed sweep runs", "how_counted": "both strategies, three systems, two write models of the two sweeps on the 144-fact subset"},
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Controlled construction: evidence trails are hand-designed and may not reflect how often such trails occur in deployment.",
+      "quote": "The episodes model recurring work, family, and social activities. Deployment studies can establish how often these trails occur and how forgetting performance changes with naturally occurring evidence structures.",
+      "locator": "Limitations, Controlled evaluation"
+    },
+    {
+      "statement": "Only reference baselines that reuse existing retrieval and write components are evaluated; dedicated erasure methods are not tested.",
+      "quote": "Our reference baselines reuse existing retrieval and write components through a common deletion procedure. The sweeps examine candidate coverage and selection within this setting. These results establish reference performance for this reuse strategy.",
+      "locator": "Limitations, Reference baselines"
+    },
+    {
+      "statement": "Scope limited to text memory; the source-level collateral measure does not capture unrelated content removed through closure or downstream utility loss.",
+      "quote": "We study text memory. Multimodal and parametric memory remain outside our scope.\nThe source-level measure does not capture unrelated content removed through closure or downstream utility loss.",
+      "locator": "Limitations, Scope"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "Protocol harness released ('it extends to other designs, and we release its harness', §4.2); 'The benchmark will be released for research use' (Ethics Statement)",
+    "data": "MemCut: 15 episodes, 456 protected facts with annotated evidence trails, sufficient sets, and distractors (release announced)",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": ["dedicated_erasure_methods_not_evaluated"]
+}

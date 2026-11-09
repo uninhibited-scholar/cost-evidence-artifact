@@ -1,0 +1,6 @@
+{"pair":"2503.18813|2506.12104","verdict":"disagree","model_term":"population","note":"二者 AgentDojo 测试集样本数量、基座 LLM 骨干模型均不相同，不构成可直接对齐对比的同分布种群。"}
+{"pair":"2503.18813|2610.01349","verdict":"disagree","model_term":"population","note":"二者测试样本规模、攻击设置（普通注入 vs 自适应越权攻击）以及子集选取范围差异巨大，不属于同一个种群。"}
+{"pair":"2506.12104|2609.33910","verdict":"disagree","model_term":"attack strength","note":"二者攻击类型分别为提示注入攻击与残留权限复现攻击，攻击强度的问题设定完全不同，不可归为同类攻击。"}
+{"pair":"2506.12104|2610.01349","verdict":"disagree","model_term":"population","note":"二者样本数量差距悬殊，且后者是自适应越权子集、并非完整 AgentDojo 测试集，不属于同一测试种群。"}
+{"pair":"2609.33910|2610.01349","verdict":"disagree","model_term":"population","note":"二者样本规模差异大，后者是剔除 banking 场景的自适应攻击子集，不属于同一种测试种群。"}
+{"pair":"2606.05743|2609.36603","verdict":"disagree","model_term":"attack strength","note":"虽然共用 HarmBench、样本总数一致，但攻击族分别为变换式越狱与自适应红队查询，攻击强度分布并不等价。"}

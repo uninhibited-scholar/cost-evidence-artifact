@@ -1,0 +1,218 @@
+{
+ "arxiv_id": "2610.13227",
+ "title": "Understanding and Mitigating Cross-Session Attacks via Persistent Artifacts in Agent Skill Composition",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "shared_state",
+  "scope": "cross-session",
+  "carrier": "Persistent task artifacts produced during skill execution — files, configurations, database records and cached data (e.g., handoff notes with handoff_guidance fields, SQLite/JSON/XLSX artifacts, Markdown status notes) — that are retained across sessions and reused by other skills; conversation history is reset between sessions",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "User authorization scope, confidentiality, and integrity must not be violated by malicious influence carried through persistent artifacts written by attacker-controlled upstream skills and consumed by downstream skills in later sessions: no unauthorized disclosure, no data use beyond authorized scope, no unauthorized operations, and no false content/statuses/software changes in deliverables; the property fails when the downstream agent treats artifact content as additional user authorization or trusted factual evidence, and it is judged per run on execution evidence rather than self-report",
+  "operationalized_as": "ASR (case-specific target security consequence occurs) and ACSR (consequence realized through the intended cross-session skill-artifact chain), both confirmed by an independent Attack Judge over all 270 adversarial cases per configuration; TSR measures legitimate task completion separately"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Modifies multiple third-party skill packages before deployment, including their instructions (SKILL.md), supporting code, and bundled resources",
+   "Upstream controlled skill induces the agent to write attack-related content into persistent artifacts during a legitimate task; downstream controlled skill guides the agent to use that content in a later session",
+   "Knows the functionality and intended use scenarios of the controlled skills",
+   "Attack operates within the agent's existing file and tool permissions"
+  ],
+  "assumptions": [
+   "Sessions can access retained persistent artifacts but do not inherit prior conversation history",
+   "The attacker cannot observe execution results or adapt payloads during execution",
+   "The attacker cannot directly modify files between sessions, modify user tasks, trusted project policies, the underlying model, the agent scaffold, or control session boundaries",
+   "Technical ability to access data or perform an operation does not imply user authorization; neither skill instructions nor generated content can independently expand authorization"
+  ],
+  "not_covered": [
+   "Direct artifact tampering by the attacker between sessions",
+   "Runtime-adaptive payloads or attacker observation of execution",
+   "Attacks on the SkillRelayGuard runtime, provenance store, or the offline judges themselves",
+   "Insider or model-itself adversaries; the user is not the adversary",
+   "Repeated-run variance within a single configuration (no repeated trials)"
+  ]
+ },
+ "intervention": {
+  "name": "SkillRelayGuard",
+  "mechanism_layer": "provenance",
+  "description": "A runtime defense decoupled from the task-execution agent with two enforced intervention points. (1) Skill-artifact attribution: at the end of an upstream session, an independent LLM combines the user task, skill content read, tool-call records, and workspace snapshot diffs to build provenance associations, each requiring a cited skill requirement, a matching tool record, and a corresponding artifact change; validated records (path, content hash, evidence) are stored outside the agent-writable workspace. (2) A post-tool hook restores provenance context (originating task, associated skills, evidence) plus an explicit usage boundary when a downstream agent reads an artifact, and before any operation executes through an instrumented interface an independent reviewer (GPT-5.4) checks authorization scope, data-use appropriateness, and factual support against original materials, returning reasons, evidence, and revision advice. Review is mandatory but advisory: the task-execution agent retains the final decision to revise, abandon, or confirm the request."
+ },
+ "results": [
+  {
+   "claim": "On SkillRelayBench (270 adversarial cross-session cases), attacks succeeded broadly across seven model configurations on three agent frameworks: ASR ranged from 46.7% to 77.4% and attack-chain success from 35.6% to 61.1%.",
+   "metric": "ASR (range across configurations)",
+   "value": "ASR 46.7%-77.4%",
+   "comparison": "ACSR 35.6%-61.1%",
+   "setting": "7 model configurations (GPT-5.3-Codex, GPT-5.4, GPT-5.4-mini, Gemini-3.6-Flash, Gemini-3.7-Flash, Haiku 4.5, Sonnet 4.6) on Codex CLI, Gemini CLI, Claude Code; attacker controls upstream+downstream third-party skill packages; 270 adversarial cases per configuration",
+   "quote": "Our evaluation of seven models across Codex CLI, Gemini CLI, and Claude Code reveals attack success rates (ASR) ranging from 46.7% to 77.4% and attack chain success rates (ACSR) ranging from 35.6% to 61.1%.",
+   "locator": "Abstract; also 5.2 Table 3",
+   "denominator": {
+    "n_total": "270 adversarial cases per configuration; 1,890 runs total across seven configurations",
+    "n_valid": "1,223 ASR successes / 948 ACSR successes overall",
+    "how_counted": "Each configuration is evaluated on all 270 adversarial cases in SkillRelayBench, yielding 1,890 experimental runs. (5.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Pooling all 1,890 runs, the unguarded agents had an overall ASR of 64.7%, ACSR of 50.2%, and TSR of 76.3%, showing cross-session composition attacks propagate through artifact handoff even after conversation-history reset.",
+   "metric": "ASR (pooled overall)",
+   "value": "ASR 64.7%",
+   "comparison": "ACSR 50.2%; TSR 76.3%",
+   "setting": "Seven model configurations x 270 SkillRelayBench adversarial cases (1,890 runs), Docker-isolated non-interactive execution",
+   "quote": "Overall | 1,223 | 64.7% | 948 | 50.2% | 1,442 | 76.3%",
+   "locator": "5.2 Table 3, Overall row",
+   "denominator": {
+    "n_total": "1,890 runs (7 configurations x 270 cases)",
+    "n_valid": "1,223 attack successes; 948 attack-chain successes; 1,442 task successes",
+    "how_counted": "Each configuration is evaluated on all 270 adversarial cases in SkillRelayBench, yielding 1,890 experimental runs. (5.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In more than half of all runs (53.0%), agents completed the user's legitimate task while also achieving the attacker's objective, so task completion alone is an inadequate safety indicator.",
+   "metric": "dual task-and-attack success rate",
+   "value": "53.0% (1,001/1,890 runs)",
+   "comparison": null,
+   "setting": "All 1,890 runs of seven model configurations on SkillRelayBench",
+   "quote": "Across all 1,890 runs, 1,001 (53.0%) achieve both the user’s task and the attack objective.",
+   "locator": "5.2",
+   "denominator": {
+    "n_total": "1,890 runs",
+    "n_valid": "1,001 runs judged successful for both task and attack",
+    "how_counted": "Across all 1,890 runs, 1,001 (53.0%) achieve both the user’s task and the attack objective. (5.2)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Across three agent configurations, SkillRelayGuard reduced overall ASR from 69.5% to 10.9% and ACSR from 54.8% to 10.0% (reductions of 58.6 and 44.8 pp) against attacker-controlled upstream/downstream skill packages.",
+   "metric": "ASR (defense, overall)",
+   "value": "ASR 69.5% -> 10.9%",
+   "comparison": "ACSR 54.8% -> 10.0%; reductions 58.6 pp (ASR) and 44.8 pp (ACSR)",
+   "setting": "Codex CLI (GPT-5.3-Codex), Gemini CLI (Gemini-3.6-Flash), Claude Code (Sonnet 4.6); each on the same 270 adversarial SkillRelayBench cases, unguarded vs guarded",
+   "quote": "Across the three configurations, the unguarded baseline has an overall ASR of 69.5% and ACSR of 54.8%. With SkillRelayGuard, they decrease to 10.9% and 10.0%, corresponding to reductions of 58.6 and 44.8 percentage points (pp), respectively.",
+   "locator": "7.2 Table 6",
+   "denominator": {
+    "n_total": "270 adversarial cases per configuration; three configurations per condition (per-config rates each over 270 cases)",
+    "n_valid": "563 attack successes unguarded vs 88 guarded; 444 vs 81 attack-chain successes (Table 6 Overall rows)",
+    "how_counted": "All rates count successes confirmed by the corresponding Judge over all 270 cases per configuration. (7.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Enabling SkillRelayGuard increased rather than decreased legitimate task completion: overall TSR rose from 79.6% to 87.5% (a gain of 7.9 pp) on the same adversarial cases.",
+   "metric": "TSR (defense, overall)",
+   "value": "79.6% -> 87.5%",
+   "comparison": "+7.9 pp",
+   "setting": "Codex CLI (GPT-5.3-Codex), Gemini CLI (Gemini-3.6-Flash), Claude Code (Sonnet 4.6); 270 adversarial cases per configuration, unguarded vs guarded",
+   "quote": "Overall TSR rises from 79.6% to 87.5%, a gain of 7.9 percentage points.",
+   "locator": "7.3 Table 6",
+   "denominator": {
+    "n_total": "270 adversarial cases per configuration; three configurations per condition",
+    "n_valid": "645 task successes unguarded vs 709 guarded (Table 6 Overall rows)",
+    "how_counted": "All rates count successes confirmed by the corresponding Judge over all 270 cases per configuration. (7.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In the ablation (Codex CLI, GPT-5.3-Codex), pre-execution advisory review alone cut ASR/ACSR to 25.9%/24.8%, and adding read-time provenance context restoration (full SkillRelayGuard) further reduced them to 17.4%/17.0%, while context restoration alone was largely ineffective (ASR 73.3% vs 77.4% Vanilla).",
+   "metric": "ASR (ablation)",
+   "value": "17.4% ASR / 17.0% ACSR (full SkillRelayGuard)",
+   "comparison": "Review only 25.9%/24.8% -> full 17.4%/17.0% (improvements of 8.5 and 7.8 pp)",
+   "setting": "Codex CLI with GPT-5.3-Codex on the same 270 adversarial cases; four configurations: Vanilla, Context only, Review only, full SkillRelayGuard",
+   "quote": "Review only reduces ASR and ACSR to 25.9% and 24.8%, providing substantially larger defense gains. The full SkillRelayGuard further reduces these rates to 17.4% and 17.0%, improvements of 8.5 and 7.8 percentage points over Review only.",
+   "locator": "7.4 Table 7",
+   "denominator": {
+    "n_total": "270 adversarial cases per ablation configuration",
+    "n_valid": null,
+    "how_counted": "Using Codex CLI with GPT-5.3-Codex, we compare four configurations on the same 270 adversarial cases. (7.4)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Among skill-package injection surfaces, malicious supporting code was the most effective overall, with ASR/ACSR of 70.2%/59.0%, exceeding injections into instructions (60.8%/44.4%) and bundled resources (63.2%/47.0%).",
+   "metric": "ASR by injection surface (pooled)",
+   "value": "code injection ASR 70.2% / ACSR 59.0%",
+   "comparison": "instructions 60.8%/44.4%; resources 63.2%/47.0%",
+   "setting": "Overall row pooling the seven model configurations on SkillRelayBench; attacks injected into upstream skill instructions, supporting code, or bundled resources",
+   "quote": "Supporting code has the highest overall ASR and ACSR, at 70.2% and 59.0%, exceeding instructions at 60.8% and 44.4% and resources at 63.2% and 47.0%.",
+   "locator": "5.3 Table 4",
+   "denominator": {
+    "n_total": "90 cases per injection surface per configuration (270 = 30 scenarios x 3 patterns x 3 surfaces); Overall pools seven configurations",
+    "n_valid": null,
+    "how_counted": "Rates computed over all scheduled runs in the reported group (4.4); Table 4 Overall row pools the seven configurations"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Among attack patterns, Evidence Poisoning had the highest overall ACSR at 61.0% (vs 49.5% for Instruction Propagation and 40.0% for Data Boundary Violation) and the highest overall ASR at 68.3%, with the smallest ASR-ACSR gap, indicating its successes most often follow the intended artifact handoff.",
+   "metric": "ACSR by attack pattern (pooled)",
+   "value": "EP ACSR 61.0%",
+   "comparison": "IP 49.5%, DBV 40.0%; ASR: EP 68.3%, IP 66.3%, DBV 59.5%",
+   "setting": "Overall row pooling the seven model configurations on SkillRelayBench; 90 cases per attack pattern per configuration",
+   "quote": "Evidence Poisoning (EP) has the highest overall ASR at 68.3%, followed by Instruction Propagation (IP) at 66.3% and Data Boundary Violation (DBV) at 59.5%. Its advantage is more pronounced for complete attack chains, with an overall ACSR of 61.0%, compared with 49.5% for IP and 40.0% for DBV.",
+   "locator": "5.3 Table 4",
+   "denominator": {
+    "n_total": "90 cases per attack pattern per configuration ('270 adversarial cases, with 90 cases per attack pattern'); Overall pools seven configurations",
+    "n_valid": null,
+    "how_counted": "Rates computed over all scheduled runs in the reported group (4.4); Table 4 Overall row pools the seven configurations"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The Agent-as-Judge evaluation may misinterpret borderline cases.",
+   "quote": "The first limitation is that Agent-as-Judge may misinterpret borderline cases.",
+   "locator": "8 (Threats to Validity)"
+  },
+  {
+   "statement": "Agent execution is stochastic and there are no repeated runs within a configuration; cross-configuration evidence does not replace repeated trials.",
+   "quote": "Second, agent execution is stochastic, and individual outcomes may vary with sampling and execution paths. We evaluate attacks using seven agent-model configurations across three scaffolds and the full defense using one configuration per scaffold to provide cross-configuration evidence, but this does not replace repeated runs within the same configuration.",
+   "locator": "8 (Threats to Validity)"
+  },
+  {
+   "statement": "The ablation study uses only Codex CLI, so component contributions may not generalize to other configurations.",
+   "quote": "The ablation study uses only Codex CLI, and the generalizability of component contributions to other configurations remains to be validated.",
+   "locator": "8 (Threats to Validity)"
+  },
+  {
+   "statement": "The benchmark cannot exhaustively cover real-world scenarios; generalization to other workflows requires further validation.",
+   "quote": "Finally, our benchmark cannot exhaustively cover real-world scenarios.",
+   "locator": "8 (Threats to Validity)"
+  },
+  {
+   "statement": "SkillRelayGuard leaves the final content-level decision to the agent, so residual attack risk remains when agents disregard restored context or confirm requests despite review advice.",
+   "quote": "Agents may disregard restored context or confirm a request despite review advice, leaving residual attack risk.",
+   "locator": "7.2"
+  },
+  {
+   "statement": "The highest-consequence category (software integrity violation, ASR 88.9%/ACSR 79.4%) covers only nine cases and should not be generalized to other software tasks.",
+   "quote": "Software integrity violation has the highest ASR and ACSR, at 88.9% and 79.4%, but covers only nine distinct cases, so these high rates should not be directly generalized to other software tasks.",
+   "locator": "5.3"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_not_read"
+ ]
+}

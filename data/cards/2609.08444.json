@@ -1,0 +1,297 @@
+{
+  "arxiv_id": "2609.08444",
+  "title": "Safe Task Planning with Long-Term Graph Memory for Embodied Agents",
+  "screening_status": "必要背景",
+  "versions_read": [
+    "v1"
+  ],
+  "object": {
+    "what_persists": "memory",
+    "scope": "single-session",
+    "carrier": "长期语义图记忆 𝒢=(𝒱,ℰ)：节点为带持久实例 ID 的对象实例（类别标签、2D/3D 边界框、掩码），边为闭集语义关系三元组⟨源对象,谓词,目标对象⟩（ON/IN/ABOVE/NEAR/ATTACHED_TO/PART OF/HOLDING），由 Gemini 2.5 flash 与 SAM 2.0 从 egocentric RGB-D 观测逐步构建并合并（§4.1）",
+    "operations_covered": [
+      "formation",
+      "update",
+      "retention",
+      "retrieval",
+      "repair"
+    ]
+  },
+  "safety_property": {
+    "type": "policy-compliance",
+    "statement": "智能体在部分可观测家庭任务中生成的每个高层动作不得违反 IS-Bench 以 BDDL 谓词定义的安全目标 𝒢_safe（防电击、防火、防坠落、防食物污染），即使危害对象已被遮挡或离开当前视野；由同时满足任务目标与安全目标的比率（SSR）判定。失效条件：危害仅存在于历史观测而记忆缺失、记忆表示无效或未保留不可见对象时，SSR 显著下降（Table 1、Table 4、Table 5）。",
+    "operationalized_as": "Safe Success Rate（SSR：同时满足 G_task 与 G_safe 的任务比率，§3 与附录 B.1 评测参数）；另以 Safety Violation 比率计量（Table 6：6/17 与 3/17）"
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [
+      "无对抗者：风险来自环境固有物理危害（electric shock、fire hazard、falling hazard、food contamination）与 VLM 规划器缺乏物理风险意识，而非任何主体的攻击行为"
+    ],
+    "assumptions": [
+      "安全危害曾出现在历史或当前观测中（作者 Limitations 自述的依赖假设）",
+      "给定可靠的低层技能集 Π，不处理低层执行安全（Related Work：Our work assumes a given low-level skill set and focuses on safe task planning）",
+      "Gemini 2.5 flash 能从 RGB 抽取对象与关系、SAM 2.0 能准确分割、深度图可用于几何校正边关系",
+      "评测使用固定预采样场景文件以降低随机性（附录 B.1 评测参数）"
+    ],
+    "not_covered": [
+      "从未被观测到的隐藏对象或隐式环境动力学导致的潜在风险（Limitations：SafeMem cannot infer potential but unseen hazards solely from broader physical contexts）",
+      "任何对抗性威胁模型（记忆投毒、提示注入、篡改记忆等均未考虑）",
+      "低层技能执行层的安全（明确交给 SafeVLA、SafeDiffuser 等方向）",
+      "η<1 时以概率 1−η 忽略 REPLAN 信号造成的残余违规（作者建议更安全场景改用 halting fallback）"
+    ]
+  },
+  "intervention": {
+    "name": "SafeMem（长期语义图记忆 + LLM 风险预测器 + 保守因子调制的重规划闭环）",
+    "mechanism_layer": "architecture",
+    "description": "在 VLM 规划器外围构建闭环架构：每步用 Gemini 2.5 flash 与 SAM 2.0 从 egocentric RGB-D 观测构建语义图并与上一步合并（保留视野外/被遮挡对象、按动作语义增改边），LLM 风险预测器读取整图对候选动作预测危害并发出 REPLAN 信号及解释，VLM 规划器据此重新生成动作；保守因子 η（默认 0.8）以概率 η 遵循 REPLAN 以避免死锁。属规划期架构级干预：不改模型权重、不做形式化验证、不在低层执行层拦截。"
+  },
+  "controls": [
+    {
+      "name": "SaP（Safety-As-Policy 认知提示）",
+      "purpose": "baseline"
+    },
+    {
+      "name": "CoT（IS-Bench 链式安全提醒）",
+      "purpose": "baseline"
+    },
+    {
+      "name": "Base VLM planner（IS-Bench 隐式安全提醒）",
+      "purpose": "baseline"
+    },
+    {
+      "name": "SafeMem w/o GM（移除图记忆，风险预测器直接看原始观测）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "full（全历史图像上下文替代图记忆）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "RAG（图像转文本知识库 + 检索增强）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "object-list（仅可见对象列表，即无边之图）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "w/o retention（移除不可见对象保留）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "w/o edge update（移除动作感知边更新）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "η=1（完全保守）对比默认 η=0.8",
+      "purpose": "ablation"
+    },
+    {
+      "name": "hazard-free tasks（移除危害的任务对照）",
+      "purpose": "negative-control"
+    }
+  ],
+  "results": [
+    {
+      "claim": "在 IS-Bench 部分可观测（单目 egocentric RGB-D）设置下，SafeMem 平均 SSR 达 0.59，显著高于各基线，说明长期图记忆对安全规划至关重要。",
+      "metric": "SSR",
+      "value": "0.59",
+      "comparison": "各危害类 SSR：Electric 0.67、Fire 0.50、Falling 0.67、Food 0.50；平均 SR 0.79",
+      "setting": "IS-Bench 代表性任务集（部分可观测：单目 egocentric RGB-D 1280×720，危害先可见后被遮挡），GPT-4o 规划器与风险预测器，保守因子 η=0.8",
+      "quote": "| SafeMem | 0.67 | 0.67 | 0.50 | 0.50 | 1.00 | 0.67 | 1.00 | 0.50 | 0.79 | 0.59 |",
+      "locator": "Table 1; §5.2 Simulated Results under the Partially Observable Setting",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "SSR=同时满足任务目标与安全目标的任务数/任务总数；η 消融表原文给出 0.35 (6/17) 与 0.18 (3/17)，即该设置共 17 任务；Table 12 清点任务名：电击3+坠落6+火灾2+食物污染6=17；各类 SSR 0.67=2/3、0.50=1/2、0.67=4/6、0.50=3/6，均值 10/17≈0.59 自洽"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "部分可观测设置下，现有 VLM 安全提示方法几乎无法保证安全：SaP 平均 SSR 0.13、CoT 0.17、Base VLM 规划器 0.00。",
+      "metric": "SSR",
+      "value": "0.13",
+      "comparison": "SaP 0.13 / CoT 0.17 / Base 0.00（Average SSR）",
+      "setting": "同 Table 1 部分可观测设置（提示类基线，无图记忆与风险预测器，同样以 GPT-4o 实现）",
+      "quote": "| SaP | 0.67 | 0.33 | 1.00 | 0.00 | 1.00 | 0.17 | 0.50 | 0.00 | 0.79 | 0.13 |\n| CoT | 1.00 | 0.33 | 0.50 | 0.00 | 1.00 | 0.17 | 0.83 | 0.17 | 0.83 | 0.17 |\n| Base | 0.67 | 0.00 | 0.00 | 0.00 | 1.00 | 0.00 | 0.67 | 0.00 | 0.59 | 0.00 |",
+      "locator": "Table 1; §5.2 Simulated Results under the Partially Observable Setting",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "SSR=同时满足任务目标与安全目标的任务数/任务总数；η 消融表原文给出 0.35 (6/17) 与 0.18 (3/17)，即该设置共 17 任务；Table 12 清点任务名：电击3+坠落6+火灾2+食物污染6=17；各类 SSR 0.67=2/3、0.50=1/2、0.67=4/6、0.50=3/6，均值 10/17≈0.59 自洽"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "去掉图记忆（SafeMem w/o GM：风险预测器直接从原始观测推断风险）后平均 SSR 降至 0.21，但仍优于提示类基线，说明风险预测器本身亦有一定作用。",
+      "metric": "SSR",
+      "value": "0.21",
+      "comparison": "各危害类 SSR：Electric 0.33、Fire 0.00、Falling 0.33、Food 0.17；平均 SR 0.75",
+      "setting": "同 Table 1 部分可观测设置；仅移除长期图记忆，其余组件不变",
+      "quote": "| SafeMem w/o GM | 0.67 | 0.33 | 0.50 | 0.00 | 1.00 | 0.33 | 0.83 | 0.17 | 0.75 | 0.21 |",
+      "locator": "Table 1; §5.2 Simulated Results under the Partially Observable Setting",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "SSR=同时满足任务目标与安全目标的任务数/任务总数；η 消融表原文给出 0.35 (6/17) 与 0.18 (3/17)，即该设置共 17 任务；Table 12 清点任务名：电击3+坠落6+火灾2+食物污染6=17；各类 SSR 0.67=2/3、0.50=1/2、0.67=4/6、0.50=3/6，均值 10/17≈0.59 自洽"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "全可观测设置（原 IS-Bench 观测空间加深度图）下 SafeMem 平均 SSR 0.67，高于全部基线，说明该方法在不同可观测条件下均有效。",
+      "metric": "SSR",
+      "value": "0.67",
+      "comparison": "各危害类 SSR：Electric 1.00、Fire 0.50、Falling 0.83、Food 0.33；平均 SR 0.88",
+      "setting": "IS-Bench 原始全可观测观测空间（含四方向相机）+ 深度图用于图构建；与部分可观测设置同一任务集；GPT-4o",
+      "quote": "| SafeMem | 1.00 | 1.00 | 0.50 | 0.50 | 1.00 | 0.83 | 1.00 | 0.33 | 0.88 | 0.67 |",
+      "locator": "Table 2; §5.3 Simulated Results under the Fully Observable Setting",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "附录 B.1：两种观测设置使用同一任务集与评测协议，任务构成见 Table 12（共 17）；分母 17 为依据同一任务集的推断"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "真实世界 Franka Panda 平台四类危害任务上，SafeMem 全部试验均安全成功：各危害类 SSR=1.0、SR=1.0。",
+      "metric": "SSR",
+      "value": "1.0",
+      "comparison": "各危害类 SSR 均 1.0；SR 均 1.0",
+      "setting": "7-DoF Franka Panda + Intel RealSense D405（848×480 egocentric RGB-D）桌面平台；4 个真实任务对应电击/火灾/坠落/食物污染；GPT-4o；η=0.8",
+      "quote": "| SafeMem | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |",
+      "locator": "Table 3; §5.4 Real-World Robot Experiment Results",
+      "denominator": {
+        "n_total": "40",
+        "n_valid": "40",
+        "how_counted": "附录 B.2.4：Each method is evaluated for 10 trials on each real-world task；4 任务×10 试验=40；§5.4 称结果为 10 次运行平均"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "真实世界设置下提示类基线几乎完全不安全：SaP 与 CoT 各危害类 SSR=0.0，Base 仅 Fire/Falling 达 0.1、其余 0.0。",
+      "metric": "SSR",
+      "value": "0.0",
+      "comparison": "SaP 0.0 / CoT 0.0 / Base 0.0-0.1（各危害类 SSR）",
+      "setting": "同 Table 3 真实世界设置（每任务 10 次试验）",
+      "quote": "| SaP | 1.0 | 0.0 | 1.0 | 0.0 | 1.0 | 0.0 | 1.0 | 0.0 |\n| CoT | 0.6 | 0.0 | 1.0 | 0.0 | 1.0 | 0.0 | 1.0 | 0.0 |\n| Base | 1.0 | 0.0 | 1.0 | 0.1 | 1.0 | 0.1 | 1.0 | 0.0 |",
+      "locator": "Table 3; §5.4 Real-World Robot Experiment Results",
+      "denominator": {
+        "n_total": "40",
+        "n_valid": "40",
+        "how_counted": "附录 B.2.4：Each method is evaluated for 10 trials on each real-world task；4 任务×10 试验=40；§5.4 称结果为 10 次运行平均"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "记忆表示消融：把图记忆换成全历史图像（full，SSR 0.13）、RAG 文本知识库（0.38）或无边对象列表（object-list，0.17）后，SSR 相对图记忆的 0.59 大幅下降，说明结构化关系（边）与紧凑表示是风险预测的关键。",
+      "metric": "SSR",
+      "value": "0.59",
+      "comparison": "SSR：graph 0.59 vs full 0.13 vs RAG 0.38 vs object-list 0.17；SR：0.79 vs 0.58 vs 0.79 vs 0.88",
+      "setting": "IS-Bench 部分可观测设置（与 Table 1 同任务集）；仅替换风险预测器所用的记忆表示，其余组件不变",
+      "quote": "| SR | 0.79 | 0.58 | 0.79 | 0.88 |\n| SSR | 0.59 | 0.13 | 0.38 | 0.17 |",
+      "locator": "Table 4; §5.6 Ablation studies",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "该表未直接写明任务数；同一部分可观测设置下 η 消融原文给出 /17、Table 12 共 17 任务，按 17 记（推断）"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "组件消融：去掉不可见对象保留（w/o retention）后 SSR 从 0.59 降至 0.21（与无图记忆持平，图不再构成记忆）；去掉动作感知边更新（w/o edge update）降至 0.38；说明记忆保持与边更新均为安全规划所必需。",
+      "metric": "SSR",
+      "value": "0.59",
+      "comparison": "SSR：SafeMem 0.59 vs w/o GM 0.21 vs w/o retention 0.21 vs w/o edge update 0.38；SR：0.79 vs 0.75 vs 0.71 vs 0.71",
+      "setting": "IS-Bench 部分可观测设置（与 Table 1 同任务集）",
+      "quote": "| SR | 0.79 | 0.75 | 0.71 | 0.71 |\n| SSR | 0.59 | 0.21 | 0.21 | 0.38 |",
+      "locator": "Table 5; §5.6 Ablation studies",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "该表未直接写明任务数；同一部分可观测设置下 η 消融原文给出 /17、Table 12 共 17 任务，按 17 记（推断）"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "保守因子消融：η=1（完全遵循 REPLAN 信号）使安全违规从 6/17 降至 3/17、SSR 从 0.59 升至 0.67（SR 均为 0.79），代价是更高延迟。",
+      "metric": "SSR",
+      "value": "0.67",
+      "comparison": "SSR 0.59->0.67；Safety Violation 0.35 (6/17)->0.18 (3/17)",
+      "setting": "IS-Bench 部分可观测设置；η=0.8（默认，主表所用）对比 η=1",
+      "quote": "| η=0.8\\eta=0.8 | 0.79 | 0.35 (6/17) | 0.59 |\n| η=1\\eta=1 | 0.79 | 0.18 (3/17) | 0.67 |",
+      "locator": "Table 6; §5.6 Ablation studies",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "表内原文给出 0.35 (6/17) 与 0.18 (3/17)，分母 17 即该设置任务总数"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "无危害对照（hazard-free，IS-Bench 任务去除危害）上 SafeMem 平均 SR 0.82，与 Base 0.76 相近、低于 CoT 0.88，说明风险预测器未因不必要的重规划损害任务完成。",
+      "metric": "SR",
+      "value": "0.82",
+      "comparison": "Avg. SR：SafeMem 0.82 vs Base 0.76 vs CoT 0.88",
+      "setting": "IS-Bench hazard-free 任务（移除危害），部分可观测设置",
+      "quote": "| Avg. SR | 0.82 | 0.76 | 0.88 |",
+      "locator": "Table 7; §5.6 Ablation studies",
+      "denominator": {
+        "n_total": "17",
+        "n_valid": "17",
+        "how_counted": "论文未明示 hazard-free 任务数；由同一 IS-Bench 任务集去除危害得到，按 17 记（推断）"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "开销：SafeMem 每规划步平均消耗 9425.40 tokens、延迟 17.62 s，高于 w/o GM（6101.48、12.43 s）与 Base（3979.77、10.33 s）。",
+      "metric": "cost (avg tokens & latency per planning step)",
+      "value": "9425.40",
+      "comparison": "Avg. Tokens：Base 3979.77 / w/o GM 6101.48 / SafeMem 9425.40；Avg. Latency (s)：10.33 / 12.43 / 17.62",
+      "setting": "IS-Bench 模拟实验（附录 B.1），GPT-4o，每规划步平均",
+      "quote": "| Base VLM Planner | 3979.77 | 10.33 |\n| SafeMem w/o GM | 6101.48 | 12.43 |\n| SafeMem | 9425.40 | 17.62 |",
+      "locator": "Table 11; §B.1 Simulated Experiment Details",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "作者自述核心限制：依赖“危害曾出现在历史或当前观测中”这一假设；SafeMem 无法仅凭更广的物理背景推断从未见过的潜在危害（隐藏对象、隐式环境动力学）。",
+      "quote": "Despite the promising results, this work relies on a limiting assumption that safety hazards appear in historical or current observations. SafeMem cannot infer potential but unseen hazards solely from broader physical contexts.",
+      "locator": "§6 Conclusion and Limitations"
+    },
+    {
+      "statement": "概率性保守机制是权衡而非安全保证：η=0.8 时仍有 0.35（6/17）违规，更安全场景需改用 halting fallback；而 η=1 又带来更高延迟。",
+      "quote": "In more safety-critical scenarios, a halting fallback needs to be designed in place of this probabilistic mechanism. However, the hyperparameter η=1\\eta=1 can lead to higher latency.",
+      "locator": "§5.6 Ablation studies"
+    },
+    {
+      "statement": "无效的记忆表示反而有害：全历史与对象列表的 SSR 低于无图记忆变体，记忆表示设计不当会损害风险预测能力。",
+      "quote": "This phenomenon indicates that ineffective memory representations are harmful to the risk prediction ability.",
+      "locator": "§5.6 Ablation studies"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": null,
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "appendix",
+      "figures"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "background_paper",
+    "no_variance_or_ci_reported",
+    "ablation_and_hazardfree_denominators_inferred_from_table6_and_table12",
+    "latex_rendering_artifacts_in_corpus_numbers"
+  ]
+}

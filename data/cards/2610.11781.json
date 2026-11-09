@@ -1,0 +1,241 @@
+{
+ "arxiv_id": "2610.11781",
+ "title": "Skill-V: Verifiable Self-Evolving Skill Library for Interactive Agents",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "skill",
+  "scope": "cross-task",
+  "carrier": "外部技能库（external skill library；训练库 + 同步只读评估副本，B.1）：每条技能存为版本化、可证伪契约 s_i=(φ_i, p_i, ρ_i, ν_i)（式2/Table 7）——语义规范 φ（skill_id/title/principle/when_to_apply/protected skill_constraints，定义技能身份与修订不得覆盖的语义边界）、可复用自然语言程序 p、可执行 rubric ρ（适用条件 + required/forbidden steps + pre/postconditions + termination conditions，判据带 weight/severity{Hard,Soft}/match mode/声明式证据算子，硬判据违例即整体判负）、演化记录 ν（skill version/rubric version/traceability/update reason/evidence case ids）。各技能另配 bounded replay buffer 保存适用历史轨迹作为证据集 E_i。新增技能先以语义形态立即入库（可检索/判适用/进策略提示），但 rubric 处于 PendingCompilation、编译通过前不得产生判定；修订经门控接受后 in-place 原位替换为下一版本，不增大库规模。ALFWorld 库 step-150 为 205 条（初始 55），WebShop 153 条（初始 66）；语义检索用 Qwen3-Embedding-0.6B，general/task-specific 分池排序。",
+  "operations_covered": ["formation", "update", "retention", "retrieval", "repair"]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "保护演化中技能库（持久过程性知识）的完整性：对已存技能契约的任何修订必须 (1) 逐字保留受保护语义约束（技能身份不得被静默改写）；(2) 在该技能的重放证据集上非回归——Disc 与 FNR 不升、BAcc 不降，改动硬判据时须至少一项严格改进（Eq.7）；(3) 保持非空可执行支持并通过 schema/判据 id 唯一性/算子类型/权重/traceability/版本单调等确定性校验。失效条件：重放证据不再代表环境正确行为（环境规则漂移，作者于 Appendix A 自认 historical dependency 局限）；以及判据语义错误但在证据池上碰巧非回归（门控只验证证据一致性、不验证语义正确性）。判定结果：Table 4 中完整 Skill-V 提交的全部 10 个修订 100% 通过完整门控、Disc/FNR/BAcc 回归 0/0/0，而去掉门控时 46 个提交修订中 9 个至少回归一项、仅 27 个通过完整门控；选定 checkpoint 的 rubric–outcome disagreement 仅 0.033（Table 12）。",
+  "operationalized_as": "Evidence Gate（确定性修订验证，B.6，Eq.6–7）：Disc(ρ')≤Disc(ρ) ∧ FNR(ρ')≤FNR(ρ) ∧ BAcc(ρ')≥BAcc(ρ) + 非空可执行支持 + 受保护语义约束逐字复制 + 硬判据改动需严格改进；未通过则拒绝、保留当前版本。配套防线：无效生成契约 fail-closed 并自动排除出策略提示（B.3）；永不执行模型生成代码，判据限定为预定义声明式算子（B.2）；轨迹扁平化排除 policy thoughts，计划而未执行的动作不能 fraudulently 满足判据；未编译（PendingCompilation）技能不得充当 verifier（B.4）；更新器 structurally cannot bypass the contract validator or the evidence-preservation gate（C.4）；退化证据池保守拒绝（support=0 时 Disc/FNR 默认 1、BAcc 默认 0，被非空支持条件拒绝，B.6）。"
+ },
+ "threat_model": {
+  "adversary": "model-itself",
+  "capabilities": [
+   "论文不设定蓄意攻击者；风险来源是 agent 自身生成内容的不可靠性（可靠性而非对抗性）：language-model updater 的新技能提案与修订可能 schema 非法、判据过宽（rubric-pass/outcome-fail）或过严（rubric-fail/outcome-pass）、或在重放证据上回归——故 'Language-model proposals are never committed directly'（B.6）",
+   "未经校准的模型生成规则可能冒充 verifier：新技能 rubric 编译完成前被禁止产生 rubric 判定（B.4 'prevents an uncalibrated model-generated rule from acting as a verifier'）",
+   "模型可能以计划而未执行的动作满足判据：轨迹扁平化严格排除 policy thoughts（B.2），确保 planned but unexecuted action cannot fraudulently satisfy a rubric criterion",
+   "更新器/外部 LLM 可能绕过验证：作者以结构性设计回应——updater 'structurally cannot bypass the contract validator or the evidence-preservation gate'（C.4）"
+  ],
+  "assumptions": [
+   "bounded replay buffer 中的历史轨迹能代表环境的正确行为（环境规则平稳；Appendix A 自认 historical dependency 局限）",
+   "外部模型（deepseek-v4-flash 判官/更新器）可用且按 JSON 协议返回完整决策；两次尝试失败后回退语义 Top-K（B.7）",
+   "环境结果 y∈{0,1} 可靠且轨迹级可比（ALFWorld 取正向终局奖励；WebShop normalized score ≥0.99 记成功，C.1）",
+   "技能受保护语义约束可被逐字复制；不可编译的语义要求仅作保护性约束、不被当作可执行证据（B.2/C.3）"
+  ],
+  "not_covered": [
+   "蓄意攻击（提示注入、恶意技能投毒、检索操纵、对抗性轨迹）完全未讨论，全文无攻击实验",
+   "技能撤销/删除：框架只更新操作边界，根本性错误策略只会被限制使用而非移除，automated skill deprecation 留作未来工作（Appendix A）",
+   "环境规则漂移/非平稳分布下历史重放的有效性（作者承认为未来方向，Appendix A）",
+   "视觉/连续控制环境（需要新的多模态评估机制，Appendix A）",
+   "语义目标本身的正确性/有益性：门控保证身份不被改写与证据非回归，不保证被保留的技能语义上正确或安全（broader impacts 仅作为展望）"
+  ]
+ },
+ "intervention": {
+  "name": "Skill-V：版本化可证伪技能契约 + 证据门控修订（Evidence Gate）+ 适用性感知技能使用",
+  "mechanism_layer": "architecture",
+  "description": "在策略-库共同演化的 RL 训练环中把外部技能库变成显式学习对象：任务失败→新增语义技能（rubric 待编译）；rubric 判定与环境结果的分歧→产生反例并提议双向边界修订（过宽收紧/过严放松）；修订只有通过确定性 Evidence Gate（受保护语义约束保留 + 非空可执行支持 + 重放证据 Disc/FNR/BAcc 非回归）才提交为新版本，否则保留原版本。推理时先语义检索（Qwen3-Embedding-0.6B）再经确定性契约检查 + LLM 适用性判官过滤（仅移除置信 ≥δ 的 NotApplicable，两次 API 失败回退语义 Top-K）。rubric 评估严格排除在策略奖励之外（Appendix B），Table 6 显示把 rubric 改成 process reward 反而 95.3→93.8，排除奖励塑形这一替代解释。"
+ },
+ "controls": [
+  {"name": "GRPO（同策略同奖励、无外部技能库，Table 1）", "purpose": "baseline"},
+  {"name": "SkillRL / Skill1 / RetroAgent / Mem0+GRPO / SimpleMem+GRPO / EvolveR / MemRL 等记忆增强 RL 与技能库基线（Table 1）", "purpose": "baseline"},
+  {"name": "No External Skills / Initial Skill Library（冻结策略、只换评测时外部知识，Table 2）", "purpose": "ablation"},
+  {"name": "Static Library / Acquisition Only / Failure-only（机制消融，Table 3）", "purpose": "ablation"},
+  {"name": "w/o Evidence Gate（修订验证门控消融，Table 4）", "purpose": "ablation"},
+  {"name": "Semantic Retr. Only / w/o LLM Judge（检索与过滤链路消融，Table 5）", "purpose": "ablation"},
+  {"name": "+ Process reward（把 rubric 转为密集奖励的对照，排除奖励塑形替代解释，Table 6）", "purpose": "ablation"}
+ ],
+ "results": [
+  {
+   "claim": "ALFWorld 总体成功率 95.3%，比同用环境任务奖励做策略优化的 GRPO 高 17.7 个百分点——外置可验证技能库带来超越纯策略优化的收益",
+   "metric": "success_rate (ALFWorld overall)",
+   "value": "95.3%",
+   "comparison": "GRPO 77.6% → Skill-V 95.3% (+17.7 pp)",
+   "setting": "ALFWorld（Pick/Look/Clean/Heat/Cool/Pick2 六类具身家务任务）；policy=Qwen2.5-7B-Instruct + GRPO（8 rollouts/指令、lr 1e-6、KL 0.01、8 GPU）；检索 Qwen3-Embedding-0.6B；适用性判官/技能更新器 deepseek-v4-flash；报告选定 step-150 checkpoint（作者明确不逐指标挑峰值，C.1）",
+   "quote": "Compared with GRPO, Skill-V improves the overall ALFWorld success rate from 77.6%77.6\\% to 95.3%95.3\\%, a gain of 17.717.7 percentage points.",
+   "locator": "§4.2 Table 1",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "WebShop 平均任务分 92.5、成功率 85.9%，同样显著超过 GRPO",
+   "metric": "success_rate & task_score (WebShop)",
+   "value": "85.9% success; 92.5 score",
+   "comparison": "GRPO: 66.1% → 85.9% success; 79.3 → 92.5 score",
+   "setting": "WebShop（自然语言约束下的交互式搜索购买；平均分 0–100 量表；契约诊断时 normalized score ≥0.99 记成功，C.1）；其余同 ALFWorld 设置，报告 step-150 checkpoint",
+   "quote": "On WebShop, it improves the average score from 79.379.3 to 92.592.5 and the success rate from 66.1%66.1\\% to 85.9%85.9\\%.",
+   "locator": "§4.2 Table 1",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "对最直接的同类基线 SkillRL（同为 RL + 演化技能库）：ALFWorld 总体成功率 89.9%→95.3%，提升覆盖 Look/Clean/Heat/Pick2 四类任务",
+   "metric": "success_rate (ALFWorld overall)",
+   "value": "95.3%",
+   "comparison": "SkillRL 89.9% → Skill-V 95.3%",
+   "setting": "同主表设置；分任务增益 Look +28.6 / Clean +10.0 / Heat +10.0 / Pick2 +5.4 pp；正文称 Skill-V 在 Look、Clean、Heat 达 100%（表内 100.0/100.0/100.0）",
+   "quote": "Compared to SkillRL, Skill-V elevates the overall ALFWorld success rate from 89.9%89.9\\% to 95.3%95.3\\%. The improvement spans several task types, including gains of 28.628.6, 10.010.0, 10.010.0, and 5.45.4 percentage points on Look, Clean, Heat, and Pick2, respectively.",
+   "locator": "§4.2 Table 1",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "WebShop 上对 SkillRL 的提升更大：成功率 72.7%→85.9%、平均分 85.2→92.5",
+   "metric": "success_rate & task_score (WebShop)",
+   "value": "85.9% success; 92.5 score",
+   "comparison": "SkillRL: 72.7% → 85.9% success; 85.2 → 92.5 score",
+   "setting": "同主表设置（step-150 checkpoint）；作者以此论证'验证技能适用性 + 修订既有边界'相对'只做获取式技能演化'的额外收益",
+   "quote": "The gains are even larger on WebShop, where Skill-V improves the average score from 85.285.2 to 92.592.5 and the success rate from 72.7%72.7\\% to 85.9%85.9\\%.",
+   "locator": "§4.2 Table 1",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "紧凑性对照：Skill1 将 ALFWorld 库扩到容量上限 5,000 技能，Skill-V 训练结束时仅约 200 条（不足其 4%），竞争性表现不依赖激进库增长",
+   "metric": "library_size (stored entries, ALFWorld end of training)",
+   "value": "≈200 entries (<4% of Skill1's 5,000)",
+   "comparison": "Skill-V ≈200 vs Skill1 5,000 (capacity)",
+   "setting": "ALFWorld 主实验 step-150；Table 1 † 注声明 Skill1 的 stored units 与其他方法可能不可直接比较；另 D.1：205 条 = 162 general + 32 task-specific + 11 common mistakes",
+   "quote": "Skill1 expands its ALFWorld library to its capacity of 5,0005{,}000 skills (Shi et al., 2026), whereas Skill-V contains approximately 200200 stored entries at the end of training. This represents less than 4%4\\% of the library size demanded by Skill1.",
+   "locator": "§4.2 Table 1",
+   "denominator": {"n_total": "5,000", "n_valid": "≈200", "how_counted": "分母为 Skill1 的 ALFWorld 库容量 5,000 技能（Table 1 † 注引 Shi et al. 2026）；Skill-V 约 200 条，论文原话 less than 4%；† 注同时提醒两方法 stored units 可能不可直接比较"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "知识来源解耦（Table 2，固定策略只换外部知识）：无外部技能时冻结策略成功率 78.59%，挂初始库升至 88.99%——外置过程性知识在大量策略训练后仍提供高增益",
+   "metric": "success_rate (ALFWorld, frozen policy)",
+   "value": "88.99%",
+   "comparison": "No External Skills 78.59% → Initial Skill Library 88.99%",
+   "setting": "ALFWorld；策略固定为训练结束 checkpoint，仅变评测时提供的外部知识（Table 2：Δ vs No Skill +10.40）",
+   "quote": "Without external skills, the frozen policy achieves a 78.59%78.59\\% success rate. Providing the initial skill library raises performance to 88.99%88.99\\%",
+   "locator": "§4.3 Table 2",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "完全演化的 Skill-V 库把冻结策略成功率进一步推至 95.30%——该库同时含新增技能与经 rubric-outcome 诊断 + 非回归验证修订过的既有契约，提供初始库之外的增量知识",
+   "metric": "success_rate (ALFWorld, frozen policy)",
+   "value": "95.30%",
+   "comparison": "Skill-V Library 95.30% vs Initial Skill Library (+6.31)",
+   "setting": "同 Table 2 设定（冻结策略）；+6.31 点为相对初始库的增益（Table 2：Δ vs Initial +6.31）",
+   "quote": "Using the fully evolved Skill-V library further improves success to 95.30%95.30\\%. Unlike a library expanded through acquisition alone, this library contains newly acquired skills alongside existing contracts revised through rubric-outcome diagnosis and non-regressive validation. This additional 6.31-point gain",
+   "locator": "§4.3 Table 2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "机制消融（Table 3）：只加新技能（Acquisition Only）或只对失败轨迹做修订（Failure-only）都远低于完整 Skill-V——可靠演化需要'库扩张 + 双向边界校正（失败反例修过宽边界、成功反例修过严边界）'的组合",
+   "metric": "success_rate (ALFWorld)",
+   "value": "68.8% / 67.2% vs 95.3%",
+   "comparison": "Acquisition Only 68.8%, Failure-only 67.2% → Full Skill-V 95.3%",
+   "setting": "ALFWorld 主实验设置下的机制消融（Table 3 四变体：Static Library / Acquisition Only / Failure-only / Full Skill-V；正文称完整法高出所有不完整变体至少 21.9 点）",
+   "quote": "Specifically, the Acquisition Only variant reaches 68.8%68.8\\% success, compared with 95.3%95.3\\% for Skill-V. Restricting revision exclusively to failed trajectories is also insufficient, reaching only 67.2%67.2\\%.",
+   "locator": "§4.3 Table 3",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "证据门控消融（Table 4）：去掉基于证据的验证时，46 个提交修订中 9 个在至少一个重放指标上回归、仅 27 个满足全部接受条件（回溯评估）——结构性合法不等于保真，无证据验证会放行回归性修订（语料正文该句 LaTeX 重影为 '99 of the 4646'/'only 2727'，对应 9 of the 46 / only 27，与 Table 4 行一致）",
+   "metric": "revision reliability (replay metric regressions / gate pass)",
+   "value": "9 of 46 committed revisions regress; 27/46 pass full gate",
+   "comparison": null,
+   "setting": "ALFWorld；w/o Evidence Gate 变体；Table 4 行：Committed 46，Non-regressive 37 (80.40%)，Pass full gate 27 (58.70%)，Metric regressions Disc 9 / FNR 0 / BAcc 3（回归计数非互斥）",
+   "quote": "Without evidence-based validation, 99 of the 4646 committed revisions regress on at least one replay metric, and only 2727 satisfy the complete acceptance criteria under retrospective evaluation.",
+   "locator": "§4.3 Table 4",
+   "denominator": {"n_total": "46", "n_valid": "37 non-regressive (80.40%); 27 pass full gate (58.70%)", "how_counted": "分母为 w/o Evidence Gate 变体提交的 46 个修订（Table 4 'Committed' 列）；80.40% 与 58.70% 均以 46 为分母；对照 Full Skill-V 行 10 committed、10 (100.00%) non-regressive、10 (100.00%) pass full gate、回归 0/0/0"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "完整 Skill-V 提交的全部修订通过完整门控，且强制该验证把总体任务成功率从 75.0% 提升到 95.3%——阻止无证据修订对库演化有决定性下游影响",
+   "metric": "success_rate (ALFWorld)",
+   "value": "75.0% → 95.3%",
+   "comparison": "w/o Evidence Gate 75.0% → Full Skill-V 95.3%",
+   "setting": "ALFWorld；w/o Evidence Gate vs Full Skill-V（Table 4 任务性能列 75.00 vs 95.30）",
+   "quote": "In contrast, all revisions committed by full Skill-V pass the complete gate. Consequently, enforcing this validation improves the overall task success rate from 75.0%75.0\\% to 95.3%95.3\\%.",
+   "locator": "§4.3 Table 4",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "适用性过滤消融（Table 5）：仅语义检索把成功率限制在 71.9%，加确定性契约检查恢复到 89.1%，再加 LLM 判官达完整 95.3%——确定性与上下文过滤各有贡献（正文此处引注写作 Table 6，数据实际在 Table 5）",
+   "metric": "success_rate (ALFWorld)",
+   "value": "71.9% → 89.1% → 95.3%",
+   "comparison": "Semantic Retr. Only 71.9% / w/o LLM Judge 89.1% / Full Skill-V 95.3%",
+   "setting": "ALFWorld 主实验设置下的检索/过滤链路消融（embedding 检索 + contract check + LLM judge 三段开关）",
+   "quote": "Relying solely on semantic retrieval severely limits the success rate to 71.9%71.9\\% (Table 6). Retaining deterministic contract checks recovers performance to 89.1%89.1\\%, omitting the LLM judge still drops success from the full 95.3%95.3\\%.",
+   "locator": "§4.3 Table 5",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "训练全程中，适用性判官把检索候选的 29.6% 判为 confidently inapplicable 并过滤——语义相似度经常捞出会误导策略的无关技能（检索语义相关性 ≠ 任务适用性）",
+   "metric": "fraction of retrieved candidates judged confidently inapplicable",
+   "value": "29.6%",
+   "comparison": null,
+   "setting": "ALFWorld 训练全程；判官为 deepseek-v4-flash，仅移除置信超过阈值 δ 的 NotApplicable 候选（保守规则保留 uncertain 候选，B.7）",
+   "quote": "Throughout training, this judge labels 29.6%29.6\\% of retrieved candidates as confidently inapplicable, confirming that semantic similarity frequently surfaces irrelevant skills that misguide the policy.",
+   "locator": "§4.3 Table 5",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "奖励塑形对照（Table 6）：把 rubric 转成 process reward 加入训练目标反而略降——收益来自可验证知识演化而非密集奖励塑形，主实验保持 task-reward-only",
+   "metric": "success_rate (ALFWorld)",
+   "value": "93.8% vs 95.3%",
+   "comparison": "default 95.3% → +process reward 93.8%",
+   "setting": "ALFWorld 主实验设置；default 只用环境任务奖励（rubric 评估严格排除在策略奖励之外，Appendix B）",
+   "quote": "Incorporating this dense reward yields a slightly lower success rate of 93.8%93.8\\%, compared to 95.3%95.3\\% for the default configuration.",
+   "locator": "§4.3 Table 6",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "库演化统计（Table 11，step-150 checkpoint）：ALFWorld 55→205 条（净增 150、10 次已接受修订），WebShop 66→153 条（净增 87、14 次修订）；修订为 in-place 版本替换、不贡献规模增长，净增长来自新增语义技能（D.1：ALFWorld 的净增全部为新习得语义技能）",
+   "metric": "library_size & accepted_revisions",
+   "value": "ALFWorld 55→205 (net +150, 10 revisions); WebShop 66→153 (net +87, 14 revisions)",
+   "comparison": null,
+   "setting": "主实验选定 step-150 checkpoint；Table 11 口径：Total entries 含单独存储的 common mistakes；ALFWorld 10 次修订分布于 update steps 5,60,65,85,120,125,150（计数 2,1,2,1,1,1,2），经训练指标与 checkpoint 版本历史双重确认（D.1）",
+   "quote": "Table 11: Skill-library evolution through step 150. Total entries include common mistakes, which are stored separately from retrievable contracts. [TABLE] | Domain | Initial | Step 150 | Net Growth | Accepted Revisions | | ALFWorld | 55 | 205 | 150 | 10 | | WebShop | 66 | 153 | 87 | 14 |",
+   "locator": "Table 11",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "修订实例（Table 8，ALFWorld 主实验 step-150）：收紧欠约束边界（gen_004 'Track Counts & Progress'，rubric-pass/outcome-fail 反例）在同一重放证据池上把 Disc 0.400→0.100、FNR 1.000→0.000、BAcc 0.500→0.917，被接受为非回归改进（Skill v1→v2、Rubric v1→v2；Case 2 反向放松过严边界 gen_008 的修订亦被接受）",
+   "metric": "replay_validation_metrics (Disc/FNR/BAcc, old→revised)",
+   "value": "Disc 0.400→0.100; FNR 1.000→0.000; BAcc 0.500→0.917",
+   "comparison": null,
+   "setting": "ALFWorld 主实验 step-150 checkpoint；技能 gen_004；replay support 10→10 条适用轨迹（修订前后同一证据池重放）",
+   "quote": "Disc ↓\\downarrow 0.400 0.100 FNR ↓\\downarrow 1.000 0.000 BAcc ↑\\uparrow 0.500 0.917",
+   "locator": "Table 8",
+   "denominator": {"n_total": "10", "n_valid": "10（修订前后重放支持集不变：Support: 10→10）", "how_counted": "Disc=(FP+FN)/N、FNR=FN/(TP+FN)、BAcc 为平衡准确率（Eq.6，B.6）；N 为该技能的重放证据池大小，Table 8 Case 1 标注 Support: 10→10"},
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "只适用于离散文本环境：契约以离散文本判据评估，迁移到视觉/连续控制环境需要新的多模态评估机制（未来可用 VLM 视觉验证物理状态变化，或以程序化奖励函数充当可执行 rubric）。",
+   "quote": "Skill-V evaluates contracts using discrete text-based criteria. Applying this framework to visual or continuous control environments will require new multimodal evaluation mechanisms.",
+   "locator": "Appendix A"
+  },
+  {
+   "statement": "无技能撤销/删除：框架只更新操作边界以防行为意外改变；若最初习得根本性错误策略，系统只会收紧限制其使用而非丢弃，显式删除（automated skill deprecation）需要额外机制、留作未来工作。",
+   "quote": "Our framework only updates operational boundaries to prevent unintended behavior changes. If an agent initially acquires a fundamentally flawed strategy, the system will tightly restrict its use rather than discarding it entirely.",
+   "locator": "Appendix A"
+  },
+  {
+   "statement": "历史依赖：严格验证重度依赖过去轨迹来防止性能回归；若环境规则随时间变化，历史轨迹可能不再代表正确行为（未来可用时间加权缓冲衰减过时证据）。",
+   "quote": "The strict validation step relies heavily on past trajectories to prevent performance regression. If the underlying rules of an environment change over time, these historical trajectories may no longer represent correct behavior.",
+   "locator": "Appendix A"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {"code": null, "data": null, "run_by_us": false},
+ "reading": {"coverage": ["abstract", "intro", "method", "results", "appendix", "figures"], "complete": true},
+ "quality_flags": ["denominator_unclear"]
+}

@@ -1,0 +1,171 @@
+{
+  "arxiv_id": "2610.22959",
+  "title": "SAFE-Mem: Secure Agentic Memory with Fine-Grained Authority and Governance-Aware Retrieval",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "mixed",
+    "carrier": "persistent agent memory as a graph of sentence, claim and entity nodes; every stored claim carries three governance labels (kind, authority, scope) derived from the trusted channel record of its source, and stays linked to its source sentences for provenance",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "A memory claim must not acquire authority its source never held (defense against authority laundering): a claim is admitted to a request's context only when its effective level min(kind, authority) reaches the use the request requires and its scope covers the request's target, so untrusted external content can inform descriptions but never act as the principal's preferences, policies or permissions in answers or tool calls, while legitimate uses of the same entries are retained.",
+    "operationalized_as": "MPBench ASR (share of attack cases whose answer endorses or acts on the injected memory, judged by GPT-4o-mini), MPBench Recall and Restraint, LoCoMo judge accuracy, and EHRAgent ASR/Exec./Lost under the MINJA memory-injection attack"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "controls the content of external artifacts the agent reads (web pages, emails, documents, tool outputs): arbitrary text, statements styled as the principal's own words, claims of prior approval, and paraphrased copies of one payload spread across many artifacts planted long before the target session",
+      "in shared-memory deployments, another principal can act as the adversary and plant records carrying its own authority through ordinary queries (MINJA on EHRAgent)"
+    ],
+    "assumptions": [
+      "the agent runtime's channel records (which channel each input arrived through) are trusted and cannot be forged",
+      "the adversary cannot alter another principal's turns, write to the memory store directly, forge channel records, or access the prompts or weights of any component",
+      "authority over a principal originates only in that principal's own assertions, instructions and authorizations",
+      "the defender knows the channel of each input but not which artifacts are malicious"
+    ],
+    "not_covered": [
+      "attacks that rely on a false fact without borrowing authority: a false claim on a web page remains a valid answer to what the page said, and a principal's own mistaken statement keeps the principal's authority",
+      "a principal persuaded to endorse content (e.g., agreeing to an assistant's suggestion to remember a page's recommendation) grants it up to the kind the request names",
+      "content-level truth judgment of stored memories (content-based defenses are complementary)"
+    ]
+  },
+  "intervention": {
+    "name": "SAFE-Mem",
+    "mechanism_layer": "provenance",
+    "description": "Fine-grained memory governance. Each extracted claim is labeled with a kind (DESCRIPTION < ATTRIBUTE < PREFERENCE < RULE < PERMISSION, what the claim binds), an authority (strongest kind its source channel may establish: principal turn = PERMISSION, external artifact = DESCRIPTION, another party = ATTRIBUTE; a claim inherits the lowest authority present during extraction, following integrity lattices) and a scope (whom that authority covers). A memory graph links sentences, claims and entities, keeping each claim traceable to its source. Governance-aware retrieval classifies each request's required use and target, and admits a claim only if min(kind, authority) >= use and the target is in scope, filtering before ranking and repeating the check at tool calls (refusing calls whose identifiers appear only in lower-authority entries). Only a principal's explicit endorsement, capped at the requested kind, can raise authority."
+  },
+  "results": [
+    {
+      "claim": "Across four backbones on MPBench, SAFE-Mem simultaneously achieves the lowest ASR, Recall above the undefended level, and the best LoCoMo accuracy of all evaluated defenses (in the paper's pooled-memory setting).",
+      "metric": "MPBench ASR / Recall / Restraint and LoCoMo accuracy",
+      "value": "ASR 2.6/6.2/1.5/1.9; Recall 86.3/85.9/84.3/83.1; Restraint 48.4/50.6/51.4/49.2; LoCoMo Acc 61.3/54.6/53.5/47.0 (percent, per backbone)",
+      "comparison": null,
+      "setting": "MPBench (6,240 cases written into one principal's pooled memory) and LoCoMo, four backbones (GPT-5.6-terra, GPT-4o-mini, Claude Haiku 5.5, Qwen3.8-Flash), k=4 claims and m=4 passages, temperature 0, external adversary controlling artifact content",
+      "quote": "SAFE-Mem       2.6   6.2   1.5   1.9 86.3 85.9 84.3 83.1 48.4 50.6 51.4 49.2 61.3 54.6 53.5 47.0",
+      "locator": "Table 1 (SAFE-Mem row), §5.2",
+      "denominator": {
+        "n_total": "ASR: 2,999 scored attack cases; Recall: 249 remember-request cases; Restraint: 2,607 suggestive cases; LoCoMo: 1,540 questions",
+        "n_valid": null,
+        "how_counted": "ASR is the share of attack cases whose answer endorses or acts on the injected memory; Recall is the share of explicit retention requests answered with the retained content"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Refusing all externally derived memory (TMA-NM) reaches SAFE-Mem-level ASR but destroys recall, since most of what users ask an agent to remember reaches it alongside external content.",
+      "metric": "MPBench Recall",
+      "value": "Recall falls to 9.6% under TMA-NM's withholding of everything derived from external content",
+      "comparison": null,
+      "setting": "MPBench, TMA-NM baseline on GPT-5.6-terra and GPT-4o-mini backbones",
+      "quote": "GPT-4o-mini, but recall falls to 9.6%, since most",
+      "locator": "§5.2, Table 1",
+      "denominator": {
+        "n_total": "249",
+        "n_valid": null,
+        "how_counted": "Recall is the share of explicit retention requests answered with the retained content"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "On LoCoMo, where there is nothing to defend against, SAFE-Mem raises judge accuracy on every backbone, by 11.1 and 15.1 points on the two GPT models (and 3.1/2.8 on the smaller backbones).",
+      "metric": "LoCoMo judge accuracy gain (points)",
+      "value": "+11.1 and +15.1 points on the two GPT backbones",
+      "comparison": null,
+      "setting": "LoCoMo long-term conversational memory benchmark, four backbones",
+      "quote": "raises it on every backbone, by 11.1 and 15.1",
+      "locator": "§5.2, Table 10",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "On EHRAgent under MINJA (cross-user shared memory, the adversary is itself a user), SAFE-Mem lets the agent keep drafting wrong-patient code but refuses every execution via the scope check, while removing almost no benign memories.",
+      "metric": "ASR / executed-code ASR / benign memories lost",
+      "value": "ASR 72.4%, executed-code ASR 0.0%, benign memories lost 2.0%",
+      "comparison": null,
+      "setting": "EHRAgent on MIMIC-III Clinical Database Demo, MINJA query-only memory injection by an adversarial user, GPT-4o-mini backbone, memory shared across users",
+      "quote": "SAFE-Mem                 72.4           0.0         2.0",
+      "locator": "Table 2 (SAFE-Mem row), §5.3",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "ASR: share of victim questions whose generated or executed code targets the wrong patient; Lost: share of memories retrieved for benign questions that a defense removes (counts not stated)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The scope check is the operative defense on shared memory: without it, 44.4% of MINJA attacks execute.",
+      "metric": "executed-code ASR (ablation w/o scope)",
+      "value": "44.4% of the attacks execute without the scope check",
+      "comparison": null,
+      "setting": "EHRAgent under MINJA, GPT-4o-mini, SAFE-Mem w/o scope ablation",
+      "quote": "44.4% of the attacks execute, which identifies scope",
+      "locator": "§5.3, Table 2 (w/o scope row)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "share of MINJA attacks whose drafted code executes (count not stated)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "SAFE-Mem stores poison but keeps it out of acting contexts: the injected memory is written to memory yet enters the retrieved context in only 1.1%/2.8% of attack cases, versus 30.2%/55.7% without defense.",
+      "metric": "ASR-retrieve (poison entering retrieved context)",
+      "value": "1.1% and 2.8% of cases with SAFE-Mem",
+      "comparison": "30.2% and 55.7% -> 1.1% and 2.8%",
+      "setting": "MPBench, GPT-5.6-terra and GPT-4o-mini backbones, storage-vs-use separation",
+      "quote": "1.1% and 2.8% of cases, against 30.2% and 55.7%",
+      "locator": "§6.2, Appendix K (Table 11)",
+      "denominator": {
+        "n_total": "2,999",
+        "n_valid": null,
+        "how_counted": "share of scored attack cases in which the injected memory is retrieved into the context prepared for the attack query"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The admission filter drives the security gains: the same memory graph and passages with governance off (every claim and passage admitted, no levels) reach 62.3%/28.2%/49.3% ASR on three backbones.",
+      "metric": "MPBench ASR (governance-off ablation)",
+      "value": "62.3%/28.2%/49.3% ASR without admission",
+      "comparison": null,
+      "setting": "MPBench ablation keeping the graph and passages but admitting every claim and passage including external text, on GPT-4o-mini, Haiku and Qwen backbones",
+      "quote": "reach 62.3%, 28.2% and 49.3% ASR on",
+      "locator": "§5.2, Appendix G (Table 6, governance off row)",
+      "denominator": {
+        "n_total": "2,999",
+        "n_valid": null,
+        "how_counted": "share of scored attack cases whose answer endorses or acts on the injected memory"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Adaptive rewrites of every MPBench attack (forged author, forged request, understated kind, conflict evasion) barely move SAFE-Mem, because the inputs that can raise a claim's level lie outside what the adversary writes.",
+      "metric": "MPBench ASR movement under adaptive attacks (points)",
+      "value": "ASR moves by at most 1.4 points",
+      "comparison": null,
+      "setting": "MPBench with four adaptive rewrite strategies against one component at a time; the strongest rewrite raises an undefended agent's ASR by 13.6/20.0/7.8 points on GPT-4o-mini/Haiku/Qwen",
+      "quote": "SAFE-Mem\u2019s ASR moves by at most 1.4 points",
+      "locator": "§6.3, Table 3",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "SAFE-Mem treats whatever a principal explicitly asks to keep as the principal's own: a principal persuaded to endorse content (e.g., agreeing to an assistant's suggestion to remember a page's recommendation) grants it up to the kind the request names, so endorsement social-engineering is not defended against.",
+      "quote": "SAFE-Mem treats what a principal explicitly asks",
+      "locator": "Limitations section (after §7 Conclusion)"
+    },
+    {
+      "statement": "SAFE-Mem governs authority, not content truth: attacks that rely on a false fact without borrowing authority (a false claim on a web page remains a valid answer to what the page said; a principal's own mistaken statement keeps the principal's authority) lie outside its scope, and content-judging defenses complement it.",
+      "quote": "its scope, and defenses that judge the content of a memory complement it.",
+      "locator": "Limitations section (after §7 Conclusion)"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": []
+}

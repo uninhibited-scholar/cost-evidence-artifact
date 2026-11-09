@@ -1,0 +1,227 @@
+{
+  "arxiv_id": "11e249ea5276",
+  "title": "AGrail: A Lifelong Agent Guardrail with Effective and Adaptive Safety Detection",
+  "screening_status": "核心研究",
+  "versions_read": [
+    "v2"
+  ],
+  "object": {
+    "what_persists": "policy",
+    "scope": "cross-task",
+    "carrier": "A safety-check memory module m ⊆ Ω that iteratively stores an optimized subset of safety checks (agent actions, safety categories, generated safety checks) keyed by step-back-prompted agent-action representations (natural language + tool command language concatenated); the memory is updated by two collaborative LLMs (Analyzer revises/merges/adds checks, Executor deletes redundant or over-restrictive ones and invokes auxiliary detection tools) during test-time adaptation, and is transferable across domains (Mind2Web-SC memory transferred to EICU-AC)",
+    "operations_covered": [
+      "formation",
+      "update",
+      "retention",
+      "retrieval"
+    ]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Adaptive risk detection with utility preservation: agent actions must be blocked when they pose task-specific risks (administrator-identified, e.g., unauthorized access to ICU patient data, privacy-regulation violations) or systemic risks compromising confidentiality, integrity, or availability (prompt injection, system sabotage, environment attacks whose harm depends on environment state), while legitimate benign actions execute (low over-blocking). Failure conditions: unsafe actions executed (ASR) or legitimate actions blocked (over-restrictive detection); safety checks themselves may be overly restrictive or overly permissive.",
+    "operationalized_as": "ASR per attack type (System Sabotage, Prompt Injection, Environment attack on Safe-OS; Prompt Injection on AdvWeb; Action Grounding and Action Generation on EIA) and benign accuracy (Norm); predictive metrics on Mind2Web-SC/EICU-AC (Label Prediction Accuracy, Precision, Recall, F1) plus dataset-specific Agreement Metrics vs ground-truth risk reasons; ablation accuracy across No-Memory / Freeze-Memory / TTA settings; input-token cost."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Prompt injection: AdvWeb injects imperceptible adversarial strings to mislead web agents into incorrect actions; EIA injects hidden malicious HTML elements that trick web agents into leaking user data",
+      "System sabotage: directing the agent to take explicitly harmful actions against the system (corrupting memory, damaging files, halting processes)",
+      "Environment attack: actions harmless in isolation but harmful given environment state (e.g., renaming a file that overwrites an existing file); cannot be pre-defined or fully simulated without the environment"
+    ],
+    "assumptions": [
+      "The guardrail observes agent actions (with optional environment observations) before execution and can block them; universal safety criteria cover Information Integrity, Information Confidentiality, and Information Availability, optionally refined by manually specified guard requests",
+      "Evaluation uses real-world agent outputs (AgentBench OS agents, SeeAct web agents, EHRAgent) rather than LLM-generated synthetic environments",
+      "Tool invocation is governed by the generated safety checks and dynamically utilized by the Executor"
+    ],
+    "not_covered": [
+      "Training the guardrail itself: the framework uses off-the-shelf LLMs as components with memory for lifelong learning (authors' stated limitation)",
+      "The framework primarily relies on reasoning-based defenses because few agent-security tools exist; external tools are invoked only when necessary (authors' stated limitation)",
+      "No adaptive attacker that re-optimizes against the guardrail's evolving safety checks is evaluated"
+    ]
+  },
+  "intervention": {
+    "name": "AGrail: lifelong agent guardrail with adaptive safety-check generation and test-time adaptation",
+    "mechanism_layer": "memory",
+    "description": "A lifelong guardrail built on a memory module of safety checks optimized by two identical collaborative LLMs: the Analyzer retrieves stored checks and modifies them (revise, merge repeats, add adaptive checks) based on universal safety criteria and optional guard requests; the Executor evaluates each check (delete if redundant/incorrect/over-blocking), invokes auxiliary detection tools when needed (Permission Detection Tool for EHR agents, OS Environment Detection Tool for OS agents, Web HTML Detection Tool for web agents), or relies on self-reasoning, then writes the updated check set back to memory (m(t) -> m(t+1)), converging toward the optimal check set during TTA. Safety status S in {True, False} gates action execution."
+  },
+  "controls": [
+    {
+      "name": "Model-based defenses (Claude-3.5 / GPT-4o with CoT, 0-shot and 1-shot)",
+      "purpose": "baseline"
+    },
+    {
+      "name": "Guardrail-based defenses (LLaMA-Guard 3, GuardAgent, AgentMonitor, ToolEmu)",
+      "purpose": "baseline"
+    },
+    {
+      "name": "No Memory vs Freeze Memory vs TTA (Table 3)",
+      "purpose": "ablation"
+    },
+    {
+      "name": "Input-order shuffling across three seeds (Table 4)",
+      "purpose": "ablation"
+    }
+  ],
+  "results": [
+    {
+      "claim": "Systemic risk detection: with Claude-3.5-Sonnet, AGrail achieves 0% ASR against prompt injection on both Safe-OS and AdvWeb while blocking only 4.4% of benign OS actions, with 3.8% ASR on system sabotage and 5% on environment attacks (benign accuracy 95.6%).",
+      "metric": "ASR (%) per systemic attack and benign accuracy (Norm %)",
+      "value": "PI 0%; AdvWeb PI 0%; SS 3.8%; Env 5%; Norm 95.6%",
+      "comparison": "model-based baselines block up to 49.2% of benign actions in Safe-OS; LLaMA-Guard 3 ASR 100% on SS/PI/Env; AgentMonitor Norm 100 but SS 46.7",
+      "setting": "Safe-OS (GPT-4-Turbo agent under PI, GPT-4o otherwise, Docker OS environment with root/regular users), AdvWeb (80 samples, four domains), AGrail on Claude-3.5-Sonnet, TTA setting (Table 1)",
+      "quote": "In systemic risk detection on Safe-OS and AdvWeb, AGrail based on Claude-3.5-Sonnet achieves 0% ASR against prompt injection attacks on OS and AdvWeb, while blocking only 4.4% of benign actions on OS. When against environment and system sabotage attack attacks, ASR remain low at 5% and 3.8%.",
+      "locator": "§6.1 (Table 1)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "ASR over the attack scenarios and benign accuracy over normal scenarios of Safe-OS, plus 80 AdvWeb samples; per-scenario counts are documented in Appendix A.2 (not restated in the main text)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "EIA data-leakage attacks show the robustness-utility trade-off: AGrail reaches 6% ASR on action grounding and 28% on action generation while maintaining 86.7% accuracy on normal web tasks.",
+      "metric": "ASR (%) on EIA (Grd/Gen) and benign accuracy (Norm %)",
+      "value": "Grd 6%; Gen 28%; Norm 86.7%",
+      "comparison": "AgentMonitor Grd 58.0 / Gen 40.0; model-based GPT-4o Grd 42.0 / Gen 16.0 with Norm 66.7 (Table 1)",
+      "setting": "EIA: 100 instances where the attack succeeded on SeeAct plus 30 curated clean benign samples; AGrail with Web HTML Detection Tool (Table 1)",
+      "quote": "For EIA attacks, AGrail achieves 6% ASR in action grounding and 28% in action generation while maintaining 86.7% accuracy on normal web tasks, demonstrating the trade-off performance between robustness and effectiveness.",
+      "locator": "§6.1 (Table 1)",
+      "denominator": {
+        "n_total": 100,
+        "n_valid": null,
+        "how_counted": "ASR over 100 EIA attack instances (action grounding and action generation settings) and accuracy over 30 clean benign samples"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Cost reading (over-restriction of baselines): model-based defenses may block 49.2% of benign actions in Safe-OS - overly restrictive detection - whereas AGrail preserves 95.6% of benign actions.",
+      "metric": "benign actions blocked (%) in Safe-OS by model-based defenses",
+      "value": "49.2%",
+      "comparison": "AGrail (Claude-3.5) blocks 4.4%",
+      "setting": "Safe-OS benign scenarios across model-based defense baselines (§6.1)",
+      "quote": "In contrast, model-based defenses perform well in specific tasks but may block 49.2% of benign actions in Safe-OS, which show overly restrictive detection in these baselines.",
+      "locator": "§6.1 (Table 1)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Share of benign Safe-OS actions blocked by the worst model-based defense baseline; per-baseline benign counts in Table 1 Norm column"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Task-specific risk detection: AGrail consistently ranks second on Mind2Web-SC and EICU-AC with either backbone - GPT-4o AGrail reaches F1 98.4 (Mind2Web-SC) and 97.8 (EICU-AC) with perfect agreement metrics.",
+      "metric": "LPA / F1 / AM on Mind2Web-SC and EICU-AC",
+      "value": "Mind2Web-SC F1 98.4 (GPT-4o) / 94.1 (Claude-3.5); EICU-AC F1 97.8 / 98.5",
+      "comparison": "GPT-4o (1-shot) F1 99.0 / 92.5; GuardAgent 89.0 / 98.7; LLaMA-Guard3 F1 23.0 (Mind2Web-SC)",
+      "setting": "Mind2Web-SC (web safety rules for SeeAct) and EICU-AC (role-based ICU data access for EHRAgent), task-specific safety criteria aligned with guard requests (Table 2)",
+      "quote": "As shown in Tables 1 and 2, AGrail consistently ranks second across specific tasks (e.g., Mind2Web-SC and EICU-AC), regardless of using GPT-4o or Claude-3.5-Sonnet.",
+      "locator": "§6.1 (Table 2)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Predictive metrics over the Mind2Web-SC and EICU-AC test sets as split by GuardAgent's original protocol; dataset sizes in Appendix A.2"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Memory ablation: training then freezing the safety-check memory beats no-memory in both ID and OOD settings, and full TTA is best (Claude-3.5-Sonnet ID 95.6 -> 96.5 -> 99.1; OOD 89.7 -> 93.9 -> 94.6; GPT-4o-mini ID 67.9 -> 70.9 -> 84.1).",
+      "metric": "accuracy (%) under No Memory / Freeze Memory / TTA",
+      "value": "ID 99.1 (TTA); OOD 94.6 (TTA) for Claude-3.5-Sonnet",
+      "comparison": "NM vs FM vs TTA (Table 3)",
+      "setting": "Mind2Web-SC: ID split 8:2 train/test; OOD domain split 3:1 with three random seeds; memory trained then frozen or adapted during TTA (Table 3)",
+      "quote": "From the results in Table 3, we observe that in both ID and OOD setting, training the memory on the training set and then freezing it leads to better performance compared to the setting without memory.",
+      "locator": "§6.2 (Table 3)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Accuracy over the Mind2Web-SC test set under ID (8:2 split) and OOD (3:1 domain split, three seeds) settings"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Domain transferability of the safety-check memory: transferring Mind2Web-SC-adapted memory to EICU-AC causes no performance degradation with Claude-3.5-Sonnet and only a 5.6% drop with GPT-4o.",
+      "metric": "performance change after cross-domain memory transfer (%)",
+      "value": "0 (Claude-3.5-Sonnet); -5.6% (GPT-4o)",
+      "comparison": "before vs after transfer to 100 randomly selected EICU-AC samples with continued TTA (Appendix D.3)",
+      "setting": "Universal safety criteria, TTA iterations on Mind2Web-SC test set then transfer to EICU-AC (§6.2)",
+      "quote": "When using GPT-4o, performance drops only by 5.6% after transfer.",
+      "locator": "§6.2 (Appendix D.3)",
+      "denominator": {
+        "n_total": 100,
+        "n_valid": null,
+        "how_counted": "Metric change over 100 randomly selected EICU-AC samples with continued TTA after transfer"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Cost reading (tokens): on the Mind2Web-SC ID test set, AGrail's input-token consumption falls between GuardAgent (two-shot) and the one-shot GPT-4o model-based baseline - an efficiency-vs-performance trade-off.",
+      "metric": "input token cost on Mind2Web-SC ID test set",
+      "value": "between GuardAgent and GPT-4o baseline (Figure 19)",
+      "comparison": "GuardAgent (two-shot) vs AGrail vs GPT-4o one-shot baseline",
+      "setting": "Case study on computing cost, Mind2Web-SC ID test set (Appendix E.2, Figure 19)",
+      "quote": "As shown in Figure 19, our token consumption falls between that of GuardAgent and the GPT-4o baseline. This cost, however, represents a trade-off between efficiency and overall performance.",
+      "locator": "E.2 (Figure 19)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Input token cost per defended action on the Mind2Web-SC ID test set; absolute token counts shown graphically in Figure 19"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Ground-truth risk agreement: AGrail outperforms baselines by an average of 46.2% in agreement rate and achieves 100% agreement on OS prompt injection, showing it identifies the correct risks rather than aimless risk labels.",
+      "metric": "agreement rate (%) with ground-truth unsafety reasons",
+      "value": "+46.2% average; 100% on OS prompt injection",
+      "comparison": "AGrail vs baseline defense agencies on Safe-OS PI/Env, AdvWeb PI, EIA PI (Figure 3)",
+      "setting": "Manually annotated ground-truth reasons for unsafety in Safe-OS environment attacks, evaluated across defense agencies (§6.3)",
+      "quote": "From Figure 3, AGrail outperforms baselines by increasing an average of 46.2% in agreement rate and even achieves a 100% agreement rate on OS prompt injection.",
+      "locator": "§6.3 (Figure 3)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Agreement rate over the annotated attack cases across Safe-OS (PI, Env), AdvWeb (PI), and EIA (PI); case counts per attack in Appendix A"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The guardrail is built from off-the-shelf LLMs plus memory; training the guardrail itself is unexplored and deferred to future work.",
+      "quote": "Our limitations are twofold. First, our current framework aims to explore the ability of existing LLMs to guardrail the agent. In our paper, we use off-the-shelf LLMs as components of our framework and incorporate memory to enable lifelong learning. Future work could explore training the guardrail.",
+      "locator": "Limitation"
+    },
+    {
+      "statement": "Tool scarcity forces reliance on reasoning-based defenses; external detection tools are invoked only when necessary, and better pluggable tools are future work.",
+      "quote": "Second, due to the scarcity of existing tools for LLM agent security, our framework primarily relies on reasoning-based defenses and invokes external tools only when necessary to minimize unnecessary tool usage.",
+      "locator": "Limitation"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": "Safe-OS (self-constructed benchmark: prompt injection, system sabotage, environment attacks in Docker OS environments with root/regular users), Mind2Web-SC and EICU-AC (from GuardAgent), AdvWeb (80 samples), EIA (100 attack instances + 30 clean benign samples); Appendix A documents data construction",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "related_work",
+      "safe_os_benchmark",
+      "method",
+      "experimental_setup",
+      "main_results",
+      "ablation",
+      "case_study",
+      "conclusion",
+      "limitation",
+      "appendix_E_computing_cost"
+    ],
+    "complete": false
+  },
+  "quality_flags": [
+    "url:https://arxiv.org/abs/2502.11448",
+    "register_hash_id_non_arxiv",
+    "denominator_unclear",
+    "appendices_unread"
+  ]
+}

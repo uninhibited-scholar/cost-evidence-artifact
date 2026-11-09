@@ -1,0 +1,198 @@
+{
+ "arxiv_id": "2610.03902",
+ "title": "When Evidence Changes: Evaluating Memory Repair and Re-reading in Language-Model Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Derived memory extracted from connector documents: claim nodes (extracted facts) that each record the document version they were shown, per-document summaries and a global summary, held in a per-document versioned dependency graph; memory is rendered in full in the use prompt without retrieval (eICU demo ICU records as medication/problem-list/lab documents)",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "revocation",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "After an authentic evidence revision (document revocation, replacement or addition), an agent must not act on revoked or superseded facts (no stale commits, superseded value not retained), must adopt replaced values, must retain still-supported information, and must not list items sourced from documents the task does not allow; failure is judged jointly with full-pipeline token cost. The property is conditional on the connector and documents being authentic; it is scored, not enforced.",
+  "operationalized_as": "Deterministic lexical endpoints over attempted trajectories: stale commit (unique-support-revoked key listed), new value adopted and success (adopted AND other identities retained), retention of the still-supported key, unsupported-source and fabricated listings, strict completion; exact McNemar tests with Holm correction, Clopper-Pearson intervals"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "No adversary: an authentic connector revokes, replaces or adds documents; the paper states 'we model no adversary who writes documents, alters memory or injects instructions' (Section 1)",
+   "The source was authentic when written and every write-time check passed; patient attribution is a connector field, never model text",
+   "Source permissions are stated in the use prompt and scored, not enforced (only two length-sweep pipelines filter by source)",
+   "The read-set commit gate checks only that nothing an action read changed between snapshot and commit, not support, permission or freshness; it never blocked a commit in these runs",
+   "One revision per trajectory; greedy decoding (temperature 0) in every build stage"
+  ],
+  "not_covered": [
+   "Adversarial document writes, memory poisoning and prompt injection (AgentPoison/MPBench/GhostWriter style) are explicitly outside the threat model",
+   "No enforcement (only scoring) of allowed-source permissions; no support/permission/freshness validation of rendered memory nodes",
+   "No clinical validity adjudication; record fidelity only",
+   "Costs measured in tokens, not prices or latency"
+  ]
+ },
+ "intervention": {
+  "name": "Evidence-revision evaluation of memory maintenance pipelines (cache, rebuild, graph-local repair, no-propagation/quarantine controls) vs full and source-filtered re-reading",
+  "mechanism_layer": "provenance",
+  "description": "All memory pipelines share an extraction prompt and a per-document versioned dependency graph in which each claim node records the document version it was shown; a revision invalidates exactly the transitive successors of the revised version. Graph-local repair recomputes only those invalidated nodes (the changed document's claims, its summary, the global summary); rebuild recomputes every node; cache re-extracts only the changed document. A read-set commit gate rejects commits whose read set changed between snapshot and commit. Full-pipeline accounting charges ingest, revision and every use against re-reading the current records, with and without source filtering."
+ },
+ "results": [
+  {
+   "claim": "Across 288 post-revocation medication uses (E1 screening and held-out runs), no pipeline listed the unique-support-revoked key; the paper notes this verifies the implementation (every pipeline removes the revoked document or its derived nodes) rather than separating pipelines",
+   "metric": "stale_commit (revoked key listed)",
+   "value": "no stale listing in 288 uses",
+   "comparison": null,
+   "setting": "eICU demo ICU records, medication task, E1/E1b events, 8 development patients x 2 sizes x 4 pipelines x 2 models (128) plus 20 sealed patients x 4 x 2 (160); Qwen2.5-7B-Instruct and Mistral-7B-Instruct-v0.3",
+   "quote": "In the 288 post-revocation medication uses of the E1 screening and held-out runs (128 development: 8 patients × \\times 2 sizes × \\times 4 pipelines × \\times 2 models; 160 held-out: 20 × \\times 4 × \\times 2) no pipeline listed the unique-support-revoked key",
+   "locator": "Section 6.1",
+   "denominator": {
+    "n_total": "288 post-revocation medication uses (128 development + 160 held-out)",
+    "n_valid": "288 (execution failures stay in the denominator)",
+    "how_counted": "E1 screening and held-out run use trajectories across 4 pipelines and 2 models"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The pre-specified held-out primary hypothesis - that memory pipelines list a drug found only in a non-allowed document more often than re-reading (E4 added-record event) - was not supported on 20 sealed patients per model",
+   "metric": "unsupported-source listings (non-allowed E4 drug listed)",
+   "value": "Qwen 2, 0, 1 of 20 vs 0; Mistral 1, 4, 4 vs 4",
+   "comparison": "memory (cache/rebuild/local repair) vs re-read",
+   "setting": "held-out run, 20 sealed patients per model, small size, E4 event, one-sided exact tests (smallest p=0.25)",
+   "quote": "The primary hypothesis—that the memory pipelines list a drug found only in a non-allowed document more often than re-reading—was not supported: Qwen 2, 0 and 1 of 20 (cache, rebuild, local repair) against 0 for re-reading (smallest one-sided p = 0.25 p=0.25 ); Mistral 1, 4 and 4 against 4",
+   "locator": "Section 6.1, Table 1",
+   "denominator": {
+    "n_total": "20 sealed patients per model per pipeline (counts of 20)",
+    "n_valid": "20",
+    "how_counted": "per-patient counts in Table 1 (held-out run)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Graph-local repair does what it is designed to do: in all 32 E1 screening trajectories it invalidated exactly the three transitive successors of the revoked document and rebuilt one node, so its revise phase costs 5-10x fewer tokens than rebuild's",
+   "metric": "revision-phase token ratio (local repair vs rebuild)",
+   "value": "5–10× fewer revise-phase tokens than rebuild",
+   "comparison": "local repair vs rebuild (revise phase only)",
+   "setting": "E1 development screening, 8 patients, both sizes, both 7B models (Qwen2.5-7B-Instruct, Mistral-7B-Instruct-v0.3)",
+   "quote": "Local repair does what it is designed to do: in all 32 E1 screening trajectories it invalidated exactly the three transitive successors of the revoked document and rebuilt one node, where rebuild recomputed 7–14.5 nodes, so its revise phase costs 5–10 × \\times less than rebuild",
+   "locator": "Section 6.2 (Fig. 3, Table 5, App. D)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Under full-pipeline accounting on the held-out run (short records), local-repair full-trajectory tokens were 3.5-4.3x re-reading's and re-reading was cheapest in every held-out cell, because ingest and memory-based use prompts dominate",
+   "metric": "full-pipeline token ratio vs re-reading",
+   "value": "3.5–4.3× re-reading’s tokens (local repair, held-out)",
+   "comparison": "local repair vs re-read (full trajectory)",
+   "setting": "held-out run, 20 sealed patients per model, 4 conditions (E0/E1/E1b/E4), both 7B models; use-stage prompts alone 2.1-2.2x",
+   "quote": "The held-out run shows the same order: local-repair full-trajectory tokens were 3.5–4.3 × \\times re-reading’s over the four held-out conditions (Table 4 , App. C ; use-stage prompts alone 2.1–2.2 × \\times ), and re-reading was cheapest in every held-out cell.",
+   "locator": "Section 6.2 (Table 4, App. C)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "In the pre-specified length sweep, when records were extended to the 10,000-token XL level with task-ineligible documents, cache, rebuild and local repair all cost less per use than re-reading (95% intervals excluding zero) and cumulative cost crossed full re-reading within 20 uses",
+   "metric": "break-even uses (cumulative cost vs full re-reading, XL level)",
+   "value": "crossed within 20 uses: Qwen at 3, 7, 14; Mistral at 2, 3, 5",
+   "comparison": "memory pipelines vs full re-read at XL",
+   "setting": "EXP-X length sweep, development patients (6 at XL), E1, 20 later uses, both 7B models; crossings of the patient mean",
+   "quote": "At XL cache, rebuild and local repair all cost less per use than re-reading, with 95 % intervals excluding zero (P3), and cumulative cost crossed within 20 uses: at k = 3 k=3 , 7 and 14 for Qwen’s cache, local repair and rebuild and at 2, 3 and 5 for Mistral’s",
+   "locator": "Section 6.3 (Fig. 2, App. O)",
+   "denominator": {
+    "n_total": "20 later uses per trajectory; 6 patients at XL (8, 3, 5, 6 at S, M, L, XL)",
+    "n_valid": "264 trajectories completed",
+    "how_counted": "crossings of the patient mean of cumulative token cost"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Source-filtered re-reading (allowed sources only) was the cheapest pipeline at every length level in both models, and even task-filtered memory (TF local repair) used 1.38-1.50x its per-use tokens",
+   "metric": "per-use / 20-use token ratio vs re-reading (RRTF)",
+   "value": "RRTF 0.70–0.72× at S and 0.05× at XL; TF per-use 1.38–1.50× RRTF",
+   "comparison": "RRTF vs full re-read; TF vs RRTF",
+   "setting": "EXP-X length sweep, levels S to XL, both 7B models, 20 later uses (pre-specified prediction P5, largely implied by the design)",
+   "quote": "Source-filtered re-reading was the cheapest pipeline at every level in both models (P5), at 0.70–0.72 × \\times re-reading’s 20-use tokens at S and 0.05 × \\times at XL, because it never pays for the added documents; TF’s per-use tokens remained 1.38–1.50 × \\times RRTF’s at every level.",
+   "locator": "Section 6.3 (Fig. 2, App. O)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "On replacement batch C (13 development patients per model, counterfactual strength change), re-reading adopted the new value in 13/13 for both models versus 8/13 and 9/13 for rebuild and local repair; the no-propagation and quarantine controls adopted it in 0/13",
+   "metric": "adoption of replaced value",
+   "value": "re-read 13/13; rebuild 8/13 and 9/13; local repair 9/13 and 8/13",
+   "comparison": "re-read 13/13 vs memory 8–9/13; controls 0/13",
+   "setting": "batch C, 13 development patients per model, 5 pipelines, 130 trajectories, both 7B models; development evidence, non-significance is not equivalence",
+   "quote": "Re-reading adopted the new value in 13/13 for both models; rebuild in 8/13 and 9/13; local repair in 9/13 and 8/13. No-propagation adopted it in 0/13 and listed the superseded value in 8/13 for both models; quarantine adopted it in 0/13 because invalidating without recomputing removes the line.",
+   "locator": "Section 6.4, Table 14 (App. I)",
+   "denominator": {
+    "n_total": "13 development patients per model (130 trajectories)",
+    "n_valid": "13 (no execution failure)",
+    "how_counted": "per-patient adoption counts in Table 14"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In the pre-specified confirmatory replacement run C2, none of the four primary paired adoption tests rejected the null and no secondary test survived Holm-3 correction",
+   "metric": "pre-specified paired adoption tests (p-values)",
+   "value": "none rejected; p=0.0625, 0.5, 0.0625, 0.25",
+   "comparison": null,
+   "setting": "C2 confirmatory run: 8 calibration (A) and 11 reused held-out (B) patients per model, 5 pipelines, 190 trajectories, frozen scorer, per-cell alpha=0.05",
+   "quote": "None of the pre-specified primary paired adoption tests rejected the null ( p = 0.0625 , 0.5 , 0.0625 , 0.25 p=0.0625,0.5,0.0625,0.25 for Qwen A, Mistral A, Qwen B and Mistral B); no secondary test survived Holm-3 (minimum adjusted p = 0.1875 p=0.1875",
+   "locator": "Section 6.4 (App. J)",
+   "denominator": {
+    "n_total": "8 calibration + 11 reused held-out patients per model; 190 trajectories",
+    "n_valid": "190 (no failures)",
+    "how_counted": "pre-specified paired exact tests, four primary cells (two models x two strata)"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Single dataset, two 7B models plus one later 32B exploratory supplement, greedy build stage, and only 3-20 patients per cell reused across pipelines and conditions",
+   "quote": "One dataset; two 7B models, with one later 32B exploratory supplement (App. P ); greedy build stage; 3–20 development, calibration or sealed patients per cell, reused across pipelines and conditions.",
+   "locator": "Section 8"
+  },
+  {
+   "statement": "Scorers are lexical and were written after inspecting development outputs; there is no clinical adjudication, and all contract and amendment numbers are post-hoc re-scorings",
+   "quote": "Scorers are lexical and were written after inspecting development outputs; no clinical adjudication exists; all contract and amendment numbers are post-hoc re-scorings of seen outputs.",
+   "locator": "Section 8"
+  },
+  {
+   "statement": "Replacement uses counterfactual strength changes only; no adversarial evaluation, one revision per trajectory, one repeated use template, and costs are tokens rather than prices or latency",
+   "quote": "Replacement uses counterfactual strength changes only; there is no adversarial evaluation, one revision per trajectory, one repeated use template, and costs are tokens, not prices or latency.",
+   "locator": "Section 8"
+  },
+  {
+   "statement": "Persistence, extraction/typing, summary, source rendering and prompts are not independently manipulated, so no causal maintenance effect is identified",
+   "quote": "Persistence, extraction/typing, summary, source rendering and prompts are not independently manipulated, so no causal maintenance effect is identified.",
+   "locator": "Section 8"
+  },
+  {
+   "statement": "At the L and XL sweep levels part of memory's per-use saving comes from truncated extraction (calls stopped at the output cap), so the observed break-evens probably favour memory",
+   "quote": "so part of memory’s per-use saving there is content that never entered memory; complete extractions would have added output and rendered claims, so these break-evens probably favour memory (not measured).",
+   "locator": "Section 6.3"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_partially_read_main_body_complete_tables_4_and_14_spot_checked"
+ ]
+}

@@ -1,0 +1,279 @@
+{
+ "arxiv_id": "2610.29784",
+ "title": "Evolving with Open Worlds: Towards Recursive Self-Improvement for Future Forecasting",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-session",
+  "carrier": "Forecasting skill library S(t) (four-level skills: hand-authored seed set S0 + experience-distilled entries) retrieved at inference; predict-team weights theta(t) updated by RLVR/RFT; task-synthesis skills S_env steering Prometheus; all three formalized as the persisting state Sigma(t)=(theta,S,E) in Equation (4)",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "No safety property is claimed, attacked, or measured: this is a capability paper on recursive self-improvement for future event forecasting (accuracy, calibration, cost). As 必要背景 it supports the survey's mechanism of persistent non-parametric agent state: an experience-distilled skill library that forms, updates, persists across evolution rounds, and is retrieved at inference (operations formation/update/retention/retrieval), with weight-level internalization studied as the complementary channel. Revocation/repair of the externalized state is explicitly left to future work.",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "The environment is objective and verifiable: every question concerns a future event whose outcome resolves publicly, supplying rewards without human annotation",
+   "Live news sources feeding Prometheus are not adversarially manipulated; contamination is treated as an accidental failure mode to design around (search/predict decoupling + evidence caching), not as an attack",
+   "All harnesses run under implementation parity (same questions, tools, official prompts) so gains are attributable to harness design"
+  ],
+  "not_covered": [
+   "No attacker is modeled; 'adversarial' task synthesis makes questions harder for training value, it is not a security adversary",
+   "Deliberate poisoning of Prometheus's 125 news sources or of the Codex-based outcome scorer is not considered",
+   "No safety or security experiments; only forecasting accuracy, calibration, and compute cost are evaluated"
+  ]
+ },
+ "intervention": {
+  "name": "DeepEvolve",
+  "mechanism_layer": "architecture",
+  "description": "A closed-loop three-module agent architecture for recursive self-improvement: Prometheus (living environment synthesizing verifiable forecasting questions from daily news), Branchus (two-team agentic forecaster: time-sensitive search team + time-invariant predict team over cached evidence, with a four-level skill library), and Athena (evolution engine with three operators: RLVR/GRPO weight updates on the predict team, trajectory-to-skill distillation, and failure-to-task-synthesis-skill feedback that makes the environment harder). Architecture-level mechanism: decoupling search from prediction plus evidence caching keeps training uncontaminated in a live environment."
+ },
+ "controls": [
+  {
+   "name": "ReAct / MAS / OpenClaw / DeerFlow / MiroFlow baseline harnesses on shared base LLMs",
+   "purpose": "baseline"
+  },
+  {
+   "name": "skill-free Branchus baseline (no distilled skills)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "plain RFT vs RFT on adversarially synthesized hard problems",
+   "purpose": "ablation"
+  },
+  {
+   "name": "fixed vs weakness-targeted (evolving) task synthesis from the same 262-trajectory pool",
+   "purpose": "ablation"
+  },
+  {
+   "name": "original vs evolved task-synthesis skill over an identical source corpus; per-harness official prompts and unified tools",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "On the external FutureX live leaderboard, the fully self-improved Branchus forecaster ranked first among all systems for three consecutive weeks, with up to a 195% improvement in rating; in the fourth week it remained among the strongest entrants (Appendix A).",
+   "metric": "Bradley-Terry rating / leaderboard rank",
+   "value": "rank first for three consecutive weeks; up to 195% rating improvement",
+   "setting": "FutureX external live benchmark, four weekly evaluations (weeks of 2026-08-17 to 2026-09-07); Branchus after full recursive self-improvement of DeepEvolve",
+   "quote": "On the external FutureX leaderboard, which evaluates predictions against real-world outcomes and is updated weekly, our self-improved forecaster ranked first across all systems over three consecutive weeks, achieving up to a 195% improvement in rating.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "On the Prometheus-synthesized live evaluation, evolved Branchus attains the highest BT score and best rank in every base-LLM block, with the four Branchus configurations in the top three positions overall (BT 62.2 on Qwen3.8-Max, +10.7 over the strongest baseline; margins never change sign).",
+   "metric": "Bradley-Terry score (BT) / rank",
+   "value": "BT 62.2 (rank 1); margin +10.7",
+   "setting": "Prometheus-synthesized live evaluation; 4 base LLMs (Qwen3.8-Max, GPT-5.6-Sol, DeepSeek-V4-Pro, Claude-Opus-4.6) x 6 harnesses = 23 harness-LLM systems (Table 1); Branchus after full recursive self-improvement",
+   "quote": "Across all four LLMs, Branchus ranks among the top three overall and leads its block, and because every result is scored against real-world outcomes, this consistency reflects an advantage intrinsic to the design (BT of 62.262.2 on Qwen3.8-Max, +10.7+10.7 over the strongest baseline in Table 1).",
+   "locator": "§1 Introduction",
+   "denominator": null,
+   "is_primary_result": true,
+   "comparison": "BT 62.2 vs strongest baseline in Table 1"
+  },
+  {
+   "claim": "Branchus's decisive advantage over baselines is calibration and numeric sharpness rather than raw accuracy: it attains the best Brier score in three of the four base-LLM blocks and the best relative WIS on Qwen3.8-Max and GPT-5.6-Sol.",
+   "metric": "Brier / relative WIS (calibration)",
+   "value": "best Brier in three of four blocks; relative WIS 0.737 and 0.865",
+   "setting": "Table 1, Prometheus-synthesized evaluation, same 23 harness-LLM systems",
+   "quote": "Branchus attains the best Brier score in three of the four blocks and the best relative WIS on both Qwen3.8-Max (0.7370.737) and GPT-5.6-Sol (0.8650.865), so its interval forecasts are tighter than the strongest baseline rather than merely competitive.",
+   "locator": "§2.2 Table 1",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Under the search/predict decoupling protocol, RLVR on the predict team yields consistent gains on both LLMs: choice accuracy rises by 1.3 points on each model and the numeric score (1-bWIS) improves by 0.31 and 0.38.",
+   "metric": "choice accuracy / numeric score (1-bWIS)",
+   "value": "accuracy +1.3 points; numeric score +0.31 and +0.38",
+   "setting": "RLVR (GRPO) on Branchus predict team over cached search-team evidence, reward from resolved outcomes; two LLMs (Qwen3-4B-Thinking, Qwen3-8B); Prometheus tasks",
+   "quote": "Under this function-oriented protocol, RLVR yields consistent gains across both LLMs (Figure 5): choice accuracy rises by 1.31.3 points on each model, while the numeric score (1−bWIS1-\\mathrm{bWIS}) improves by 0.310.31 and 0.380.38.",
+   "locator": "§2.3 Figure 5",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "RFT gains compound over evolution rounds rather than being spent in one pass: on GLM-4.7-Flash the first round already sharpens forecasts and the second round pushes Brier and relative WIS lower as the task pool grows from 600 to 1,000 examples.",
+   "metric": "Brier / relative WIS across RFT rounds",
+   "value": "Brier 0.651 -> 0.636 -> 0.630; relative WIS 1.02 -> 0.99 -> 0.98; pool 600 -> 1000",
+   "setting": "RFT on GLM-4.7-Flash predict team over each round's cached trajectories; two evolution rounds on live Prometheus tasks",
+   "quote": "the first round already sharpens forecasts (Brier →0.6360.651\\!\\to\\!0.636, relative WIS →0.991.02\\!\\to\\!0.99), and the second round keeps pushing them down (Brier 0.6300.630, relative WIS 0.980.98) as the task pool grows from 600600 to 10001000 (Figure 3).",
+   "locator": "§2.3 Figure 3",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Distilled skills inserted at inference without touching the weights improve both forecasting axes: relative to the skill-free Branchus baseline, Brier drops 0.135 -> 0.122 and MAPE falls 2.80% -> 2.28%, from only the round-1 pool of 88 live trajectories.",
+   "metric": "Brier / MAPE",
+   "value": "Brier 0.135 -> 0.122; MAPE 2.80% -> 2.28%",
+   "setting": "Skill-free Branchus + experience-distilled skills from nested round-1 pool (88 live trajectories); weights untouched; Prometheus synthesized evaluation",
+   "quote": "Relative to the skill-free Branchus baseline, the Brier score drops from 0.1350.135 to 0.1220.122 (0.0130.013 lower), and the same pattern reappears on the numeric side of the benchmark, where the MAPE falls from 2.80%2.80\\% to 2.28%2.28\\% (0.520.52 points lower).",
+   "locator": "§2.4 Figure 6",
+   "denominator": null,
+   "is_primary_result": true,
+   "comparison": "Brier 0.135 -> 0.122 (0.013 lower); MAPE 2.80% -> 2.28%"
+  },
+  {
+   "claim": "As each round adds its trajectories to the growing pool (88, 186, 262), skill-distilled gains accumulate round by round at a slowing pace: Brier reaches 0.007, 0.012 and 0.013 below baseline across the three rounds and MAPE descends from 2.80% to 2.40%, 2.32% and 2.28%.",
+   "metric": "Brier / MAPE improvement per round",
+   "value": "Brier 0.007 / 0.012 / 0.013 below baseline; MAPE 2.80% -> 2.40% -> 2.32% -> 2.28%",
+   "setting": "Three nested trajectory pools (88, 186, 262 live trajectories) over three evolution rounds; skills inserted at inference, weights untouched",
+   "quote": "Each pool adds gain on top of the last, with the Brier score reaching 0.0070.007, 0.0120.012 and 0.0130.013 below the baseline across the three rounds and the MAPE descending from 2.80%2.80\\% to 2.40%2.40\\%, 2.32%2.32\\% and 2.28%2.28\\% (Figure 6)",
+   "locator": "§2.4 Figure 6",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Later skill rounds add breadth rather than aggregate metric movement: the skill library's topical coverage broadens roughly threefold from round 1 (88 trajectories) to round 3 (262 trajectories).",
+   "metric": "skill library topical coverage (domains / tasks)",
+   "value": "168 -> 479 domains; 173 -> 505 tasks",
+   "setting": "Same three-round skill evolution as Figure 6; coverage counted as domains and concrete tasks covered by distilled skills",
+   "quote": "topical coverage broadens roughly threefold, from 168168 domains and 173173 tasks at round 11 (8888 trajectories) to 479479 domains and 505505 tasks at round 33 (262262 trajectories) (Figure 7(b))",
+   "locator": "§2.4 Figure 7(b)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "On structure synthesis problems (recurring templates), recursively evolved skills cut the agent's tool use by 44% as the library grows, while MAPE stays at least as strong as the skill-free baseline.",
+   "metric": "tool calls per question",
+   "value": "tool calls drop 44% (32 -> 18 per question)",
+   "setting": "Branchus with growing skill library on Prometheus structure synthesis questions (template-generated, recurring patterns)",
+   "quote": "as the library grows, tool calls drop by 44% (from 3232 to 1818 per question) while MAPE stays at least as strong as the skill-free baseline.",
+   "locator": "§2.5 Figure 8(a)",
+   "denominator": {
+    "n_total": "32 tool calls per question (skill-free baseline)",
+    "n_valid": "18 tool calls per question (with skills)",
+    "how_counted": "论文原话 'from 32 to 18 per question'（per-question averages, Figure 8(a)）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "On open synthesis problems from unfamiliar domains the signature reverses: skills induce 13% more tool calls, and there the quality gains are largest, with MAPE falling by 32% and almost closing the gap to structure-synthesis accuracy.",
+   "metric": "tool calls per question / MAPE",
+   "value": "tool calls +13% (30 -> 34 per question); MAPE -32% (3.40% -> 2.31%)",
+   "setting": "Branchus with growing skill library on Prometheus open synthesis questions (freely proposed by Codex from the day's news)",
+   "quote": "the agent issues 13% more tool calls (from 3030 to 3434 per question) and investigates more broadly, and here the quality gains are the largest in the plot, with MAPE falling by 32% (from 3.40%3.40\\% to 2.31%2.31\\%)",
+   "locator": "§2.5 Figure 8(a)",
+   "denominator": {
+    "n_total": "30 tool calls per question (skill-free baseline); MAPE baseline 3.40%",
+    "n_valid": "34 tool calls per question; MAPE 2.31%",
+    "how_counted": "论文原话 'from 30 to 34 per question' 与 'from 3.40% to 2.31%'（Figure 8(a)）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Questions synthesized under the evolved (weakness-targeted) task-synthesis skill are measurably harder for the same Branchus checkpoint: selection accuracy drops and the Brier score worsens.",
+   "metric": "selection accuracy / Brier on synthesized questions",
+   "value": "accuracy 0.60 -> 0.53; Brier 0.52 -> 0.58",
+   "setting": "Same Branchus checkpoint evaluated on question batches from the original vs the evolved task-synthesis skill (identical source corpus)",
+   "quote": "Evaluating the same Branchus checkpoint on questions from the original and the evolved skill, selection accuracy drops from 0.600.60 to 0.530.53 and the Brier score worsens from 0.520.52 to 0.580.58 (Figure 9(a)).",
+   "locator": "§2.6 Figure 9(a)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "The added difficulty of evolved questions is not noise: AUROC stays essentially unchanged, so the agent's confidence still separates correct from incorrect answers on the harder questions.",
+   "metric": "AUROC (confidence discrimination)",
+   "value": "AUROC 0.678 -> 0.68",
+   "setting": "Same comparison as Figure 9(a): original vs evolved-skill question batches, same Branchus checkpoint",
+   "quote": "Instead AUROC is essentially unchanged, edging up from 0.6780.678 to 0.680.68, so the agent’s uncertainty remains informative.",
+   "locator": "§2.6 Figure 9(a)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Coupling task synthesis to the agent's weaknesses enriches the experience distilled from the same 262-trajectory pool: more skills and broader coverage than a fixed environment.",
+   "metric": "number of distilled skills / coverage",
+   "value": "skills 1312 -> 1403; domains 320 -> 337; tasks 331 -> 357",
+   "setting": "Fixed pool of 262 live trajectories; weakness-targeting vs fixed task synthesis in Prometheus",
+   "quote": "From the same pool of 262262 trajectories, coupling task synthesis to the agent’s weaknesses raises the number of distilled skills from 13121312 to 14031403 and broadens coverage from 320320 to 337337 domains and from 331331 to 357357 concrete tasks (Figure 9(b)).",
+   "locator": "§2.7 Figure 9(b)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "RFT on the adversarially synthesized hard problems improves every tracked forecasting metric over plain RFT.",
+   "metric": "Brier / AUROC / relative WIS / Md-sAPE",
+   "value": "Brier -1.6%; AUROC +2.7%; relative WIS -1.0%; Md-sAPE -4.0%",
+   "setting": "RFT with vs without weakness-targeted adversarial task synthesis (Figure 10); Prometheus live tasks",
+   "quote": "Relative to plain RFT, RFT on the adversarially synthesized hard problems improves every forecasting metric we track, lowering the Brier score by 1.6%1.6\\%, raising AUROC by 2.7%2.7\\%, and tightening numeric forecasts by 1.0%1.0\\% in relative WIS and 4.0%4.0\\% in Md-sAPE (Figure 10).",
+   "locator": "§2.7 Figure 10",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Skill distillation is pure inference with no rollout or backward pass but is not free: extracting, filtering and generalizing skills from one trajectory costs on average 14.96 LLM calls and 303,135 tokens (Table 2).",
+   "metric": "token/call cost per trajectory distilled",
+   "value": "14.96 calls; 303,135 tokens per trajectory",
+   "setting": "Athena skill-distillation pipeline (Eval/Extract/Filter/Organize stages), averages per trajectory, output includes reasoning tokens",
+   "quote": "| Total | 14.96 | 284,769 | 18,366 | 303,135 |",
+   "locator": "Table 2",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "On the pre-registered 2026 Nobel Prize forecasts (published on X before announcement), Branchus was the sole forecaster among frontier agents, standalone web-search models and the Kalshi market to surface and list the two outsider laureates (Halzen in Physics, Pillay in Peace), doing so in one of its three independent runs.",
+   "metric": "laureate surfaced (qualitative case study)",
+   "value": "sole forecaster to list both outsider laureates (one of three runs)",
+   "setting": "2026 Nobel Prizes in Physics and Peace; pre-announcement forecasts published on X; comparison against frontier agent systems, web-search LLMs and Kalshi prediction market (Figure 12)",
+   "quote": "Yet our system succeeded where they all failed. Branchus was the sole forecaster to surface and list either laureate, namely Halzen in Physics and Pillay in Peace, doing so in one of its three independent runs.",
+   "locator": "Appendix B",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "RSI progress is bounded by the quality and quantity of available experience; long-horizon evaluation is expensive; stability under non-stationary drift is not guaranteed.",
+   "quote": "Such progress is not without cost: it remains bounded by the quality and quantity of available experience, long-horizon evaluation is expensive, and stability under non-stationary drift is not guaranteed.",
+   "locator": "§1 Introduction"
+  },
+  {
+   "statement": "Where resolvable, informative events are rare or culture-dependent, trajectories stay thin, capping the recursive loop's ceiling.",
+   "quote": "The first concerns the experience the environment supplies, its fuel: where resolvable, informative events are rare or strongly culture-dependent, trajectories stay thin, so broadening the sources of experience in both quantity and quality is a natural way to raise the ceiling of the recursive loop.",
+   "locator": "§3 Discussion"
+  },
+  {
+   "statement": "The skill library may not survive world drift: a skill distilled under one regime can misapply after the regularity shifts; forgetting, time-weighting and failure detection are named as needed but not implemented (no revocation/repair operator).",
+   "quote": "The second concerns the skill library as the world drifts, since a skill distilled under one regime may apply differently once the underlying regularity shifts; forgetting, time-weighting, and failure detection would keep the externalized experience reliable, so that improvement accumulates genuine capability.",
+   "locator": "§3 Discussion"
+  },
+  {
+   "statement": "The environment-as-teacher is only as discerning as its failure diagnoses: silent weaknesses (e.g., overconfidence) stay hidden, and rounds are paced by real-world event resolution.",
+   "quote": "First, it is only as discerning as its diagnoses: a wrong prediction is an explicit failure that can be turned into a harder task, whereas a silent weakness such as overconfidence stays hidden from this signal, so the environment improves the agent most where its errors are already visible.",
+   "locator": "§3 Discussion"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://github.com/RUCAIBox/DeepEvolve",
+  "data": "https://github.com/RUCAIBox/DeepEvolve",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear"
+ ]
+}

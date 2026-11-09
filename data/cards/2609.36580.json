@@ -1,0 +1,203 @@
+{
+  "arxiv_id": "2609.36580",
+  "title": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "cross-task",
+    "carrier": "S-Harness five explicit safety components (Safety Prompt, Validated Memory, Safety Skills, Permission Policy, Guard Policy) updated after each episode, plus Guard model parameters periodically updated by GuardVPO from accumulated event-level safety experience",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "policy-compliance",
+    "statement": "Agent task execution over a sequential deployment stream should avoid unsafe outcomes (both safety hazards and adversarial security attacks) while still completing the original task; judged jointly by Unsafe Outcome Rate together with Task Success Rate and Safe-and-Useful Completion Rate, so safety gains cannot come from over-conservative blocking. Holds only under the paper's continual test-time setting where feedback arrives after task completion and updates affect only subsequent tasks.",
+    "operationalized_as": "UOR (percentage of episodes resulting in an unsafe outcome), TSR, and SUCR on Agent-SafetyBench and Agent Security Bench (ASB), reported Overall and per Safety/Security subset on a 1,024-episode continual evolution stream and a 300-episode held-out test set"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "ASB episodes pair an original task with an attack tool from the same scenario under the Mixed Attack setting, covering both aggressive and non-aggressive attacks",
+      "Cross-benchmark transfer includes prompt-injection scenarios (AgentDojo)",
+      "The unprotected task-performing model itself frequently produces unsafe outcomes (UOR 74-76% in tables), i.e., intrinsic unsafe behavior in the Safety setting"
+    ],
+    "assumptions": [
+      "The task-performing model remains frozen throughout deployment; only the external safety system (S-Harness and Guard) is updated",
+      "Execution trajectory and safety feedback become available only after each task completes, and updates take effect only on subsequent episodes",
+      "Official benchmark feedback provides reliable safety judgments used as the training signal"
+    ],
+    "not_covered": [
+      "Adaptive adversaries that react to the evolving defense during deployment",
+      "Attacks on the safety system itself (e.g., poisoning accumulated memory, skills, or event-level experience)",
+      "Multimodal, GUI/computer-use, audio, and long-horizon environments (stated in Appendix G as future work)"
+    ]
+  },
+  "intervention": {
+    "name": "SafeCoEvo: dual-timescale S-Harness + GuardVPO co-evolution",
+    "mechanism_layer": "architecture",
+    "description": "An external safety system wrapped around a frozen task-performing model. At a short timescale, S-Harness updates five explicit components (Safety Prompt, Validated Memory, Safety Skills, Permission Policy, Guard Policy) after each episode from the trajectory and feedback (Eq. 4), abstracting away source-specific identifiers so knowledge is reusable across tasks. At a long timescale, GuardVPO periodically trains the Guard on accumulated event-level safety experience with an asymmetric safe/unsafe reward (+0.5/-0.5/-1.5/+1.0) and a KL-regularized clipped policy objective (Eqs. 6-8)."
+  },
+  "controls": [
+    {"name": "DeepSeek-v4.1-Flash (no safety module)", "purpose": "baseline"},
+    {"name": "AgentDoG1.5-Unified-Qwen3.5-4B static Guard", "purpose": "baseline"},
+    {"name": "SafeHarness (fixed harness)", "purpose": "baseline"},
+    {"name": "SHE (experience-driven evolving harness, adapted to the same continual stream)", "purpose": "fair-comparison"},
+    {"name": "SafeCoEvo (Static)", "purpose": "ablation"},
+    {"name": "SafeCoEvo w/o GuardVPO", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "On the full continual evolution stream, SafeCoEvo beats the strongest evolving baseline SHE, cutting UOR while raising both task-success metrics, so safety does not come from over-blocking.",
+      "metric": "UOR / TSR / SUCR",
+      "value": "UOR -10.05%; TSR +12.15%; SUCR +15.67%",
+      "comparison": "SafeCoEvo vs strongest evolution baseline SHE",
+      "setting": "DeepSeek-v4.1-Flash agent, Agent-SafetyBench + ASB continual evolution stream, continual test-time protocol",
+      "quote": "As summarized in Table 1, compared with the strongest evolution baseline, SHE, SafeCoEvo reduces UOR by 10.05% over the full 1,024-episode continual evolution stream, while improving TSR and SUCR by 12.15% and 15.67%, respectively.",
+      "locator": "§4.2 (Table 1)",
+      "denominator": {
+        "n_total": "1,024 episodes (full continual evolution stream)",
+        "how_counted": "UOR is 'the percentage of episodes that result in an unsafe outcome'; TSR/SUCR are percentages of episodes over the same stream (§4.1)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Absolute performance of full SafeCoEvo on the full 1,024-episode stream: UOR 14.01% with TSR 76.08% and SUCR 70.02%.",
+      "metric": "UOR / TSR / SUCR",
+      "value": "UOR 14.01%; TSR 76.08%; SUCR 70.02%",
+      "comparison": null,
+      "setting": "Full continual evolution stream, Agent-SafetyBench + ASB, DeepSeek-v4.1-Flash agent",
+      "quote": "| SafeCoEvo | – | 14.01% | – | 76.08% | – | 70.02% |",
+      "locator": "Table 1 (SafeCoEvo row, Full columns)",
+      "denominator": {
+        "n_total": "1,024 episodes (full continual evolution stream)",
+        "how_counted": "Table 1 'Overall performance on the continual evolution stream ... Full denote ... the full 1,024 episodes'; metrics are percentages of episodes (§4.1)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Safety capabilities acquired during continual evolution generalize to a held-out test set of unseen scenarios without any test-time updates, with larger gains than on the stream itself.",
+      "metric": "UOR / TSR / SUCR",
+      "value": "UOR -21.52%; TSR +26.97%; SUCR +36.38%",
+      "comparison": "SafeCoEvo vs strongest evolution baseline SHE",
+      "setting": "300-episode held-out test set (four unseen scenarios), evolved S-Harness and Guard frozen, no test-time updates",
+      "quote": "As shown in Table 2, compared with the strongest evolution baseline, SHE, SafeCoEvo reduces UOR by 21.52%, while improving TSR and SUCR by 26.97% and 36.38%, respectively.",
+      "locator": "§4.3 (Table 2)",
+      "denominator": {
+        "n_total": "300 held-out test episodes (100 Agent-SafetyBench / 200 ASB, four unseen scenarios)",
+        "how_counted": "percentages of episodes on the held-out test set (§4.1 datasets split)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "S-Harness evolution alone (short timescale) accounts for most of the gain: vs the fully static configuration it cuts UOR and sharply raises utility on the full stream.",
+      "metric": "UOR / TSR / SUCR",
+      "value": "UOR -10.45%; TSR +31.45%; SUCR +27.64%",
+      "comparison": "SafeCoEvo w/o GuardVPO vs SafeCoEvo (Static)",
+      "setting": "Full 1,024-episode continual evolution stream",
+      "quote": "Compared with the fully static SafeCoEvo configuration, S-Harness reduces UOR by 10.45%, while improving TSR and SUCR by 31.45% and 27.64%, respectively.",
+      "locator": "§4.2 (Table 1)",
+      "denominator": {
+        "n_total": "1,024 episodes (full continual evolution stream)",
+        "how_counted": "percentage-of-episode metrics over the full stream (§4.1)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "GuardVPO adds a further gain on top of S-Harness evolution over the full stream (it is activated only after the first 512 episodes).",
+      "metric": "UOR / TSR / SUCR",
+      "value": "UOR -3.96%; TSR +0.88%; SUCR +2.83%",
+      "comparison": "SafeCoEvo (full) vs S-Harness evolution alone",
+      "setting": "Full 1,024-episode continual evolution stream; GuardVPO trained on experience from the first 512 episodes",
+      "quote": "Table 1 further shows that introducing GuardVPO over the full continual evolution stream reduces UOR by an additional 3.96%, while improving TSR and SUCR by 0.88% and 2.83%, respectively.",
+      "locator": "§4.2 (Table 1)",
+      "denominator": {
+        "n_total": "1,024 episodes (full continual evolution stream)",
+        "how_counted": "percentage-of-episode metrics over the full stream (§4.1)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The advantage of evolved safety knowledge is concentrated in the adversarial Security setting, where S-Harness evolution nearly halves UOR and massively raises success versus the static configuration.",
+      "metric": "UOR / TSR / SUCR (Security setting)",
+      "value": "UOR -14.85%; TSR +50.67%; SUCR +44.56%",
+      "comparison": "S-Harness evolution vs SafeCoEvo (Static)",
+      "setting": "ASB (Security) portion of the full continual evolution stream, Mixed Attack setting",
+      "quote": "On the full continual evolution stream, compared with SafeCoEvo (Static), continual S-Harness evolution reduces UOR by 14.85%, while improving TSR and SUCR by 50.67% and 44.56%, respectively.",
+      "locator": "Appendix A (Table 7)",
+      "denominator": {
+        "n_total": "ASB portion of the stream (620 of 1,024 episodes)",
+        "how_counted": "Security setting = ASB subset; percentage-of-episode metrics (§4.1, Appendix A)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The continual adaptation capability transfers to an alternative task-performing model backbone rather than being tied to DeepSeek-v4.1-Flash.",
+      "metric": "UOR / TSR / SUCR",
+      "value": "UOR -17.81%; TSR +23.66%; SUCR +19.80%",
+      "comparison": "SafeCoEvo w/o GuardVPO vs SOTA",
+      "setting": "Task-performing model replaced by Qwen3.7-Flash; continual evolution stream",
+      "quote": "when replacing the default task-performing model, DeepSeek-v4.1-Flash, with Qwen3.7-Flash, SafeCoEvo w/o GuardVPO reduces UOR by 17.81% compared with SOTA on the continual evolution stream, while improving TSR and SUCR by 23.66% and 19.80%, respectively.",
+      "locator": "§4.4 (Figures 4-5)",
+      "denominator": {
+        "n_total": "1,024 episodes (continual evolution stream)",
+        "how_counted": "percentage-of-episode metrics on the continual evolution stream (§4.1)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "GuardVPO's risk-judgment gains transfer to external benchmarks the Guard was never trained on, at the cost of slightly lower safe-class specificity.",
+      "metric": "Unsafe F1 / Unsafe Recall / Correct predictions",
+      "value": "R-Judge F1 +0.46%, Recall +1.06%; ATBench F1 +1.28%, Recall +2.76%; correct 802/1000 -> 810/1000",
+      "comparison": "GuardVPO-optimized Guard vs initial AgentDoG 1.5 Guard",
+      "setting": "Guard evaluated zero-shot on external benchmarks R-Judge and ATBench after continual evolution",
+      "quote": "compared with the initial AgentDoG 1.5, the Guard optimized by GuardVPO improves Unsafe F1 and Unsafe Recall on R-Judge by 0.46% and 1.06%, respectively, and by 1.28% and 2.76% on ATBench, while increasing the number of correct predictions from 802/1000 to 810/1000.",
+      "locator": "§4.5 (Table 5)",
+      "denominator": {
+        "n_total": "ATBench Correct counted out of 1000; R-Judge and ATBench F1/Recall set sizes not stated in the corpus",
+        "how_counted": "ATBench Correct reported as 802/1000 -> 810/1000 (Table 5); F1/Recall/Specificity percentages given without explicit denominator counts"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The GuardVPO objective is one instantiation, not claimed to be the only or optimal approach to long-term parametric safety internalization.",
+      "quote": "Although our experiments demonstrate the effectiveness of GuardVPO, we do not claim that its current optimization formulation is the only or optimal approach to long-term parametric safety internalization.",
+      "locator": "Appendix G"
+    },
+    {
+      "statement": "Evaluation is limited to text-driven tool-using agents and a limited set of safety and security scenarios; multimodal, GUI, audio, and long-horizon environments are not covered.",
+      "quote": "Our current evaluation primarily focuses on text-driven tool-using agents and a limited set of safety and security scenarios.",
+      "locator": "Appendix G"
+    },
+    {
+      "statement": "GuardVPO increases sensitivity to unsafe events but introduces a modest trade-off in recognizing safe examples (safe-class specificity decreases on both external benchmarks).",
+      "quote": "Meanwhile, Safe-class specificity slightly decreases on both R-Judge and ATBench, suggesting that GuardVPO increases sensitivity to unsafe events while introducing a modest trade-off in recognizing safe examples.",
+      "locator": "§4.5"
+    },
+    {
+      "statement": "Benefits of continual adaptation are not uniform across unseen scenarios: on the held-out Safety subset, S-Harness evolution is worse than the static configuration, while Security generalization is strong.",
+      "quote": "These results suggest that the benefits of continual adaptation are not uniform across all unseen safety scenarios.",
+      "locator": "Appendix B"
+    }
+  ],
+  "counterexamples": [
+    {
+      "observation": "On the held-out test set Safety subset (Table 8), SafeCoEvo w/o GuardVPO increases UOR by 6.00% and decreases TSR/SUCR by 6.00%/8.00% vs SafeCoEvo (Static) - continual evolution can hurt on unseen safety scenarios.",
+      "locator": "Appendix B (Table 8)"
+    }
+  ],
+  "reproduction": {
+    "code": "https://github.com/SII-YUCHENG2002/SafeCoEvo",
+    "data": "Agent-SafetyBench, Agent Security Bench (ASB), R-Judge, ATBench, AgentDojo, AgentHarm",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "num_runs_unspecified"
+  ]
+}

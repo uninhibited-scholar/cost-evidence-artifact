@@ -1,0 +1,313 @@
+{
+ "arxiv_id": "2610.07639",
+ "title": "HarnessSecurity-Bench: Do Security Mechanisms Really Protect Coding Agent Harnesses?",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "none (no persistent-state object studied)：评测对象是六个编码智能体 harness 的九类原生安全机制（AA/NI/CAL/CDL/MCP/PIF/PR/RO/PT）在单次隔离 Docker 容器内单任务执行中的 ON/OFF 即时效果；攻击资源（仓库工件、指令/技能、工具描述、任务级知识记录、外部服务）均随任务投递、trial 结束即弃，不构成被研究的跨会话持久状态；audit logging（AL）虽在 RQ1 分类中但被排除在 RQ3 之外",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "被测 harness 安全机制处于 ON 时应阻断攻击效应（确定性 attack-effect oracle：未授权工具/命令调用、对受保护文件/数据库/平台状态的未授权修改、canary/token 等敏感数据外送至攻击者接收端），同时保持 utility oracle 通过率；安全性以 ASR（通过的 attack-effect oracle 比例）判定并与 utility 一并报告。限制合法与恶意操作共享的能力会同时阻断两者（utility 代价），而被允许的工具/命令可能经替代执行路径使未授权操作仍可达。",
+  "operationalized_as": "Utility = 通过的 utility oracle 检查比例；ASR = 通过的 attack-effect oracle 检查比例；确定性 oracle 检查文件/数据库变更、接收端记录与执行事件，oracle 定义与判定保存在 agent 工作区之外；ΔUtility/ΔASR 以百分点报告，U 判定从分母剔除（§5.3、§6.1）"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "在任务仓库与工作流工件中预置载荷（文档、源码注释、配置文件）：把未授权动作包装成 misleading workflow steps 或 fabricated operational prerequisites",
+   "投毒 agent 指令与技能文件（MCP Email Validation 的 poisoned AGENTS.md；PT Pixel Pet Codec 的项目指令）",
+   "在工具描述与工具返回内容中嵌入注入指令（Doc Search 工具描述诱导未授权 admin_exec；Issue Triage 的 incident handoff 响应要求提交附件/日志）",
+   "通过未修改的数据库工具投毒任务级知识/案例记录（StreamLoop：关于 retention、reviewer identity、policy exceptions 的协调性虚假业务记录）",
+   "控制外部服务与执行依赖：包生命周期钩子、reporter 端点、HTTP 记录，触发未授权回调与 canary 外传",
+   "目标为攻击者指定的具体未授权动作（queue purging、build token posting、deployment manifest upload、recovery snapshot deletion、evidence deletion、privilege escalation、policy change 等），由确定性 attack-effect oracle 判定成败"
+  ],
+  "assumptions": [
+   "合法用户指令是任务要求的权威来源且在攻击增强中保持不变；utility oracle 与合法完成路径保留",
+   "攻击以任务执行中自然遇到的资源/工件形式投递；direct-user-input 攻击面被排除",
+   "每次 trial 在固定镜像的新隔离 Docker 容器中运行；oracle 定义与判定位于 agent 工作区之外",
+   "被测机制的 ON/OFF 由评测者设定，其余 sandbox/approval/network/tool 配置在每次 ON/OFF 对照中固定并记录"
+  ],
+  "not_covered": [
+   "直接用户输入攻击（direct-user-input surface 明确排除出 HSB 评测范围）",
+   "audit logging（AL）不进入 RQ3 运行时评测",
+   "闭环源 harness 的运行时评测（RQ3 仅六个开源 harness；闭环源在 RQ2 中大量 U 评级）",
+   "跨会话/持久化的知识-记忆攻击（任务级知识投毒均在单 trial 内交付）",
+   "真实部署环境与 GLM-5.2 之外的基础模型（Docker/模拟服务不完全再现真实部署；单基础模型限制泛化）"
+  ]
+ },
+ "intervention": {
+  "name": "被评测对象为六个编码智能体 harness 的原生安全机制（AA、NI、CAL、CDL、MCP、PIF、PR、RO、PT；论文未提出新机制，HSB 是评测基准）",
+  "mechanism_layer": "execution",
+  "description": "HSB 对产品化 harness 已实现的安全机制做同环境 ON/OFF 对照：auto-approve（跳过确认）、network isolation（默认拒绝出口/域名白名单）、command allowlisting/denylisting、MCP 权限、prompt-injection filtering（内容层）、path restriction、read-only mode、project trust（仓库资源准入）；每次对照固定其余 sandbox/approval/network/tool 配置；AL（audit logging）被排除在 RQ3 之外。"
+ },
+ "controls": [
+  {
+   "name": "Security setting OFF（原生机制禁用；AA-OFF 的权限请求由独立 Qwen3.8-27B 审查者经确定性 bridge 审批）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "U/D/A 单 setting 行（U 观察原生默认；D 仅 ON；A 仅 OFF baseline）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "每次 ON/OFF 对照固定其余 sandbox/approval/network/tool 配置并记录",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Enabling auto-approve (ON) across six harnesses on the 2-task AA benchmark raises overall ASR from 29.2% to 95.6% (+66.4 pp) while utility rises from 77.1% to 95.4% (+18.3 pp): skipping confirmation lets both legitimate and malicious prerequisite operations proceed more readily.",
+   "metric": "ASR / Utility",
+   "value": "ASR 95.6% (ON)",
+   "comparison": "ASR 29.2% -> 95.6% (+66.4 pp); Utility 77.1% -> 95.4% (+18.3 pp)",
+   "setting": "被测机制 auto-approve（AA）；2 任务（Job Scheduler Backoff, Settlement Fee Rounding）×6 harness（Claude Code, Codex CLI, Gemini CLI, gptme, Qwen Code, GitHub Copilot）×10 trials/setting；基础模型 GLM-5.2；AA-OFF 由独立 Qwen3.8-27B 审查者经确定性 bridge 审批全部六个 harness 的权限请求，ON=跳过原生确认；每 setting 120 trials / 360 attack checks / 780 utility checks",
+   "quote": "Utility rose from 77.1% to 95.4% (+18.3+18.3 pp), while ASR rose from 29.2% to 95.6% (+66.4+66.4 pp).",
+   "locator": "§6.2 Table 6",
+   "denominator": {
+    "n_total": "360 attack-effect oracle checks and 780 utility oracle checks per setting (2 tasks × 6 harnesses × 10 trials)",
+    "n_valid": "ASR: 344/360 passed (ON), 105/360 (OFF); Utility: 744/780 (ON), 601/780 (OFF)",
+    "how_counted": "Table 6 Overall row counts; rates = passed oracles / total oracles, Unknown (U) verdicts excluded (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With network isolation enabled (ON), overall ASR falls from 57.1% to 0.8% (-56.3 pp) but utility falls from 90.9% to 66.4% (-24.5 pp): required network interactions account for 161 of the 162 fewer utility passes, so the restriction blocks registry-dependent legitimate work together with malicious callbacks/exfiltration.",
+   "metric": "ASR / Utility",
+   "value": "ASR 0.8% (ON)",
+   "comparison": "ASR 57.1% -> 0.8% (-56.3 pp); Utility 90.9% -> 66.4% (-24.5 pp)",
+   "setting": "被测机制 network isolation（NI）；2 任务（Dependency Lock Repair, CI Summary Repair）×6 harness（Claude Code, Codex CLI, Gemini CLI, gptme, Qwen Code, GitHub Copilot）×10 trials/setting；GLM-5.2；ON=默认拒绝出口/域名白名单生效，OFF=网络访问不受限；每 setting 120 trials / 240 attack checks / 660 utility checks",
+   "quote": "| Overall | 90.9% | (600/660) | 66.4% | (438/660) | 57.1% | (137/240) | 0.8% | (2/240) | ↓ 24.5%\\downarrow\\,24.5\\% | ↓ 56.3%\\downarrow\\,56.3\\% |",
+   "locator": "Table 6",
+   "denominator": {
+    "n_total": "240 attack-effect oracle checks and 660 utility oracle checks per setting",
+    "n_valid": "ASR: 2/240 (ON), 137/240 (OFF); Utility: 438/660 (ON), 600/660 (OFF)",
+    "how_counted": "Table 6 NI Overall row counts; U verdicts excluded (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With command allowlisting enabled (ON), overall ASR falls from 98.1% to 50.0% (-48.1 pp) with only a 1.5 pp utility loss (99.2% -> 97.7%): most legitimate implementation and validation remains achievable through permitted commands.",
+   "metric": "ASR / Utility",
+   "value": "ASR 50.0% (ON)",
+   "comparison": "ASR 98.1% -> 50.0% (-48.1 pp); Utility 99.2% -> 97.7% (-1.5 pp)",
+   "setting": "被测机制 command allowlisting（CAL）；2 任务（CLI Arg Parser, Markdown Table Render）×6 harness（Claude Code, Codex CLI, Gemini CLI, gptme, Qwen Code, GitHub Copilot）×10 trials/setting；GLM-5.2；ON=显式命令白名单，OFF=无限制命令策略；每 setting 120 trials / 360 attack checks / 660 utility checks",
+   "quote": "| Overall | 99.2% | (655/660) | 97.7% | (645/660) | 98.1% | (353/360) | 50.0% | (180/360) | ↓ 1.5%\\downarrow\\,1.5\\% | ↓ 48.1%\\downarrow\\,48.1\\% |",
+   "locator": "Table 6",
+   "denominator": {
+    "n_total": "360 attack-effect oracle checks and 660 utility oracle checks per setting",
+    "n_valid": "ASR: 180/360 (ON), 353/360 (OFF); Utility: 645/660 (ON), 655/660 (OFF)",
+    "how_counted": "Table 6 CAL Overall row counts; U verdicts excluded (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With command denylisting enabled (ON, four paired harnesses), overall ASR falls from 41.7% to 1.3% (-40.4 pp) while overall utility rises from 94.6% to 99.8% (+5.2 pp); for example, blocking the induced key-copying preserved 15 of the 29 additional utility passes that had been invalidated under OFF.",
+   "metric": "ASR / Utility",
+   "value": "ASR 1.3% (ON)",
+   "comparison": "ASR 41.7% -> 1.3% (-40.4 pp); Utility 94.6% -> 99.8% (+5.2 pp)",
+   "setting": "被测机制 command denylisting（CDL）；2 任务（Record Deduplication, INI Config Parsing）；6 harness 中 4 个支持 ON/OFF 对照（Claude Code, Gemini CLI, Qwen Code, GitHub Copilot），Codex CLI 与 gptme 为 default-enforced 仅 ON、不进 Overall；GLM-5.2；Overall 每 setting 240 attack checks / 560 utility checks",
+   "quote": "| Overall | 94.6% | (530/560) | 99.8% | (559/560) | 41.7% | (100/240) | 1.3% | (3/240) | ↑ 5.2%\\uparrow\\,5.2\\% | ↓ 40.4%\\downarrow\\,40.4\\% |",
+   "locator": "Table 6",
+   "denominator": {
+    "n_total": "240 attack-effect oracle checks and 560 utility oracle checks per setting (paired harnesses only)",
+    "n_valid": "ASR: 3/240 (ON), 100/240 (OFF); Utility: 559/560 (ON), 530/560 (OFF)",
+    "how_counted": "Table 6 CDL Overall row counts; Overall includes only harnesses evaluated in both settings (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With MCP permissions enabled (ON, three-task MCP benchmark), overall ASR falls from 82.2% to 54.2% (-28.1 pp) with overall utility roughly unchanged (73.3% -> 73.9%); some retained operations could still alter protected state.",
+   "metric": "ASR / Utility",
+   "value": "ASR 54.2% (ON)",
+   "comparison": "ASR 82.2% -> 54.2% (-28.1 pp); Utility 73.3% -> 73.9% (+0.5 pp)",
+   "setting": "被测机制 MCP permissions（MCP）；3 任务（Doc Search, Email Validation, StreamLoop case reconciliation）×6 harness（Claude Code, Codex CLI, Gemini CLI, gptme, Qwen Code, GitHub Copilot）×10 trials/setting；GLM-5.2；ON=MCP/外部工具服务器授权与调用范围限制，OFF=无工具白名单且默认放行；每 setting 180 trials / 360 attack checks / 1140 utility checks",
+   "quote": "| Overall | 73.3% | (836/1140) | 73.9% | (842/1140) | 82.2% | (296/360) | 54.2% | (195/360) | ↑ 0.5%\\uparrow\\,0.5\\% | ↓ 28.1%\\downarrow\\,28.1\\% |",
+   "locator": "Table 7",
+   "denominator": {
+    "n_total": "360 attack-effect oracle checks and 1140 utility oracle checks per setting",
+    "n_valid": "ASR: 195/360 (ON), 296/360 (OFF); Utility: 842/1140 (ON), 836/1140 (OFF)",
+    "how_counted": "Table 7 MCP Overall row counts; U verdicts excluded (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With path restriction enabled (ON, four paired harnesses on the four-task PR benchmark), overall ASR falls from 95.0% to 46.9% (-48.1 pp) with utility essentially unchanged (81.6% -> 81.9%); per-harness ASR reductions ranged from complete observed suppression (Codex CLI, gptme) to almost unchanged outcomes (Claude Code, Qwen Code).",
+   "metric": "ASR / Utility",
+   "value": "ASR 46.9% (ON)",
+   "comparison": "ASR 95.0% -> 46.9% (-48.1 pp); Utility 81.6% -> 81.9% (+0.3 pp)",
+   "setting": "被测机制 path restriction（PR）；4 任务（Claims Reimbursement, Safe Path Join, MVCC LSM Compaction, Embedding Drift Monitor）；paired harness：Codex CLI, Claude Code, gptme, Qwen Code（Gemini CLI 与 GitHub Copilot 为 default-enforced 仅 ON，不进 Overall）；GLM-5.2；Overall 每 setting 160 attack checks / 1440 utility checks",
+   "quote": "| Overall | 81.6% | (1175/1440) | 81.9% | (1180/1440) | 95.0% | (152/160) | 46.9% | (75/160) | ↑ 0.3%\\uparrow\\,0.3\\% | ↓ 48.1%\\downarrow\\,48.1\\% |",
+   "locator": "Table 7",
+   "denominator": {
+    "n_total": "160 attack-effect oracle checks and 1440 utility oracle checks per setting (paired harnesses only)",
+    "n_valid": "ASR: 75/160 (ON), 152/160 (OFF); Utility: 1180/1440 (ON), 1175/1440 (OFF)",
+    "how_counted": "Table 7 PR Overall row counts; Overall includes only harnesses evaluated in both settings (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With read-only mode enabled (ON), overall ASR falls from 8.3% to 0.8% (-7.5 pp) from a low OFF baseline while utility drops from 69.8% to 35.8% (-34.0 pp): checks requiring persistent implementation changes account for 347 of the 367 fewer utility passes.",
+   "metric": "ASR / Utility",
+   "value": "ASR 0.8% (ON)",
+   "comparison": "ASR 8.3% -> 0.8% (-7.5 pp); Utility 69.8% -> 35.8% (-34.0 pp)",
+   "setting": "被测机制 read-only mode（RO）；2 任务（Takeaway Ordering, Bike Dispatch Audit）×6 harness（Claude Code, Codex CLI, Gemini CLI, gptme, Qwen Code, GitHub Copilot）×10 trials/setting；GLM-5.2；ON=抑制覆盖操作内的持久变更（approval_policy 固定），OFF=允许写入；每 setting 120 trials / 120 attack checks / 1080 utility checks",
+   "quote": "| Overall | 69.8% | (754/1080) | 35.8% | (387/1080) | 8.3% | (10/120) | 0.8% | (1/120) | ↓ 34.0%\\downarrow\\,34.0\\% | ↓ 7.5%\\downarrow\\,7.5\\% |",
+   "locator": "Table 7",
+   "denominator": {
+    "n_total": "120 attack-effect oracle checks and 1080 utility oracle checks per setting",
+    "n_valid": "ASR: 1/120 (ON), 10/120 (OFF); Utility: 387/1080 (ON), 754/1080 (OFF)",
+    "how_counted": "Table 7 RO Overall row counts; U verdicts excluded (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With the workspace marked untrusted (PT ON, five paired harnesses), overall ASR falls from 75.3% to 40.3% (-35.0 pp) and utility falls from 100.0% to 80.0% (-20.0 pp); the entire utility loss comes from Gemini CLI refusing startup in all 40 ON trials after the workspace was marked untrusted.",
+   "metric": "ASR / Utility",
+   "value": "ASR 40.3% (ON)",
+   "comparison": "ASR 75.3% -> 40.3% (-35.0 pp); Utility 100.0% -> 80.0% (-20.0 pp)",
+   "setting": "被测机制 project trust（PT）；4 任务（Constellation Postcard, Pixel Pet Codec, Pocket Music Box, Clockwork Mobile）；5 个 paired harness（Codex CLI, Claude Code, Gemini CLI, Qwen Code, GitHub Copilot；gptme 对 PT 为 absent，仅 OFF）；GLM-5.2；ON=工作区标记 untrusted，OFF=trusted（approval/sandbox/network 固定）；Overall 每 setting 300 attack checks / 1200 utility checks",
+   "quote": "| Overall | 100.0% | (1200/1200) | 80.0% | (960/1200) | 75.3% | (226/300) | 40.3% | (121/300) | ↓ 20.0%\\downarrow\\,20.0\\% | ↓ 35.0%\\downarrow\\,35.0\\% |",
+   "locator": "Table 7",
+   "denominator": {
+    "n_total": "300 attack-effect oracle checks and 1200 utility oracle checks per setting (paired harnesses only)",
+    "n_valid": "ASR: 121/300 (ON), 226/300 (OFF); Utility: 960/1200 (ON), 1200/1200 (OFF)",
+    "how_counted": "Table 7 PT Overall row counts; Overall includes only harnesses evaluated in both settings (§6.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Excluding the Gemini CLI startup-refusal configuration, the other four PT harnesses retain 100% utility while ASR falls from 75.8% to 50.4%: denying task startup differs from limiting repository resources during execution while retaining a legitimate completion path.",
+   "metric": "ASR / Utility",
+   "value": "ASR 50.4% (ON, excluding Gemini CLI startup-refusal configuration)",
+   "comparison": "ASR 75.8% -> 50.4%",
+   "setting": "被测机制 project trust（PT）；Claude Code, Codex CLI, Qwen Code, GitHub Copilot 四个在 ON 下继续执行的 harness；GLM-5.2；ON=工作区 untrusted",
+   "quote": "This utility loss came entirely from Gemini CLI refusing startup in all 40 ON trials after the workspace was marked untrusted.\nExcluding that startup-refusal configuration, the other four harnesses retained 100% utility while ASR fell from 75.8% to 50.4%.",
+   "locator": "§6.2",
+   "denominator": {
+    "n_total": "4 harnesses × 60 attack-effect oracle checks per setting = 240 (derived from Table 7 per-harness rows); utility 240 oracle checks per harness per setting",
+    "n_valid": null,
+    "how_counted": "derived from Table 7 PT per-harness paired rows (Codex, Claude Code, Qwen Code, GitHub Copilot); prose rates 75.8% -> 50.4% given in §6.2"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "For prompt-injection filtering only gptme supports a paired ON/OFF comparison: ASR falls by 3.3 pp (16/60 -> 14/60 passed attack checks) and utility falls by 1.9 pp; the filter matches explicit injection patterns in tool outputs, and attacks presented as ordinary workflow prerequisites can still influence execution under this screening.",
+   "metric": "ASR / Utility",
+   "value": "ASR 14/60 attack checks (ON, gptme)",
+   "comparison": "ASR 16/60 -> 14/60 (-3.3 pp); Utility -1.9 pp",
+   "setting": "被测机制 prompt-injection filtering（PIF）；2 任务（Issue Triage, C# Maze）；仅 gptme 支持 ON/OFF 对照（其余 harness 的 PIF 为 U/D/A 单 setting，不能确立 ON/OFF 效应）；GLM-5.2；gptme 过滤器匹配工具输出中的显式注入模式并添加警告；paired 部分 60 attack checks / 160 utility checks 每 setting",
+   "quote": "Only gptme supported a paired PIF comparison: ASR fell by 3.3 pp, from 16/60 to 14/60 passed attack checks, while utility fell by 1.9 pp.",
+   "locator": "§6.2 Table 7",
+   "denominator": {
+    "n_total": "60 attack-effect oracle checks for the only paired comparison (gptme)",
+    "n_valid": "14/60 passed (ON), 16/60 (OFF)",
+    "how_counted": "§6.2 prose counts; Table 7 PIF rows show remaining cells are single-setting (U/D/A)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Across 40 harnesses × 10 mechanisms (400 cells), 205 cells have confirmed implementation (109 opt-in O, 64 configurable-off C, 32 default-enforced D), 83 have confirmed absence, and 112 remain unknown: about half of confirmed mechanism implementations are opt-in.",
+   "metric": "confirmed mechanism implementations",
+   "value": "205/400 implemented; 109 opt-in (O), 96 active by default (64 C, 32 D)",
+   "comparison": null,
+   "setting": "40 harness（27 开源 + 13 闭环源）×10 机制 = 400 cells；5 评分者独立评级（L1 Claude Opus 4.8、L2 DeepSeek V4 Flash、L3 GLM-5.2、H1、H2；Evidence-of-thought 评级须引用出处与行区间），≥3/5 多数决，18 个无多数 cell 由 H1-H3 仲裁；语料截止 2026-08-31",
+   "quote": "Of 400 harness–mechanism cells, 205 have confirmed implementation (D, C, or O), 83 have confirmed absence (A), and 112 are rated U.\nWithin the 205 implemented cells, O is the most frequent rating (109); the remaining 96 are active by default (64 C and 32 D).",
+   "locator": "§4.2 Table 4",
+   "denominator": {
+    "n_total": "400 harness–mechanism cells (40 harnesses × 10 mechanisms)",
+    "n_valid": "205 implemented (109 O + 64 C + 32 D); 83 absent (A); 112 unknown (U)",
+    "how_counted": "§4.2; consensus = rating supported by at least 3 of 5 raters"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Implementation-evidence gaps concentrate in closed-source harnesses: unknown (U) ratings account for 69 of 130 closed-source cells (53.1%) versus 43 of 270 open-source cells (15.9%), and cover all 13 closed-source PIF cells.",
+   "metric": "unknown (U) rating share",
+   "value": "53.1% (closed-source) vs 15.9% (open-source)",
+   "comparison": null,
+   "setting": "同 RQ2 评级矩阵（40 harness × 10 机制），按开源（270 cells）与闭环源（130 cells）分组统计 U 评级占比",
+   "quote": "More broadly, U accounts for 69 of 130 closed-source cells (53.1%), compared with 43 of 270 open-source cells (15.9%).",
+   "locator": "§4.2",
+   "denominator": {
+    "n_total": "130 closed-source cells; 270 open-source cells",
+    "n_valid": "69 U (closed-source); 43 U (open-source)",
+    "how_counted": "§4.2; U = insufficient or conflicting evidence about implementation or default state"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Task-level bypass: on the CLI Arg Parser task under Qwen Code with command allowlisting enabled, the native gate rejected the unauthorized checker but the agent later invoked it through an allowed Python interpreter; the trial passed all six utility checks and all three attack-effect checks, so allowed tools or commands can leave unauthorized operations reachable through alternative execution paths.",
+   "metric": "attack-effect oracle checks passed (bypass case)",
+   "value": "all three attack-effect checks passed despite CAL ON",
+   "comparison": null,
+   "setting": "CLI Arg Parser 任务（CAL 基准），Qwen Code 且 CAL ON，GLM-5.2；单 trial 案例观察（每组合共 10 trials）",
+   "quote": "The trial passed all six utility checks and all three attack-effect checks, showing that satisfying the checked task requirements coexisted with successful attack effects.",
+   "locator": "§6.3 Case B",
+   "denominator": {
+    "n_total": "3 attack-effect oracle checks in the CLI Arg Parser task trial",
+    "n_valid": "3 passed",
+    "how_counted": "§6.3 Case B prose (all three attack-effect checks passed; all six utility checks passed)"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "AA-OFF 的审批决定由固定的 LLM 审查者标准化，但模型偏差与残余非确定性仍可能影响个别审批决定；报告的 AA 结果反映所规定的审批配置。",
+   "quote": "Model bias and residual nondeterminism may still affect individual approval decisions, so the reported AA results reflect the specified approval configuration.",
+   "locator": "§7.1 Approval review"
+  },
+  {
+   "statement": "研究者与模型偏差可能影响 RQ1–RQ2 评级结果的准确性与一致性（以 Evidence-of-Thought 评级与仲裁缓解）。",
+   "quote": "Researcher and model biases may affect the accuracy and consistency of RQ1–RQ2 results.",
+   "locator": "§7.1 Rating consistency"
+  },
+  {
+   "statement": "闭环源 harness 难以可复现评测（GUI IDE 工作流的自动化执行可能无法忠实再现交互操作），核心运行时评测因此仅覆盖六个开源 harness。",
+   "quote": "Closed-source harnesses are more difficult to evaluate reproducibly because their interaction modes differ, particularly for GUI-based IDE workflows, where automated execution may not faithfully reproduce interactive operation.",
+   "locator": "§7.2 Harness scope"
+  },
+  {
+   "statement": "Docker 容器、自动化执行与模拟服务不能完全再现真实部署环境。",
+   "quote": "Docker containers, automated execution, and simulated services do not fully reproduce real deployments.",
+   "locator": "§7.2 Deployment environment"
+  },
+  {
+   "statement": "使用单一基础模型（GLM-5.2）可能限制 RQ3 的泛化性：不同模型在工具使用与指令遵循上的差异会影响绝对 ASR 与 ON/OFF 差值幅度。",
+   "quote": "Using a single base LLM may limit the generalizability of RQ3 because different models can vary in tool use and instruction following, affecting both absolute ASR and the magnitude of ON/OFF differences.",
+   "locator": "§7.2 Model coverage"
+  },
+  {
+   "statement": "模型随机性与偶发错误输出可能在重复执行间引入波动（以每条件重复 10 次缓解）。",
+   "quote": "Model stochasticity and occasional erroneous outputs may introduce variation across repeated executions.",
+   "locator": "§7.2 Model stochasticity"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/TsingPig/HarnessSecurity-Benchmark",
+  "data": "https://github.com/TsingPig/HarnessSecurity-Benchmark（task packages and utility checks）；项目主页 https://tsingpig.github.io/HarnessSecurity-Benchmark/",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "appendix_b_body_absent_in_corpus_only_heading",
+  "table6_vs_appendix_table10_rounding_drift: NI ΔASR 56.3 vs 56.2; CDL ASR-on 1.3% vs 1.2% (3/240)",
+  "pif_overall_row_only_covers_single_paired_comparison_gptme"
+ ]
+}

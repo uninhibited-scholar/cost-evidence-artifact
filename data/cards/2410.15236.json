@@ -1,0 +1,160 @@
+{
+ "arxiv_id": "2410.15236",
+ "title": "Jailbreaking and Mitigation of Vulnerabilities in Large Language Models",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "none (no persistent-state object studied)",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "保护 LLM 的安全对齐（policy-compliance）：在提示类（对抗后缀 GCG、自动迭代 PAIR、AutoDAN、WordGame、多轮 Crescendo、逻辑链注入、词替换密码、ASCII ArtPrompt、角色扮演）、模型类（后门投毒、Shadow Alignment 微调、model interrogation、激活转向）、多模态（ImgTrojan、HADES、FigStep）与多语言（低资源语言翻译）越狱攻击下，LLM 不得生成违反安全准则的有害内容；次要面为保密性（系统提示/私有信息泄露）。失效条件：安全对齐依赖模式记忆而非对上下文与意图的理解，可被精心构造的提示绕过；判定依据是有害输出是否被成功诱导（ASR）。",
+  "operationalized_as": "§V-A 汇总的度量：Attack Success Rate (ASR)、True Positive Rate (TPR)、False Positive Rate (FPR)、Benign Answer Rate、Perplexity、Transferability、Stealthiness、Cost；§V-B 基准数据集（AdvBench、HarmBench、RealToxicityPrompts、DAN、SafetyPrompts、VLSafe、MM-SafetyBench、JailbreakV-28K、TechHazardQA、NicheHazardQA、Do-Not-Answer、Latent Jailbreak、RED-EVAL、JailbreakHub）；§VI 作者自测系统提示泄露（图 3）"
+ },
+ "threat_model": {
+  "adversary": "user",
+  "capabilities": [
+   "黑盒提示访问：构造对抗性/多轮/角色扮演/伪装提示（PAIR 用攻击方 LLM 迭代查询，通常少于 20 次查询成功）",
+   "白盒/梯度访问：GCG 生成可迁移对抗后缀（可迁移到 ChatGPT、Bard、Claude）、激活转向（对比层搜索自动选择脆弱层）",
+   "训练/微调期投毒与触发器植入：TrojanRAG、PoisonPrompt、ImgTrojan、Shadow Alignment（少量恶意数据即可颠覆安全对齐）",
+   "跨模态输入：对抗图像、排版图像（FigStep）、图文组合攻击",
+   "低资源语言翻译绕过英语主导的安全训练数据",
+   "解码层操纵：选取低排名输出 token 提取被拒回答（model interrogation）；利用在线越狱社区共享与迭代的提示（JailbreakHub 数据集）"
+  ],
+  "assumptions": [
+   "攻击者可通过提示接口与已部署 LLM 交互，多数攻击仅需查询访问",
+   "安全对齐（SFT/RLHF）依赖模式记忆而非对上下文与意图的理解，可被精心构造的提示绕过",
+   "安全训练数据以英语为主，低资源语言与视觉模态对齐不足",
+   "即使良性数据微调也可能破坏安全对齐（Qi et al. [12]）；被拒绝的响应在解码分布中仍保留生成概率，可被利用"
+  ],
+  "not_covered": [
+   "Agent 持久记忆/技能/经验等状态化攻击面：全部攻击与防御均在单次交互内生效，不涉及跨会话/跨用户持久状态",
+   "对授权、权限与部署基础设施层的攻击",
+   "攻击与防御长期协同演化的实证研究；对齐的形式化保证（BEB 仅作为未来方向引用）"
+  ]
+ },
+ "intervention": {
+  "name": "Surveyed defense taxonomy (no new mechanism proposed): prompt filtering/transformation/optimization, model-level defenses, multi-agent, self-regulation",
+  "mechanism_layer": "content",
+  "description": "综述性防御分类（图 2），无单一自有干预：提示级防御（过滤：困惑度/关键词/实时监控；变换：改写/重标记化/语义平滑；优化：RPO、DRO、self-reminders、IAPrompt）、模型级防御（对抗训练、安全微调 VLGuard/RED-INSTRUCT、剪枝 WANDA、Moving Target Defense、有害知识遗忘 Eraser、RA-LLM 鲁棒对齐检查）、多智能体防御（AutoDefense 协作过滤）、其他（自过滤 LLM Self Defense/PARDEN/Self-Guard、回译、SafeDecoding 安全感知解码）。机制层取 content，因提示级防御是该综述的最大主要类别；综述的防御亦覆盖执行层（SafeDecoding）与架构层（剪枝、MTD、RA-LLM）。"
+ },
+ "controls": [],
+ "results": [
+  {
+   "claim": "作者自测（非系统实验，无量化）：GPT-4o 与 Perplexity Pro 在集成安全措施下，仍被简单且精心构造的提示（如以教学场景为伪装的繁体中文翻译请求）诱导泄露系统级指令（图 3）",
+   "metric": "system_prompt_disclosure",
+   "value": "both tested models disclosed system-level instructions (qualitative, unquantified)",
+   "comparison": null,
+   "setting": "GPT-4o 与 Perplexity Pro（图 3 标注截至 10/15/2024）；作者手工提示演示，无样本量与量化判定标准",
+   "quote": "Our experiments revealed that, despite integrated safety measures, both models were susceptible to simple yet carefully crafted prompts, resulting in the unintended disclosure of system instructions.",
+   "locator": "§VI Research Gaps and Future Directions, Fig. 3",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "综述转引 [43]：WordGame 将恶意词伪装为文字游戏（查询与响应同时混淆），在 Llama 2-7b Chat、GPT-3.5、GPT-4 上越狱成功率超过 92%，优于近期算法型攻击；分母与成功判定标准未报告",
+   "metric": "ASR",
+   "value": ">92%",
+   "comparison": "outperforms recent algorithm-focused attacks (qualitative)",
+   "setting": "综述二手转引 WordGame [43]；模型 Llama 2-7b Chat、GPT-3.5、GPT-4；本综述未报告分母与判定方式",
+   "quote": "This obfuscation significantly raises the jailbreak success rate, exceeding 92% on Llama 2-7b Chat, GPT-3.5, and GPT-4, outperforming recent algorithm-focused attacks [43].",
+   "locator": "§III-A1 Adversarial Prompting",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "综述转引 [20]：GPTFuzzer 以人工模板为种子自动变异越狱提示，对 ChatGPT 与 LLaMa-2 攻击成功率超过 90%，超过人工构造的提示；分母未报告",
+   "metric": "ASR",
+   "value": ">90%",
+   "comparison": "surpasses human-crafted prompts (qualitative)",
+   "setting": "综述二手转引 GPTFuzzer [20]；目标模型 ChatGPT、LLaMa-2；本综述未报告分母与判定方式",
+   "quote": "This framework achieves over 90% attack success rates against ChatGPT and LLaMa-2 models, surpassing human-crafted prompts.",
+   "locator": "§III-A1 Adversarial Prompting",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "综述转引 [7]：PAIR 用攻击方 LLM 对黑盒目标 LLM 迭代生成并精炼越狱提示，通常少于 20 次查询即可产生成功越狱，且跨开源与闭源模型可迁移",
+   "metric": "query_cost",
+   "value": "<20 queries",
+   "comparison": null,
+   "setting": "综述二手转引 PAIR [7]；黑盒设置，攻击方 LLM 迭代查询目标 LLM（GPT-3.5/4、Vicuna、PaLM-2 等）",
+   "quote": "This method is efficient, often requiring fewer than 20 queries to produce a successful jailbreak, and achieves high success rates with strong transferability across various LLMs, including both open and closed-source models like GPT-3.5/4, Vicuna, and PaLM-2 [7].",
+   "locator": "§III-A1 Adversarial Prompting",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "综述转引 [61]：Prompt Adversarial Tuning (PAT) 在防御越狱攻击的同时保持 80% 的良性回答率（防御不过度 restrictive 的证据）；分母未报告",
+   "metric": "benign_answer_rate",
+   "value": "80%",
+   "comparison": null,
+   "setting": "综述二手转引 PAT [61]；良性提示上的回答率；本综述未报告分母与统计口径",
+   "quote": "For instance, the Prompt Adversarial Tuning (PAT) method maintained a high benign answer rate of 80% while defending against jailbreak attacks [61].",
+   "locator": "§V-A Metrics for Evaluation (Benign Answer Rate)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "综述转引 [37]：self-reminders 将查询封装进负责任的系统提示以促使模型遵循安全准则，显著降低针对 ChatGPT 的越狱成功率（定性，无数值）",
+   "metric": "ASR",
+   "value": "reduced jailbreak success rate (qualitative)",
+   "comparison": null,
+   "setting": "综述二手转引 self-reminders [37]；ChatGPT；提示级自我调节防御",
+   "quote": "This method significantly reduces jailbreak success rates against ChatGPT.",
+   "locator": "§IV-A3 Prompt Optimization",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "作者指出：多轮对话与复杂交互下攻击成功难以一致量化（评估有效性限制）",
+   "quote": "Many jailbreak attacks involve multi-turn dialogues or complex interactions, making it challenging to consistently measure attack success [11]. This is particularly relevant for methods like Crescendo, which gradually escalates interactions to bypass safety measures [45].",
+   "locator": "§V-C Challenges and Limitations in Evaluation"
+  },
+  {
+   "statement": "作者指出：现有基准数据集未能覆盖有害内容全谱且含内在偏差，导致安全评估不完整",
+   "quote": "Existing benchmark datasets often fail to represent the full spectrum of potential harmful content and may contain inherent biases [19]. For example, datasets may be skewed towards certain topics or demographics, resulting in incomplete safety evaluations.",
+   "locator": "§V-C Challenges and Limitations in Evaluation"
+  },
+  {
+   "statement": "作者指出：缺乏公认的 LLM 安全评估标准，导致各研究方法与度量不一致、结果难以比较",
+   "quote": "There is no widely accepted standard for evaluating LLM safety and robustness, leading to inconsistencies in methodologies and metrics across studies [23].",
+   "locator": "§V-C Challenges and Limitations in Evaluation"
+  },
+  {
+   "statement": "本综述自身实验仅为说明性演示：对 GPT-4o 与 Perplexity Pro 做手工提示测试（图 3），无系统实验设置、无量化、无分母",
+   "quote": "To illustrate these vulnerabilities, we conducted some testing with the latest GPT-4o model and Perplexity Pro, as shown in Figure 3.",
+   "locator": "§VI Research Gaps and Future Directions"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "denominator_unclear",
+  "no_appendix_in_corpus",
+  "survey_paper_no_own_quantified_experiments",
+  "secondhand_numbers_reported_from_cited_works"
+ ]
+}

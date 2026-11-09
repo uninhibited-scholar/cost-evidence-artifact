@@ -1,0 +1,108 @@
+{
+ "arxiv_id": "2603.22350",
+ "title": "Session Risk Memory (SRM): Temporal Authorization for Deterministic Pre-Execution Safety Gates",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "within-task",
+  "carrier": "Session Risk Memory: a compact semantic centroid representing the evolving behavioral profile of an agent session, plus a risk signal accumulated through an exponential moving average over baseline-subtracted gate outputs; both operate on the same semantic vector representation as the underlying deterministic gate, with no additional model components, training, or probabilistic inference; the state lives and is evaluated over the trajectory of one session",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "Temporal authorization consistency: individually-compliant steps that collectively decompose harmful intent (slow-burn exfiltration, gradual privilege escalation, compliance drift) must be caught at the trajectory level, not only per action. Failure condition of the baseline being extended: stateless per-action gates are 'structurally blind to distributed attacks that decompose harmful intent across multiple individually-compliant steps'. Judged by F1, false positive rate, and detection rate over multi-turn attack sessions, with per-turn overhead as the cost side.",
+  "operationalized_as": "F1, FPR, and detection rate on a multi-turn benchmark of 80 sessions containing slow-burn exfiltration, gradual privilege escalation, and compliance drift scenarios; SRM extends the ILION gate and is compared against stateless ILION; per-turn overhead in microseconds."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Distributed attack: decomposes harmful intent across multiple individually-compliant steps, each of which passes deterministic per-action authorization (spatial authorization consistency holds per action while the trajectory violates temporal authorization consistency)",
+   "Attack scenarios evaluated: slow-burn exfiltration, gradual privilege escalation, and compliance drift across multi-turn sessions"
+  ],
+  "assumptions": [
+   "A deterministic pre-execution safety gate (ILION) already evaluates each agent action against assigned roles; SRM extends it with trajectory-level authorization using the same semantic vector representation",
+   "Per the abstract, SRM requires no additional model components, training, or probabilistic inference"
+  ],
+  "not_covered": [
+   "The full paper (threat-model section, adversary knowledge assumptions, additional baselines and analyses) was not accessible for this card - no HTML full text exists on arXiv or ar5iv; all card content is grounded in the abstract only",
+   "Adaptive attackers that probe or evade the temporal risk signal are not addressed in the abstract"
+  ]
+ },
+ "intervention": {
+  "name": "Session Risk Memory (SRM): trajectory-level authorization module on top of a deterministic per-action gate",
+  "mechanism_layer": "architecture",
+  "description": "A lightweight deterministic module extending stateless pre-execution safety gates with trajectory-level (temporal) authorization: it maintains a compact semantic centroid tracking the session's evolving behavioral profile and accumulates a risk signal via exponential moving average over baseline-subtracted gate outputs, reusing the gate's semantic vector representation; the framework distinguishes spatial authorization consistency (per action) from temporal authorization consistency (over trajectory)."
+ },
+ "controls": [
+  {
+   "name": "Stateless ILION (per-action gate without SRM)",
+   "purpose": "baseline"
+  }
+ ],
+ "results": [
+  {
+   "claim": "On a multi-turn benchmark of 80 sessions (slow-burn exfiltration, gradual privilege escalation, compliance drift), ILION+SRM achieves F1 = 1.0000 with 0% false positive rate vs stateless ILION at F1 = 0.9756 with 5% FPR, both maintaining a 100% detection rate.",
+   "metric": "F1 / FPR / detection rate on the 80-session multi-turn benchmark",
+   "value": "F1 1.0000 (SRM) vs 0.9756 (stateless ILION); FPR 0% vs 5%; detection 100% both",
+   "comparison": "ILION+SRM vs stateless ILION",
+   "setting": "Multi-turn benchmark of 80 sessions with slow-burn exfiltration, gradual privilege escalation, and compliance drift scenarios (per abstract)",
+   "quote": "Results show that ILION+SRM achieves F1 = 1.0000 with 0% false positive rate, compared to stateless ILION at F1 = 0.9756 with 5% FPR, while maintaining 100% detection rate for both systems.",
+   "locator": "Abstract",
+   "denominator": {
+    "n_total": 80,
+    "n_valid": null,
+    "how_counted": "Metrics over the 80 multi-turn attack sessions of the benchmark; per-session turn counts and per-scenario splits are not stated in the abstract"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Cost reading: SRM eliminates all false positives with a per-turn overhead under 250 microseconds - the temporal-authorization state is cheap enough for pre-execution gating.",
+   "metric": "per-turn overhead (microseconds)",
+   "value": "<250 microseconds",
+   "comparison": "added on top of the underlying deterministic gate, with no additional model components or training",
+   "setting": "SRM module operating on the same semantic vector representation as the underlying gate (per abstract)",
+   "quote": "Critically, SRM eliminates all false positives with a per-turn overhead under 250 microseconds.",
+   "locator": "Abstract",
+   "denominator": {
+    "n_total": 80,
+    "n_valid": null,
+    "how_counted": "Per-turn overhead measured across the benchmark sessions; measurement methodology is not stated in the abstract"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  "§6.3: benchmark 用与 ILION 语义向量空间兼容的结构化动作语法，真实系统的自然语言动作在 21 维关键词加权嵌入下可能表现不同",
+  "§6.3: w_delta=0——当前稀疏 21D 嵌入下余弦距离饱和到 1.0，漂移项无判别力（嵌入设计问题，非 SRM 公式问题）",
+  "§6.3: 80-session 基准规模有限且为受控环境；分支工作流、异步并行动作、会话中断等非线性会话结构未评估"
+ ],
+ "reproduction": {
+  "code": null,
+  "data": "Multi-turn benchmark of 80 sessions (slow-burn exfiltration, gradual privilege escalation, compliance drift scenarios), per the abstract; further details unavailable without full text",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "experimental_setup",
+   "results",
+   "discussion",
+   "limitations"
+  ],
+  "complete": true,
+  "note": "2026-11-05 全文补齐（任务B2）：arXiv HTML/ar5iv 均无渲染，取官方 PDF (v1, 12 pp) 转 text，逐条重核结果引文全部逐字命中。"
+ },
+ "quality_flags": [
+  "arxiv_html_and_ar5iv_absent",
+  "fulltext_from_pdf_v1"
+ ]
+}

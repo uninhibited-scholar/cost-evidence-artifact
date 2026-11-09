@@ -1,0 +1,176 @@
+{
+ "arxiv_id": "2610.11270",
+ "title": "Gated Memory: Admission-Controlled Memory Formation for Conversational AI",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "持久向量记忆库（persistent vector store / memory backend；实验中为 mem0 框架 + Qdrant 向量库），存储从用户话语抽取的 subject-relation-object 原子事实（含 category/provenance/scope/时间地点 grounding 元数据）",
+  "operations_covered": [
+   "formation"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "（1）完整性（主）：持久记忆库只应包含值得存储的事实——拒绝瞬时状态、泛化情绪反应与语义空洞内容，防止其占据 top-k 检索槽位；接地约束禁止断言评估窗口中不存在的实体，消除抽取的 fabricated errors。失效条件：formation 错误在事实形成后不可检测（Unlike downstream deduplication, formation errors are undetectable after the fact is formed），准入判断依赖底层 LLM prompt 质量，对抗性或歧义话语可能被误分类。（2）隐私约束（附带）：按四类实体范围（USER_PII/INTERNAL/EXTERNAL/GENERIC）控制富化——USER_PII 一律不富化、INTERNAL 仅内部元数据不发起外部调用，防止个人信息未经同意发给外部服务。",
+  "operationalized_as": "LoCoMo-10 上 LLM-judge accuracy（formation 层为唯一实验变量，对照为同检索/生成/评测的 mem0 基线：总体 50.6%→51.9%，+2.6% 相对提升）+ 准入统计（5,882 utterances 中准入 5,527 (94.0%)、拒绝 355 (6.0%)）。隐私约束（USER_PII 不富化/INTERNAL 无外部调用）仅为设计保证，论文未单独实验验证。"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无蓄意攻击者：写入侧污染被刻画为生产系统的无意质量问题（'production memory systems that might be polluted with a lot of irrelevant context'），失败模式为 reactive admission、absent enrichment、irrecoverable loss of context，而非攻击",
+   "候选事实来自正常用户话语；准入判断依赖底层 LLM prompt 质量（adversarial or ambiguous utterances may be misclassified at formation time）",
+   "记忆后端（deduplication、conflict resolution、embedding、persistence）与检索、生成保持不变，门控只决定什么进入后端（Gated Memory governs what reaches the backend, it does not replace it）"
+  ],
+  "not_covered": [
+   "对抗性用户/记忆投毒攻击：论文未建模攻击者，仅在 Limitations 提及 adversarial utterances 可能在 formation 时被误分类",
+   "隐私攻击（如经外部富化外泄个人信息）只以范围分类约束作设计性防范，未做实验验证",
+   "检索与生成阶段的安全/质量（Retrieval and generation are entirely unchanged）",
+   "准入与富化各自贡献未解耦（Disentangling the individual contributions of admission and enrichment is left as future work）"
+  ]
+ },
+ "intervention": {
+  "name": "Gated Memory",
+  "mechanism_layer": "architecture",
+  "description": "在对话与存储之间插入的轻量级 formation 层，含两级决策检查点：(1) utterance-level admission gate——在抽取（extraction）之前用结构化 LLM prompt 依据完整原话评估每个候选事实；对话被分解为 current exchange（唯一事实来源）与 read-only reference history（仅用于指代消解），按三准则准入（个性化关系/半稳定用户属性/跨会话可复用），拒绝瞬时状态、泛化情绪反应与语义空洞内容；(2) 条件富化——准入内容分解为原子事实（multi-intent splitting），标注六类 formation category（persona/preference/event/procedural/user_rule/error_learning）与 provenance（directly stated vs inferred）、条件适用范围、时间/地点 deictic grounding，并按四类实体范围（USER_PII/INTERNAL/EXTERNAL/GENERIC）施加隐私约束的条件富化；接地约束禁止断言评估窗口中不存在的实体并保留原话语语言。门控只决定什么到达后端，不替换后端。"
+ },
+ "controls": [
+  {
+   "name": "mem0 baseline（同 Qdrant 向量库、开源 8B instruction-tuned LLM、固定生成 prompt，无 formation 层，即 formation 层的完全消融）",
+   "purpose": "baseline"
+  }
+ ],
+ "results": [
+  {
+   "claim": "总体：仅替换 formation 层（Gated Memory vs mem0 基线，检索/生成/评测完全相同）使 LoCoMo-10 总体 LLM-judge 准确率相对提升 +2.6%（50.6%→51.9%），论文据此把 formation quality 定为可测量的 binding constraint",
+   "metric": "LLM-judge accuracy (Overall)",
+   "value": "51.9% vs 50.6% (baseline), +2.6% relative",
+   "comparison": "memory baseline 50.6% -> Gated Memory 51.9% (+2.6% relative)",
+   "setting": "LoCoMo-10：10 个多会话对话、1,540 questions、四类（Single-Hop/Multi-Hop/Temporal/Open Domain；Category 5 adversarial excluded）；基线为 mem0 + Qdrant + 开源 8B instruction-tuned LLM + 固定生成 prompt；唯一实验变量为 formation 层；数据集具有 atypical emotional density",
+   "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+   "locator": "§5 Table 2",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "独立 LLM judge 对每个答案判 correct/incorrect（lenient matching）；分母为 LoCoMo-10 全部 1,540 questions across four categories（Category 5 adversarial excluded）；+2.6% 为相对提升，其分母是基线总体准确率 50.6%"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "准入统计：门控处理 5,882 条 utterance，准入 5,527（94.0%）、拒绝 355（6.0%）；拒绝主要为模糊情绪表达、程序性轮次与瞬时情境引用",
+   "metric": "admission rate (share of utterances admitted)",
+   "value": "94.0% admitted (5,527/5,882); 6.0% rejected (355/5,882)",
+   "comparison": null,
+   "setting": "LoCoMo-10 十个对话的完整对话流，Gated Memory 准入门控（正常用户话语，无攻击者）",
+   "quote": "The gate processed 5,882 utterances across ten conversations, admitting 5,527 (94.0%) and rejecting 355 (6.0%). Rejections consisted primarily of vague emotional expressions, procedural turns, and transient situational references.",
+   "locator": "§4.4",
+   "denominator": {
+    "n_total": "5882",
+    "n_valid": "5882",
+    "how_counted": "门控处理的全部 utterance：5,527 admitted + 355 rejected = 5,882 across ten conversations"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Single-Hop 相对提升最大（+4.4%，49.6%→51.8%）：归因于移除低信号条目减少了 top-k 检索槽位竞争，提高了匹配检索池上的精度",
+   "metric": "LLM-judge accuracy (Single-Hop)",
+   "value": "51.8% vs 49.6% (baseline), +4.4% relative",
+   "comparison": "memory baseline 49.6% -> Gated Memory 51.8% (+4.4% relative)",
+   "setting": "LoCoMo-10 Single-Hop 类别；mem0 基线（Qdrant + 8B LLM + 固定生成 prompt），唯一实验变量为 formation 层；检索/生成/评测两条件相同",
+   "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+   "locator": "§5 Table 2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Multi-Hop 回归 −4.2%（50.0%→47.9%）：按单条事实效用优化的准入策略会剪掉相互依赖的节点，是独立事实评估固有的 precision-recall 权衡，非特定阈值造成的假象",
+   "metric": "LLM-judge accuracy (Multi-Hop)",
+   "value": "47.9% vs 50.0% (baseline), −4.2% relative",
+   "comparison": "memory baseline 50.0% -> Gated Memory 47.9% (−4.2% relative)",
+   "setting": "LoCoMo-10 Multi-Hop 类别；mem0 基线（Qdrant + 8B LLM + 固定生成 prompt），唯一实验变量为 formation 层",
+   "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+   "locator": "§5 Table 2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Open Domain +3.3%（48.3%→49.9%）：论文归因于条件富化——一条富化后的 EV 条目能支持 raw extraction string 无法回答的一类查询",
+   "metric": "LLM-judge accuracy (Open Domain)",
+   "value": "49.9% vs 48.3% (baseline), +3.3% relative",
+   "comparison": "memory baseline 48.3% -> Gated Memory 49.9% (+3.3% relative)",
+   "setting": "LoCoMo-10 Open Domain 类别；mem0 基线（Qdrant + 8B LLM + 固定生成 prompt），唯一实验变量为 formation 层",
+   "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+   "locator": "§5 Table 2",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Temporal +1.7%（57.6%→58.6%）：与准入策略偏好时间稳定事实、拒绝瞬时情境引用的取向一致",
+   "metric": "LLM-judge accuracy (Temporal)",
+   "value": "58.6% vs 57.6% (baseline), +1.7% relative",
+   "comparison": "memory baseline 57.6% -> Gated Memory 58.6% (+1.7% relative)",
+   "setting": "LoCoMo-10 Temporal 类别；mem0 基线（Qdrant + 8B LLM + 固定生成 prompt），唯一实验变量为 formation 层",
+   "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+   "locator": "§5 Table 2",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "准入有效性依赖底层 LLM prompt 质量，对抗性或歧义话语可能在 formation 时被误分类；且与下游去重不同，formation 错误在事实形成后不可检测。",
+   "quote": "The admission gate’s effectiveness depends on the quality of the underlying LLM prompt. Adversarial or ambiguous utterances may be misclassified at formation time. Unlike downstream deduplication, formation errors are undetectable after the fact is formed.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "仅在 LoCoMo-10（utterance 情绪密度异于常态）上评估，跨领域、跨语言、任务导向部署的泛化未经实证。",
+   "quote": "The evaluation is conducted on LoCoMo-10 with atypical emotional density in utterance data. Hence generalization across domains, languages, and task-oriented deployments need to be demonstrated empirically.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "6.0% 拒绝率是保守下界；任务导向部署预期过滤率显著更高，需进一步分析。",
+   "quote": "The 6.0% rejection rate is a conservative lower bound and task-oriented deployments are expected to exhibit substantially higher filtering rates that needs to be analyzed further.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "Multi-Hop 回归（−4.2%）暴露独立事实评估固有的 precision-recall 权衡；建模事实间依赖的 chain-aware admission 仍是 future work。",
+   "quote": "The Multi-Hop regression (−-4.2%) reveals a precision-recall tradeoff inherent to independent fact evaluation,chain-aware admission that models inter-fact dependencies remains future work.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "富化阶段对 EXTERNAL 范围事实引入外部知识调用，带来延迟与时间敏感信息的过期风险，需只对稳定事实富化。",
+   "quote": "Finally, the enrichment stage introduces external knowledge calls for EXTERNAL-scoped facts, adding latency and potential staleness risk for time-sensitive information that needs to be addressed by only including stable facts for enrichment.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "准入与富化各自贡献未解耦（论文自称留作 future work）。",
+   "quote": "Disentangling the individual contributions of admission and enrichment is left as future work.",
+   "locator": "§4.2"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": "LoCoMo-10 benchmark（Maharana et al. 2024）；论文未提供代码链接",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "no_appendix_in_corpus",
+  "corpus_numbers_latex_duplicated"
+ ]
+}

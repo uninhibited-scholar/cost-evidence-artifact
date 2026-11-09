@@ -1,0 +1,209 @@
+{
+ "arxiv_id": "2410.02644",
+ "title": "Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-task",
+  "carrier": "RAG memory database D of (key, value) pairs where keys are user queries with tool-list information and values are task plans; the agent saves its task execution history to the database after each task operation and retrieves the K most similar entries as in-context demonstrations for planning; in the poisoning setting the database becomes D_poison = D_clean ∪ A with attacker-introduced adversarial key-value pairs, accessed black-box (internal structure unknown to both attacker and the formalization)",
+  "operations_covered": [
+   "formation",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Agent operational integrity across all stages (system prompt, user prompt handling, tool usage, memory retrieval): the agent should complete the user's target task with benign actions and refuse aggressive instructions, and must not be redirected to an attacker-selected injected task through direct prompt injection, observation prompt injection, memory poisoning, or their combination; for the Plan-of-Thought backdoor, the agent must keep benign actions on clean unaltered queries (benign performance BP) while the backdoored behavior is under test. Failure conditions: agent uses attack-specific tools (ASR), fails to refuse aggressive tasks (RR), or loses utility under defense (PNA-d).",
+  "operationalized_as": "8 metrics (Table 4): ASR = percentage of attacked tasks where the agent successfully uses attack-specific tools; ASR-d under each defense; RR = refuse rate on aggressive tasks judged by the backbone LLM; PNA/PNA-d = task completion without attack/defense; BP = original-task completion without backdoor trigger; FNR/FPR for detection defenses. Evaluated over 10 scenarios, 10 agents, 50 agent tasks, 400 attack tasks, over 400 tools, 13 LLM backbones, nearly 90,000 testing cases."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Knows every detail of attack tools and can integrate them into the agent's toolkit, e.g., by manipulating third-party API platforms (RapidAPI) to add malicious tools",
+   "Can craft and insert prompts into the agent's system prompt (e.g., deploying the prompt as a new agent via ChatGPT plugins) - the vector exploited by the PoT backdoor",
+   "Can access and manipulate the user's prompt (third-party prompt-engineering services or a man-in-the-middle attacker), e.g., embedding a backdoor trigger",
+   "Black-box access to RAG databases and embedders; can poison the memory database indirectly by using DPI or OPI attacks so that the agent itself saves attacker-shaped execution histories"
+  ],
+  "assumptions": [
+   "The attacker lacks knowledge of the agent's backbone LLM (architecture, training data, parameters); interaction is API-only",
+   "Memory poisoning treats the memory/RAG base as a black box without knowing its internal structure (unlike prior white-box RAG-poisoning settings)",
+   "A task succeeds for the agent if all required tools are used; an attack succeeds if the agent uses all tools in the attacker's injected tool list"
+  ],
+  "not_covered": [
+   "No adaptive re-attack loop: defenses are evaluated in one pass, and attackers do not re-optimize against the deployed defense",
+   "Training-time attacks on the backbone are excluded (the PoT backdoor is explicitly training-free); fine-tuning-based agent backdoors are only discussed as related work",
+   "White-box access to RAG internals is out of scope by design"
+  ]
+ },
+ "intervention": {
+  "name": "Agent Security Bench (ASB): formalization and benchmark of 13 attack types and 10 defenses",
+  "mechanism_layer": "evaluation",
+  "description": "Formalizes five attack families against the ReAct agent pipeline - Direct Prompt Injection (DPI, Definition 1), Observation Prompt Injection (OPI, Definition 2), Memory Poisoning (Definition 3: poisoned RAG database whose retrieved demonstrations steer plan generation), a novel training-free Plan-of-Thought (PoT) Backdoor (Definition 4: backdoored plan demonstrations injected into the system prompt plus a trigger in the query), and Mixed Attacks - and benchmarks 10 corresponding defenses (e.g., Delimiters, Paraphrasing, Instruction, Sandwich) across 10 scenarios, 10 agents, 400+ tools, and 13 LLM backbones, with 8 metrics (ASR, ASR-d, RR, PNA, PNA-d, BP, FNR, FPR)."
+ },
+ "controls": [
+  {
+   "name": "No defense (ASR without defense)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "PNA (performance under no attack)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Benign performance BP (no backdoor trigger)",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Aggressive vs non-aggressive task split",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Mixed Attack (DPI + OPI + Memory Poisoning combined) is the most effective attack: average ASR 84.30% with the lowest average Refuse Rate 3.22% across 13 LLM backbones; Qwen2-72B and GPT-4o reach ASRs near 100%.",
+   "metric": "ASR / RR averaged over 13 LLM backbones and 10 scenarios",
+   "value": "84.30% (RR 3.22%)",
+   "comparison": "DPI 72.68%; OPI 27.55%; Memory Poisoning 7.92%; PoT Backdoor 42.12%; overall average 46.91%",
+   "setting": "ASB benchmark, ReAct agents, ~90,000 testing cases total, Table 5 'Average' row",
+   "quote": "Mixed Attack which combines multiple vulnerabilities achieves the highest average ASR of 84.30% and the lowest average Refuse Rate of 3.22%.",
+   "locator": "§5.3 (Table 5)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "ASR = percentage of attacked tasks where the agent uses all attack-specific tools, averaged over 13 backbones x 10 scenarios; the per-attack task split of the ~90,000 testing cases is not itemized in the paper"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Memory poisoning is the least effective of the five attack families on average (ASR 7.92%), with most models below 10% but LLaMA3.1-8B at 25.65% - memory poisoning effectiveness is highly backbone-dependent.",
+   "metric": "ASR for the Memory Poisoning attack, averaged over 13 backbones",
+   "value": "7.92%",
+   "comparison": "Mixed 84.30%; DPI 72.68%; PoT Backdoor 42.12%; OPI 27.55%; per-backbone Memory Poisoning ASR range 1.85% (LLaMA3-70B) to 25.65% (LLaMA3.1-8B)",
+   "setting": "ASB memory poisoning via black-box RAG poisoning with poisoned plans retrieved as in-context demonstrations (Table 5)",
+   "quote": "Memory Poisoning has an average ASR of 7.92%. Most models, like GPT-4o, show minimal vulnerability, with ASRs below 10%, though LLaMA3.1-8B has a higher ASR of 25.65%.",
+   "locator": "§5.3 (Table 5)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Percentage of attacked tasks where the poisoned plan redirects the agent to the attack tools, averaged over 13 backbones x 10 scenarios; per-attack case counts not itemized"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "DPI is widely effective: average ASR 72.68%, with GPT-3.5 Turbo at 98.40% and Gemma2-27B at 96.75%; larger/more capable models tend to be more fragile, though higher refusal rates can offset this (GPT-4o: RR 20.05%, ASR 60.35%).",
+   "metric": "ASR / RR for Direct Prompt Injection",
+   "value": "72.68% (average)",
+   "comparison": "GPT-3.5 Turbo 98.40%; Gemma2-27B 96.75%; LLaMA3-8B 25.20% (lowest); GPT-4o 60.35% with RR 20.05%",
+   "setting": "ASB DPI attacks injecting an injected instruction and attack tool list into the user prompt (Table 5, Figure 2)",
+   "quote": "DPI achieves an average ASR of 72.68%. Models like GPT-3.5 Turbo and Gemma2-27B are particularly vulnerable, with ASRs of 98.40% and 96.75%, respectively.",
+   "locator": "§5.3 (Table 5)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Percentage of attacked tasks using all attack tools, averaged over 13 backbones x 10 scenarios"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The novel training-free PoT Backdoor targets advanced models: average ASR 42.12%, but 100% on GPT-4o and 95.50% on GPT-4o-mini.",
+   "metric": "ASR for PoT Backdoor attack",
+   "value": "42.12% (average); 100% (GPT-4o); 95.50% (GPT-4o-mini)",
+   "comparison": "backdoored plan demonstrations injected into system prompt + trigger in query; benign performance BP measured separately (Sec. D.1 reports unaffected utility)",
+   "setting": "ASB PoT backdoor across 13 backbones (Table 5)",
+   "quote": "PoT Backdoor has a moderate average ASR of 42.12%, but it is highly effective against advanced models like GPT-4o and GPT-4o-mini, with ASRs of 100% and 95.50%, respectively.",
+   "locator": "§5.3 (Table 5)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Percentage of attacked tasks using all attack tools, averaged over 13 backbones x 10 scenarios"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Cost reading (defenses): current prevention-based defenses are inadequate and cost utility - under DPI, Paraphrasing is the only defense that reduces average ASR materially (56.87%, Delta -21.52%) while Delimiter (+0.69%) and Instruction (-1.62%) barely help; defenses also cause utility losses in primary tasks when no attack is present.",
+   "metric": "ASR-d and Delta vs undefended average ASR (DPI)",
+   "value": "Paraphrase 56.87% (Delta -21.52%); Delimiter 79.08% (Delta +0.69%); Instruction 76.77% (Delta -1.62%)",
+   "comparison": "undefended DPI average ASR 78.38% (Table 6 Average row)",
+   "setting": "ASB defenses for DPI across 13 backbones (Table 6); OPI defenses show Delta -3.02% / -1.67% / +0.06% (Table 7)",
+   "quote": "It illustrates that current prevention-based defenses are inadequate: they are ineffective at preventing attacks and often cause some utility losses in the primary tasks when there are no attacks (see Sec. D.2). Notably, even though the average ASR under Paraphrasing defense in DPI decreases compared to no defense, it remains high, with an average ASR-d of 56.87%.",
+   "locator": "§5.4 (Table 6, Table 7)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "ASR-d = percentage of attacked tasks using all attack tools under the defense, averaged over 13 backbones x 10 scenarios; Delta computed against the undefended average ASR"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "OPI defenses are essentially ineffective: average ASR-d values 24.96% / 26.31% / 28.04% vs undefended 27.98%, i.e., Delta between -3.02% and +0.06% across Delimiter, Sandwich, and Instruction defenses.",
+   "metric": "ASR-d and Delta vs undefended average ASR (OPI)",
+   "value": "Delta -3.02% / -1.67% / +0.06%",
+   "comparison": "undefended OPI average ASR 27.98% (Table 7 Average row)",
+   "setting": "ASB defenses for OPI across 13 backbones (Table 7)",
+   "quote": "Δ\\Delta 0 -3.02% -1.67% 0.06%",
+   "locator": "§5.4 (Table 7)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Delta row of Table 7: change in average ASR-d vs the undefended OPI average ASR (27.98%), each averaged over 13 backbones x 10 scenarios"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Benign utility falls slightly under defence: without any defence the average PNA is 29.46%, and under the evaluated defences it drops by 1.17 to 6.94 points (22.52-28.29%).",
+   "metric": "PNA under benign, no-attack conditions",
+   "value": "29.46% undefended -> 22.52-28.29% under defences",
+   "comparison": "no defence vs each defence, benign conditions",
+   "setting": "average across defences on the benign evaluation in Appendix D.2/Table 16",
+   "quote": "The average PNA without any defenses is 29.46%, and the corresponding performance under defenses experiences a minor drop.",
+   "locator": "Appendix D.2, Table 16",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Defense coverage and attack scenarios are explicitly incomplete: the authors defer stronger defenses and more attack scenarios to future work.",
+   "quote": "ASB provides a crucial resource for developing stronger defenses and more resilient LLM agents. In the future, we will focus on improving defenses and expanding attack scenarios.",
+   "locator": "§6 Conclusion and Future Work"
+  },
+  {
+   "statement": "The memory-poisoning formalization is deliberately restricted to black-box access, so white-box poisoning strategies against known RAG internals are outside the evaluated threat space.",
+   "quote": "ASB analyzes the impact of poisoning on the agent framework and treats memory or RAG base as a black box for memory poisoning without knowing the internal structure.",
+   "locator": "§2 Related Work"
+  },
+  {
+   "statement": "The paper has no dedicated limitations section; the scope constraints above are stated in the conclusion and related-work positioning.",
+   "quote": "We introduce ASB, a benchmark for evaluating the security of LLM agents under various attacks and defenses. ASB reveals key vulnerabilities of LLM-based agents in every operational step.",
+   "locator": "§6 Conclusion and Future Work"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/agiresearch/ASB (Abstract: 'Our code can be found at https://github.com/agiresearch/ASB'); Appendix F is a Reproducibility Statement",
+  "data": "10 scenarios, 10 agents, 50 agent tasks, 400 attack tasks, 400+ tools (normal and attack), 10 PoT demonstrations, 13 LLM backbones, ~90,000 testing cases",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "related_work",
+   "threat_model",
+   "attack_formalizations",
+   "benchmark_statistics",
+   "experimental_setup",
+   "attack_results",
+   "defense_results",
+   "conclusion"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "no_dedicated_limitations_section",
+  "paper_text_contains_duplicated_paragraph_5_4"
+ ]
+}

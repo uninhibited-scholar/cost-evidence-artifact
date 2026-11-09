@@ -1,0 +1,255 @@
+{
+ "arxiv_id": "2610.27495",
+ "title": "Self-Evolving Agents through Privileged Retrospective Distillation",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-task",
+  "carrier": "两条持续载体：(1) 模型权重——每轮用 OPSD（forward-KL top-k=20 全参数蒸馏）把特权教师分布蒸回 student，成为下一轮策略 π(r+1)；(2) 累积经验库 B(r)——跨轮携带、只增不减的 on-policy 轨迹库（含成功与失败轨迹），每轮从其重derive precedents（按 content-token overlap 检索 top-n）与 lessons（按任务类型摘要），仅训练期作教师侧特权上下文，推理时评测不用特权上下文",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "论文不研究任何安全性质（不涉及权限、保密、完整性、策略合规或可用性），也没有对抗者；其目标是能力自进化：在无 ground-truth 轨迹、无 verifier 派生奖励的条件下，把自然积累的交互经验经特权回顾蒸馏转化为持续模型能力，以 ALFWorld/ScienceWorld 成功率（SR）与 SearchQA 精确匹配（EM）度量",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "每任务只采样一条 on-policy 轨迹（无重复尝试+按成功筛选）",
+   "策略优化不使用 ground-truth 轨迹或 verifier 派生奖励（OPSD 目标中不含 policy-gradient 或 task-reward 项）",
+   "frontier-guided 扩展为更强访问设定：额外假设可访问一个 frontier 模型（Claude-Opus-4.8）与可执行环境指标，仅用于评估 context-policy 候选与事后验收，不为参数更新提供奖励"
+  ],
+  "not_covered": [
+   "无对抗模型：不研究攻击者、提示注入、越狱或对经验库的投毒/污染（经验库直接并入所有成功与失败轨迹，无完整性或来源校验）",
+   "未讨论教师（特权上下文）被错误经验误导时蒸馏放大的风险",
+   "未研究跨用户/跨部署场景；经验库与策略仅在单一训练管线内演化"
+  ]
+ },
+ "intervention": {
+  "name": "Retrospective Self-Distillation (RSD)",
+  "mechanism_layer": "content",
+  "description": "监督信号在 content 层构造并内化入参数：每轮当前策略采集 on-policy 轨迹并入累积经验库；对每个交互 turn 构造四组件特权回顾上下文（跨任务 precedents、按任务类型摘要的 lessons、对当前决策的 reflection、暴露下游反馈的 future hindsight），同一模型以此特权视图对自己已实现的动作重新打分，再以 forward-KL（top-k=20）在学生访问到的状态上做 on-policy 自蒸馏更新权重；推理评测时不给特权上下文。教师按 freeze-to-peak 调度防止无限演化。扩展版 frontier-guided context-policy evolution 由 frontier 模型在白名单 YAML 旋钮内提议上下文构造编辑，用无训练 inference probe 排序候选，并按整轮训练后的真实环境指标做接受/回退（ε=0.5%，只回退 context policy、不回退模型权重）"
+ },
+ "controls": [
+  {
+   "name": "Base",
+   "purpose": "baseline"
+  },
+  {
+   "name": "RFT (Rejection Sampling Fine-Tuning)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GT-SFT (ground-truth SFT)",
+   "purpose": "positive-control"
+  },
+  {
+   "name": "STaR",
+   "purpose": "baseline"
+  },
+  {
+   "name": "BoN-16+SFT",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GRPO (verifier-based RL, rollout group 8)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GT-OPSD (teacher conditioned on gold trajectory)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Reflexion@2",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Harness@Inf (privileged context at inference, no post-training)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Fixed harness",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Random harness (same edit space/budget, no frontier guidance)",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Frozen / fully-evolving teacher schedules",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "主结果：ALFWorld-8B 上 RSD 平均 SR 达 76.6，优于 Base 62.9、RFT 66.9、STaR 65.3、BoN-16+SFT 71.6",
+   "metric": "success rate (SR)",
+   "value": "76.6",
+   "comparison": "Base 62.9 / RFT 66.9 / STaR 65.3 / BoN-16+SFT 71.6 → RSD 76.6",
+   "setting": "ALFWorld，Qwen3-8B，进化后 student 单次尝试、推理时不带特权上下文评测，三种子平均",
+   "quote": "On ALFWorld-8B, RSD achieves an average SR of 76.6, compared with 62.9 for Base, 66.9 for RFT, 65.3 for STaR, and 71.6 for BoN-16+SFT.",
+   "locator": "§4.2 Table 1",
+   "denominator": {
+    "n_total": "≈274（≈140 valid-seen + 134 valid-unseen）",
+    "n_valid": null,
+    "how_counted": "Appendix B Evaluation Protocol：ALFWorld 报两 split 的 SR，Table 1 caption 注明 Results are averaged over three seeds"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "主结果：ScienceWorld 提升最显著，RSD 从 15.6→23.4（8B）、12.9→20.6（14B），超过 BoN-16+SFT（20.8/20.4）",
+   "metric": "task success rate (SR)",
+   "value": "23.4 (8B) / 20.6 (14B)",
+   "comparison": "Base 15.6 → 23.4 (8B); Base 12.9 → 20.6 (14B); BoN-16+SFT 仅 20.8 / 20.4",
+   "setting": "ScienceWorld development set，Qwen3-8B/14B，RSD 推理时不带特权上下文，三种子平均",
+   "quote": "The gains are particularly pronounced on ScienceWorld, where RSD improves from 15.6 to 23.4 at 8B and from 12.9 to 20.6 at 14B, while even BoN-16+SFT reaches only 20.8 and 20.4 despite substantially increasing rollout exploration.",
+   "locator": "§4.2 Table 1",
+   "denominator": {
+    "n_total": "449",
+    "n_valid": null,
+    "how_counted": "Appendix B：'For ScienceWorld, we evaluate 449 development variations and report task success rate.'；Table 1 三种子平均"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "总括口径：三基准×两规模上 RSD 相对 Base 最高提升 59.7%（相对值），frontier-guided 相对固定 context policy 再最高 +44.7%（相对值）；论文未指明取得峰值的设置，也未给相对值的试验次数口径",
+   "metric": "relative improvement over base model (%)",
+   "value": "up to 59.7",
+   "comparison": "Base → RSD：最高 +59.7（相对%）；fixed context policy → frontier-guided：最高 +44.7（相对%）",
+   "setting": "ALFWorld/ScienceWorld/SearchQA × Qwen3-8B/14B；'up to' 口径",
+   "quote": "Across ALFWorld, ScienceWorld, and SearchQA with Qwen3-8B and 14B, RSD improves performance by up to 59.7%59.7\\% relative over the base model, and frontier-guided context-policy evolution adds up to a further 44.7%44.7\\% relative improvement over a fixed context policy.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "frontier-guided context-policy evolution 在 ScienceWorld 增益最清晰：SR 从 23.4→27.5（8B）、20.6→29.8（14B），且两个规模都超过 random search",
+   "metric": "task success rate (SR)",
+   "value": "27.5 (8B) / 29.8 (14B)",
+   "comparison": "23.4 → 27.5 (8B); 20.6 → 29.8 (14B)，相对 Fixed context policy",
+   "setting": "ScienceWorld，Qwen3-8B/14B；frontier=Claude-Opus-4.8，白名单 YAML 编辑 + no-training probe 筛选 + 事后环境指标验收（ε=0.5%）",
+   "quote": "As shown in Fig. 2, frontier-guided context-policy evolution yields the clearest gains on ScienceWorld, where it improves SR from 23.4 to 27.5 at 8B and from 20.6 to 29.8 at 14B relative to the fixed policy, and also outperforms random search at both scales.",
+   "locator": "§5.3 Fig. 2",
+   "denominator": {
+    "n_total": "449",
+    "n_valid": null,
+    "how_counted": "Appendix B：'For ScienceWorld, we evaluate 449 development variations and report task success rate.'；Table 1 三种子平均"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "组件消融：ScienceWorld 上去掉 precedents 使 SR 从 23.4 跌到 15.1（几乎回到 Base 15.6），去掉 future hindsight 也大幅降到 17.6；ALFWorld 则是 lessons/reflection/future 各贡献约 5 点、precedents 影响小",
+   "metric": "task success rate (SR)",
+   "value": "15.1",
+   "comparison": "23.4 → 15.1（去 precedents，几乎回到 Base 15.6）; 23.4 → 17.6（去 future）",
+   "setting": "ScienceWorld，Qwen3-8B（Table 2 为 8B 消融），推理不带特权上下文",
+   "quote": "ScienceWorld exhibits a different pattern: removing precedents decreases SR from 23.4 to 15.1, nearly returning to the Base performance of 15.6, while removing future also causes a substantial drop to 17.6.",
+   "locator": "§5.1 Table 2",
+   "denominator": {
+    "n_total": "449",
+    "n_valid": null,
+    "how_counted": "Appendix B：'For ScienceWorld, we evaluate 449 development variations and report task success rate.'；Table 1 三种子平均"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "上下文演化对照（第 3 轮，ALFWorld-8B）：完整演化配置 67.9 SR，仅更新 lessons 69.0，仅更新 precedents 63.8，冻结 round-1 context 掉到 59.7——对陈旧回顾上下文反复训练会限制持续改进",
+   "metric": "unseen SR",
+   "value": "67.9 (full) vs 59.7 (frozen round-1 context)",
+   "comparison": "full 67.9 / lessons-only 69.0 / precedents-only 63.8 / frozen round-1 context 59.7",
+   "setting": "ALFWorld-8B，同一 base checkpoint 起训 3 轮，Fig. 5 报 unseen SR",
+   "quote": "By round 3, the full configuration reaches 67.9 SR on ALFWorld, while updating lessons alone reaches 69.0, updating precedents alone reaches 63.8, and freezing the round-1 context drops to 59.7.",
+   "locator": "§5.2 Fig. 5",
+   "denominator": {
+    "n_total": "≈134",
+    "n_valid": null,
+    "how_counted": "ALFWorld valid-unseen 任务数（Appendix B）；Appendix D.7 注明该组 round-3 数字为 unseen SR"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "内化检验（Evolved(no-C) − Base(C)）：ALFWorld 强内化，8B/14B 分别高出 14.5 与 8.9 个百分点；ScienceWorld 部分内化（8B +3.8，Evolved(C) 再 +3.3；14B 几乎持平但 Evolved(C) +6.1）；SearchQA 无可测内化",
+   "metric": "internalized gain (SR percentage points, Evolved(no-C) − Base(C))",
+   "value": "+14.5 pp (8B) / +8.9 pp (14B)",
+   "comparison": "ALFWorld：Evolved(no-C) − Base(C) = +14.5 pp (8B), +8.9 pp (14B)",
+   "setting": "四条件诊断：Base(no-C)/Base(C)/Evolved(no-C)/Evolved(C)，ALFWorld 与 ScienceWorld，Qwen3-8B/14B",
+   "quote": "As shown in Fig. 3, ALFWorld exhibits strong internalization at both model scales: Evolved(no-C) exceeds Base(C) by 14.5 and 8.9 percentage points for 8B and 14B, respectively, while reintroducing the harness to the evolved model provides only a small additional gain.",
+   "locator": "Appendix D.2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "边界情形：SearchQA 上自进化几乎不增长且 SearchQA-14B 的 Harness@Inf（41.4 EM）高于 RSD（38.7 EM），说明部分上下文信息仍是互补的、未被内化进模型",
+   "metric": "exact match (EM)",
+   "value": "38.7 (RSD) vs 41.4 (Harness@Inf)",
+   "comparison": "RSD 38.7 < Harness@Inf 41.4（SearchQA-14B EM）",
+   "setting": "SearchQA test set，Qwen3-14B；EM 为各评测子集平均（子集规模未给出）",
+   "quote": "SearchQA-14B provides an important boundary case, where Harness@Inf reaches 41.4 compared with 38.7 for RSD, suggesting that some contextual information remains complementary to the model rather than being fully internalized.",
+   "locator": "§4.2 Beyond Test-Time Adaptation",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "教师调度对照（单种子诊断）：fully evolving 自教师早期受益明显（第 7 轮达 80.3）但随后不稳定，第 9 轮崩至 39.4、第 10 轮 0.0；frozen teacher 稳定但峰值仅 68.2——这是默认 freeze-to-peak 调度的动机",
+   "metric": "mean SR over seen+unseen splits (%)",
+   "value": "peak 80.3 (round 7) → 39.4 (round 9) → 0 (round 10)",
+   "comparison": "Fully evolving teacher：round 7 → 80.3, round 8 → 76.2, round 9 → 39.4, round 10 → 0",
+   "setting": "ALFWorld，Qwen3-8B，固定 canonical context policy，10 轮自进化，每个调度单种子",
+   "quote": "In contrast, the fully evolving teacher benefits strongly from co-evolution during the early rounds, reaching 80.3%80.3\\% at round 7, but subsequently becomes unstable and collapses from 76.2%76.2\\% at round 8 to 39.4%39.4\\% at round 9 and 0%0\\% at round 10.",
+   "locator": "Appendix D.10",
+   "denominator": {
+    "n_total": "≈274（≈140 valid-seen + 134 valid-unseen）",
+    "n_valid": null,
+    "how_counted": "Appendix B Evaluation Protocol：ALFWorld 报两 split 的 SR，Table 1 caption 注明 Results are averaged over three seeds"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "SearchQA 是方法的边界情形：模型缺乏把可得回顾信号转化为持续行为改进的能力，作者据此承认自进化的有效性取决于任务是否提供可学习的行为余地",
+   "quote": "This suggests that the SearchQA boundary case reflects limited capacity to convert the available retrospective signal into persistent behavioral improvement, rather than simply an absence of useful contextual information.",
+   "locator": "§4.2"
+  },
+  {
+   "statement": "附录 D.4 的 lesson 来源消融为单种子诊断，作者明确不作统计意义上的匹配比较",
+   "quote": "These results suggest that both successful and failed experience can provide useful retrospective information, although we treat this single-seed study as a diagnostic rather than a statistically matched comparison.",
+   "locator": "Appendix D.4"
+  },
+  {
+   "statement": "与测试时适应对照：Reflexion@3 在多个设置上超过单次尝试评测的 RSD，说明更多测试时交互可用推理开销换取更高性能",
+   "quote": "While RSD outperforms Reflexion@2 across all six settings under its standard single-attempt evaluation, Reflexion@3 surpasses RSD in several settings, illustrating that additional test-time interaction can trade increased inference effort for higher performance.",
+   "locator": "Appendix D.1"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear"
+ ]
+}

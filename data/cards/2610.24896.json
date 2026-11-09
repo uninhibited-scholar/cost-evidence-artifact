@@ -1,0 +1,236 @@
+{
+ "arxiv_id": "2610.24896",
+ "title": "Peer Pressure: Execution-Verified Co-Evolution of Attacker and Defender Populations for Code Security",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-task",
+  "carrier": "训练期持续状态有三层：(1) 攻防两侧各为一组 LoRA 适配器种群（单侧 G=2-16，作者扫过规模；7B/9B 冻结底座上的 role-specific 适配器），跨训练轮次以 Elo/fitness 保留并由锦标赛淘汰-重播（mutation / rank-preserving crossover）维持多样性，精英适配器永不淘汰；(2) 已验证 Red 轨迹缓存跨轮复用于 matched Blue 更新；(3) RQ4 对照臂直接测试了'冻结权重 + 演化技能库'的纯非参数状态路线（本底座上 62.4 vs 同骨干 frozen 61.4 之上、低于 PRPO 64.8——技能库状态可复用但收益有限）。注意：持久状态主要是权重空间种群与轨迹缓存，不是语义记忆库；部署时只部署单个最高-Elo Blue 适配器，防御在部署后不再更新。",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "保护对象：(a) 代码域——真实仓库补丁不被夹带可触发的已知类弱点，防御者是能定位（入口点 EP + 危险操作 CO + trace）的 diff/仓库级审查器；(b) 越狱域——guard 分类器拒绝有害改写提示同时不过度拒绝安全提示（XSTest 拒绝率几乎不变）。失效条件：攻击分布持续移动而防御只在静态语料上训练时（论文动机），以及 Red 适应训练中的 Blue 时（若对手冻结则收益消失）。判定方式：全部奖励由容器内执行判定（补丁可应用、构建、过测试、完成任务、真实 exploit 触发），评估用独立于训练 oracle 的 judge 与 held-out 外部集。",
+  "operationalized_as": "代码域：held-out 场景/未见应用的 balanced accuracy 与 TPR@FPR=5%，VulnGym T1 的 advisory recall (AR)/entry recall (ER)/edit similarity (ES)；越狱域：WildGuardTest 全量 ASR（两个独立 judge：WildGuardTest/Llama Guard 3）、HarmBench 320 条 held-out behaviors ASR、XSTest 安全提示拒绝率"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Red（漏洞注入策略）编辑真实仓库：在通过测试的功能补丁上隐藏一个已编目的可触发弱点类，或做同等规模的干净修改；仅在补丁可应用、构建通过、测试通过且 exploit 在隔离容器中真实触发时获得奖励",
+   "Red 针对当前 Blue 委员会适应隐蔽方式：sink 固定但路径不固定——trace 间接化、相对 sink 的摆放、诱饵编辑都会扩大审查器必须覆盖的空间（'Red nevertheless adapts against Blue's search'）",
+   "越狱域中 Red 作为提示改写器，针对外部 WildGuard guard 也能提升攻击成功率（12.4% -> 27.8%）",
+   "评估侧对手：冻结 Qwen3.5-9B 目标模型 + 冻结 HarmBench 验证分类器（训练 oracle）之外的两个 judge"
+  ],
+  "assumptions": [
+   "弱点类在训练前编目固定（每类有既有 exploit harness），Red 只适应'如何隐藏已知弱点'而非发现新弱点——扩展类集需要新 harness（Limitations 自述）",
+   "Red 总是拿到已认证的植入位点，不做搜索；不针对训练应用之外的软件",
+   "部署的防御（单个 Blue 适配器）冻结评估，不对评估期攻击再做适应",
+   "同骨干同 rank 适配器共享底座与 KL reference，从而支持权重空间重组"
+  ],
+  "not_covered": [
+   "部署后防御不再演化：回路是训练期回路，无测试时/部署期在线防御更新（与 SED/SafeCoEvo 的测试时演化不同）",
+   "不防御对防御系统自身的投毒；不处理状态依赖、多步或多 commit 拼装的新型弱点（Limitations 自述）",
+   "评估 prevalence 均衡构造，与真实审查流量不匹配（作者给出按真实 prevalence 校准的告警）",
+   "jailbreak oracle 是冻结分类器，继承其盲区"
+  ]
+ },
+ "intervention": {
+  "name": "PRPO: Peer-Relative Policy Optimization（种群化攻击-防御共训练）",
+  "mechanism_layer": "weight-space",
+  "description": "以执行验证为唯一领域组件的共演化训练框架：Red 与 Blue 各为一个 LoRA 适配器种群（同一冻结底座），交替块更新（更新本方时冻结对方委员会）。核心创新是把种群放进策略梯度基线而非对手池：每条样本只与'面对完全相同 condition（场景+冻结对方委员会+解码预算）'的同角色 peer 做留一比较（MPA，匹配种群优势），从而消去条件难度与对手强度；配合每 N 轮的锦标赛（fitness=Elo 均值+近邻多样性 Hamming 距离，六轴隐蔽词汇表）淘汰最低者并以 mutation/crossover 重播。奖励全部由容器执行判定：Red 的回报=Blue 委员会的置信加权定位错误评分（隐蔽性无需专门系数——Blue 学会某线索后 Red 被推离它）；Blue 的回报=逆类别先验加权的 balanced accuracy + 定位项。验证过的 Red 轨迹缓存复用给 matched Blue 更新，验证器吞吐而非 GPU 决定节奏。"
+ },
+ "controls": [
+  {
+   "name": "Base (zero-shot)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Security-SFT / Safety-SFT（warm-start，零 RL 引用）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Single co-evolving pair (G=1 both)",
+   "purpose": "population"
+  },
+  {
+   "name": "Ensemble-of-4（无共训）",
+   "purpose": "capacity"
+  },
+  {
+   "name": "Within-policy RLOO (G=2)",
+   "purpose": "allocation-control"
+  },
+  {
+   "name": "baseline 交换：learned critic (GAE) / global batch baseline / OPO / incl.-mean",
+   "purpose": "credit-assignment-control"
+  },
+  {
+   "name": "冻结 Red 对照（Blue 对冻结对手训练）",
+   "purpose": "adaptive-opponent ablation"
+  },
+  {
+   "name": "冻结权重 + 演化技能库（RQ4）与冻结前沿模型 Claude Opus 4.8（RQ4）",
+   "purpose": "weight-vs-state control"
+  },
+  {
+   "name": "WildGuard (7B, released)",
+   "purpose": "fair-comparison (jailbreak domain)"
+  }
+ ],
+ "results": [
+  {
+   "claim": "共演化收益依赖会适应的对手：diff 级臂上共演化 Blue 在训练应用 held-out 场景达 87.0% balanced accuracy（unseen 64.8%），而对抗冻结 Red 训练的 Blue 只有 60.8%——收益在对手不适应时消失大半。",
+   "metric": "balanced accuracy (Blue, frozen eval)",
+   "value": "87.0% (MPA, Src) / 64.8% (unseen) vs 60.8% (frozen Red)",
+   "comparison": "87.0 vs 60.8（同预算、同算法，仅对手是否适应不同）；unseen 上 64.8 vs Security-SFT 59.3（+5.5）vs Base 55.9",
+   "setting": "Setting A（Grimoire，7 弱点类，Qwen2.5-Coder-7B-Instruct，12-24 seeds），Table 1 + §5 RQ2 + Figure 2",
+   "quote": "The gain needs an adapting opponent: against a frozen Red, Blue reaches 60.8%60.8\\%. Both sides gain against frozen-initial opponents while Red’s evasion against the current Blue stays bounded (Fig. 2); sensitivity and specificity rise together, so the gain is discrimination not a shifted threshold (Fig. A6).",
+   "locator": "§5 RQ2 (Table 1, Fig. 2)",
+   "denominator": {
+    "n_total": "Setting A 认证位点数（正文数字在数学环境中，≈170 位点规模）与 unseen 4 应用 x 成对场景（每应用 paired 场景数未逐列给出）；balanced accuracy 分母为均衡评估集",
+    "n_valid": "每行均来自冻结评估（无适应），单一部署适配器=最高 Elo Blue 最佳验证 checkpoint；12-24 seeds",
+    "how_counted": "balanced accuracy 对类别 prevalence 校正； unseen 列为 4 应用均值±SD，与 MPA 的 paired contrast 用 Wilcoxon"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "军备竞赛动力学成立：对冻结初始对手 Red 的认证逃逸率上升、对当前对手则保持有界（斜率不显著）——攻击确实在针对演化的防御重新适应，且双方都不是停滞策略。",
+   "metric": "Red certified evasion vs current Blue (slope)",
+   "value": "bounded（mean 与 slope 数值在图中，正文记 slope n.s.）",
+   "comparison": "vs frozen-initial opponent（evasion 上升）与 vs current opponent（有界）",
+   "setting": "diff 级臂 Setting A，Figure 2(a)(c)，细节 Appendix M",
+   "quote": "an arms race, not two stalled policies",
+   "locator": "§5 RQ2 Figure 2 caption (App. M)",
+   "denominator": {
+    "n_total": "训练轮次上的重复测量（Figure 2，12-24 seeds）",
+    "n_valid": "同一训练运行内按对手类型（frozen-initial vs current）分组的 Red 认证逃逸率轨迹",
+    "how_counted": "逃逸率 = 认证可利用且 Blue 未检出（或定位错误）的补丁占比随训练轮次的变化；斜率显著性检验"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "同一算法原样迁移到越狱防御：PRPO guard 在 WildGuardTest 全量上将 ASR 从 no-guard 36.0% 压到 4.6%（独立 judge Llama Guard 3 下 5.3%），低于 WildGuard 8.9% 与 Safety-SFT 9.2%，而 XSTest 安全提示拒绝率几乎不变（3.8% vs no-guard 2.1%）。",
+   "metric": "ASR (WildGuardTest, all items)",
+   "value": "4.6%",
+   "comparison": "36.0 (no guard) -> 8.9 (WildGuard) / 9.2 (Safety-SFT) -> 4.6 (PRPO)；credit 对照：single pair 8.2 / RLOO 6.1 / global baseline 5.9",
+   "setting": "Qwen2.5-7B-Instruct，Red=提示改写、Blue=guard，训练于 HarmBench validation behaviors + WildJailbreak train（冻结 HarmBench 验证分类器为 oracle），评估于 WildGuardTest（两个均非训练 oracle 的 judge），冻结 Qwen3.5-9B 目标；12 seeds（credit contrast 配对）",
+   "quote": "Attack-success rate follows the same ordering as in code (Table 3). The credit contrast 5.9→4.65.9\\to 4.6 is significant (paired tt, p=0.041p{=}0.041, 12 seeds), and over-refusal stays nearly flat, so the gain is not bought with false alarms.",
+   "locator": "§5 Generality: jailbreak safety (Table 3)",
+   "denominator": {
+    "n_total": "WildGuardTest 全量条目（分母为全集，整数计数未在正文复述）；另 320 条 held-out HarmBench behaviors",
+    "n_valid": "同一 WildGuardTest 集合跨全部 guard 变体；XSTest 拒绝率在其安全提示全集上",
+    "how_counted": "ASR = 有害成功 / WildGuardTest 全量；credit contrast 为 seed 内配对差，12 seeds"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "共演化出的攻击者对未参与训练的外部 WildGuard guard 也有效（12.4% -> 27.8%），而 PRPO guard 在同一提示上守住 9.3%；在 320 条 held-out HarmBench behaviors 上 ASR 从 41.5%（no guard）降到 7.2%。",
+   "metric": "ASR under external guard (Red transfer) / ASR (HarmBench held-out)",
+   "value": "27.8% (Red vs WildGuard)；7.2% (PRPO guard on HarmBench)",
+   "comparison": "12.4% -> 27.8%（Red 对外部 guard 的逃逸提升）；41.5% -> 7.2%",
+   "setting": "越狱域，App. Q；评估 judge 与训练 oracle 分离",
+   "quote": "Red improves against that external guard too, 12.4%→27.8%12.4\\%\\!\\to\\!27.8\\%, while our guard holds those prompts to 9.3%9.3\\%; on the 320320 held-out HarmBench behaviors ASR falls 41.5%→7.2%41.5\\%\\!\\to\\!7.2\\% (App. Q).",
+   "locator": "§5 Generality: jailbreak safety (App. Q)",
+   "denominator": {
+    "n_total": "320 条 held-out HarmBench behaviors；'those prompts'=被外部 guard 攻击的提示集（整数未给出）",
+    "n_valid": "同上",
+    "how_counted": "ASR 按对应集合全量；具体计数以 App. Q 为准"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "仓库级端到端检测（VulnGym T1，完全 held out）：PRPO Setting B 训练的 9B 智能体在 172 条 held-out VulnGym advisories 上恢复 23 条（Setting A 为 18 条），对照 Security-SFT 10 条、同骨干零训练 7 条；entry-point file recall 从 4/43（zero-shot）/6（SFT）升至 17/43。",
+   "metric": "advisory recall (VulnGym T1) / entry recall",
+   "value": "23/172 (Setting B)；18/172 (Setting A)；entry recall 17/43",
+   "comparison": "23 vs 10 (Security-SFT) vs 7 (untrained)；entry recall 17 vs 13 (mini-swe-agent + GLM-5.2)",
+   "setting": "Qwen3.5-9B + mini-swe-agent（未修改 scaffold），8 seeds，VulnGym T1 stratified advisories 完全 held out，benchmark 自带评测器",
+   "quote": "On T1 the detector recovers 1818 of 172172 advisories in Setting A and 2323 in Setting B, against 1010 for Security-SFT and 77 for the same backbone untrained under the same scaffold, a 3.3×3.3\\times gain at identical model and harness",
+   "locator": "§5 RQ2 (Table 2)",
+   "denominator": {
+    "n_total": "172 条 VulnGym T1 held-out advisories；entry recall 分母 43 个 reachable entry points；Hard 层 31 条",
+    "n_valid": "同上；published 基线行（Qwen3.5-9B 8 条）在 Claude Code 脚手架下，非同 harness",
+    "how_counted": "T1=端到端（EP+CO+trace 匹配，行内 <=N 行）；8 seeds 均值，Setting B 增益 12.4±2.3 advisories"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "纯非参数状态路线（冻结权重+演化技能库）在 unseen 应用达 60.5%（低于 PRPO 4.3 点），冻结前沿模型 Claude Opus 4.8 为 71.2%（训练应用）/60.4%（unseen），对照共演化 7B 的 87.0%/64.8%——技能库可复用状态有效但被权重更新超出，且前沿模型的 OOD 边距只有其域内边距的四分之一。",
+   "metric": "balanced accuracy (unseen), weight-vs-state controls",
+   "value": "60.5 (skill library) / 60.4 unseen·71.2 Src (frozen frontier) vs 64.8 unseen·87.0 Src (PRPO)",
+   "comparison": "RQ4 对照组：skill library 60.5 (-4.3 vs PRPO)；frontier 60.4 vs PRPO 64.8",
+   "setting": "diff 级臂，4 个未见应用；Claude Opus 4.8 为冻结前沿 reviewer（App. X.4：prompt 级适应受固定上下文窗口限制，无法从 verifier 学习）",
+   "quote": "On our backbone this reaches 60.5%60.5\\% on unseen applications, 4.34.3 below PRPO; a frozen frontier model (Claude Opus 4.8) reaches 71.2%71.2\\% on the training application and 60.4%60.4\\% on unseen ones, against the co-evolved 7B’s 87.0%87.0\\% and 64.8%64.8\\% at a fraction of the serving cost, though the out-of-distribution margin is a quarter of the in-distribution one.",
+   "locator": "§5 RQ4",
+   "denominator": {
+    "n_total": "4 个未见应用的成对场景集（同 Table 1 unseen 列）",
+    "n_valid": "同 RQ4 对照臂（与主臂同预算）",
+    "how_counted": "balanced accuracy 均值±SD，同 Table 1 协议"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "评估 prevalence 均衡构造与真实审查流量不符：按源应用运行点（TPR 0.728 / FPR 0.031）在 1% prevalence 下 precision 仅约 0.057——部署阈值需按目标仓库校准。",
+   "quote": "Our evaluation sets are balanced by construction, whereas real review traffic is not: at the source application’s operating point (, ), precision would be at prevalence and at , so most alerts a reviewer sees would be false.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "弱点类在训练前固定，Red 适应的是已知弱点的隐藏方式而非发现新弱点；状态依赖、多步或多 commit 拼装的弱点不在奖励与度量范围内；jailbreak oracle 是冻结分类器，继承其盲区。",
+   "quote": "Red adapts how a known weakness is concealed rather than which weakness exists; extending the class set requires new exploit harnesses. The jailbreak oracle is a frozen classifier and inherits its blind spots.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "规模受限：单侧 8 适配器种群、单节点训练；仓库级臂每 seed 成本高且与 diff 级臂骨干不同，粒度与模型规模未解耦。",
+   "quote": "We use adapters per role on a single node, as in concurrent population-LoRA work (Castanyer et al., 2026), and do not study larger populations.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "权重空间共演化（LoRA 种群），非持久状态载体，按 SCOPE 降为背景",
+   "quote": null,
+   "locator": null
+  }
+ ],
+ "counterexamples": [
+  {
+   "observation": "训练应用的 held-out 文件本身贡献了部分收益：held-out files 对照损失数个点，size/hunk-count probe 仅 51.1 vs chance 50——收益主要来自弱点类迁移而非记忆具体文件（按 App. W.4/W.5 组织为按类迁移）。",
+   "locator": "§5 RQ3 Training composition"
+  },
+  {
+   "observation": "incl.-mean（自包含均值）变体在 Src 上 87.2 略高于 MPA 87.0 且差异不显著（n.s.）——匹配条件本身（而非留一）承担了大部分方差缩减。",
+   "locator": "§5 Table 1"
+  }
+ ],
+ "reproduction": {
+  "code": "论文未在正文给出公开代码链接（训练框架/适配器发布状态未明；TODO: 检查 artifact）",
+  "data": "Grimoire v0.5.0 + 6 个 Setting B 应用（Lago/PrestaShop/Pretix/OpenEMR/Habitica/Mautic，pinned 容器），4 个 held-out 应用（Miniflux/FileBrowser/BookStack/Plausible），VulnGym，HarmBench/WildJailbreak/WildGuardTest/XSTest",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix-partial",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "demoted_to_background_weight_space",
+  "denominator_partially_reported",
+  "deployment_defense_frozen",
+  "evaluation_static_attack_sets",
+  "math_rendering_duplicated_in_corpus",
+  "weight_space_coevolution_not_semantic_memory"
+ ]
+}

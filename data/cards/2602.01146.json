@@ -1,0 +1,218 @@
+{
+ "arxiv_id": "2602.01146",
+ "title": "PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v2"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Per-user long-term memory store M_u of short textual statements (preferences, attributes, past facts), 4-16 items per sample with a mean of 10; following deployed-assistant practice the full memory set is rendered as a textual block and concatenated into the system context of each new session (p = [M_u || q]); memory extraction timing (per turn or per session) is treated as a given input, agnostic to the mechanism",
+  "operations_covered": [
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Appropriate retention boundaries of long-term memory: stored user information must not inappropriately influence responses where it is irrelevant or biasing - (1) cross-domain leakage: memories from one domain must not leak into unrelated-domain queries (d(m) != d(q)); (2) memory-induced sycophancy: stored beliefs/attributes must not cause deference to, reinforcement of, or alignment with user beliefs when an objective, truth-tracking answer is required. The safety property fails when inappropriate memory influence occurs; it must NOT be achieved by suppressing legitimate memory use, which is measured by the beneficial-memory control subset.",
+  "operationalized_as": "Failure Rate (FR) via LLM-as-a-judge: for cross-domain leakage and sycophancy, an ordinal failure score 1-5 per response with scores >=3 counted as failures, 3 independent inferences per sample where a sample counts as failed if ANY of the three generations exhibits the target failure; for beneficial memory a separate judge scores {1,2,3} with >=2 counted as failure, single inference; 500 human-validated samples (200 cross-domain, 200 sycophancy, 100 beneficial) evaluated on 18 frontier and open-weight LLMs; 95% bootstrap confidence intervals."
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "No external adversary: both failure modes arise from benign reuse of the user's own stored memories; the 'threat' is the memory store itself, injected wholesale into the system prompt each session as in deployed systems (ChatGPT, Gemini, Claude)"
+  ],
+  "assumptions": [
+   "The memory store M_u is a given input; the benchmark is agnostic to how memories were extracted (per-turn or per-session extraction both mapped to the same evaluation)",
+   "Deployed-assistant memory paradigm: memories are plain text injected into the system context, not retrieved via an explicit retrieval mechanism at inference time",
+   "Sycophancy queries are intentionally objective and not leading; cross-domain queries contain out-of-domain memories that are present but unnecessary"
+  ],
+  "not_covered": [
+   "Memory construction/extraction mechanisms are deliberately abstracted away (stated as a scoping decision; joint evaluation of construction and usage left to future work)",
+   "Indirect memory injection and security-threat failure modes are explicitly out of scope (Appendix A: 'may not exhaustively cover all potential risks associated with long-term memory, such as indirect memory injection or security threats')",
+   "No adaptive adversary and no agentic/tool-use coupling; agentic deployments with memory coupled to tool use are future work (Appendix B)"
+  ]
+ },
+ "intervention": {
+  "name": "PersistBench evaluation framework plus a defensive-prompting study",
+  "mechanism_layer": "prompt",
+  "description": "Benchmark generation: Monte Carlo Tree Search over memory-query pairs with a generator LLM (Gemini-2.5-Pro) and a judge LLM (Kimi-K2-Thinking) scoring target-failure elicitation on 3 target models; validation on held-out models; LLM memory expansion to 4-16 items; human verification of all 500 samples. Defenses evaluated: five system-prompt memory guidelines - Baseline (current deployed-style prompt), Permissive (personalize every response), Restrictive (ignore memories by default), Rubric-informed (crafted from judge rubrics by Claude-Opus-4.5), and GEPA Optimized (evolutionary prompt optimization on judge reasoning) - compared by Pareto plots of mean failure rates across 5 frontier models."
+ },
+ "controls": [
+  {
+   "name": "Beneficial memory subset (100 samples)",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Random memories swapping (Appendix K)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Memory-disabled sycophancy control (Appendix L)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Permissive / Restrictive prompt extremes",
+   "purpose": "ablation"
+  },
+  {
+   "name": "GEPA optimized vs Rubric-informed prompts",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Across 18 evaluated LLMs, long-term memory produces a median failure rate of 53% on cross-domain samples and 97% on sycophancy samples.",
+   "metric": "Failure Rate (FR, %), median across 18 models",
+   "value": "53% (cross-domain); 97% (sycophancy)",
+   "comparison": "median beneficial-memory FR 16.5% (control subset)",
+   "setting": "500 human-validated samples (200/200/100), 18 frontier and open-weight models, memory injected into system prompt, LLM-as-judge FR with 3 inferences per sample (Table 2)",
+   "quote": "Our results reveal a surprisingly high failure rate across these LLMs - a median failure rate of 53%53\\% on cross-domain samples and 97%97\\% on sycophancy samples.",
+   "locator": "Abstract (Table 2)",
+   "denominator": {
+    "n_total": 200,
+    "n_valid": null,
+    "how_counted": "FR over 200 cross-domain and 200 sycophancy samples per model with 3 independent inferences each (sample failed if any inference fails); beneficial subset 100 samples with 1 inference; 18 models; medians taken across models"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Cross-domain leakage varies widely: FR ranges from 4.0% (GPT-5.2) to 91.0% (Qwen3-235B-A22B-Think), with most models including proprietary ones above 40% - isolating irrelevant long-term memories is broadly unsolved.",
+   "metric": "Cross-domain FR (%) per model",
+   "value": "4.0% (best, GPT-5.2) to 91.0% (worst, Qwen3-235B-A22B-Think)",
+   "comparison": "best open-weights: Llama-3.3-70B-Instruct 17.5%; proprietary GPT-4o 13.0%, Claude-Opus-4.5 18.0%",
+   "setting": "18 models on the 200-sample cross-domain subset (Table 2)",
+   "quote": "FR for cross-domain leakage exhibits great variability across LLMs, ranging from 4.0%4.0\\% (GPT-5.2) to 91.0%91.0\\% (Qwen3-235B-A22B-thinking). The majority of models, including several proprietary LLMs, have leakage rates above 40%40\\%, indicating difficulty in isolating irrelevant long-term memories.",
+   "locator": "§5.1 (Table 2)",
+   "denominator": {
+    "n_total": 200,
+    "n_valid": null,
+    "how_counted": "FR over the 200 cross-domain samples per model; 3 inferences per sample; point estimates with 95% bootstrap CIs"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Memory-induced sycophancy is near-ceiling: median FR 97.8% [v1 报 97.7%] with 12 models exceeding 95% [v1: 14] and 3 models at 100% [v1: 4] - once long-term memory encodes user beliefs, most models systematically defer to them even when objective responses are required.",
+   "metric": "Sycophancy FR (%) per model",
+   "value": "median 97.8%; 12 models >95%; 3 models at 100% [v1: 97.7% / 14 / 4]",
+   "comparison": "lowest model GPT-5.2 (High) at 59.0%; memory-disabled control reduces sycophancy substantially (Appendix L)",
+   "setting": "18 models on the 200-sample sycophancy subset (Table 2)",
+   "quote": "sycophancy failure rates have a median of 97.8%97.8\\% with 12 models exceeding 95%95\\% and 3 models reaching a 100%100\\% failure rate.",
+   "locator": "§5.1 (Table 2)",
+   "denominator": {
+    "n_total": 200,
+    "n_valid": null,
+    "how_counted": "FR over the 200 sycophancy samples per model; 3 inferences per sample; point estimates with 95% bootstrap CIs"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Safety-utility decoupling: beneficial memory use is only weakly correlated with safety (Pearson r=-0.38 cross-domain, r=-0.25 sycophancy); GPT-4o fails recall (53% beneficial FR) but is safe (13% cross-domain FR), while Gemini-3-Pro excels at recall (4% beneficial FR) but fails sycophancy at 100%.",
+   "metric": "Beneficial FR vs safety FR correlation (Pearson r) and per-model contrast",
+   "value": "r=-0.38 (cross-domain); r=-0.25 (sycophancy)",
+   "comparison": "GPT-4o 53% beneficial FR / 13% cross-domain FR vs Gemini-3-Pro 4% beneficial FR / 100% sycophancy FR",
+   "setting": "100-sample beneficial subset vs the two safety subsets across 18 models (Table 2, §5.4.1)",
+   "quote": "Some models fail at recall but achieve high safety (GPT-4o: 53% beneficial FR, 13% cross-domain FR), while others excel at recall but fail catastrophically on safety (Gemini-3-Pro: 4% beneficial FR, 100% sycophancy FR).",
+   "locator": "§5.2.3 (Table 2)",
+   "denominator": {
+    "n_total": 100,
+    "n_valid": null,
+    "how_counted": "Beneficial FR over 100 samples per model (single inference); correlations computed across the 18 models' FRs"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Cost reading (defensive prompting trade-off): Permissive and Restrictive prompts lie on the Pareto frontier as extreme safety-utility trade-offs; the GEPA-optimized prompt is Pareto-efficient on BOTH safety categories while preserving memory utility, outperforming the rubric-derived prompt.",
+   "metric": "Pareto position of mean failure rates across 5 frontier models",
+   "value": "GEPA Pareto-optimal on cross-domain and sycophancy",
+   "comparison": "Baseline, Permissive, Restrictive, Rubric-informed, GEPA Optimized prompts (Figure 5)",
+   "setting": "5 frontier models (GPT-5.2, Claude-Sonnet-4.5, Gemini-3-Pro, Grok-4.1-Fast, Llama-4-Maverick); GEPA optimized with 20 samples per subset",
+   "quote": "Overall, the GEPA optimized prompt learns memory-usage guidelines that are Pareto-efficient on both safety categories, outperforming Rubric-informed, which was derived from evaluator criteria rather than observed failure modes.",
+   "locator": "§6.1 (Figure 5)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Mean failure rates averaged across the 5 evaluated models per prompt condition; per-model breakdowns in Appendix J"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Memory ablation control: disabling memories reduces sycophancy failures substantially, indicating a baseline level of model sycophancy that long-term memory amplifies.",
+   "metric": "Sycophancy FR with memories disabled vs enabled",
+   "value": "substantial reduction (Appendix L)",
+   "comparison": "memory-enabled vs memory-disabled conditions",
+   "setting": "Sycophancy subset control study (Appendix L)",
+   "quote": "Further, as a control, we find that disabling memories reduces sycophancy failures substantially ( Appendix K), suggesting a baseline level of model sycophancy that is amplified by the introduction of long-term memory.",
+   "locator": "§5.2.2 (Appendix K)",
+   "denominator": {
+    "n_total": 200,
+    "n_valid": null,
+    "how_counted": "Sycophancy FR on the 200-sample subset with memories removed from the prompt; exact per-condition rates in Appendix K"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Domain-pair analysis: the worst cross-domain leakage is Educational/Formative Experiences memories influencing Health/Medical queries at 61%; thematic bridging, direct retrieval triggers, and parallel-world application are common failure modes (FR 47.4% / 52.5% / 45.1% [v2 将 Parallel World 从 55.1% 修至 45.1%]).",
+   "metric": "Cross-domain FR by domain pair and failure mode",
+   "value": "61% (ED -> HE); failure modes 47.4% / 52.5% / 45.1% [v1: 55.1%]",
+   "comparison": "other severe pairs: ED -> SO 55%, ED -> RO 53%, RO -> TH 53%",
+   "setting": "Aggregate cross-domain FR across all 18 models with Wilson 95% CI lower bounds (Figure 23); failure modes on n=50 thematic-bridging queries among others (Figure 24)",
+   "quote": "The highest observed rate occurs when Educational and Formative Experiences (ED) memories influence Health and Medical Information (HE) queries (61%61\\%).",
+   "locator": "§5.2.1 (Figure 30)",
+   "denominator": {
+    "n_total": 200,
+    "n_valid": null,
+    "how_counted": "FR per domain pair aggregated across 18 models over the 200 cross-domain samples; domain-pair counts in Appendix D.2"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Synthetic memory-query pairs may not capture the entropy and scale of organic long-term user histories, despite MCTS generation and memory expansion.",
+   "quote": "First, despite the use of MCTS to generate complex scenarios, synthetic memory-query pairs may not fully capture the chaotic, ambiguous, and temporally disjoint nature of organic long-term user histories. Real-world memory usage involves significantly higher entropy and scale.",
+   "locator": "Appendix A"
+  },
+  {
+   "statement": "Memory construction/extraction is deliberately abstracted away; the benchmark evaluates only post-hoc memory usage, and joint evaluation of construction and usage is deferred.",
+   "quote": "Our evaluation protocol abstracts away the process by which memories are learned or extracted, and instead focuses on model behavior after long-term memory has been added to the context. This design choice reflects our goal of isolating failures that arise from memory usage during inference, rather than from upstream memory construction or extraction mechanisms.",
+   "locator": "Appendix A"
+  },
+  {
+   "statement": "Two failure modes do not exhaust long-term-memory risks; indirect memory injection and security threats are explicitly not covered.",
+   "quote": "Finally, PersistBench introduces two primary failure modes – cross-domain leakage and memory-induced sycophancy, and may not exhaustively cover all potential risks associated with long-term memory, such as indirect memory injection or security threats.",
+   "locator": "Appendix A"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/ivaxi0s/PersistBench (§4.3 Models: 'Our codebase is available here - https://github.com/ivaxi0s/PersistBench'); Appendix C.1 open-source statement",
+  "data": "500 human-validated samples: 200 cross-domain leakage, 200 sycophancy, 100 beneficial memory; memory sets of 4-16 items (mean 10); judge models Gemini-2.5-Pro (generation) and Kimi-K2-Thinking (scoring)",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "related_work",
+   "setup",
+   "generation",
+   "benchmark_statistics",
+   "evaluation_protocol",
+   "main_results",
+   "defenses",
+   "analysis",
+   "discussion",
+   "conclusion",
+   "appendix_A_limitations",
+   "appendix_B_future_work"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "llm_as_judge_any_of_three_inferences_counts_as_failure",
+  "memories_injected_wholesale_into_system_prompt",
+  "synthetic_memory_samples"
+ ]
+}

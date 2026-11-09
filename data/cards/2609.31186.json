@@ -1,0 +1,89 @@
+{
+ "arxiv_id": "2609.31186",
+ "title": "Evolutionary Safety of Recursive Self-Improving AI: Taxonomy, Risk Discovery, and Evaluation",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "Persistent system state of a self-improving system, S_t=(B_t, A_t, theta_t): persistent agent artifacts A_t (memory, skills, tools, workflows), model/policy parameters theta_t, evaluation and environmental feedback channels, the computational substrate, and the meta-level update mechanisms themselves (updater U_t and evaluator J_t procedures that generate and admit future updates); derived artifacts and successor models inherit effects through provenance/lineage links.",
+  "operations_covered": ["formation", "update", "retention", "retrieval", "revocation", "repair"]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Definition 1 (Evolutionary Safety): how safety properties are preserved, weakened, or restored as AI systems retain and build on the results of their own improvement processes. A safety-relevant change is in scope when its effects persist in later states, influence the generation or selection of subsequent updates, or propagate to derived artifacts and successor systems; failures confined to a single interaction remain local safety issues. Properties discussed include refusal reliability, privacy protection, and authorization/permission compliance (running example: a coding agent retains a permission-bypassing workaround as a reusable skill, so the unsafe behavior persists after the original input is removed and is inherited by successors). Degradation is judged per property; model collapse and catastrophic forgetting are explicitly not treated as safety failures by themselves.",
+  "operationalized_as": "Measured risk r_j(S;J,E) per safety property j under a fixed reference evaluator and environment (each measurement must specify task set, exposure denominator, and uncertainty); update-level difference Delta r_j,t (Eq. 3) between consecutive states; trajectory metrics (peak risk, time to failure, duration of unsafe behavior, recovery latency); lineage metrics on a provenance graph (propagation reach, depth, delay); population-level risk distributions across roles; and the selection-induced risk shift Delta_sel,j(t) (Eq. 5)."
+ },
+ "threat_model": {
+  "adversary": "model-itself",
+  "capabilities": [
+   "retains and reuses experience across interactions through memories, skills, tools, and workflows without changing model parameters",
+   "generates candidate updates and selects them through its own evaluator; selection can favor higher-measured-risk candidates (selection distortion)",
+   "modifies its own update procedures (updater revision): automated search over workflows and agent architectures, harness optimization, revision of admission rules and security checks",
+   "carries effects into successors via generated training data, distillation, model merging, and reusable derived artifacts",
+   "reciprocal adaptation: interacting systems reshape one another's learning conditions (e.g., covert communication channels under message-level monitoring, spread of unsafe conventions through shared experience)",
+   "adversarial variants also in scope: memory/experience poisoning and backdoor behaviors that persist through subsequent safety training"
+  ],
+  "assumptions": [
+   "a safety failure is evolutionarily consequential only if its effects persist in later states, influence subsequent update generation/selection, or propagate to derived artifacts and successors; otherwise it remains a local safety issue",
+   "persistent state (agent artifacts, model parameters) and selection pressure (evaluators, environmental feedback) exist and can in principle be tracked and versioned",
+   "capability forgetting and distributional collapse are not themselves safety violations; degradation must be assessed against specific safety properties",
+   "a fixed external reference evaluator, or overlapping evaluator versions, can be maintained for longitudinal comparison"
+  ],
+  "not_covered": [
+   "no experiments of its own: the paper is a taxonomy/framework; surveyed studies 'do not necessarily demonstrate risk accumulation under RSI'",
+   "similar failures across multiple descendants do not establish transmission; confirming inheritance requires provenance plus independent descendant testing, which the paper lists as an open problem for partially observed lineages",
+   "physical consequences: restoring software state does not contain external/physical effects ('restoring software state and containing external consequences remain distinct requirements')",
+   "explicitly open: safety preservation under composed updates; safety evaluation under a changing judge (unknown-failure coverage lacks an observable denominator); latent risks in social adaptation; propagation attribution across artifacts and populations; recovery criteria for when a failure is genuinely recovered"
+  ]
+ },
+ "intervention": {
+  "name": "Evolutionary-safety governance controls (modification boundaries, pre-commit gating, independent verification and authorization, lineage traceability and recovery)",
+  "mechanism_layer": "architecture",
+  "description": "Four complementary governance principles over persistent updates, not a deployed system: (i) modification boundaries define which components the system may change and who authorizes changes, with provenance checks on experience and generated artifacts limiting promotion of untrusted content into persistent state; (ii) pre-commit gating keeps candidate updates separate from the active system (sandboxed branches, shadow execution) until safety and performance are assessed; (iii) independent verification and authorization keep approval authority separate from proposal authority, under an external commit control that the proposed update cannot itself modify or replace (held-out tests, isolated verification, restricted permissions); (iv) lineage traceability and recovery link each accepted update to its source, evaluation evidence, verifier, permission changes, and downstream dependencies, then selectively quarantine or revalidate affected descendants. Required safeguards scale with an update's scope, persistence, and potential propagation. These controls support the paper's risk-discovery and evaluation framework (Sec. 4): states, accepted updates, trajectories, and lineages as evaluation units, source-removal protocols, frozen-update causal comparisons (Eq. 4), and evaluation validity under evolving evaluators."
+ },
+ "results": [],
+ "limitations": [
+  {
+   "statement": "The framework is conceptual: most existing methods provide only partial evidence and control, and how to maintain safety properties throughout sustained self-improvement remains open.",
+   "quote": "However, most existing methods offer only partial evidence and control, leaving open how safety properties can be maintained throughout sustained self-improvement.",
+   "locator": "§7 Open Problems"
+  },
+  {
+   "statement": "The surveyed safety studies do not themselves demonstrate risk accumulation under RSI; they expose failure modes that may become more consequential under persistence and reuse.",
+   "quote": "Although these studies do not necessarily demonstrate risk accumulation under RSI, they reveal failure modes that may become more consequential when systems retain experience, update their models, or reuse learned artifacts.",
+   "locator": "§1 Introduction"
+  },
+  {
+   "statement": "For discovery of previously unknown failure modes there is no observable denominator, so coverage of adaptive evaluation cannot be quantified.",
+   "quote": "Adaptive testing can uncover failures missed by fixed benchmarks, but the coverage of previously unknown failures lacks an observable denominator",
+   "locator": "§7 Open Problems"
+  },
+  {
+   "statement": "A measured safety difference between consecutive states does not by itself establish the update's causal contribution.",
+   "quote": "The measured difference alone does not establish the causal contribution of the update.",
+   "locator": "§4.1 Evaluation Units and Metrics"
+  },
+  {
+   "statement": "Attribution of propagation is not possible from similar failures alone; transmission routes require provenance plus independent descendant testing, and removing the original source may not eliminate effects already embedded downstream.",
+   "quote": "Similar failures in multiple descendants do not by themselves establish transmission; identifying the route requires provenance and independent descendant testing.",
+   "locator": "§2.3 Manifestations of Evolutionary Risk"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "figures", "appendix"],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_empirical_results",
+  "illustrative_numbers_only",
+  "no_denominators_reported",
+  "no_appendix_in_corpus"
+ ]
+}

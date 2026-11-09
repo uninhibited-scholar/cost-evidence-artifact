@@ -1,0 +1,144 @@
+{
+ "description": "Documented exceptions to the internal consistency check in code/verify_quotes.py, which asks whether each evidence quote appears verbatim in the quote field of the card result it points to. Of the 133 evidence entries in extraction/derived/cost-tags-129.json, 118 pass and the 15 entries below do not, for the reasons given: ten are pre-revision card-text traces and five are recon-9 additions whose quote is a different, also verbatim, sentence of the same paper. Every one of the 15 was separately verified against the source text under the two tests in tools/quote_audit.py (coverage and digit-by-digit numbers), so each is a traceability gap on the card side, not a fidelity gap on the source side. Nothing in this manifest changes any count: every listed entry still has has=true on its card.",
+ "exceptions": [
+  {
+   "id": "2503.18813",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (CaMeL utility discussion); the current card's results[0].quote differs after the v2 re-extraction. Qualitative-only entry (does not enter the C1 main count)."
+  },
+  {
+   "id": "2503.18813",
+   "cost_class": "latency_compute",
+   "evidence_index": 1,
+   "result_index": 8,
+   "status": "stale_pointer",
+   "note": "Quote matches the current card exactly at results[7] ('CaMeL requires the highest token usage...'); the recorded result_index=8 dates from a 9-result version of the card. Pointer issue only; the quote text is verbatim."
+  },
+  {
+   "id": "2506.12104",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 1,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (DRIFT GPT-4o-mini utility reading)."
+  },
+  {
+   "id": "2609.01836",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 5,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (authorized-use-rate drop under gating)."
+  },
+  {
+   "id": "2609.01836",
+   "cost_class": "revocability",
+   "evidence_index": 0,
+   "result_index": null,
+   "status": "unanchored_c420_addition",
+   "note": "The C4-from-19-to-20 addition (2026-11-01 revision): a revocation-residue reading ('retained revoked records among surviving errors', 7 of 9 unique residual states) registered with result_index=null. The quote is a diagnostic sentence in the source's results discussion (Sec. 4.4, table on executor behaviour after source-authority gating) and verifies verbatim against fulltext/2609.01836v1.txt, but it is not one of the card's eight registered result entries. Registering it as a result would change the 1,077 result total, so it is kept as a locator-anchored reading and disclosed here.",
+   "locator": "Sec. 4.4, executor-behaviour table after source-authority gating"
+  },
+  {
+   "id": "2609.22818",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (reranker -4.4 pp core-accuracy reading)."
+  },
+  {
+   "id": "2609.22818",
+   "cost_class": "utility_loss",
+   "evidence_index": 1,
+   "result_index": 2,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (write-time defenses no-resolvable-cost reading)."
+  },
+  {
+   "id": "2609.22818",
+   "cost_class": "utility_loss",
+   "evidence_index": 2,
+   "result_index": 3,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (prompt-injection variant accuracy reading)."
+  },
+  {
+   "id": "2609.22818",
+   "cost_class": "latency_compute",
+   "evidence_index": 0,
+   "result_index": 4,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (2.7% token-overhead reading)."
+  },
+  {
+   "id": "2609.22818",
+   "cost_class": "false_positive",
+   "evidence_index": 0,
+   "result_index": 1,
+   "status": "quote_from_prerevision_card_text",
+   "note": "Quote registered from the pre-revision card text (33.6% false-quarantine reading)."
+  },
+  {
+   "id": "2608.12851",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "evidence_quote_is_a_different_sentence",
+   "note": "Recon-9 addition (2026-11-07): the C-Util cost of SafeEvolve ('costs 12.7 points of C-Util'). The quote is byte-verbatim in corpus/2608.12851.txt; the referenced result entry records a different sentence of the same paper (the gate-failure summary), so the pointer is consistent at the claim level and the traceability gap is on the card side only."
+  },
+  {
+   "id": "2609.07529",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "evidence_quote_is_a_different_sentence",
+   "note": "Recon-9 reclassification (qualitative to numeric, 2026-11-07): Clean U 80.47% versus 77.92% Base. The quote is byte-verbatim in corpus/2609.07529.txt; the referenced result entry reports the adaptive-ASR and Safe-U figures of the same experiment."
+  },
+  {
+   "id": "2610.19005",
+   "cost_class": "false_positive",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "evidence_quote_is_a_different_sentence",
+   "note": "Recon-9 addition (2026-11-07): the over-blocking patch (8%) reading. The quote is byte-verbatim in corpus/2610.19005.txt; the referenced result entry records the capture-rate table of the same arena study."
+  },
+  {
+   "id": "2610.19005",
+   "cost_class": "revocability",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "evidence_quote_is_a_different_sentence",
+   "note": "Recon-9 addition (2026-11-07): 'in 4% of the games attacker-installed code remains executable after the defender deploys a patch'. Byte-verbatim in corpus/2610.19005.txt; the referenced result entry records the capture-rate table."
+  },
+  {
+   "id": "2602.01146",
+   "cost_class": "false_positive",
+   "evidence_index": 0,
+   "result_index": 0,
+   "status": "evidence_quote_is_a_different_sentence",
+   "note": "Recon-9 addition (2026-11-07): judge precision 68.00% with recall 85.00%. Byte-verbatim in corpus/2602.01146.txt; the referenced result entry records the cross-domain failure rates."
+  }
+ ],
+ "resolved_20261102": [
+  {
+   "id": "2608.00426",
+   "cost_class": "utility_loss",
+   "evidence_index": 0,
+   "result_index": 6,
+   "status": "quote_from_prerevision_card_text (resolved 2026-11-02)",
+   "note": "Quote registered from the pre-revision card text (MAPLE-Guard benign-utility table row). Resolved on 2026-11-02: the evidence quote was re-derived from the version of record and the card result quote synced to it, so the entry now passes."
+  },
+  {
+   "id": "2608.12851",
+   "cost_class": "revocability",
+   "evidence_index": 0,
+   "result_index": 6,
+   "status": "quote_from_prerevision_card_text (resolved 2026-11-02)",
+   "note": "Quote registered from the pre-revision card text (SafeEvolve retirement-ablation reading). Resolved on 2026-11-02: the evidence quote was re-derived from the version of record and the card result quote synced to it, so the entry now passes."
+  }
+ ]
+}

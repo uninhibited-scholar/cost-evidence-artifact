@@ -1,0 +1,137 @@
+{
+ "arxiv_id": "2609.32091",
+ "title": "Memory as Middleware for Self-Improving AI Agents",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "altk-evolve 记忆中间件的 typed memory store：episodic/semantic/procedural 三类记忆分命名空间持久化，表示为 purpose-directed gists 并由 durable store 保留全文原文；实体（entity）携带 content、type 标签（guideline/fact/trajectory/policy）、trigger、provenance（来源 task/session、自动/手动）、ownership/visibility（默认私有、显式 publish）与 support count；经 MCP 工具协议及宿主原生原语（plugin、instruction file、skill、hook）绑定到 Claude Code/Codex/Claw Code/IBM Bob 四个宿主",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "设计层主张（论文未做安全实验），涉及两类属性：(a) confidentiality——记忆按租户/类型命名空间隔离、检索默认限定活动命名空间、默认私有仅显式发布（§3.5），失效形态为跨用户/租户泄漏敏感上下文；(b) integrity——写路径将候选记忆与既有记忆调和（add/update/merge/supersede/quarantine/reject，§3.6），共享记忆需 admission checks 与 provenance verification（§3.7），失效形态为共享记忆成为投毒渠道、过期/重复/矛盾记忆操纵 agent 未来行为。判定：论文仅以 Table 2 'realized today' 列声明已实现 per-tenant & per-type namespaces、visibility、git sync、provenance、deletion，未以任何安全指标判定。在本综述攻防框架中，它支撑防御侧机制：受治理的记忆基础设施（isolation + provenance + lifecycle controls）作为针对记忆投毒与跨租户泄漏的系统级防御——即把 §3.7 'admission checks, provenance verification, and default-private visibility are safety mechanisms as much as governance ones' 落为中间件层的 controls 目标（§3.1）。",
+  "operationalized_as": "未操作化为可测安全指标：论文唯一量化评估是 AppWorld Test-Normal 的任务/场景完成率（可靠性），非安全属性。最接近的操作化是 §4/Table 2 已实现的控制面——per-tenant & per-type namespaces、default-private visibility 与显式 publish/unpublish、provenance metadata、owner-checked delete、append-only recall audit（§4.2）——均无对抗性验证。"
+ },
+ "threat_model": {
+  "adversary": "unclear",
+  "capabilities": [
+   "向共享记忆写入投毒条目以影响其他 agent 的未来行为——论文仅作设计动机与引用：'a shared memory is a channel for poisoning and for leaking personal or proprietary context'（§3.7，引 AgentPoison 与长时记忆安全综述），未做实验",
+   "当隔离/可见性控制不足时获取其他租户或用户的敏感记忆（跨命名空间上下文泄漏，§3.5/§3.7 设计动机，未实验）",
+   "多写者通道：记忆可由 agent 自身、用户、其他 agent 或组织写入（§2.2）；缺乏 precedence/provenance/conflict 处理时任何写者都可影响未来行为——论文将其视为需调和的写路径问题，而非刻画的对手"
+  ],
+  "assumptions": [
+   "中间件层、宿主 interposition 点与存储后端是可信基础设施；未考虑对中间件本身的攻击",
+   "写路径上的多写者（agent/用户/组织）假定为合法写者，冲突由调和与治理机制处理，而非对抗模型",
+   "agent 从失败运行中内化错误经验（§6 'internalizes the mistakes of failed runs'）被视为 admission/质量问题而非对手行为"
+  ],
+  "not_covered": [
+   "无任何对抗性实验：memory poisoning、跨租户泄漏、记忆注入仅作为相关工作引用与设计动机，未构造攻击者、未测量",
+   "论文未定义正式威胁模型或对手能力清单",
+   "embodied agents 明确不在范围（§1 'raise different constraints that we do not address'）"
+  ]
+ },
+ "intervention": {
+  "name": "altk-evolve（memory middleware 参考实现）",
+  "mechanism_layer": "architecture",
+  "description": "记忆即中间件：在 agent 与存储之间插入可插拔层，实现 capture→extract→consolidate→store→retrieve→inject 的 experience flywheel（Figure 2）。关键机制：typed memory（episodic/semantic/procedural 分命名空间，防检索干扰）、purpose-directed gists + durable originals（分层存储）、generalize-then-consolidate 的写路径调和（去重/合并/废止）、per-tenant & per-type namespaces 与默认私有可见性、provenance 元数据、MCP 工具接口（含 dosage-aware 检索、save_trajectory、owner-checked delete）与四宿主原生绑定（Table 1）；Table 2 明确记录六项关注点中已实现 vs 开放的部分。"
+ },
+ "results": [
+  {
+   "claim": "同一 GPT-4.1 agent 与推理循环下，在 AppWorld held-out test-normal 上启用 altk-evolve 记忆层使 aggregate task-goal completion 从 69.6% 升至 73.2%，更严格的 scenario-goal completion（场景内每个任务都须成功）从 50.0% 升至 64.3%（+14.3 点）",
+   "metric": "Task Goal / Scenario Goal completion (%)",
+   "value": "69.6% → 73.2% (task-goal); 50.0% → 64.3% (scenario-goal)",
+   "comparison": "no-memory baseline 69.6%/50.0% → altk-evolve 73.2%/64.3%；scenario-goal +14.3 点",
+   "setting": "AppWorld Test-Normal split（held-out）；guidelines 从 train+dev 分区轨迹抽取；两条件均用 GPT-4.1 agent 与同一推理循环，仅记忆层不同；task-goal=per-task success，scenario-goal=场景内所有任务成功；论文未报告 n",
+   "quote": "Aggregate task-goal completion —per-task success—rises from 69.6% to 73.2% , while the stricter scenario-goal completion , which requires every task in a scenario to succeed, rises far more, from 50.0% to 64.3% (a 14.3-point gain).",
+   "locator": "§5 Evaluation",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "提升集中在最难任务：Hard 档 scenario-goal completion 翻倍以上，从 19.1% 到 47.6%",
+   "metric": "Scenario Goal completion (%), Hard tier",
+   "value": "19.1% → 47.6%",
+   "comparison": "no-memory baseline 19.1% → altk-evolve 47.6%（Hard 档 more than doubles）",
+   "setting": "AppWorld Test-Normal，Hard 难度档；同第 1 条结果设置（GPT-4.1，仅记忆层不同）；论文未报告 n",
+   "quote": "The improvement concentrates where tasks are hardest: scenario-goal completion on the Hard tier more than doubles , from 19.1% to 47.6%.",
+   "locator": "§5 Evaluation",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Table 3 全表：altk-evolve 在所有难度档的 Task-Goal completion 均高于 no-memory 基线；Scenario-Goal completion 在 Aggregate/Easy/Hard 提升、Medium 持平（56.2%）",
+   "metric": "Task Goal and Scenario Goal completion (%) by difficulty tier",
+   "value": "Task: Aggregate 69.6→73.2, Easy 89.5→91.2, Medium 66.7→70.8, Hard 54.0→58.7; Scenario: Aggregate 50.0→64.3, Easy 79.0→89.5, Medium 56.2→56.2, Hard 19.1→47.6",
+   "comparison": "altk-evolve vs no-memory baseline，按 Aggregate/Easy/Medium/Hard 档（见 value）",
+   "setting": "AppWorld Test-Normal split；baseline 无 altk-evolve；论文未报告 n",
+   "quote": "Table 3. altk-evolve versus a no-memory baseline on AppWorld (Test-Normal split): Task Goal and Scenario Goal completion (%). Baseline (no memory) altk-evolve Type Task Scenario Task Scenario Aggregate 69.6 50.0 73.2 64.3 Easy 89.5 79.0 91.2 89.5 Medium 66.7 56.2 70.8 56.2 Hard 54.0 19.1 58.7 47.6",
+   "locator": "Table 3",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "同一记忆层不加修改地运行于四个独立开发的 coding-agent 宿主（Claude Code、Codex、Claw Code、IBM Bob），经各宿主原生 interposition 原语绑定——two-sided pluggability 与 host-native interposition 主张是实证而非断言",
+   "metric": "host portability（不加修改支持的宿主数）",
+   "value": "four coding-agent hosts (Claude Code, Codex, Claw Code, IBM Bob)",
+   "comparison": null,
+   "setting": "经 plugin、instruction file、skill、hook、MCP tool protocol 等各宿主原生原语绑定（Table 1），宿主 agent 代码零改动；另有三个可换存储后端（files、pgvector、Milvus，Table 2）",
+   "quote": "The same memory layer runs unmodified across four independently developed coding-agent hosts—Claude Code, Codex, Claw Code, and IBM Bob—binding through each host’s native interposition primitive (Section 4 ).",
+   "locator": "§5 Evaluation",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "作者自评：这些结果只是可行性与信号的证据，不是完整评估；更完整的研究仍在进行",
+   "quote": "We treat these results as evidence of feasibility and signal, not as a complete evaluation; a fuller study is ongoing.",
+   "locator": "§5 Evaluation"
+  },
+  {
+   "statement": "架构对六项关注点的覆盖不均衡：Table 2 明确区分 realized today 与 open direction（hierarchical/role-based scopes、formal semantics/transactions、federation policy/audit trails、retention/eviction policy 均未实现）",
+   "quote": "Crucially, the architecture covers the six concerns unevenly, and we say so explicitly: Table 2 records what it realizes today versus what remains open, and its open directions are precisely the research agenda of Section 6 .",
+   "locator": "§4 A Reference Architecture and Implementation"
+  },
+  {
+   "statement": "范围限定：仅覆盖通过工具行动的软件 agent（coding/workflow/enterprise），embodied agents 明确不处理",
+   "quote": "Our scope is software agents that act through tools over long-lived operational contexts—coding, workflow, and enterprise agents; embodied agents, whose memory is coupled to perception and control, raise different constraints that we do not address.",
+   "locator": "§1 Introduction"
+  },
+  {
+   "statement": "文档状态自述：preliminary IBM Technical Report，内容仍在积极修订，引用前需查更新版本",
+   "quote": "This is a preliminary IBM Technical Report. The content is under active revision and this document will be updated; please check for a later version before citing it.",
+   "locator": "Status of this document"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "background_paper",
+  "version_assumed_v1",
+  "no_appendix_in_corpus",
+  "figures_present_as_captions_only_in_corpus",
+  "no_safety_evaluation: results 为 AppWorld 完成率与宿主可移植性等可靠性/工程测量，非对抗安全实验；memory poisoning 与跨租户泄漏仅作设计动机引用（§3.7）",
+  "no_formal_threat_model: 论文未定义对手；adversary=unclear，capabilities 为从 §2.2/§3.5/§3.7 原文引出的隐含威胁，未经实验",
+  "preliminary_technical_report_under_revision: 论文自述内容仍在修订，引用前需查新版本"
+ ]
+}

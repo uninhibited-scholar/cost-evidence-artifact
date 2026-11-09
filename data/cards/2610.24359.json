@@ -1,0 +1,222 @@
+{
+ "arxiv_id": "2610.24359",
+ "title": "Can Agents Keep Secrets They Were Never Told? Benchmarking Latent Privacy Risks Across Sessions with MemJoin",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Long-term memory records written, updated, and retrieved by six memory frameworks (A-Mem, LangMem, Mem0, MemGPT, MemoryBank, SimpleMem) over multi-session synthetic user histories; reference inputs Full history (verbatim sessions), All memory (exported store), and Task only (no history)",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "confidentiality",
+  "statement": "A sensitive relation (user bound to a service/attribute, site, and date) that is entailed only by combining records from several sessions, and that the later ordinary task does not require, must not be stated in the agent's answer. It fails whenever memory formation, update, retention, or retrieval delivers and connects the clues so that the fixed reader states the complete person-linked relation; a low disclosure rate can also mask the failure mode of values never reaching the reader.",
+  "operationalized_as": "Disclosure rate DR = ND/288 (a case counts when at least two of three trials reach A4: service, site, and date bound to the correct user), availability (string-match of target values in reader context), conditional A4 (A4 among availability-passing inputs), plus TCR / Helpfulness / Refusal for task utility"
+ },
+ "threat_model": {
+  "adversary": "model-itself",
+  "capabilities": [
+   "Reader model (fixed Qwen3.5-9B) receives memory records retrieved for an ordinary task and can join facts across separately harmless records without the task asking for the relation",
+   "Memory framework itself merges, consolidates, or links records across sessions (writer materialization, update consolidation, retrieval join), forming the sensitive relation inside the store or the retrieved context"
+  ],
+  "assumptions": [
+   "No adversarial user: sessions are benign synthetic interactions and the task never requests the sensitive relation",
+   "Target annotations remain with the evaluator and never reach the reader or memory frameworks",
+   "The reader answers under a short instruction not to volunteer private facts the task does not need"
+  ],
+  "not_covered": [
+   "Adversarial users deliberately planting clues or probing prompts",
+   "Cross-user memory sharing or multi-user collusion",
+   "Side channels such as timing or membership inference beyond record joining",
+   "Real user data (all 288 cases are synthetic)",
+   "Revocation after disclosure: deleting stored records does not retract what the recipient already learned"
+  ]
+ },
+ "intervention": {
+  "name": "Five post-hoc mitigations: M1 privacy instruction, M2 value sanitization, M3 cross-record cue removal, M4 top-1 retrieval budget, output filtering",
+  "mechanism_layer": "content",
+  "description": "M1 replaces the reader's system instruction with data-minimization guidance; M2 masks personal values found by a PII scanner; M3 rewrites names and identifier prefixes shared across records into per-clause labels, cutting cross-record links while keeping values; M4 keeps only the first retrieved record; output filtering passes finished answers to a critic LLM that deletes spans or replaces the answer with a refusal. Each is applied alone after memory construction and retrieval are frozen, not as a sequential defense."
+ },
+ "controls": [
+  {
+   "name": "Full history (verbatim source sessions)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Task only (no historical context)",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "All memory (entire exported store, bypassing retrieval)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Itemized history (sessions presented as separate records)",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Every one of six memory frameworks discloses the cross-session sensitive relation in ordinary-task answers: under Retrieved memory 5.9%-13.9% of cases are disclosed, versus 22.9% under Full history and none under Task only.",
+   "metric": "disclosure_rate (DR)",
+   "value": "5.9%-13.9%",
+   "comparison": "vs 22.9% (Full history); none (Task only)",
+   "setting": "288 synthetic cases x 3 trials; fixed reader Qwen3.5-9B; six memory frameworks under Retrieved memory, with Full-history and no-history controls",
+   "quote": "Table 1 shows that every framework discloses the relation: under Retrieved memory, 5.9% to 13.9% of cases are disclosed, against 22.9% under Full history and none under Task only.",
+   "locator": "§4.2 Table 1",
+   "denominator": {
+    "n_total": "288 cases per view",
+    "n_valid": "288",
+    "how_counted": "DR = ND/288; a case counts when at least two of its three trials reach A4 (Table 1 caption)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "LangMem's lowest disclosure rate reflects values that never arrived rather than safer reader behavior: its availability is 60.2%, and among inputs that do contain the service, site, and date, 13.8% of answers state the relation, in line with the other frameworks.",
+   "metric": "availability; conditional disclosure (A4 given availability)",
+   "value": "60.2% availability; 13.8% conditional disclosure",
+   "comparison": null,
+   "setting": "LangMem under Retrieved memory; 288 cases x 3 trials; fixed reader Qwen3.5-9B",
+   "quote": "LangMem has the lowest disclosure rate and the lowest availability, 60.2%, yet among its inputs that contain the service, site, and date, 13.8% of answers state the relation, in line with the other five frameworks.",
+   "locator": "§4.2 Table 1",
+   "denominator": {
+    "n_total": "864 answers/inputs per view (288 cases x 3 trials)",
+    "n_valid": "inputs passing the availability check (framework-dependent subset)",
+    "how_counted": "Table 1 caption: answer-level percentages are over the 864 answers; conditional A4 = A4 among inputs passing availability (Eq. 2.2)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Value delivery alone does not explain disclosure: even with service, site, and date all present in the reader's input, the six frameworks' conditional A4 stays at 10.8%-14.4%, below the 22.9% of Full history.",
+   "metric": "conditional_A4",
+   "value": "10.8%-14.4%",
+   "comparison": "vs 22.9% (Full history)",
+   "setting": "six frameworks, Retrieved memory, restricted to inputs passing the availability check; fixed reader Qwen3.5-9B",
+   "quote": "Availability does not close the whole gap, since even with the service, site, and date present the six frameworks stay at 10.8% to 14.4%, against 22.9% under Full history.",
+   "locator": "§4.2 Table 1",
+   "denominator": {
+    "n_total": "inputs passing availability per framework (of 864 per view)",
+    "n_valid": null,
+    "how_counted": "conditional A4 = A4 among inputs passing availability (Eq. 2.2); the Full history 22.9% is DR over 288 cases"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Memory rewriting creates disclosures absent from the original history: of the 168 cases disclosed across the six frameworks, one in three are not disclosed under Full history (memory-only counts range from 1 for LangMem to 15 for A-Mem).",
+   "metric": "memory_only_disclosed_cases",
+   "value": "168 disclosed cases; one in three memory-only",
+   "comparison": "memory-only counts from 1 (LangMem) to 15 (A-Mem)",
+   "setting": "six frameworks under Retrieved memory versus Full history on the same 288 paired cases, two-of-three A4 rule",
+   "quote": "Of the 168 cases disclosed across the six frameworks, one in three are not disclosed under Full history; the Mem.-only column of Table 1 gives these counts, from 1 for LangMem to 15 for A-Mem.",
+   "locator": "§4.2 Table 1 (Mem.-only column)",
+   "denominator": {
+    "n_total": "168 = sum of disclosed cases across the six frameworks (each evaluated on 288 cases)",
+    "n_valid": null,
+    "how_counted": "sum of ND over the six Retrieved memory views; Mem.-only = positive under Retrieved memory but not under Full history (Table 1 / Table E.4)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Removing shared cross-record cues (M3) while keeping every target value visible at least halves disclosure: 16.4%->7.7% for A-Mem, 15.0%->1.9% for MemGPT, and 25.6%->8.7% for itemized full history, showing that links between records, not stored values, carry the relation.",
+   "metric": "disclosure_rate (DR) before vs after M3 cue removal",
+   "value": "16.4%->7.7% (A-Mem); 15.0%->1.9% (MemGPT); 25.6%->8.7% (itemized history)",
+   "comparison": "A-Mem 16.4->7.7; MemGPT 15.0->1.9; itemized history 25.6->8.7",
+   "setting": "M3 applied to frozen inputs of A-Mem and MemGPT (Retrieved memory reference) and to itemized full history; only case pairs where all target values remain visible; fixed reader Qwen3.5-9B",
+   "quote": "Table 3 shows that, in the 207 case pairs where the service, site, and date all remain visible, disclosure falls by at least half: from 16.4% to 7.7% for A-Mem, from 15.0% to 1.9% for MemGPT, and from 25.6% to 8.7% for the itemized full history.",
+   "locator": "§4.3 Table 2 (lower block)",
+   "denominator": {
+    "n_total": "207 case pairs",
+    "n_valid": "207",
+    "how_counted": "subset of M3 pairs in which every checked target value stays visible after M3, fixed from the transformed inputs before any answer was generated (Table F.4)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Value-removing mitigations buy zero disclosure only by destroying utility (A-Mem TCR falls to 5.2% under M2 and 13.2% under M4), whereas link removal M3 lowers disclosure to 5.6% (A-Mem) and 1.4% (MemGPT) across the 287 complete pairs with TCR moving only about -1.0/+2.4 points.",
+   "metric": "DR and TCR after mitigation (M2 / M4 / M3)",
+   "value": "M2/M4: A-Mem TCR 5.2% / 13.2%; M3: DR 5.6% (A-Mem) and 1.4% (MemGPT)",
+   "comparison": "M3 TCR change about -1.0 and +2.4 points",
+   "setting": "A-Mem and MemGPT with Retrieved memory as reference; interventions applied alone to frozen inputs; fixed reader Qwen3.5-9B",
+   "quote": "Both bring disclosure to zero, but A-Mem’s TCR falls to 5.2% and 13.2%. M3 removes links, and across all 287 pairs it lowers disclosure to 5.6% and 1.4% while TCR changes by only −1.0-1.0 and +2.4+2.4 points",
+   "locator": "§4.4 Table 3",
+   "denominator": {
+    "n_total": "287 complete paired cases (288 for the A-Mem M4 row)",
+    "n_valid": "complete case pairs with three valid trials per arm (Appendix D.1)",
+    "how_counted": "Table 3 caption: rows use complete paired cases with three trials per arm; one failed annotation batch leaves 287 pairs in most conditions"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Permission-aware output filtering removes disclosure (zero in five frameworks, 0.3% in MemGPT) while raising TCR by 7.6 to 10.1 points, but the authors call this an optimistic estimate because the critic sees task scope and field permissions the reader never does.",
+   "metric": "DR after output filtering; TCR change",
+   "value": "0.3% in MemGPT (zero in five frameworks); TCR +7.6 to +10.1 points",
+   "comparison": null,
+   "setting": "critic (gpt-5.6-terra) edits frozen answers of the six Retrieved memory views plus Full history and Task only; 288 cases per arm; fixed reader Qwen3.5-9B",
+   "quote": "Output filtering brings disclosure to zero in five frameworks and to 0.3% in MemGPT while raising TCR by 7.6 to 10.1 points.",
+   "locator": "§4.4 Figure 4 / Tables F.5-F.6",
+   "denominator": {
+    "n_total": "288 complete cases per view (864 answers per arm)",
+    "n_valid": "288",
+    "how_counted": "Table F.5 caption: each row has 288 complete cases and 864 answers per arm"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "A stronger privacy mitigation degrades benign task completion: M4 cuts the TCR of A-Mem from 20.1% to 13.2%.",
+   "metric": "TCR on benign ordinary tasks",
+   "value": "20.1% -> 13.2% (M4); M2 7.7%-5.2%",
+   "comparison": "before vs after each privacy mitigation M1-M4",
+   "setting": "benign ordinary tasks under mitigations M1-M4, Appendix F.1",
+   "quote": "M4 cuts the TCR of A-Mem from 20.1% to 13.2%.",
+   "locator": "Appendix F.1",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The output-filtering result is an optimistic estimate: the critic sees each case's task scope and field permissions, which the reader never does, and shares its model with the grading judges.",
+   "quote": "Its critic, however, sees each case’s task scope and field permissions, which the reader never does, and shares its model with the grading judges (Zheng et al., 2023; Panickssery et al., 2024), so this result is an optimistic estimate.",
+   "locator": "§4.4"
+  },
+  {
+   "statement": "The benchmark is not preregistered; RQ2 comparisons were fixed after framework outcomes were available, and the analysis timings only describe prospective decisions for individual supplements.",
+   "quote": "These timings describe prospective decisions for individual supplements, not preregistration of the entire benchmark.",
+   "locator": "Appendix D.2"
+  },
+  {
+   "statement": "Availability is a lexical string-match check, so a failed check does not establish that the reader cannot recover the information from a paraphrase.",
+   "quote": "A failed check therefore indicates missing lexical coverage, not necessarily information that a reader cannot recover from a paraphrase.",
+   "locator": "Appendix C.4"
+  },
+  {
+   "statement": "The evidence-configuration differences (writer materialization, update consolidation, retrieval join) are descriptive post-hoc splits and are not statistically tested.",
+   "quote": "The configurations describe how evidence is arranged across sessions, not where an evaluated agent performs inference, and the differences between them are not tested.",
+   "locator": "Appendix E.3 / Table 2"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "synthetic_cases_only_no_real_user_data",
+  "single_fixed_reader_model_qwen3.5-9b",
+  "mitigations_applied_post_hoc_to_frozen_inputs"
+ ]
+}

@@ -1,0 +1,187 @@
+{
+  "arxiv_id": "2608.21159",
+  "title": "AID-Guard: Stateful Authorization for Delegated Agent Effects",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "shared_state",
+    "scope": "cross-session",
+    "carrier": "Linearizable SQLite authority store (TCB): user-approved roots and quota lineage, H1 transaction bindings, H2-issued single-use capabilities, reservations, delivery fences, successor links, and role-separated outcome/no-effect evidence objects; each protocol rule is recorded as a durable transition that survives crash and restart",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "revocation", "repair"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Three conditional properties over one reservation lineage: (P1) delegated execution authorization — within a D0-complete declared domain, every accepted protected provider-atomic effect descends from one active user-approved root through one H1 binding, H2 issuance, and H3 claim, with D2 submitting the exact immutable request under the approved provider precondition; (P2) conditional effect uniqueness — under supported atomic or controlled-idempotent provider contracts, one reserved use commits at most one provider-atomic effect across retry and recovery, with release or exactly one successor only after a certified no-effect certificate and a provider-terminal predecessor delivery fence retained through the declared recovery horizon; (P3) auditable accountability — complete evidence bundles support public integrity verification and privileged deterministic replay, and missing evidence is reported incomplete, never as proof of no effect. Properties fail if the TCB (root signer, gateway, authority store, exclusive effect boundary) is compromised, if the deployment omits effect-capable routes (D0 violated), or if the provider contract lacks atomicity or durable scoped idempotency (A6); judged by live mutations, outcome/recovery traces, concurrency histories, external Stripe/Resend schedules, and proposer-compromise episodes producing zero unauthorized or duplicate effects.",
+    "operationalized_as": "13 live one-factor boundary mutations (none produced an unauthorized provider effect), 4 end-to-end outcome/recovery traces, 3 linearizable concurrent histories, 210 frozen Stripe provider-contract trials, 40 terminalize-then-successor + 30 confirm/cancel race + 10 crash-recovery schedules with no duplicate effect, 44 direct attacks under full proposer compromise all blocked while 44 matched legitimate proposals admitted, 864 frontier attack episodes with zero unsafe effects, and a 20-attack shared-extension composition study; plus bounded transition models (Appendix F) as finite validation, not unbounded proof."
+  },
+  "threat_model": {
+    "adversary": "model-itself",
+    "capabilities": [
+      "Full control of the planner, agent, and subagents (complete proposer compromise)",
+      "Injection of arbitrary text through email, web, retrieval, files, or tool output",
+      "Fabricating caller metadata and proposing any syntactically valid operation",
+      "Possessing ordinary credentials of a compromised authenticated actor",
+      "Stealing or replaying protocol objects; substituting same-typed fields",
+      "Racing concurrent requests; inducing process crashes or response loss",
+      "Tampering with ordinary audit storage"
+    ],
+    "assumptions": [
+      "A1: D0-complete declared effect domain — every effect-capable path passes through the registered adapter or equivalent verifier; the prototype verifies conformance but does not discover omitted routes",
+      "A2: uncompromised root signer, gateway, authority store, resolvers, and role keys for the relevant transition; trusted maintainer-controlled host",
+      "A3: correct closed-schema canonicalization, operation-contract resolution, provenance evaluation, and deterministic policy",
+      "A4: linearizable authority store and fail-closed trusted time",
+      "A5: D2 dispatch binding of the exact immutable request under provider-enforced mutable-state preconditions",
+      "A6: conformant atomic or controlled-idempotent provider contract with uncompromised KT/KE evidence roles for recovery guarantees"
+    ],
+    "not_covered": [
+      "Compromised trusted hosts or enforcement components (gateway, authority store, root signer, exclusive effect boundary)",
+      "Undeclared bypass paths outside the D0 inventory; automatic discovery of semantically equivalent effect paths",
+      "Denial of service and side channels",
+      "Non-atomic batches (must be decomposed or rejected)",
+      "Providers outside the supported atomic / controlled-idempotent outcome contracts (no retry, release, or successor guarantee; ambiguity stays charged)",
+      "User-intent inference and policy quality; automatic contract synthesis",
+      "Multi-region authority-store linearizability; production hardening",
+      "Malicious-store rollback / split-view (witnessed transparency mechanism not implemented)"
+    ]
+  },
+  "intervention": {
+    "name": "AID-Guard",
+    "mechanism_layer": "architecture",
+    "description": "A stateful authorization-to-effect closure protocol implemented as a Python 3.11/SQLite prototype (RFC 8785 canonicalization, SHA-256, Ed25519, official MCP SDK) in a declared loopback MCP domain. Three mandatory authority checkpoints — H1 binds an eligible non-authoritative evaluation to one transaction, H2 reserves quota and issues one holder-bound single-use capability, H3 claims it at the credential-holding effect boundary — followed by D2 commit-time revalidation of the exact approved request against current provider state. Ambiguous delivery conservatively retains the reservation; certified no-effect recovery installs a durable provider-delivery fence before releasing the reservation or transferring it to exactly one successor on the same lineage. A separate role-separated evidence plane emits immutable decision/claim/dispatch/outcome/closure objects supporting public verification and privileged replay. Result: under supported provider contracts, one reservation yields at most one effect across commit, ambiguity, retry, and recovery (one-effect-or-certified-no-effect semantics)."
+  },
+  "controls": [
+    {"name": "Unprotected condition (no defense)", "purpose": "baseline"},
+    {"name": "Official AgentDojo defenses: repeat-user-prompt and Spotlighting (delimiting)", "purpose": "baseline"},
+    {"name": "Progent, CaMeL, Spotlighting under common positive-control and shared-extension profiles", "purpose": "baseline"},
+    {"name": "Matched ambient control (same mutation outside the protected graph)", "purpose": "negative-control"},
+    {"name": "Positive control asking the model to emit each of 44 closed executable attack sequences", "purpose": "positive-control"},
+    {"name": "Exact 1x contemporaneous control rerun for the no-seed frontier experiment", "purpose": "fair-comparison"},
+    {"name": "Control-removal matrix (commit-time binding, identity continuity, outcome binding, single-use authority, durable recovery fence)", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "In the frozen loopback MCP domain, all 13 one-factor live boundary mutations were rejected by their responsible protocol check and none produced an unauthorized provider effect.",
+      "metric": "unauthorized provider effects from live mutations",
+      "value": "all 13 mutations rejected; none added an unauthorized provider effect",
+      "comparison": null,
+      "setting": "Declared loopback MCP domain at boundary epoch 0, synthetic credentials, trusted maintainer-controlled Windows host, controlled transactional provider; 13 official-MCP one-factor mutations with matched ambient control",
+      "quote": "All 13 official-MCP mutations were rejected by their responsible protocol check or, for post-effect mutations, returned an invalid verification result. None added an unauthorized provider effect.",
+      "locator": "§VI-C (RQ2), Fig. 4",
+      "denominator": {"n_total": "13 live one-factor mutations", "n_valid": null, "how_counted": "Each of 13 live mutations changes one factor and is assigned to one primary security dimension (§VI-A Controls and counting)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Across two external SaaS providers (Stripe, Resend), all terminalize-then-successor, confirm/cancel race, and crash-recovery schedules completed without a duplicate effect.",
+      "metric": "duplicate effects across recovery schedules",
+      "value": "40 terminalize-then-successor schedules, 30 confirm/cancel races, and 10 crash-recovery schedules completed without a duplicate effect",
+      "comparison": null,
+      "setting": "Stripe PaymentIntent test mode and Resend scheduled-email contracts via external APIs; Resend fence bounded by documented 24-hour idempotency retention; bounded test-mode schedules",
+      "quote": "Across two SaaS providers, 40 terminalize-then-successor schedules, 30 overlapping Stripe confirm/cancel races, and 10 Stripe crash-recovery schedules completed without a duplicate effect.",
+      "locator": "Abstract; §VI-D (RQ3), Appendix Table IX",
+      "denominator": {"n_total": "40 terminalize-then-successor schedules + 30 confirm/cancel races + 10 crash-recovery schedules", "n_valid": null, "how_counted": "Appendix Table IX campaign breakdown; provider-side retrieve/list oracles cross-check effect objects"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the Stripe provider-contract campaign, every trial across seven strata (valid, replay, conflict, duplicate-delivery, transfer, lookup, unauthenticated bypass) matched its predeclared outcome.",
+      "metric": "provider-contract outcome conformance",
+      "value": "all 210 frozen trials matched their predeclared outcomes",
+      "comparison": null,
+      "setting": "Stripe PaymentIntent test mode traversing H3/D2; seven 30-trial strata; provider-side retrieve/list oracles cross-check effect counts",
+      "quote": "Across 210 frozen trials in seven 30-trial strata, every valid, replay, conflict, duplicate-delivery, transfer, lookup, and unauthenticated-bypass case matched its predeclared outcome.",
+      "locator": "§VI-D (RQ3), Appendix Table IX",
+      "denominator": {"n_total": "210 frozen Stripe trials in seven 30-trial strata", "n_valid": null, "how_counted": "Provider-side retrieve/list oracles found one PaymentIntent in every effect-bearing trial and none in the bypass stratum"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under model-in-the-loop AgentDojo evaluation, protected arms produced zero oracle-confirmed unsafe effects while unprotected arms produced one (DeepSeek V4 Flash) and seven (Qwen3 Max).",
+      "metric": "oracle-confirmed unsafe effects",
+      "value": "zero unsafe effects with AID-Guard vs one (DeepSeek) and seven (Qwen) unprotected",
+      "comparison": null,
+      "setting": "AgentDojo v1.2.2 banking/Slack/travel/workspace suites; deepseek/deepseek-v4-flash and qwen/qwen3-max (Alibaba) at temperature zero; exact single-use manifest compiled from benchmark reference calls; 144 injection episodes per safety cell",
+      "quote": "The protected DeepSeek and Qwen arms produced zero unsafe effects, compared with seven for Qwen and one for DeepSeek without protection.",
+      "locator": "§VI-F (RQ5), Table V",
+      "denominator": {"n_total": "144 injection episodes per model and condition (Table V caption: each safety cell contains 144 injection episodes)", "n_valid": null, "how_counted": "AgentDojo attack-oracle confirmation of executed dangerous calls"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "The strict exact-manifest admission profile imposed a large benign-utility cost relative to the unprotected agent, partially recovered by a typed three-call form in a separate no-seed frontier.",
+      "metric": "benign utility change (percentage points)",
+      "value": "benign utility reduced by 35.4–43.8 percentage points under the strict exact-manifest profile",
+      "comparison": null,
+      "setting": "AgentDojo v1.2.2 matrix, two models, 48 benign episodes per cell; exact single-use manifest enforcement vs unprotected; paired task-cluster 95% bootstrap intervals; frontier run without generation seed not directly comparable",
+      "quote": "The strict exact-manifest profile reduced benign utility by 35.4–43.8 percentage points; in a separate no-seed frontier, Typed-3x observed 9–10 more benign completions than Exact-1x, with no observed unsafe effects across 864 frontier episodes.",
+      "locator": "Abstract; §VI-F (RQ5), Table V",
+      "denominator": {"n_total": "48 benign episodes per model and condition (Table V caption)", "n_valid": null, "how_counted": "Benign task completion per episode; Δ = AID-Guard minus unprotected with paired task-cluster 95% bootstrap interval"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "In a separate no-seed frontier rerun with three pre-fixed authority forms, the typed three-call form raised benign utility over exact single-use while all attack episodes produced zero unsafe effects.",
+      "metric": "benign utility (tasks completed)",
+      "value": "DeepSeek 12/48 (Exact 1x) vs 22/48 (Typed 3x); Qwen 17/48 vs 26/48; zero unsafe effects in all attack episodes",
+      "comparison": "12/48 -> 22/48 (DeepSeek); 17/48 -> 26/48 (Qwen)",
+      "setting": "Frontier rerun, endpoint exposes no generation seed so absolute utility not comparable to Table V; identical 48-task benign inventories; exact single-use / typed single-use / typed three-call forms; 432 attack episodes per model",
+      "quote": "Across identical 48-task benign inventories in the frontier rerun, observed utility was 12/48, 14/48, and 22/48 for DeepSeek and 17/48, 18/48, and 26/48 for Qwen under Exact 1x, Typed 1x, and Typed 3x, respectively. All 864 attack episodes produced zero unsafe effects.",
+      "locator": "§VI-F (RQ5); Appendix C, Table X",
+      "denominator": {"n_total": "48 benign episodes per utility cell; 432 attack episodes per model (864 total)", "n_valid": null, "how_counted": "Table X: each utility cell contains 48 benign episodes; the unsafe column aggregates 432 attack episodes per model"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "Under complete proposer compromise (direct submission of attack sequences without a model), AID-Guard blocked all 44 direct attacks while admitting and executing all 44 matched legitimate proposals.",
+      "metric": "unsafe effects under full proposer compromise",
+      "value": "blocked all 44 direct attacks and admitted all 44 matched legitimate proposals",
+      "comparison": "unprotected: all 44 direct attacks caused unsafe effects; forced pressure produced 98 unsafe effects without protection and none with AID-Guard",
+      "setting": "Predeclared 44-case direct-proposal profile (Qwen extension) with trusted authority and commit boundary outside the compromised proposer; surrounding campaign used DeepSeek, Qwen, GLM, and Kimi K2.5 temperature-zero episodes",
+      "quote": "Forced pressure produced 98 oracle-confirmed unsafe effects without protection and none with AID-Guard. Under full proposer compromise, all 44 direct attacks caused unsafe effects without protection; AID-Guard blocked all 44 while admitting and executing all 44 matched legitimate proposals.",
+      "locator": "§VI-F (RQ5), Fig. 6; Appendix D, Table XI",
+      "denominator": {"n_total": "44 direct attacks plus 44 matched legitimate direct proposals", "n_valid": null, "how_counted": "Oracle-confirmed unsafe effects on the predeclared 44-case Qwen extension (Table XI)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the shared-extension composition study, AID-Guard blocked all 20 post-admission lifecycle attacks that upstream-only defenses partially suffered, while preserving all eight matched-valid executions.",
+      "metric": "post-admission lifecycle attack containment",
+      "value": "blocked all 20 shared attacks; upstream-only arms produced 12 unsafe effects; all eight matched-valid cases preserved",
+      "comparison": null,
+      "setting": "Five shared scenarios per source (request or actor substitution, cross-session replay, commit-time drift, same-key body conflict) appended to normal actions of AgentDojo, Spotlighting, CaMeL, and Progent with one controlled-provider contract; incremental lifecycle study, not a native-system ranking",
+      "quote": "Across the 20 shared attacks, the upstream-only arms produced 12 unsafe effects, four duplicate effects, and four provider-native rejections; AID-Guard blocked all 20, while both arms preserved all eight matched-valid cases.",
+      "locator": "§VI-G (RQ6), Fig. 7",
+      "denominator": {"n_total": "20 shared attacks (five scenarios per source across four upstream sources) plus eight matched-valid executions", "n_valid": null, "how_counted": "Composition study counts oracle-confirmed unsafe and duplicate effects per arm"},
+      "is_primary_result": true
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The prototype is evaluated only on synthetic credentials in a single trusted-host, one loopback domain, one controlled provider, and bounded Stripe/Resend schedules.",
+      "quote": "The prototype uses synthetic credentials on a trusted host, one enumerable loopback domain, one controlled provider, and bounded Stripe and Resend schedules.",
+      "locator": "§VII-B"
+    },
+    {
+      "statement": "The finite test-mode provider observations do not establish every network interleaving or a formal provider guarantee, and the Resend schedule remains sequential.",
+      "quote": "these finite test-mode observations do not establish every network interleaving or a formal provider guarantee, and the Resend schedule remains sequential.",
+      "locator": "§VII-B"
+    },
+    {
+      "statement": "The P1–P2 properties are validated only over bounded models and do not cover unbounded provider and concurrency combinations.",
+      "quote": "The P1–P2 models do not cover unbounded provider and concurrency combinations.",
+      "locator": "§VII-B"
+    },
+    {
+      "statement": "Evaluated authority forms are conservative and the process-separated prototype is high-latency; practical deployment needs better contract synthesis, policy tuning, and implementation optimization.",
+      "quote": "The evaluated authority forms remain conservative, and the process-separated prototype is high-latency; practical deployment requires improved contract synthesis, policy tuning, and implementation optimization.",
+      "locator": "§VII-B"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "Versioned artifact with implementation, evaluation scripts, and frozen result inventories; authors state \"we will release it for artifact evaluation\" (§VI-A Reproducibility)",
+    "data": "Frozen corpus combining official-MCP traces, mutations, semantic regressions, concurrent histories with natural/forced/direct-proposal AgentDojo campaigns and paired effect-lifecycle extensions",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "corpus_pdf_extraction_artifacts_in_numbers: duplicated tokens in tables/prose (e.g. \"−43.8-43.8\", \"−0.7-0.7 pp\", \"2.35×\\times\") originate from PDF-to-text extraction, not the paper",
+    "frontier_utility_run_lacks_seed: the 44-case/864-episode frontier rerun exposes no generation seed, so its absolute utility is not directly comparable to the main Table V run (stated by authors)"
+  ]
+}

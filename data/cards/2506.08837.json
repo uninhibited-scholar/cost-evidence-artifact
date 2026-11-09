@@ -1,0 +1,119 @@
+{
+ "arxiv_id": "2506.08837",
+ "title": "Design Patterns for Securing LLM Agents against Prompt Injections",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "论文不研究任何持久化记忆/技能/经验对象；仅涉及任务内状态：dual-LLM 模式中存放 quarantined LLM 结果、由 privileged LLM 按引用（by reference）操作、由非 LLM orchestrator 替换的变量内存，以及 context-minimization 模式中在多轮交互内被移除的对话上下文。均不跨会话。",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "核心安全性质（设计层面主张，非实证）：一旦 LLM 智能体摄入不可信输入，系统必须被约束到该输入不可能触发任何 consequential actions（对系统或环境有负副作用的动作）——最低要求是受限智能体不能调用会破坏系统完整性或机密性的工具（未授权工具执行、数据外泄、RCE），且其输出不构成下游风险（如经嵌入链接/markdown 图片/非打印字符外泄敏感信息、操纵后续智能体行为）。保证来自架构级隔离而非模型鲁棒性；每个模式都有作者明示的残余失效条件（见 limitations）。个别案例还触及 availability（SQL Agent 资源耗尽/DoS）与 policy-compliance（药品聊天机器人的法规要求），但主线是 integrity + confidentiality。",
+  "operationalized_as": "无攻击实验、无量化指标（无 ASR/utility 数值）。论证形式为：6 个设计模式的机制分析（§3.1）+ 10 个案例研究（§4.1-§4.10）中逐设计的定性 utility/security 权衡——security 侧以该设计是否使注入无法触发 consequential actions 及其残余攻击面判定（如 action-selector \"trivially immune\"、plan-then-execute 为 control flow integrity、dual LLM 需输出安全约束），utility 侧以功能损失定性描述。保证类型为按构造（by construction）的隔离与约束能力：预定义动作集、固定计划、无工具隔离子 LLM、输出格式/正则约束、上下文移除。"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "控制智能体处理的第三方内容并嵌入注入指令：文件与文件名（OS 助手）、SQL 数据库内容（SQL Agent）、邮件/日历邀请（Email & Calendar 助手）、服务提供商返回内容与第三方创建的日历事件含白色小字隐藏注入（Booking 助手）、商品评论（Product Recommender）、简历含小号/白色文字隐藏指令（Resume Screening）、远程文档与第三方代码（Software Engineering Agent）",
+   "部分案例中攻击者即最终用户，直接在用户提示中注入（客服聊天机器人、预约助手、药品说明书机器人、医疗诊断 intermediary）；论文明确不区分 direct 与 indirect 提示注入，统称 prompt injections",
+   "攻击目标：未授权工具执行/操纵系统状态、数据收集与外泄（URL、markdown 图片、非打印字符/ASCII smuggling）、冒用用户身份发邮件或向同事发送指令、删除/隐藏用户信息、Python 解释器内远程代码执行、资源耗尽/拒绝服务、声誉损害（screenshot attack）"
+  ],
+  "assumptions": [
+   "底层 LLM 本身对提示注入脆弱——安全性必须由系统级设计提供；LLM 级启发式防御（提示工程、对抗训练）\"不能提供保证\"（do not provide guarantees）",
+   "quarantined/隔离子 LLM 的输出必须满足安全约束（如模糊搜索返回布尔值、map 输出为数字的正则、结构化格式）才能回流主流程；输出按符号/引用由传统软件 orchestrator 处理",
+   "部分案例假定特定来源可信：药品说明书（行业受监管）、客服内部知识库（内部数据+高问责）、医疗诊断中的数据库与医生",
+   "案例中用户/智能体权限按最小权限配置（如 agent 权限不超过用户权限）时，恶意用户也无法跨用户读取或影响他人数据"
+  ],
+  "not_covered": [
+   "不提供任何量化保证或实验验证；所有 security 结论为设计论证，各模式均留有作者明示的残余攻击面（plan-then-execute 下工具调用参数可被不可信数据污染、不防用户提示注入；dual LLM 中 quarantined LLM 输出本身可被篡改以携带外泄内容；map-reduce 下恶意内容仍可提升自身排名；context-minimization 下检索阶段仍可被对抗用户操纵；沙箱内侦察与经数据分析/可视化的信息外泄仍可能）",
+   "通用智能体（general-purpose agents）的安全不在方案范围内——作者明确声明以当前能力不可达，模式刻意限制智能体不能解任意任务",
+   "传统非 AI 软件安全漏洞不展开，仅在 Appendix A 以 best practices（沙箱、最小权限等）形式提及",
+   "威胁模型不含：非注入通道的模型越狱/有害输出、长期潜伏于被假定可信来源的攻击（说明书/内部知识库/医生/数据库被假定为可信）、多人合谋或侧信道攻击"
+  ]
+ },
+ "intervention": {
+  "name": "Six design patterns: Action-Selector / Plan-Then-Execute / LLM Map-Reduce / Dual LLM / Code-Then-Execute / Context-Minimization（辅以 Appendix A 最佳实践：action sandboxing、strict data formatting、user permissions、user confirmation、data & action attribution）",
+  "mechanism_layer": "architecture",
+  "description": "系统级隔离与能力约束的架构层防御：指导原则是一旦智能体摄入不可信输入，就约束到该输入不可能触发任何 consequential actions。具体机制：(1) Action-Selector——LLM 仅作为把自然语言请求翻译为预定义动作集的\"开关\"，动作结果不回流给 LLM；(2) Plan-Then-Execute——处理不可信数据前先固定动作计划，工具输出不能改变控制流（control flow integrity），但参数仍可被污染；(3) LLM Map-Reduce——为每份第三方数据派发隔离子 LLM（map），reduce 端不用 LLM 或对 map 输出施加防注入格式约束；(4) Dual LLM——privileged LLM 有工具但不见不可信数据，quarantined LLM 处理不可信数据但无任何工具，输出须满足安全约束或以符号引用由非 LLM orchestrator 替换；(5) Code-Then-Execute——以显式程序替代规划，程序可调用工具并派生无特权 LLM 处理不可信文本；(6) Context-Minimization——多轮交互中把用户提示移出后续上下文以防其污染响应生成。建议按威胁模型组合多个模式（Recommendation 2：no single pattern is likely to suffice）。"
+ },
+ "controls": [],
+ "results": [],
+ "limitations": [
+  {
+   "statement": "通用智能体在当前能力下无法保证安全；设计模式以刻意牺牲通用性（智能体不得解任意任务）换取安全，属于 utility-security 权衡而非免费增益",
+   "quote": "While securing general-purpose agents remains out of reach with current capabilities, we argue that application-specific agents can be secured through principled system design.",
+   "locator": "§5 Conclusions & Recommendations"
+  },
+  {
+   "statement": "Plan-Then-Execute 的残余风险：不阻止所有提示注入——固定计划下工具调用的输入/参数仍可被不可信数据操纵，且不防用户提示中的注入",
+   "quote": "This pattern does not prevent all prompt injections, but acts as a form of “control flow integrity” protection (Bagdasarian et al., 2024; Abdelnabi et al., 2025b; Balunovic et al., 2024). Further, this pattern does not prevent prompt injections contained in the user prompt.",
+   "locator": "§3.1 2) The Plan-Then-Execute Pattern"
+  },
+  {
+   "statement": "Dual LLM 的残余风险：quarantined LLM 仍可被注入，其输出本身可被篡改以实现攻击者目标（如非打印字符编码外泄数据），即使主 LLM 只按符号处理该输出",
+   "quote": "In this pattern, the quarantined LLM is still susceptible to prompt injection. Although it cannot call tools, this LLM still has access to any sensitive data it might have been given and can still produce attacker-controlled output.",
+   "locator": "§4.3.3 3) Dual LLM pattern"
+  },
+  {
+   "statement": "Map-Reduce 的残余风险：注入的影响被限制在单条数据内，但不消除——恶意评论/简历仍可为自己刷排名（尽管这也可能与正常好评难以区分）",
+   "quote": "Here, a malicious review can still make sure it fits all categories, but this could also be achieved by simply writing a good review. Any prompt injection in a review is limited to that review itself, and cannot influence the processing of other reviews or products.",
+   "locator": "§4.6.3 3) Map-reduce pattern"
+  },
+  {
+   "statement": "Context-Minimization 的残余风险：返回文本虽确来自可信源，但检索阶段仍可被对抗性用户操纵（如说服 LLM 忽略某些标准、不高亮禁忌症）",
+   "quote": "This design ensures that any text returned is really from the leaflet. However, adversarial users could still manipulate the retrieval part by persuading the LLM to ignore certain criteria and not highlight some relevant parts, e.g., not highlight contraindications.",
+   "locator": "§4.8.3 2) The context-minimization pattern"
+  },
+  {
+   "statement": "用户确认类最佳实践的固有局限：影响自动化与可用性，疲劳/过载的人类审核者可能批准不安全动作——这是作者对 user-level 防御的明确保留",
+   "quote": "While theoretically effective, these approaches can significantly impact system automation and usability, and pose a safety risk themselves with tired or overloaded human verifiers approving unsafe actions.",
+   "locator": "§2 Background"
+  },
+  {
+   "statement": "OS 助手案例中 dual LLM/map-reduce 设计的残余风险：约束后的子 LLM 输出仍可导致恶意文件被移动/复制到错误位置",
+   "quote": "This can however still lead to malicious files being moved or copied to places they don't belong.",
+   "locator": "§4.1.2 5) The dual LLM / map-reduce pattern"
+  }
+ ],
+ "counterexamples": [
+  {
+   "name": "Naive baseline: LLM in the shell (OS Assistant)",
+   "statement": "给 LLM 完整 shell 的朴素设计被作者用作反面教材：攻击面巨大，任意文件可能含致 RCE 的注入指令",
+   "quote": "Security: This design exposes a huge attack surface. For example, any file on the computer might contain malicious instructions, which (if read) cause the LLM to execute arbitrary code.",
+   "locator": "§4.1.2 1) LLM in the shell"
+  },
+  {
+   "name": "Naive baseline: Unconstrained agent (Booking Assistant)",
+   "statement": "无约束智能体（仅靠 system prompt 约束）被用作反面教材：对所有类型的提示注入均脆弱",
+   "quote": "Security: This design is vulnerable to all kinds of prompt injections.",
+   "locator": "§4.5.3 1) Unconstrained agent"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_empirical_evaluation",
+  "design_pattern_position_paper",
+  "results_empty_no_experiments",
+  "no_persistent_state"
+ ]
+}

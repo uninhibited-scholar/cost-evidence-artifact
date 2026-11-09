@@ -1,0 +1,209 @@
+{
+ "arxiv_id": "2608.05563",
+ "title": "When Experience Becomes Instruction: Trajectory Poisoning in Self-Evolving Agent Skill Systems",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "skill",
+  "scope": "mixed",
+  "carrier": "持久技能工件（SKILL.md 式指令文件）存于版本化技能库，由轨迹池经 SES 流水线演化产生（SkillClaw 聚合多用户会话、跨用户同步技能库；Trace2Skill 从执行轨迹蒸馏出技能目录）",
+  "operations_covered": [
+   "formation",
+   "update"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "自演化技能（SES）系统证据推广环节的完整性：不可信轨迹经验不得被演化器归因为可复用模式并写入持久技能工件。在技能可见黑盒攻击者、10% 攻击者支持条件下该边界即失效；失效由生成工件中新嵌入目标行为的 SER 判定（C1 包含 ∧ C2 演化归因 ∧ C3 实现）。载荷族 F1-F4 分别示范机密性、数据完整性、供应链完整性与安全削弱等下游影响，但评估止于工件本身，不含运行时影响。",
+  "operationalized_as": "SER（Skill Embedding Rate）= 完成演化试验中输出技能新嵌入目标行为的比例，用族特定 diff-aware 金丝雀规则判定（预注册规则找新增文本中目标操作+金丝雅对象/执行语境的联合表达）；成功定义为 C1∧C2∧C3，初始技能被检查以排除既有文本。"
+ },
+ "threat_model": {
+  "adversary": "user",
+  "capabilities": [
+   "技能可见黑盒：可查看公开或已安装的技能工件",
+   "向共享证据池贡献有限份额的轨迹（默认 k=3 / n=30，ρ=10%），可用 Sybil 身份制造重复支持",
+   "构造保持原任务与结果的变换轨迹，使目标行为显得因果相关（领域对齐位点、因果绑定、跨轨迹不变性）"
+  ],
+  "assumptions": [
+   "攻击者控制止于其贡献的轨迹 Tp：不能查看私有轨迹池、过滤器或演化提示词，不能直接修改技能库或下游组件",
+   "每个实验格内全部下游组件与初始技能条件固定，仅输入轨迹不同；演化器提示词与技能库代码未修改",
+   "载荷以惰性金丝雀（端点、路径、注册表、CI 标志）编码，绝不执行；评估止于生成的技能工件"
+  ],
+  "not_covered": [
+   "直接技能上传、模型妥协、真实凭据窃取、真实外传、破坏性文件系统效果",
+   "运行时触发激活、动作执行与良性效用影响（SER 只回答工件是否被污染）",
+   "用户域对话记忆系统、仅验证器系统、参数训练耦合系统",
+   "多演化周期的纵向反馈效应（实验止于单周期）"
+  ]
+ },
+ "intervention": {
+  "name": "来源多样性推广门（provenance-diversity gate，试点）",
+  "mechanism_layer": "provenance",
+  "description": "在证据推广时（而非生成后扫描技能文本）检查模式是否被独立支持：要求至少三个用户与簇、拒绝多数主导、惩罚高文本重叠。在 n=30,k=3 下阻断全部 25/25 单簇 F1 候选，把门后 SER 从 25/25 降到 0/25，同时接受一个五会话多样性对照。作者明确标注其为初步结果（候选分组为假设、清洁对照小、协同 Sybil 可伪装多样性），并主张来源应随每次更新携带以便审计。"
+ },
+ "results": [
+  {
+   "claim": "在 SkillClaw 主实验（10% 攻击者支持、init 技能精化设定、6 个 evolver × 4 个安全效应族）中，PoisonedEvolution 在 600 次完成试验里 546 次将目标行为写入持久技能（SER 91.0%）",
+   "metric": "SER (Skill Embedding Rate)",
+   "value": "546/600 (91.0% SER)",
+   "comparison": null,
+   "setting": "SkillClaw，xlsx 技能，n=30,k=3（ρ=10%），6 个 LLM evolver（GPT-5.4、MiniMax-M2.5、DeepSeek-V3.2、DeepSeek-V4-Pro、Qwen3.5-35B-A3B、Qwen3.5-122B-A10B），F1-F4 惰性金丝雀载荷，技能可见黑盒攻击者，25 完成试验/模型-族格",
+   "quote": "At 10% attacker support, across six mainstream LLM evolvers in SkillClaw, PoisonedEvolution embeds target behaviors in 546/600 trials (91.0% SER).",
+   "locator": "Abstract; RQ1 Table 1",
+   "denominator": {
+    "n_total": "600 completed evolution trials (6 evolvers x 4 families x 25 trials)",
+    "n_valid": "546 trials with target behavior newly embedded in the output skill",
+    "how_counted": "each model-family cell contains 25 completed trials under the init setting; entries are embedded/completed trials"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "在结构不同的 Trace2Skill 流水线上，同样 10% 攻击者支持下 600 次试验中 369 次嵌入目标行为（SER 61.5%），证明攻击可跨演化架构迁移",
+   "metric": "SER (Skill Embedding Rate)",
+   "value": "369/600 (61.5% SER)",
+   "comparison": null,
+   "setting": "Trace2Skill，n=30,k=3（ρ=10%），每行为族 150 次试验，失败路由 + 独立 success/error analyst + 层级合并，仅输入轨迹池改变",
+   "quote": "On the structurally different Trace2Skill pipeline at the same ratio, it embeds target behaviors in 369/600 trials (61.5% SER), demonstrating transfer across evolution architectures.",
+   "locator": "Abstract; RQ3 Table 2",
+   "denominator": {
+    "n_total": "600 trials (150 per behavior family)",
+    "n_valid": "369 embedded trials",
+    "how_counted": "entries aggregate 150 trials per behavior family at n=30,k=3"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "重复支持是成败关键：固定 n=30 时把攻击者支持从 k=1 提到 k=3 将 SER 从 5/25 提升到 25/25（一条记录远弱于三条一致记录）",
+   "metric": "SER (embedded/completed trials)",
+   "value": "25/25 at k=3",
+   "comparison": "5/25 (k=1) -> 21/25 (k=2) -> 25/25 (k=3)",
+   "setting": "SkillClaw RQ2 消融，固定批大小 n=30，25 完成试验/格",
+   "quote": "At fixed n=30n=30, increasing attacker support from k=1k=1 (3.3%) to k=2k=2 (6.7%) raises SER from 5/25 to 21/25, and k=3k=3 (10%) reaches 25/25.",
+   "locator": "RQ2 Figure 2 (left)",
+   "denominator": {
+    "n_total": "25 completed trials per cell",
+    "n_valid": "embedded trials per cell (5, 21, 25 as k grows)",
+    "how_counted": "Figure 2 labels report embedded/completed trials"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "固定 k=3 而清洁池扩大到 n=100（稀释至 3%）时，代表性强 evolver 仍保持 22/25，攻击对清洁证据稀释鲁棒",
+   "metric": "SER (embedded/completed trials)",
+   "value": "22/25 at n=100 (3%)",
+   "comparison": "25/25 (n=10, 30%) and 25/25 (n=30, 10%) -> 22/25 (n=100, 3%)",
+   "setting": "SkillClaw RQ2 消融，固定攻击者支持 k=3，代表性强 evolver",
+   "quote": "At fixed k=3k=3, a representative strong evolver reaches 25/25 at n=10n=10 (30%) and n=30n=30 (10%), and remains high at 22/25 when n=100n=100 (3%).",
+   "locator": "RQ2 Figure 2 (right)",
+   "denominator": {
+    "n_total": "25 completed trials per cell",
+    "n_valid": "embedded trials (25, 25, 22 as pool grows)",
+    "how_counted": "Figure 2 labels report embedded/completed trials"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "因果归因（C2）是主要技术环节：把行为绑定到任务结果的 Causal 编码达 25/25，而单点插入 Local 仅 8/25、碎片化 Fragmented 11/25",
+   "metric": "SER (embedded/completed trials)",
+   "value": "25/25 (causal)",
+   "comparison": "8/25 (local) -> 11/25 (fragmented) -> 25/25 (causal)",
+   "setting": "SkillClaw Figure 3 C2 消融，同一目标行为的不同归因方式，25 试验/格",
+   "quote": "Causal ties the behavior to the observed task outcome. Local and fragmented insertions reach 8/25 and 11/25, whereas causal framing reaches 25/25.",
+   "locator": "RQ2 Figure 3 (C2)",
+   "denominator": {
+    "n_total": "25 completed trials per variant",
+    "n_valid": "embedded trials (8, 11, 25 by variant)",
+    "how_counted": "Figure 3 labels report embedded/completed trials"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "实现（C3）依赖可执行的领域对齐编码：F1 族下 Tailored 达 25/25，Generic 18/25，辅助通道 Auxiliary 0/25（通道与位点同时变化，属实现压力测试而非单变量因果估计）",
+   "metric": "SER (embedded/completed trials)",
+   "value": "25/25 (tailored)",
+   "comparison": "18/25 (generic) -> 0/25 (auxiliary) -> 25/25 (tailored)",
+   "setting": "SkillClaw Figure 3 C3 消融，固定 F1 族、变化操作编码与工作流位点，25 试验/格",
+   "quote": "Generic uses a broad reporting instruction, Auxiliary places the effect in an out-of-band communication cue, and Tailored integrates actionable xlsx-specific semantics into the main trajectory. The variants reach 18/25, 0/25, and 25/25.",
+   "locator": "RQ2 Figure 3 (C3)",
+   "denominator": {
+    "n_total": "25 completed trials per variant",
+    "n_valid": "embedded trials (18, 0, 25 by variant)",
+    "how_counted": "Figure 3 labels report embedded/completed trials"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "无初始技能（no-init，技能创建路径）下，4 个代表性 evolver 的诊断实验在 600 次试验中嵌入 490 次（81.7%），证明创建路径同样可行（仅用于可行性，不作因果模式效应估计）",
+   "metric": "SER (Skill Embedding Rate)",
+   "value": "490/600 (81.7%)",
+   "comparison": null,
+   "setting": "SkillClaw no-init 诊断，4 个代表性 evolver，n=30,k=3，技能创建模式",
+   "quote": "A separate no-init diagnostic across four representative evolvers tests skill creation and embeds the behavior in 490/600 trials (81.7%).",
+   "locator": "RQ1 (no-init diagnostic)",
+   "denominator": {
+    "n_total": "600 trials",
+    "n_valid": "490 embedded trials",
+    "how_counted": "separate no-init diagnostic across four representative evolvers"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "试点来源多样性推广门在 n=30,k=3 下阻断全部单簇 F1 候选，把门后 SER 从 25/25 降到 0/25，同时接受一个五会话多样性对照",
+   "metric": "post-gate SER (embedded/completed)",
+   "value": "0/25",
+   "comparison": "25/25 -> 0/25",
+   "setting": "SkillClaw，n=30,k=3，单簇 F1 候选，推广时来源多样性门（要求三用户与簇、拒绝多数主导、惩罚高文本重叠），作者标注为初步试点",
+   "quote": "At n=30,k=3n=30,k=3, it blocks 25/25 single-cluster F1 candidates, reducing post-gate SER from 25/25 to 0/25, while accepting one five-session diverse control.",
+   "locator": "Discussion, provenance-diversity gate",
+   "denominator": {
+    "n_total": "25 single-cluster F1 candidates",
+    "n_valid": "0 accepted after gate",
+    "how_counted": "blocks 25/25 single-cluster F1 candidates; one five-session diverse control accepted"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "来源多样性门仅为初步试点：候选分组被假设、清洁对照很小、协同 Sybil 可伪装多样性",
+   "quote": "This is preliminary: candidate grouping is assumed, the clean control is small, and coordinated Sybils may mimic diversity.",
+   "locator": "Discussion, Defenses should inspect evidence promotion"
+  },
+  {
+   "statement": "实验止于单个演化周期，未测量部署系统反复演化后 poisoned skill 自我强化的纵向反馈效应",
+   "quote": "Our experiments stop after one evolution cycle, but deployed systems evolve repeatedly. Once a poisoned skill guides later agents, their trajectories may repeat its behavior and make the pattern appear independently validated. We do not measure this longitudinal effect.",
+   "locator": "Discussion, Evolution may create a feedback loop"
+  },
+  {
+   "statement": "良性任务效用检查只是针对性 sanity check，不构成完整的效用-安全 Pareto 前沿",
+   "quote": "It is a targeted sanity check, not a complete utility–security Pareto frontier.",
+   "locator": "Discussion, Evolver policy matters"
+  },
+  {
+   "statement": "论文主张仅限工件层面污染，不含运行时损害；工件污染与运行时影响是不同问题",
+   "quote": "Our claims concern artifact poisoning, not runtime compromise.",
+   "locator": "Conclusion"
+  },
+  {
+   "statement": "用户域对话记忆系统、仅验证器系统与参数训练耦合系统不在实证主张范围内",
+   "quote": "User-scoped dialogue-memory systems, verifier-only systems, and parameter-training systems remain outside our empirical claims.",
+   "locator": "Background, Scope and generality"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_not_read",
+  "corpus_contains_duplicated_latex_tokens_e.g._n=30n=30_quotes_copied_verbatim",
+  "figures_present_as_captions_only_in_corpus"
+ ]
+}

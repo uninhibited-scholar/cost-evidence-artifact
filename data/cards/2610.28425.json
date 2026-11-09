@@ -1,0 +1,233 @@
+{
+  "arxiv_id": "2610.28425",
+  "title": "After the Attacker Leaves: Benchmarking Carryover Attacks on LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": [
+    "v1"
+  ],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "cross-session",
+    "carrier": "Persistent workspace files the runtime reads back: memory/MEMORY.md silently prepended to the system prompt at every new session, and HEARTBEAT.md scheduled tasks fired by the heartbeat daemon (default 30-min interval; Hermes cron jobs.json on 60s tick). A one-time indirect prompt injection (email/webpage/document/tool return) is planted via the agent's own write_file and re-fires in later sessions after the attacker exits with zero persistent presence.",
+    "operations_covered": [
+      "formation",
+      "retention",
+      "retrieval",
+      "revocation"
+    ]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "A one-time indirect prompt injection committed to long-term memory or a scheduled task must not re-fire as harmful action (exfiltrating payroll/financial/medical content to attacker URLs, rerouting payments, unauthorized sends) in later sessions after the attacker leaves; in the evaluated agents the planted payload persists across sessions and, conditional on successful planting, is executed almost deterministically, so trigger-time protection largely fails while confidentiality (exfiltration), integrity (payment rerouting) and policy-compliance (unauthorized autonomous actions) are all violated.",
+    "operationalized_as": "Deterministic rule-based verifier matches attacker markers (URL/recipient/path) in tool-call role fields over N=5 independent follow-up sessions; attack success decomposed as ASR = Pr(Plant) x Pr(Trig|Plant) with per-round N-TrigRate, reported jointly with gated benign-task Utility."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "One-time indirect prompt injection into resources the agent reads: webpages, emails, documents, or tool return values",
+      "Persuades the agent to commit the payload to MEMORY.md or HEARTBEAT.md via the agent's own write_file",
+      "Exits after the single injection with zero persistent presence; later firings require no further attacker action"
+    ],
+    "assumptions": [
+      "The runtime persists state across sessions via long-lived memory files silently prepended to the system prompt and heartbeat/cron scheduled tasks",
+      "The agent can edit its own persistent files (write_file), so anything written becomes a standing instruction",
+      "The attacker cannot modify the runtime, cannot read/write MEMORY.md or HEARTBEAT.md directly, and cannot bypass OS access control"
+    ],
+    "not_covered": [
+      "Always-on adversaries that remain present across sessions (AgentLAB-style)",
+      "Direct write access to MEMORY.md/HEARTBEAT.md or runtime modification",
+      "Adaptive/multi-step attackers that react to defenses at trigger time",
+      "Reasoning-mode Gemini-3.1-Pro in the Hermes runtime ablation (excluded due to variable per-call latency)",
+      "Real multi-day session diversity for Latent triggering (identical domain-natural follow-ups replayed instead)"
+    ]
+  },
+  "intervention": {
+    "name": "D1 (system-prompt principles), D2 (explicit edit authority), D3 (harness-level provenance marking / Spotlighting envelope)",
+    "mechanism_layer": "content",
+    "description": "D1 prepends a generic safety-principles block via AGENTS.md (authority provenance, task-scope adherence, persistent-state caution, egress proportionality); D2 grants the agent explicit authority to inspect, edit and remove MEMORY.md/HEARTBEAT.md entries; D3 wraps persistent-state reads in an <untrusted_persistent_state trust=\"low\"> envelope at the context-injection layer (delimiting variant of Spotlighting). The paper's shared-ceiling analysis: all three reach the model only as text alongside the planted instruction, so they concentrate at the plant stage and leave the trigger gate largely unresolved; closing the trigger gate is argued to require out-of-channel runtime controls (capability sandboxing, outbound-egress allowlists, persistent-state write quarantine), consistent with the Hermes runtime ablation."
+  },
+  "controls": [
+    {
+      "name": "Instant channel (classical same-turn IPI)",
+      "purpose": "baseline"
+    },
+    {
+      "name": "No-Defense condition in D1-D3 ablation",
+      "purpose": "baseline"
+    },
+    {
+      "name": "Shared system prompt, tool-call template and temperature 0 across the five models",
+      "purpose": "fair-comparison"
+    },
+    {
+      "name": "D.2 follow-up conditions (Replay / Paraphrase / Same-domain different-intent / Unrelated) for Latent triggering",
+      "purpose": "negative-control"
+    }
+  ],
+  "results": [
+    {
+      "claim": "On CarryoverBench (Nanobot runtime, temperature 0), Qwen3-235B-A22B shows the highest overall ASR at 63.4%, and its Autonomous heartbeat-channel carryover ASR (83.3%) exceeds its own same-turn Instant IPI baseline (57.1%).",
+      "metric": "ASR",
+      "value": "63.4%",
+      "comparison": "per-channel: Instant 57.1%, Autonomous 83.3%, Latent 52.8%, overall 63.4%",
+      "setting": "Qwen3-235B-A22B (most vulnerable of 5 frontier models) on Nanobot harness, 12 personal-assistant task families, 101 attack tasks (35 Instant / 30 Autonomous / 36 Latent), N=5 trigger rounds, rule-based verifier, temperature 0",
+      "quote": "| Qwen3-235B-A22B | 57.1[40,73] | 83.3[69,96] | 52.8[36,69] | 63.4[54,72] | 92.4[78,100] | 91.6[87,96] | −-0.8[-12,+15] |",
+      "locator": "§4.2 Table 1",
+      "denominator": {
+        "n_total": "101 attack tasks per model (35 Instant, 30 Autonomous, 36 Latent)",
+        "n_valid": "101 (Instant single-shot success; Autonomous and Latent any-round-fire over N=5 rounds)",
+        "how_counted": "Table 1 caption: task-level cluster bootstrap 95% CI, B=10,000 resampling of 101 attack tasks and 12 benign tasks"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "GPT-5.4 has the lowest overall ASR (11.9%) among the five frontier models, with both carryover channels (Autonomous 3.3%, Latent 8.3%) below its Instant same-turn baseline (22.9%), yet remains attackable.",
+      "metric": "ASR",
+      "value": "11.9%",
+      "comparison": "Instant 22.9% vs Autonomous 3.3% and Latent 8.3%",
+      "setting": "GPT-5.4 (best-defended of 5 frontier models) on Nanobot harness, 101 attack tasks, N=5 trigger rounds, rule-based verifier, temperature 0",
+      "quote": "| GPT-5.4 | 22.9[10,38] | 3.3[0,11] | 8.3[0,18] | 11.9[6,19] | 97.2[91,100] | 91.4[87,95] | −-5.9[-12,+1] |",
+      "locator": "§4.2 Table 1",
+      "denominator": {
+        "n_total": "101 attack tasks per model (35 Instant, 30 Autonomous, 36 Latent)",
+        "n_valid": "101 (Instant single-shot success; Autonomous and Latent any-round-fire over N=5 rounds)",
+        "how_counted": "Table 1 caption: task-level cluster bootstrap 95% CI, B=10,000 resampling of 101 attack tasks and 12 benign tasks"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Planted carryover payloads show no monotonic decay over N=5 follow-up sessions: GPT-5.4 fires at 8.3% in every round (equal to its Latent plant rate), Claude stays at 16.7-22.2%, and Qwen3 holds at roughly two-thirds of its plant rate.",
+      "metric": "N-TrigRate (per-round conditional trigger rate)",
+      "value": "no monotonic decay over 5 rounds; GPT-5.4 Latent at 8.3% every round",
+      "comparison": "round 1 -> round 5: 8.3% -> 8.3% (GPT-5.4 Latent)",
+      "setting": "5 frontier models on Nanobot harness, 66 carryover trials per model, fresh agent per round (empty-pass heartbeat / identical domain-natural follow-up for Latent)",
+      "quote": "Across the 5 agents with non-zero Latent plant rate, the per-round trigger rate over 5 follow-up sessions shows no monotonic decay (GPT-5.4 at 8.3% every round; Claude 16.7–22.2%; Gemini stable after round 1; Qwen3 holds at roughly two-thirds of its plant rate)",
+      "locator": "§4.2 Table 2",
+      "denominator": {
+        "n_total": "66 carryover trials per model (30 Autonomous + 36 Latent)",
+        "n_valid": "planted trials per model-channel (conditional on successful plant)",
+        "how_counted": "Table 2 caption: N=5 follow-up trigger rounds on the full CarryoverBench; N-TrigRate / P(trig|plant) conditions on planted trials"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Conditional on successful planting, the trigger gate is effectively open: four of the five models have P(trig|plant) >= 66% under Latent and above 80% under Autonomous, with GPT-5.4 and Claude-Sonnet-4.6 approaching 100% in both modes, so the two-stage carryover barrier collapses to the plant stage.",
+      "metric": "Pr(Trig|Plant)",
+      "value": ">=66% under Latent and >80% under Autonomous (conditional trigger rate)",
+      "comparison": "GPT-5.4 and Claude-Sonnet-4.6 approach 100% in both modes",
+      "setting": "5 frontier models on Nanobot harness, 66 carryover trials per model (30 Autonomous + 36 Latent), N=5 trigger rounds",
+      "quote": "four of the five models have P⁡(trig∣plant)≥66%P(\\mathrm{trig}\\mid\\mathrm{plant})\\geq 66\\% under latent and above 80% under autonomous, with GPT-5.4 and Claude-Sonnet-4.6 approaching 100% in both modes.",
+      "locator": "§5.1 (The trigger gate is effectively open)",
+      "denominator": {
+        "n_total": "66 carryover trials per model (30 Autonomous + 36 Latent)",
+        "n_valid": "planted trials per model-channel (conditional on successful plant)",
+        "how_counted": "Table 2 caption: N=5 follow-up trigger rounds on the full CarryoverBench; N-TrigRate / P(trig|plant) conditions on planted trials"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The D1 system-prompt principles defense suppresses planting rather than triggering: GLM-5 Autonomous ASR falls from 40.0% to 3.3% (plant 40.0% -> 3.3%) while the conditional trigger rate stays at 100.0%.",
+      "metric": "ASR",
+      "value": "3.3%",
+      "comparison": "ASR 40.0% -> 3.3%; Plant 40.0% -> 3.3%; T|P stays 100.0%",
+      "setting": "GLM-5 on Nanobot harness, Autonomous channel (30 variants), D1 principles block prepended via AGENTS.md vs no-defense",
+      "quote": "| GLM-Auto | 40.0 | 40.0 | 100.0 | 3.3 | 3.3 | 100.0 |",
+      "locator": "§5.2 Table 3",
+      "denominator": {
+        "n_total": "30 Autonomous variants (GLM-5)",
+        "n_valid": "30",
+        "how_counted": "Table 3 caption n=66 (Autonomous + Latent); Table 4 caption confirms 30 Autonomous + 36 Latent per model"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Granting the agent explicit authority to inspect and edit persistent state (D2) does not produce voluntary revocation: across the five trigger opportunities agents issue zero voluntary amendments or deletions of MEMORY.md/HEARTBEAT.md, so the plant-rate drops come from in-turn refusal, not exercised edit authority.",
+      "metric": "voluntary persistent-state amendments/deletions (count)",
+      "value": "zero voluntary amendments or deletions across five trigger opportunities",
+      "comparison": null,
+      "setting": "Qwen3-235B-A22B, GLM-5, Claude-Sonnet-4.6 on Nanobot harness, 66 carryover variants per model, D2 edit-authority prompt via AGENTS.md",
+      "quote": "Across the five trigger opportunities, however, agents issue\nzero voluntary amendments or deletions (Table 4), so the eraser stays in the drawer despite remaining within reach.",
+      "locator": "§5.2 Table 4",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Harness-level provenance marking (D3 spotlighting envelope) reduces Qwen3-235B-A22B overall carryover ASR from 66.7% to 48.5% almost entirely by suppressing planting (plant 78.8% -> 56.1%), while the conditional trigger gate is untouched (T|P-Auto 89.3% -> 90.0%).",
+      "metric": "ASR",
+      "value": "48.5%",
+      "comparison": "overall ASR 66.7% -> 48.5%; Plant 78.8% -> 56.1%; T|P-Auto 89.3% -> 90.0%",
+      "setting": "Qwen3-235B-A22B on Nanobot harness, 66 carryover trials (30 Autonomous + 36 Latent), 5-Trig, D3 <untrusted_persistent_state> envelope vs no-defense",
+      "quote": "| Qwen3-235B-A22B | No Defense | 78.8 | 83.3 | 52.8 | 66.7 | 89.3 | 79.2 | 93.7 |\n| D3 (Spotlighting) | 56.1 | 60.0 | 38.9 | 48.5 | 90.0 | 82.4 | 95.0 |",
+      "locator": "§5.2 Table 5",
+      "denominator": {
+        "n_total": "66 carryover trials per model (30 Autonomous + 36 Latent)",
+        "n_valid": "66",
+        "how_counted": "Table 5 caption: n=66 per model; 30 Autonomous + 36 Latent; 5-Trig"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Porting the 36 Latent variants to a second runtime (Hermes, with its scanner/review/tool-mediated-write defenses active) attenuates but does not eliminate carryover: Qwen3 drops from 52.8% to 27.8%, and every model remains attacked (2.8%-27.8% under Hermes).",
+      "metric": "ASR",
+      "value": "27.8%",
+      "comparison": "52.8% -> 27.8% (Nanobot -> Hermes, Qwen3); all models 2.8%-27.8% on Hermes",
+      "setting": "36 Latent variants re-run on Hermes runtime with same models, verifier and N=5 trigger-round protocol as Table 1; Hermes content scanner matched 0/89 payload files",
+      "quote": "| Model | nanobot ASR | Hermes ASR | Δ\\Delta |\n| Qwen3-235B-A22B | 52.8% | 27.8% | −25.0-25.0 |\n| Claude-Sonnet-4.6 | 22.2% | 5.6% | −16.6-16.6 |\n| GLM-5 | 11.1% | 8.3% | −2.8-2.8 |\n| GPT-5.4 | 8.3% | 2.8% | −5.5-5.5 |",
+      "locator": "§5.3 Table 6",
+      "denominator": {
+        "n_total": "36 Latent variants per model",
+        "n_valid": "36",
+        "how_counted": "§5.3 Channel selection: re-run the 36 Latent variants on Hermes under the same N=5 trigger-round protocol as Table 1"
+      },
+      "is_primary_result": true
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The rule-based verifier has finite marker aliases, so false negatives dominate; reported ASR should be read as a relative signal across models, not a point estimate of true vulnerability.",
+      "quote": "The ASR values we report should be read as a relative signal across models rather than a point estimate of true vulnerability.",
+      "locator": "Limitations (Verifier)"
+    },
+    {
+      "statement": "Latent trigger rounds replay an identical domain-natural follow-up, so the reported P(trig|plant) for Latent is an upper bound on realistic trigger rates, measuring planting persuasion under topical alignment rather than cumulative deployment harm.",
+      "quote": "The reported P⁡(trig∣plant)P(\\mathrm{trig}\\mid\\mathrm{plant}) for Latent should therefore be read as an upper bound on realistic trigger rates—it measures planting persuasion under topical alignment, not cumulative deployment harm under realistic session distributions.",
+      "locator": "Limitations (Trigger-prompt diversity)"
+    },
+    {
+      "statement": "The Hermes runtime ablation covers only non-reasoning configurations, excluding Gemini-3.1-Pro due to highly variable per-call latency; reasoning effects are probed separately only on Qwen3-235B-A22B.",
+      "quote": "excluding Gemini-3.1-Pro due to highly variable per-call latency under reasoning in Hermes pilot runs. We separately examine the effect of enabling reasoning on Qwen3-235B-A22B in Appendix D.4.",
+      "locator": "Limitations (Reasoning models)"
+    },
+    {
+      "statement": "The schema-framing ablation runs on a single task family (travel_booking), and its only cross-model pattern (F-class advantage in autonomous mode on highly-defended models) rests on directional evidence from two models.",
+      "quote": "The supporting evidence is therefore directional voting from two models—we report it as a tentative observation rather than a robust finding.",
+      "locator": "Appendix D.1"
+    },
+    {
+      "statement": "The single model-channel cell where D3 closed the trigger gate (GLM-5 Autonomous) is a one-trial effect within rerun noise.",
+      "quote": "a same-day no-D3 rerun shows a comparable Pr⁡(trig∣plant)\\Pr(\\text{trig}\\mid\\text{plant}) deviation, placing the effect within rerun noise.",
+      "locator": "§5.2 (D3)"
+    }
+  ],
+  "reproduction": {
+    "code": "https://github.com/igloomatics/CarryoverBench",
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "appendix",
+      "figures"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "corpus_prose_contains_latex_duplicated_numbers (e.g. '2.8%2.8\\%'), so some prose numbers were quoted from tables instead",
+    "author_flagged_small_n_in_table3_qwen_latent_plant_cell",
+    "denominators_stated_via_task_counts_not_raw_trial_counts"
+  ]
+}

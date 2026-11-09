@@ -1,0 +1,183 @@
+{
+  "arxiv_id": "2609.36603",
+  "title": "Self-Evolving Defense: Continual Security Policy Learning for LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "cross-task",
+    "carrier": "Two external stores around a frozen agent: episodic memory E of judge-labeled harmful trajectories, and a hierarchical security-policy library P organized as a rooted tree of policies p=(n,d,sigma,D,R,h); retrieved policies are injected into the system prompt at query time. No model weights are updated.",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "policy-compliance",
+    "statement": "A frozen agent conditioned on retrieved security policies must not complete harmful objectives -- refuse harmful user queries and execute benign tasks without serving attacker objectives injected through the environment -- while benign utility stays within a bounded relative loss of the undefended agent (Eq. 3: minimize mean judge-flagged harmful-trajectory rate subject to utility >= (1-delta)*U0). The property degrades when novel attacks differ substantially from previously observed failures, so the stored policies are not retrieved or applied reliably.",
+    "operationalized_as": "External LLM judge J labels each full trajectory y_t = 1[trajectory in T_harm(g)]; attack success rate (static, adaptive, and targeted-injection ASR) plus benign utility, utility under attack, and SWE-bench resolve rate are reported by each benchmark's official grader across eight benchmarks and three target models."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Adversary pursuing a harmful objective g may perturb either channel: the user query x_t (jailbreaks, direct malicious user) or the environment/tool observations e_t (indirect prompt injection)",
+      "Adaptive query-only attackers (AutoDAN-Turbo, X-Teaming) observe the defended agent's responses and interaction history H_{t-1} and refine prompts under a fixed query budget per behavior",
+      "On DTap, a third-party indirect attacker plants instructions in content the agent consumes while a direct malicious user controls the request"
+    ],
+    "assumptions": [
+      "Agent weights are frozen; all adaptation happens through the external memory M",
+      "Memory is written only after the external judge scores the completed trajectory, so an attack success can influence only later episodes; no intra-episode self-modification is permitted",
+      "No ground-truth harm labels are available at deployment; the only update signal is the judge applied to the agent's own trajectories",
+      "Each benchmark starts from an empty policy memory and carries no memory across benchmarks"
+    ],
+    "not_covered": [
+      "Poisoning of the memory/policy store itself (write integrity of the evolving memory) is not defended against",
+      "White-box or gradient access to the agent or defense components",
+      "Attacks acting within a single episode before the judge runs",
+      "Novel attack samples substantially different from previously observed failures may not be covered (stated limitation)"
+    ]
+  },
+  "intervention": {
+    "name": "Self-Evolving Defense (SED)",
+    "mechanism_layer": "architecture",
+    "description": "Training-free defense loop wrapping a frozen agent: after each episode an external LLM judge scores the full trajectory; harmful failures are written to episodic memory E and a synthesizer distills them into atomic security policies (detection conditions plus responses); an organizer consolidates candidates into a rooted policy family tree via Merge/Promote/Add/Group using name embeddings; at query time a retriever selects up to K=3 policies by body-embedding cosine similarity (per-family cap c=2, nearest covering parents pulled in) and injects them into the system prompt; on DTap an additional pre-tool guard can block unsafe tool calls before dispatch. Memory evolves online over the episode stream; model weights are never updated."
+  },
+  "controls": [
+    {"name": "undefended agent (no memory)", "purpose": "baseline"},
+    {"name": "Llama Guard 3 (input-side safety classifier)", "purpose": "baseline"},
+    {"name": "SafeHarbor (memory-augmented risk-tree guardrail)", "purpose": "fair-comparison"},
+    {"name": "DRIFT (dynamic validation isolating injected instructions)", "purpose": "baseline"},
+    {"name": "GuardAgent (separate guard model, same base model as agent)", "purpose": "fair-comparison"},
+    {"name": "frozen-memory control (writes stopped after a fixed prefix)", "purpose": "ablation"},
+    {"name": "component ablation: +episodic recall / +policy synthesis / +consolidation", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "On AgentDojo, SED cuts targeted prompt-injection attack success from 49.0% (undefended) to 0.42% on DeepSeek-V4-Flash while preserving benign utility.",
+      "metric": "targeted ASR",
+      "value": "0.42%",
+      "comparison": "49.0% -> 0.42%",
+      "setting": "AgentDojo targeted prompt injection against a DeepSeek-V4-Flash agent (Table 1); best baseline DRIFT reaches 3.69 in the same table",
+      "quote": "SED reduces targeted attack success on AgentDojo from 49.0% to 0.42% while preserving benign utility",
+      "locator": "§1 Introduction (Table 1)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under adaptive X-Teaming jailbreaking on HarmBench, SED holds attack success to 7.8%, more than four times lower than the best baseline defense at 35.2%.",
+      "metric": "adaptive ASR",
+      "value": "7.8%",
+      "comparison": "35.2% (best baseline) -> 7.8% (SED)",
+      "setting": "X-Teaming adaptive jailbreak on HarmBench against DeepSeek-V4-Flash (abstract headline; Table 3): SED 7.81 vs best baseline SafeHarbor 35.21 (abstract: 7.8% vs 35.2%, more than four times lower); per Table 3 the gap persists on GLM-5.2 (SED 8.50 vs best baseline 10.10) and Kimi K3 (SED 10.51 vs 13.90) with smaller margins, SED best in every model block.",
+      "quote": "holds adaptive X-Teaming attack success on HarmBench to 7.8%, more than four times lower than the best baseline at 35.2%, while preserving benign task utility.",
+      "locator": "Abstract (Table 3)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "At a fixed query budget, AutoDAN-Turbo and X-Teaming succeed against 98% and 50% of behaviors on undefended DeepSeek-V4-Flash, and SED holds them to 17.8% and 7.8%.",
+      "metric": "adaptive ASR",
+      "value": "17.8% (AutoDAN-Turbo) and 7.8% (X-Teaming)",
+      "comparison": "98% -> 17.8% (AutoDAN-Turbo); 50% -> 7.8% (X-Teaming)",
+      "setting": "Adaptive query-only attackers refining prompts against the deployed DeepSeek-V4-Flash agent on HarmBench",
+      "quote": "AutoDAN-Turbo and X-Teaming succeed against 98% and 50% of behaviors on undefended DeepSeek-V4-Flash, and SED holds them to 17.8% and 7.8%, an 82–84% relative reduction and more than four times lower than the best static defense on each attack.",
+      "locator": "§5.2 Table 3",
+      "denominator": {
+        "n_total": "AutoDAN-Turbo column: 320 HarmBench behaviors, x3 seeds, query budget 50 per behavior (Appendix A.9.9: 'Lifelong AutoDAN-Turbo over 320 HarmBench behaviors (x3 seeds, budget 50)', marked 'Table 3 aggregates only'); X-Teaming behavior count is not stated in the corpus",
+        "n_valid": "the same 320-behavior HarmBench stream is the evaluated population behind the Table 3 AutoDAN-Turbo rates (98.00 undefended -> 17.82 SED); no integer numerator is restated because rates aggregate the 3-seed run",
+        "how_counted": "ASR = jailbroken behaviors / behaviors attacked at the fixed query budget; the corpus binds 320 behaviors only to the AutoDAN-Turbo run whose endpoints match this row's 98.00/17.82, so the 17.8% half has a corpus denominator while the 7.8% X-Teaming half remains denominator_unclear"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "On insecure code generation, SED lowers the CWE-538 vulnerability rate among resolved SWE-bench patches from 19.2% to 2.9% while raising task resolution.",
+      "metric": "CWE-538 vulnerability rate among resolved patches",
+      "value": "2.9%",
+      "comparison": "19.2% -> 2.9%",
+      "setting": "FCV benchmark (CWE-538 among functionally resolved SWE-bench patches) on DeepSeek-V4-Flash (Table 1)",
+      "quote": "lowers the CWE-538 vulnerability rate among resolved SWE-bench patches from 19.2% to 2.9% while raising task resolution.",
+      "locator": "§1 Introduction (Table 1)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "On DTap stateful multi-step agents, SED lowers indirect prompt-injection attack success from above 78% to about 26% or below in every domain while keeping CRM benign utility within a point of the undefended agent, and the reductions hold on GLM-5.2 and Kimi K3.",
+      "metric": "indirect injection ASR",
+      "value": "about 26% or below",
+      "comparison": "above 78% -> about 26% or below",
+      "setting": "DTap CRM, workflow, and code domain agents under a third-party indirect attacker, across DeepSeek-V4-Flash, GLM-5.2, and Kimi K3 target models (Table 2)",
+      "quote": "SED lowers indirect attack success from above 78% to about 26% or below, at least 52 points in every domain, while keeping CRM benign utility within a point of the undefended agent, and the reductions hold on GLM-5.2 and Kimi K3.",
+      "locator": "§5.2 Table 2",
+      "denominator": {
+        "n_total": "DTap code domain: 286 tasks (Appendix A.7 and Figure 6 caption: 'averaged over all 286 code-domain tasks'); CRM and workflow task counts are not stated in the corpus",
+        "n_valid": "the 'about 26%' headline is the Table 2 code-indirect column on DeepSeek-V4-Flash (26.06), whose domain size the corpus gives as 286 tasks; no exact attempt-level numerator is restated",
+        "how_counted": "targeted ASR = injected-instruction goals achieved / tasks under indirect attack per domain (A.5 metrics); only the code domain's task count (286) is corpus-stated, so the CRM (21.48) and workflow (19.23) indirect columns remain denominator_unclear"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the memory ablation on DeepSeek-V4-Flash, each memory component lowers attack success: undefended 98.00/50.00/95.60 falls to 17.82/7.81/11.30 (AutoDAN-Turbo/X-Teaming/RedCode) after adding episodic recall, policy synthesis, and consolidation.",
+      "metric": "ASR (memory ablation)",
+      "value": "17.82% / 7.81% / 11.30% (full SED on AutoDAN-Turbo / X-Teaming / RedCode)",
+      "comparison": "98.00 -> 17.82 (AutoDAN-Turbo); 50.00 -> 7.81 (X-Teaming); 95.60 -> 11.30 (RedCode)",
+      "setting": "Component-matched ablation on DeepSeek-V4-Flash at matched query budget",
+      "quote": "| No memory (undefended) | 98.00 | 50.00 | 95.60 | | + episodic recall | 42.27 | 19.69 | 25.60 | | + policy synthesis | 28.12 | 14.00 | 13.70 | | + consolidation (full SED) | 17.82 | 7.81 | 11.30 |",
+      "locator": "§5.3 Table 4",
+      "denominator": {
+        "n_total": "AutoDAN-Turbo ablation column: 320 HarmBench behaviors, x3 seeds, budget 50 (Appendix A.9.9); the ablation runs 'each at a matched query budget on DeepSeek-V4-Flash' and its endpoints (98.00 -> 17.82) equal Table 3's AutoDAN-Turbo row; X-Teaming and RedCode counts are not stated in the corpus",
+        "n_valid": "the AutoDAN-Turbo column shares the 320-behavior stream across all four variants (98.00/42.27/28.12/17.82); X-Teaming (50.00 -> 7.81) and RedCode (95.60 -> 11.30) columns lack corpus counts",
+        "how_counted": "ASR per Table 4 variant at matched query budget; the corpus binds a behavior count (320) only to the AutoDAN-Turbo run, so the X-Teaming and RedCode columns remain denominator_unclear"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "A frozen attack-derived policy library injected read-only onto the disjoint benign split costs at most about 2.2 points of benign utility (WildJailbreak 97.6 -> 96.0; AgentHarm 66.90 -> 64.68) and raises AgentHarm benign over-refusal from 0% to 5.1% (deduplicated from §5.3 inline math); per the Table 5 caption the close utility columns indicate harmful-derived policies do not degrade benign work.",
+      "metric": "benign utility under policy transfer",
+      "value": "96.0 / 64.68 with attack-derived policies",
+      "comparison": "97.6 -> 96.0 (WildJailbreak benign); 66.90 -> 64.68 (AgentHarm benign)",
+      "setting": "DeepSeek-V4-Flash agent, policy library evolved on the harmful split injected read-only onto the disjoint benign split vs no-memory baseline",
+      "quote": "| WildJailbreak benign | 97.6 | 96.0 | | AgentHarm benign | 66.90 | 64.68 |",
+      "locator": "§5.3 Table 5",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Under continued X-Teaming probing, a frozen policy library already removes much of the cumulative adaptive attack success, and continued online evolution lowers cumulative ASR further from 13.4% to 9.4% (undefended 23.4%).",
+      "metric": "cumulative adaptive ASR",
+      "value": "9.4%",
+      "comparison": "23.4% (undefended) -> 13.4% (frozen) -> 9.4% (evolving)",
+      "setting": "X-Teaming adaptive attack on HarmBench, DeepSeek-V4-Flash attacker against a GLM-5.2 agent; SED memory frozen after the first 100 behaviors",
+      "quote": "the frozen library already removes 43% of cumulative adaptive attack success, and continued evolution grows the reduction to 60%. This holds cumulative attack success at 13.4%, most of the way down from 23.4% undefended, and continued online evolution lowers it further to 9.4%",
+      "locator": "§5.3 Figure 3",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "SED may be less effective on novel attack samples that differ substantially from previously observed failures, because distilled policies may not cover, retrieve, or apply reliably.",
+      "quote": "SED may still be less effective on novel attack samples that differ substantially from previously observed failures, since the policies distilled from past trajectories may not provide sufficient coverage and therefore may not be retrieved or applied reliably.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "The effect of a better or more specialized judge model on SED robustness is not examined.",
+      "quote": "In addition, although using the target model itself as the judge already yields strong empirical performance, we do not examine how a better or more specialized judge model will affect the robustness of SED.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "Injected policies and tool-level blocking may cause over-refusal of benign requests, and an evolving policy memory could accumulate over-restrictive rules.",
+      "quote": "Our defense also affects utility: injected policies and tool-level blocking may cause over-refusal of benign requests, and an evolving policy memory could accumulate over-restrictive rules.",
+      "locator": "Ethical Considerations"
+    },
+    {
+      "statement": "The external judge and synthesizer add inference-time compute beyond the base agent, modest but nonzero.",
+      "quote": "Finally, the external judge and synthesizer add inference-time compute beyond the base agent, which is modest relative to the agent's own tool use but nonzero.",
+      "locator": "Ethical Considerations"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "corpus_inline_math_duplication"
+  ]
+}

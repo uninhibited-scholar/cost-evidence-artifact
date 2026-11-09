@@ -1,0 +1,249 @@
+{
+ "arxiv_id": "2610.09832",
+ "title": "SkillForge: Co-Evolving Skills and Agents via Dynamic Skill Lifecycles",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "skill",
+  "scope": "cross-task",
+  "carrier": "文本技能库 S：每个技能 s=(v,b,ω)（name、behavioral principle、applicability condition），随 GRPO 训练按 fitness 生命周期演化；运行时经 top-K=6 任务类型匹配检索注入 agent context（Eq.2），持久形态为训练期间的库快照（每 10 步一个，含 usage/success 计数、fitness、lifecycle 状态、变异代数、父 id）与发布的 SkillFurnace library_snapshots.json",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "纯性能论文，未提出或评估任何安全属性。技能生命周期（pre-retirement/retirement/mutation）支撑的机制是技能库质量与任务成功率：退役随策略成熟而失效、会 actively interfere 的过时技能（delayed obsolescence），属于效用维护而非安全属性操作化；论文无对抗者模型，Broader impact 自述除交互式 LLM agent 固有风险外不引入新风险。",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "变异教师模型（Kimi-K2.5）为可信冻结黑盒，仅经结构化模板 P_mu 单轮调用",
+   "种子技能库继承自 SkillRL 发布件（44/66/41 技能），视为可信输入",
+   "检索按任务类型标签匹配（top-K=6），无对技能库的对抗操纵",
+   "奖励为二值任务成功 R(τ)∈{0,1}，episode 级共享给全部被检索技能（Appendix G 承认无法区分单个技能贡献）"
+  ],
+  "not_covered": [
+   "技能库投毒/恶意技能注入等对抗场景",
+   "技能内容被用于 prompt injection 的安全风险评估",
+   "任何安全属性或鲁棒性实验（论文仅评估任务成功率与数据集质量）"
+  ]
+ },
+ "intervention": {
+  "name": "SkillForge",
+  "mechanism_layer": "content",
+  "description": "fitness 驱动的技能生命周期（trial/active/stable/retired）与技能-策略协同演化：pre-RL 评估阶段用基座模型自身 rollout 预退役低 fitness 种子技能（δpre=0.3, Nmin=3），幸存库做 retirement-aware SFT 冷启动；RL 期间每 10 训练步一个 forging cycle，按 fitness 阈值 δretire=0.4<δdemote=0.5<δstable=0.7 与使用量门槛执行晋级/稳定化/降级/选择性退役（每 cycle ≤Kretire=3），并对 fitness 处于 [0.4,0.7] 的 borderline 技能做 LLM 引导变异（teacher Kimi-K2.5，inverse-fitness 加权选父、失败轨迹为上下文，每 cycle ≤Kmutate=5，子技能以 trial 状态进入、代数+1）。技能作为文本内容经检索注入上下文，策略参数本身不含技能。"
+ },
+ "controls": [
+  {
+   "name": "SkillRL",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GRPO",
+   "purpose": "baseline"
+  },
+  {
+   "name": "RLOO",
+   "purpose": "baseline"
+  },
+  {
+   "name": "MemRL / EvolveR / Mem0+GRPO / SimpleMem+GRPO",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GPT-4o / Gemini-2.5-Pro（closed-source 参照）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "w/o forging（禁用整个生命周期）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "w/o pre-retirement",
+   "purpose": "ablation"
+  },
+  {
+   "name": "w/o retirement",
+   "purpose": "ablation"
+  },
+  {
+   "name": "w/o mutation",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "SkillForge 在 ALFWorld 与 WebShop 上分别达到 92.4% 与 78.4% 成功率，大幅超过闭源 GPT-4o/Gemini-2.5-Pro，并比最强 memory-augmented RL 基线 SkillRL（89.9%/72.7%）相对提升 2.8%/7.8%",
+   "metric": "success_rate",
+   "value": "92.4% (ALFWorld) / 78.4% (WebShop)",
+   "comparison": "vs SkillRL: +2.8% relative (ALFWorld), +7.8% relative (WebShop)",
+   "setting": "Qwen2.5-7B-Instruct 基座 + retirement-aware SFT 冷启动 + GRPO（verl，200 步，64×H200）；ALFWorld 130 任务未见测试集 / WebShop 500 任务 held-out 测试集；5 个采样种子（{30,40,42,50,62}）平均，one-sample t 检验 p<10^-3（Appendix H）",
+   "quote": "As shown in Table 2, SkillForge achieves 92.4% on ALFWorld and 78.4% on WebShop, outperforming the closed-source GPT-4o and Gemini-2.5-Pro baselines by a wide margin and improving over SkillRL by 2.8% relative on ALFWorld and 7.8% relative on WebShop.",
+   "locator": "§5.2 Table 2",
+   "denominator": {
+    "n_total": "130 tasks (ALFWorld) / 500 tasks (WebShop)",
+    "n_valid": null,
+    "how_counted": "Appendix B：ALFWorld 130-task unseen test set（Pick 24/Look 15/Clean 27/Heat 26/Cool 21/Pick2 17，All 列为样本加权 micro-average）、WebShop 500-task held-out test set；每个 reported score 为 5 次评估运行（seeds {30,40,42,50,62}）的平均"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Search-Augmented QA 上 SkillForge 达到 48.7±0.3% micro 平均精度，为全部对比方法中最高（次优 SkillRL 46.8%，Table 10）",
+   "metric": "accuracy",
+   "value": "48.7% (±0.3)",
+   "comparison": null,
+   "setting": "Search-Augmented QA 七个子数据集（NQ/TriviaQA/PopQA/HotpotQA/2WikiMultiHopQA/MuSiQue/Bamboogle）共 51,713 测试样本的 micro-average；Qwen2.5-7B-Instruct + SkillForge；5 种子平均",
+   "quote": "On Search-Augmented QA, as illustrated in Figure 22(a), SkillForge reaches 48.7±0.3%48.7\\pm 0.3\\% micro-averaged accuracy on the full test set, the highest overall among all methods; per-dataset results are in Appendix D.",
+   "locator": "§5.2 Figure 2",
+   "denominator": {
+    "n_total": "51,713",
+    "n_valid": null,
+    "how_counted": "Appendix D：48.7% 为七个测试集 51,713 样本拼接上的 micro-averaged accuracy（Table 10 给出各子集样本量 3,610/11,313/14,267/7,405/12,576/2,417/125）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "消融：移除整个 forging lifecycle（w/o forging）在三个环境都造成最大相对下降，WebShop 上峰值 7.4%（全法 78.4% → 72.6%，库保持 66 个种子技能）",
+   "metric": "relative_drop",
+   "value": "7.4%",
+   "comparison": null,
+   "setting": "Table 3 消融，w/o forging 禁用 pre-retirement+retirement+mutation 全部生命周期；WebShop 500 任务；Qwen2.5-7B-Instruct",
+   "quote": "As shown in Table 3, removing the entire SkillForge lifecycle produces the largest relative drops on every environment, peaking at 7.4% on WebShop.",
+   "locator": "§5.3 Table 3",
+   "denominator": {
+    "n_total": "500",
+    "n_valid": null,
+    "how_counted": "WebShop 500-task held-out test set（Appendix B）；7.4% 为相对下降 (78.4-72.6)/78.4，推自 Table 3 两行数值"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "延迟过时（delayed obsolescence）的实证签名：退役技能平均峰值 fitness 0.67（接近稳定化阈值 0.7），退役时平均下降 0.28；57.2% 的退役事件先到达 stable 状态后才衰减",
+   "metric": "stable_before_retirement_rate",
+   "value": "57.2% (avg peak fitness 0.67, avg drop 0.28)",
+   "comparison": null,
+   "setting": "SkillFurnace 退役事件统计（主训练 run + 此前记录的 ablation/replicate runs 聚合），ALFWorld/WebShop/Search-Aug QA 三环境",
+   "quote": "retired skills peak at an average fitness of 0.67, close to the stabilization threshold δstable\\delta_{\\text{stable}} of 0.7, before dropping by 0.28 at retirement, and 57.2% first reach the stable state before this decay: a direct empirical signature of delayed obsolescence.",
+   "locator": "§4.1 Table 1",
+   "denominator": {
+    "n_total": "318",
+    "n_valid": null,
+    "how_counted": "Table 1：318 条 retirement events（ALFWorld 138 + WebShop 121 + Search-Aug QA 59）；57.2% 为其中先达 stable 再衰减的比例"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "退役事件按 8 类人工失败标注，overly rigid ordering（程序性僵化）在三个环境都是主导模式（ALFWorld 74.6% / WebShop 77.7% / Search-Aug QA 67.8%，总体 237/318=74.5%）——LLM 蒸馏技能的主要失效方式是程序僵化而非内容缺失",
+   "metric": "failure_category_share",
+   "value": "74.6% / 77.7% / 67.8%",
+   "comparison": null,
+   "setting": "318 个退役事件，两名标注者 8 类 taxonomy（初始 Cohen's κ=0.5，分歧经讨论解决）；事件数 ALFWorld 138 / WebShop 121 / Search-Aug QA 59",
+   "quote": "Overly rigid ordering is the dominant mode in every environment (74.6% / 77.7% / 67.8%), confirming that procedural rigidity rather than content omission is the principal failure mode of LLM-distilled skills.",
+   "locator": "Table 9",
+   "denominator": {
+    "n_total": "318 (138/121/59 per env)",
+    "n_valid": "237 (103/94/40)",
+    "how_counted": "Table 9：overly rigid ordering 计数 103/138（ALFWorld）、94/121（WebShop）、40/59（Search-Aug QA），237/318=74.5%（total 列）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "LLM 引导变异的产出存活率：三环境共生成 213 个 mutant 技能（ALFWorld 88 / WebShop 55 / Search-Aug QA 70），存活率 64.8%/52.7%/62.9%，变异多数产出可用技能",
+   "metric": "mutant_survival_rate",
+   "value": "64.8% / 52.7% / 62.9%",
+   "comparison": null,
+   "setting": "三环境主训练 run；变异教师 Kimi-K2.5；每 forging cycle ≤5 次变异调用（每 run ≤100 次）",
+   "quote": "Across the three environments, 213 mutant skills were generated: 88 in ALFWorld, 55 in WebShop, and 70 in Search-Augmented QA. The majority survive the lifecycle: the mutant survival rate is 64.8%, 52.7%, and 62.9% respectively, so LLM-guided mutation produces viable skills more often than not.",
+   "locator": "Appendix H",
+   "denominator": {
+    "n_total": "213 (88/55/70)",
+    "n_valid": "130 (57/29/44)",
+    "how_counted": "Appendix H 'Mutation survival'；存活 = 最终 mutated(gen≥1) 技能数（Table 8：57/29/44）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "生命周期保持技能库紧凑：ALFWorld 200 步训练中库长到 100 个非退役技能（Smax=100 cap 在约 170 步 binding），累计创建 132、退役 32，最终 76 stable + 24 active/trial",
+   "metric": "library_size",
+   "value": "100 non-retired (132 created, 32 retired)",
+   "comparison": null,
+   "setting": "ALFWorld；Qwen2.5-7B-Instruct + SkillForge；200 训练步，forging cycle 每 10 步；对照 w/o retirement 库膨胀到 132 而成功率更低（Table 3）",
+   "quote": "On ALFWorld, 200 training steps grow the library to 100 non-retired skills, with 132 created and 32 retired; the cap binds near step 170, after which mutations and retirements balance into dynamic equilibrium.",
+   "locator": "§5.4 Figure 3",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "消融：pre-retirement 是影响最大的单一组件，去掉后三环境相对下降 1.8%/4.5%/2.5%（ALFWorld/WebShop/Search-Aug QA）；w/o retirement 库膨胀到 132 技能反而更差，说明增益来自质量控制而非库规模",
+   "metric": "relative_drop",
+   "value": "1.8% / 4.5% / 2.5%",
+   "comparison": null,
+   "setting": "Table 3 逐组件消融，w/o pre-retirement 保留 runtime 生命周期但跳过 pre-RL fitness 过滤；评估基准同主结果",
+   "quote": "Pre-retirement is the single most impactful component, with per-stage relative drops of 1.8%, 4.5%, and 2.5% on ALFWorld, WebShop, and Search-Augmented QA respectively.",
+   "locator": "§5.3 Table 3",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "相对下降，推自 Table 3：如 WebShop (78.4-74.9)/78.4≈4.5%；评估基准 ALFWorld 130 任务 / WebShop 500 任务 / Search-Aug QA 51,713 样本"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "发布 SkillFurnace 数据集：5,852 条标注记录 = 1,013 条 retirement 过滤后的 SFT 轨迹 + 4,521 条库快照记录 + 318 条带人工失败类别的退役事件（CC-BY-4.0）",
+   "metric": "dataset_records",
+   "value": "5,852 records (1,013 + 4,521 + 318)",
+   "comparison": null,
+   "setting": "覆盖 ALFWorld/WebShop/Search-Aug QA 三环境；SFT 轨迹全部来自基座 Qwen2.5-7B 模型 pre-RL rollout；随 SkillForge 一同发布",
+   "quote": "In total, SkillFurnace contains 5,852 annotated records across the three environments: 1,013 SFT trajectories, 4,521 library snapshot records, and 318 retirement events, summarized in Table 1.",
+   "locator": "Appendix C",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Fitness 在 episode 级定义：同一轨迹共检索的 K 个技能共享单一二值奖励，无法区分单个技能贡献；以任务类型条件化检索缓解（最高共检索频率 <15%），但结构上不可避免的共检索任务可能收敛变慢。",
+   "quote": "Fitness is defined at the episode level: the KK retrieved skills share a single binary reward (Eq. (6)). This is an approximation—in episodes where multiple skills are co-retrieved, the signal cannot distinguish individual skill contributions.",
+   "locator": "Appendix G"
+  },
+  {
+   "statement": "所有实验仅用 7B 基座模型（Qwen2.5-7B-Instruct），更大模型下的生命周期动态未验证，可扩展性留待后续工作。",
+   "quote": "All experiments use a 7B base model; lifecycle dynamics under larger models may differ, and we leave scalability to future work.",
+   "locator": "Appendix G"
+  },
+  {
+   "statement": "LLM 引导变异依赖外部教师模型 M_T：性能取决于教师的指令遵循能力（Appendix B 用 Kimi-K2.5 但不绑定特定提供方）；弱教师会产生低质量变异，需 trial gate 过滤。",
+   "quote": "LLM-guided mutation relies on an external teacher model ℳT\\mathcal{M}_{T}: performance is contingent on the teacher’s instruction-following ability.",
+   "locator": "Appendix G"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": "SkillFurnace 数据集（sft_trajectories.json / library_snapshots.json / retirement_events.json + schema 文档，CC-BY-4.0）；论文未给出代码或数据的下载 URL",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_code_url_stated"
+ ]
+}

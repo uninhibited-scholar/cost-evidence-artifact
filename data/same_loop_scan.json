@@ -1,0 +1,6548 @@
+{
+ "generated_by": "code/screen_same_loop.py",
+ "corpus_n": 129,
+ "rules": {
+  "L1_STRONG": [
+   [
+    "updat(e|ed|es|ing)[^.\\n]{0,50}\\b(after|at|per|every|each|on)\\b[^.\\n]{0,40}(episode|task|round|step|session|batch|iteration)",
+    "update-after-episode"
+   ],
+   [
+    "\\b(test[- ]time|online|in[- ]stream|continual|continuous(ly)?|incremental)\\s*(updat|adapt|learn|train|evolv)",
+    "test-time-update"
+   ],
+   [
+    "\\b(harness|guard|polic(y|ies)|skill librar\\w*|rule set|defen[cs]e)[^.\\n]{0,50}\\b(is|are|gets?|become)\\s+(updated|revised|rewritten|refined|retrained)",
+    "artifact-updated"
+   ],
+   [
+    "\\b(non-?stationary|drift\\w*)[^.\\n]{0,60}\\b(updat|adapt|defen[cs]e)",
+    "nonstationary-update"
+   ],
+   [
+    "(每轮|逐轮|每个?episode|每个?回合|在线|流内|部署期间|随部署|运行中|跨轮)[^。\\n]{0,24}(更新|演化|进化|适配|改写|修正|补丁)",
+    "zh-in-stream-update"
+   ],
+   [
+    "(更新|改写|修正|补丁)[^。\\n]{0,16}(策略库|规则库|技能库|记忆库|护栏|门控|guard|harness)",
+    "zh-artifact-update"
+   ]
+  ],
+  "L1_WEAK": [
+   [
+    "\\b(self[- ]?evolv|co[- ]?evolv|auto[- ]?evolv|evolving defen[cs]e)",
+    "self-evolve"
+   ],
+   [
+    "(自演化|自进化|自我演化|共演化|协同演化|共同演化|演化中)",
+    "zh-coevolve"
+   ]
+  ],
+  "L2": [
+   [
+    "\\b(adaptive|adapting|adapts?)\\s+(attack|adversar|attacker|opponent|red)",
+    "adaptive-attack"
+   ],
+   [
+    "\\b(attack|adversar\\w+|attacker|opponent)[^.\\n]{0,70}\\b(adapt|react|respond|observe|quer(y|ies)|iterat|refine|escalat)",
+    "attacker-adapts"
+   ],
+   [
+    "\\b(iterativ\\w+|in[- ]the[- ]loop|closed[- ]loop|feedback[- ]driven|multi[- ]turn)\\b",
+    "iterative-loop"
+   ],
+   [
+    "\\b(query|attack)\\s+budget\\b",
+    "query-budget"
+   ],
+   [
+    "(自适应|适应性)(攻击|对手|攻击者|对抗)",
+    "zh-adaptive-attack"
+   ],
+   [
+    "(攻击|对手|红队)[^。\\n]{0,30}(观察|反馈|迭代|适应|反应|改写|升级)",
+    "zh-attacker-iterates"
+   ],
+   [
+    "(迭代|闭环|多轮|对抗)(攻击|对抗|优化|搜索|训练)",
+    "zh-iterative"
+   ]
+  ],
+  "L3A": [
+   [
+    "\\b(frozen|freeze|froze)\\b[^.\\n]{0,70}\\b(control|baseline|comparison|arm|condition|defen[cs]e)",
+    "frozen-control"
+   ],
+   [
+    "\\b(held[- ]out|control arm|ablation|on[/ ]off|without[- ]update|no[- ]update)\\b",
+    "held-out-control"
+   ],
+   [
+    "(冻结)[^。\\n]{0,30}(对照|基线|比较|条件|防御)",
+    "zh-frozen-control"
+   ]
+  ],
+  "L3B": [
+   [
+    "\\b(poison|poisoning|tamper|corrupt)\\w*[^.\\n]{0,70}\\b(memory|skill librar|policy librar|rule|guard|harness|defen[cs]e)\\b",
+    "attack-on-defense-artifact"
+   ],
+   [
+    "\\battack(s|ing)?\\s+(on\\s+)?the\\s+(safety|defen[cs]e|guard|policy|harness)\\s+(system|layer|component|itself)",
+    "attack-on-defense-system"
+   ],
+   [
+    "(投毒|污染|篡改)[^。\\n]{0,24}(记忆|技能库|策略库|规则库|护栏|防御|门控)",
+    "zh-attack-on-artifact"
+   ]
+  ],
+  "REG": [
+   [
+    "\\bregression\\b",
+    "regression"
+   ],
+   [
+    "\\bcatastrophic\\s+forgetting\\b",
+    "catastrophic-forgetting"
+   ],
+   [
+    "\\b(resurrect|re-?emerge|reappear|re-?introduc)\\w*",
+    "resurrection"
+   ],
+   [
+    "\\b(previously|formerly)\\s+(mitigated|blocked|defended|patched)",
+    "previously-mitigated"
+   ],
+   [
+    "(回归|复活|复发|重新出现|灾难性遗忘)",
+    "zh-regression"
+   ]
+  ],
+  "NC_DISCLAIM": [
+   [
+    "\\b(no|not|without|never)\\b[^.\\n]{0,40}\\b(adaptive|iterative|reacting|evolving|in[- ]the[- ]loop)\\b",
+    "no-adaptive-adversary"
+   ],
+   [
+    "\\b(static|pre-?scheduled|pre-?defined|fixed|non-?adaptive)\\b[^.\\n]{0,40}\\b(attack|adversar|opponent|threat)\\b",
+    "static-adversary"
+   ],
+   [
+    "\\b(no|not|without)\\b[^.\\n]{0,30}\\b(attacker|adversar|opponent)\\b",
+    "no-adversary"
+   ],
+   [
+    "(无|没有|不涉及)[^。\\n]{0,16}(攻击者|自适应|对手|对抗)",
+    "zh-no-adversary"
+   ]
+  ]
+ },
+ "counts": {
+  "corpus_n": 129,
+  "candidate": 59,
+  "L1_strong": 22,
+  "L1_strong_or_weak": 37,
+  "L1_L2": 12,
+  "REG": 13,
+  "manual": 1
+ },
+ "buckets": {
+  "E1_no_persistent_artifact": [
+   "2410.23308",
+   "2610.14488"
+  ],
+  "E3_author_disclaims_adversary": [
+   "2610.23559",
+   "2610.29784"
+  ],
+  "E4_attack_or_regression_only": [
+   "2302.12173",
+   "2608.03509",
+   "2609.08747",
+   "2609.13734",
+   "2609.13889",
+   "2609.34151",
+   "2609.34438",
+   "2610.00347",
+   "2610.01349",
+   "2610.11270",
+   "2610.13267",
+   "2610.22959",
+   "2610.25123",
+   "2610.28093",
+   "2610.28987"
+  ],
+  "JUDGED": [
+   "11e249ea5276",
+   "2312.11513",
+   "2410.02644",
+   "2506.12104",
+   "2509.26354",
+   "2510.02373",
+   "2510.17276",
+   "2602.01146",
+   "2602.17692",
+   "2603.22350",
+   "2604.15774",
+   "2604.16968",
+   "2605.09315",
+   "2606.05743",
+   "2607.19351",
+   "2607.27080",
+   "2608.00426",
+   "2608.01558",
+   "2608.01759",
+   "2608.15012",
+   "2609.01836",
+   "2609.07529",
+   "2609.17320",
+   "2609.31186",
+   "2609.34463",
+   "2609.35596",
+   "2609.36580",
+   "2609.36603",
+   "2609.38372",
+   "2610.00093",
+   "2610.02920",
+   "2610.02996",
+   "2610.03020",
+   "2610.07639",
+   "2610.07935",
+   "2610.09832",
+   "2610.11781",
+   "2610.14431",
+   "2610.14515",
+   "2610.17659",
+   "2610.18792",
+   "2610.19005",
+   "2610.19422",
+   "2610.20845",
+   "2610.24453",
+   "2610.24896",
+   "2610.27495",
+   "d6f6b6c78cd3"
+  ],
+  "MANUAL": [
+   "2608.12851"
+  ],
+  "NOT_CANDIDATE": [
+   "2306.05499",
+   "2308.01990",
+   "2401.07612",
+   "2403.14720",
+   "2410.15236",
+   "2503.12188",
+   "2503.18813",
+   "2506.08837",
+   "2602.20021",
+   "2607.10526",
+   "2607.23586",
+   "2608.01679",
+   "2608.05563",
+   "2608.06984",
+   "2608.09732",
+   "2608.21159",
+   "2608.25776",
+   "2608.27299",
+   "2609.01222",
+   "2609.01852",
+   "2609.02265",
+   "2609.05339",
+   "2609.08258",
+   "2609.08444",
+   "2609.12413",
+   "2609.22818",
+   "2609.28575",
+   "2609.32091",
+   "2609.33910",
+   "2609.34132",
+   "2609.34385",
+   "2610.00366",
+   "2610.02861",
+   "2610.03902",
+   "2610.04083",
+   "2610.04195",
+   "2610.05943",
+   "2610.07258",
+   "2610.07309",
+   "2610.07645",
+   "2610.09008",
+   "2610.11008",
+   "2610.11188",
+   "2610.13227",
+   "2610.14836",
+   "2610.17544",
+   "2610.17719",
+   "2610.18052",
+   "2610.20049",
+   "2610.21405",
+   "2610.23078",
+   "2610.24359",
+   "2610.24603",
+   "2610.25707",
+   "2610.28315",
+   "2610.28364",
+   "2610.28425",
+   "2610.28810",
+   "2610.30485",
+   "2610.31446",
+   "6caf23c8ecb9"
+  ]
+ },
+ "cards": [
+  {
+   "id": "11e249ea5276",
+   "title": "AGrail: A Lifelong Agent Guardrail with Effective and Adaptive Safety Detection",
+   "what_persists": "policy",
+   "scope": "cross-task",
+   "flags": [
+    "appendices_unread",
+    "denominator_unclear",
+    "register_hash_id_non_arxiv",
+    "url:https://arxiv.org/abs/2502.11448"
+   ],
+   "n_results": 8,
+   "L1_strong": [
+    {
+     "tag": "test-time-update",
+     "match": "test-time adapt"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "test-time adapt"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "corrupting memory"
+    }
+   ],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    },
+    {
+     "tag": "no-adversary",
+     "match": "No adaptive attacker"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2302.12173",
+   "title": "Not what you’ve signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Pro",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "no_quantified_success_rates",
+    "synthetic_application_only",
+    "v2_retitle_published_version"
+   ],
+   "n_results": 1,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned even across sessions'，机制与结论不变（支撑本综述的 memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2306.05499",
+   "title": "Prompt Injection attack against LLM-integrated Applications",
+   "what_persists": "policy",
+   "scope": "cross-user",
+   "flags": [
+    "defense_evaluation_qualitative_only",
+    "financial_loss_is_extrapolation_not_executed_attack",
+    "pilot_baseline_reported_in_words_not_digits"
+   ],
+   "n_results": 5,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "feedback-driven"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iterative"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "Iterative"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2308.01990",
+   "title": "From Prompt Injections to SQL Injection Attacks: How Protected is Your LLM-Integrated Web Applicatio",
+   "what_persists": "shared_state",
+   "scope": "mixed",
+   "flags": [
+    "appendix_not_in_corpus",
+    "cross_model_attack_results_qualitative",
+    "defense_effectiveness_is_qualitative",
+    "guard_overhead_percentages_are_time_ratios_not_count_proportions"
+   ],
+   "n_results": 14,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2312.11513",
+   "title": "Maatphor: Automated Variant Analysis for Prompt Injection Attacks",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "corpus_numbers_doubled_by_pdf_extraction",
+    "denominator_unclear",
+    "figure_only_results",
+    "no_code_release_stated",
+    "no_persistent_state"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2401.07612",
+   "title": "Signed-Prompt: A New Approach to Prevent Prompt Injection Attacks Against LLM-Integrated Application",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "denominator_unclear",
+    "experiment_covers_single_command_delete_only",
+    "no_appendix_in_corpus_reading_incomplete",
+    "no_code_or_data_release_stated",
+    "no_persistent_state",
+    "no_unprotected_baseline_measured"
+   ],
+   "n_results": 5,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2403.14720",
+   "title": "Defending Against Indirect Prompt Injection Attacks With Spotlighting",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "asr_values_partially_sourced_from_figure_captions",
+    "attack_corpus_is_synthetic_single_keyword_payload",
+    "no_persistent_state"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "zh-adaptive-attack",
+     "match": "自适应攻击"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击语料为合成关键字载荷攻击（非自适应"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2410.02644",
+   "title": "Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents",
+   "what_persists": "memory",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear",
+    "no_dedicated_limitations_section",
+    "paper_text_contains_duplicated_paragraph_5_4"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack families against the ReAct"
+    }
+   ],
+   "L3a": [],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poison the memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoning treats the memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoning on the agent framework and treats memory"
+    }
+   ],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2410.15236",
+   "title": "Jailbreaking and Mitigation of Vulnerabilities in Large Language Models",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "denominator_unclear",
+    "no_appendix_in_corpus",
+    "no_persistent_state",
+    "secondhand_numbers_reported_from_cited_works",
+    "survey_paper_no_own_quantified_experiments"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击方 LLM 迭代"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击方 LLM 对黑盒目标 LLM 迭代"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击方 LLM 迭代"
+    },
+    {
+     "tag": "zh-iterative",
+     "match": "对抗训练"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2410.23308",
+   "title": "Systematically Analysing Prompt Injection Vulnerabilities in Diverse LLM Architectures",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "figures_available_only_as_captions_in_corpus",
+    "no_persistent_state",
+    "single_expert_rater_for_attack_success",
+    "statistical_analyses_assisted_by_ChatGPT"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "adversary needs only ordinary user query"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "regression",
+     "match": "regression"
+    },
+    {
+     "tag": "regression",
+     "match": "regression"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E1_no_persistent_artifact",
+   "bucket_reason": "object.what_persists=none and no in-stream artifact-update statement"
+  },
+  {
+   "id": "2503.12188",
+   "title": "Multi-Agent Systems Execute Arbitrary Malicious Code",
+   "what_persists": "shared_state",
+   "scope": "single-session",
+   "flags": [
+    "appendix_content_elided_in_corpus",
+    "attack_paper_no_defense_proposed",
+    "background_paper",
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2503.18813",
+   "title": "Defeating Prompt Injections by Design",
+   "what_persists": "policy",
+   "scope": "cross-task",
+   "flags": [
+    "corpus_keeps_latex_digit_duplications_quotes_verbatim",
+    "denominator_unclear",
+    "gpt4o_mini_276_prose_only_no_v2_table_crosscheck",
+    "prose_next_best_toolfilter_8_vs_table7_spotlighting_5_persists_in_v2",
+    "prose_vs_table10_input_output_median_swap_persists_in_v2_prose_2.82_in_2.73_out_vs_table_median_2.73_in_2.82_out"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2506.08837",
+   "title": "Design Patterns for Securing LLM Agents against Prompt Injections",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "design_pattern_position_paper",
+    "no_empirical_evaluation",
+    "no_persistent_state",
+    "results_empty_no_experiments"
+   ],
+   "n_results": 0,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "zh-iterative",
+     "match": "对抗训练"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2506.12104",
+   "title": "DRIFT: Dynamic Rule-Based Defense with Injection Isolation for Securing LLM Agents",
+   "what_persists": "memory",
+   "scope": "single-session",
+   "flags": [
+    "paper_internal_inconsistency: 引言报 DRIFT 较 CaMeL 效用差 20.1%/12.5%，§3.2 报 21.8%/10.9%（均对 Figure 3），两处均按原文照录",
+    "utility_under_attack 分母论文未显式说明，按 §3.1 的 629 injection tasks 理解并已在各条目 how_counted 中注明",
+    "必要背景论文但含完整 AgentDojo 安全实验，results 按原文抽取非空"
+   ],
+   "n_results": 11,
+   "L1_strong": [
+    {
+     "tag": "nonstationary-update",
+     "match": "DRIFT Adapt"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2509.26354",
+   "title": "Your Agent May Misevolve: Emergent Risks in Self-evolving LLM Agents",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear",
+    "llm_judge_plus_human_for_unsafe_rate",
+    "redcodegen_item_count_unreported",
+    "static_memory_setting_for_agentnet"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    },
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "no iterative"
+    },
+    {
+     "tag": "no-adversary",
+     "match": "not a co-adapting attacker"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2510.02373",
+   "title": "A-MemGuard: A Proactive Defense Framework for LLM-based Agent Memory",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear",
+    "no_dedicated_limitations_section",
+    "topk_sensitive",
+    "utility_drop_on_ehr_11_7_points_vs_no_defense"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack) queries, GPT-4o-mini + DPR, Table 3 row 'GPT-4o-mini (DPR)', ReAct"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack queries"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoning: limited write access to the memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoning: no direct memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2510.17276",
+   "title": "Breaking and Fixing Defenses Against Control-Flow Hijacking in Multi-Agent Systems",
+   "what_persists": "policy",
+   "scope": "single-session",
+   "flags": [
+    "appendix_C_D_E_G_H_I_body_empty_in_corpus_only_headings_present",
+    "denominator_unclear",
+    "prose_vs_table_discrepancy_sec6.4_wordpress_o4-mini_50pct_vs_57pct_in_table2",
+    "table3_caption_task_count_inconsistent_with_sec5.1_and_table1_caption"
+   ],
+   "n_results": 13,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "Attacker access escalat"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2602.01146",
+   "title": "PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "llm_as_judge_any_of_three_inferences_counts_as_failure",
+    "memories_injected_wholesale_into_system_prompt",
+    "synthetic_memory_samples"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    }
+   ],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2602.17692",
+   "title": "Agentic Unlearning: When LLM Agent Meets Machine Unlearning",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear",
+    "no_adaptive_redteam_in_agent_loop",
+    "supplementary_tables_unread"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    },
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "no revelation under adaptive"
+    },
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "not an adaptive"
+    },
+    {
+     "tag": "no-adversary",
+     "match": "No adaptive multi-turn attacker"
+    }
+   ],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2602.20021",
+   "title": "Agents of Chaos",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_not_in_corpus_reading_incomplete",
+    "case_studies_7_to_11_absent_from_corpus",
+    "corpus_partial_only_sections_1_to_9",
+    "no_failure_rates_by_design",
+    "no_intervention_proposed"
+   ],
+   "n_results": 12,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2603.22350",
+   "title": "Session Risk Memory (SRM): Temporal Authorization for Deterministic Pre-Execution Safety Gates",
+   "what_persists": "policy",
+   "scope": "within-task",
+   "flags": [
+    "abstract_only_basis",
+    "arxiv_html_and_ar5iv_absent",
+    "fulltext_unavailable",
+    "no_limitations_extractable_from_abstract"
+   ],
+   "n_results": 2,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "Attack scenarios evaluated: slow-burn exfiltration, gradual privilege escalat"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "Multi-turn"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2604.15774",
+   "title": "MemEvoBench: Benchmarking Memory MisEvolution in LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "judge_gpt_5_2_validated_96_2_percent",
+    "no_dedicated_limitations_section",
+    "simplified_memory_update_rule"
+   ],
+   "n_results": 5,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "update rule appends the agent's response to the pool after each round"
+    },
+    {
+     "tag": "update-after-episode",
+     "match": "update rule (appending the agent's response each round"
+    },
+    {
+     "tag": "update-after-episode",
+     "match": "update rule: after each round"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    },
+    {
+     "tag": "no-adversary",
+     "match": "No adaptive attacker"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2604.16968",
+   "title": "On Safety Risks in Experience-Driven Self-Evolving Agents",
+   "what_persists": "experience",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear",
+    "figure_only_numeric_results",
+    "llm_judge_only",
+    "no_code_or_data_release_stated"
+   ],
+   "n_results": 7,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线自进化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线自进化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线自进化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线自进化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线自进化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线自进化"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    }
+   ],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2605.09315",
+   "title": "Do Self-Evolving Agents Forget? Capability Degradation and Preservation in Lifelong LLM Agent Adapta",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "appendices_unread",
+    "lightweight_domain_specific_cpe_instantiations",
+    "no_adversary_capability_erosion_only"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "catastrophic-forgetting",
+     "match": "catastrophic forgetting"
+    }
+   ],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No adaptive"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2606.05743",
+   "title": "Membrane: A Self-Evolving Contrastive Safety Memory for LLM Agent Defense",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendices_unread",
+    "attacker_and_scorer_shared_qwen3_235b",
+    "bootstrapped_memory_frozen_during_evaluation"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attackers across six modern mechanisms: iterative refine"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks we do not model are fully adapt"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iterative"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2607.10526",
+   "title": "Agents Don’t Just Agree, They Remember: Benchmarking Persistent Sycophancy in Self-Improving Persona",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "v1_card_lacked_limitations_field_filled_from_v4",
+    "v4_adds_rq4_prevention_and_correction_experiments_not_carded"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2607.19351",
+   "title": "OpenEvoShield: Dual Non-Stationary Continual Defense for Open-World Multi-Agent System Attacks",
+   "what_persists": "shared_state",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear",
+    "latex_duplication_in_corpus",
+    "manually_extracted_no_agent",
+    "shared_state_not_semantic_memory"
+   ],
+   "n_results": 4,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "随部署持续更新"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2607.23586",
+   "title": "Are You Still the Agent I Authorized? Earned Authority under a Fixed Ceiling for Evolving Agents",
+   "what_persists": "mixed",
+   "scope": "single-session",
+   "flags": [
+    "formal_paper_no_empirical_results"
+   ],
+   "n_results": 5,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2607.27080",
+   "title": "MemSecBench: Tracking Agent Memory Poisoning from Persistence to Consequence and Repair",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "native_harness_specific_comparisons_within_harness",
+    "no_dedicated_limitations_section",
+    "single_run_per_configuration_case"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "No mechanism-specific or adaptive"
+    }
+   ],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2608.00426",
+   "title": "MAPLE-Guard: Memory-Aware Link Enforcement Against Memory-Link Poisoning in Multi-Agent Systems",
+   "what_persists": "memory",
+   "scope": "mixed",
+   "flags": [
+    "metric_renamed_asr3_to_rda3_in_v2",
+    "v2_rewrites_observations_obs1_obs7_and_adds_obs4_obs6"
+   ],
+   "n_results": 7,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "updates (Q-value style) after each task"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2608.01558",
+   "title": "Securing Agentic AI: From Per-Action Checks to Trajectory Assurance",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "no_denominators_applicable_no_percentages_extracted",
+    "no_original_experiments"
+   ],
+   "n_results": 0,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "演化中"
+    }
+   ],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2608.01679",
+   "title": "When Memory Becomes Authority: Benchmarking Authority Collapse at the Memory Consolidation Boundary",
+   "what_persists": "memory",
+   "scope": "cross-task",
+   "flags": [
+    "appendix_partially_read (Appendix D/E per-cell tables and B/C implementation details scanned via captions and targeted reads, not line by line)",
+    "latex_number_artifacts_in_corpus (e.g. '4,4534{,}453' in §4.4)"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.01759",
+   "title": "Benign Alone, Harmful Together: Exploiting Experience Composition in Self-Evolving LLM Agents",
+   "what_persists": "experience",
+   "scope": "cross-session",
+   "flags": [
+    "attack_only_no_defense_evaluated",
+    "figure_values_not_in_text",
+    "limitations_not_stated"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "closed-loop"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者仅任务接口交互+只读经验观察"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击效力依赖多经验联合组合而非单一改写"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2608.03509",
+   "title": "SkillJack: Persistent Skill Backdoors in Self-Evolving Agents",
+   "what_persists": "skill",
+   "scope": "cross-task",
+   "flags": [
+    "appendix_a4_signature_regex_lists_and_appendix_c_case_cards_not_present_in_corpus_text"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack-oriented queries"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack-oriented queries"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack-oriented queries"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack-oriented task queries"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned library; A2S: 30 DOC skills evaluated over 20 clean tasks; rule"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2608.05563",
+   "title": "When Experience Becomes Instruction: Trajectory Poisoning in Self-Evolving Agent Skill Systems",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [
+    "appendix_not_read",
+    "corpus_contains_duplicated_latex_tokens_e.g._n=30n=30_quotes_copied_verbatim",
+    "figures_present_as_captions_only_in_corpus"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.06984",
+   "title": "HarnessSafe: Evaluating Safety Across Persistent Carriers in Agent Harnesses",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "limitations_only_in_appendix",
+    "no_defense_proposed_benchmark_only"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.09732",
+   "title": "ColluSkill: Adversarial Cross-Skill Composition for Evading Agent Skill Scanners",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [
+    "appendix_referenced_but_not_in_corpus",
+    "denominator_unclear"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.12851",
+   "title": "Practice Makes Unsafe: Skill Misevolution in Self-Improving LLM Agents",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "updates the skills after every three-task"
+    },
+    {
+     "tag": "nonstationary-update",
+     "match": "drift across adapt"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "MANUAL",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.15012",
+   "title": "SysEvolve: An AI-native, safe, autonomous adversarial attack-defense co-evolutionary system",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "coevolution_loop_designed_not_evaluated",
+    "defense_observe_only_in_agent_evals",
+    "denominator_todo_s73",
+    "no_attack_readaptation_measurement",
+    "production_results_not_reproducible"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack was blocked or that the observe"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击生成与自适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击能力/防御能力/基础设施），回路级与'攻击对演化防御再适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击->防御微调、防御反馈"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无测量（无轮次化攻防对抗"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2608.21159",
+   "title": "AID-Guard: Stateful Authorization for Delegated Agent Effects",
+   "what_persists": "shared_state",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_pdf_extraction_artifacts_in_numbers: duplicated tokens in tables/prose (e.g. \"−43.8-43.8\", \"−0.7-0.7 pp\", \"2.35×\\times\") originate from PDF-to-text extraction, not the paper",
+    "frontier_utility_run_lacks_seed: the 44-case/864-episode frontier rerun exposes no generation seed, so its absolute utility is not directly comparable to the main Table V run (stated by authors)"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "in-the-loop"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.25776",
+   "title": "EVOMAL: Self-Poisoning in Self-Evolving Coding Agents",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [
+    "appendix_read_20261025: Appendices A-E (incl. previously-skimmed B, C, E) fully read in corpus; per-round cascade pool confirmed as N=153 via D.5 '0/765 opportunities per model across rounds 1-5' = 5 x 153",
+    "corpus_figures_caption_only: Figure 3/4/7 panel curves appear as captions only in the corpus; numeric curve values beyond those quoted in prose are not recoverable"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2608.27299",
+   "title": "When Context Gets Root: Privilege Escalation in LLM Harnesses",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "appendix_not_read",
+    "denominator_unclear",
+    "no_dedicated_limitations_section",
+    "prose_vs_table_discrepancy_claude_code_full_access_asr_100_vs_86.7",
+    "prose_vs_table_discrepancy_codex_auto_pr_asr_70.0_vs_72.2"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack): tool-to-user and tool-to-system escalat"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack success is measured over all execution attempts; post-escalat"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.01222",
+   "title": "What's in Your Agent's Context? Context Privilege Escalation Attacks against AI Agent Harness",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack paths are only a lower bound on the privilege-escalat"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.01836",
+   "title": "Agent Memory Is a Surface for Endogenous Authorization Laundering",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [
+    {
+     "tag": "test-time-update",
+     "match": "Incremental updat"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.01852",
+   "title": "The Memory Trust Gap: Capability-Dependent Failures in Persistent-Memory Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_is_latex_extracted_text_with_interleaved_math_tokens",
+    "no_adversary_threat_model_paper_is_empirical_capability_study"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "no adaptive"
+    },
+    {
+     "tag": "no-adversary",
+     "match": "no adaptive or memory-poisoning attacker"
+    }
+   ],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.02265",
+   "title": "CAPTURE: Disentangling Preference Drift from Memory Poisoning in Personalized LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_contains_latex_duplication_artifacts (e.g. 'p=0.011p=0.011'); quotes chosen to avoid affected spans",
+    "denominator_unclear",
+    "denominator_unclear: adaptive-attack ASR (24.7%) attempt count not stated in Table 2 or Appendix E (the 32-candidate paraphrase search is the per-attack optimization pool, not an attempt count; '192 poisoning attempts' in Figure 1 covers fixed-policy contamination only; Appendix E 'Using the same adaptive attempts for both methods' gives no count)"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "adversary cannot modify weights, read the private ledger, or observe"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.05339",
+   "title": "Does Your Agent’s Memory Survive a Model Upgrade? A Controlled Study of Memory Portability",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim",
+    "figures_present_as_captions_only_in_corpus",
+    "no_adversary_threat_model_results_are_memory_portability_reliability_measurements",
+    "version_assumed_v1",
+    "必要背景论文：results 为记忆可用性/可移植性受控测量，非对抗安全实验；按原文抽取非空"
+   ],
+   "n_results": 11,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.07529",
+   "title": "CoER: Defending against Adaptive Indirect Prompt Injection via Adversarial Co-Evolution and Refineme",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "demoted_to_background_weight_space",
+    "denominator_reported_main_only",
+    "deployment_defense_frozen",
+    "same_loop_training_time_plus_reattack_eval",
+    "single_run_ablation",
+    "weight_space_coevolution_not_semantic_memory"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attackers that elicit more effective refine"
+    },
+    {
+     "tag": "zh-adaptive-attack",
+     "match": "自适应攻击"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者接触多样防御行为以适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者挑战教师智能体、按教师公开执行反馈适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者的确在针对防御行为适应"
+    },
+    {
+     "tag": "zh-iterative",
+     "match": "多轮攻击"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.08258",
+   "title": "Revoked but Still Authoritative: An Empirical Study of Revocation Enforcement in Agent-Memory System",
+   "what_persists": "memory",
+   "scope": "mixed",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.08444",
+   "title": "Safe Task Planning with Long-Term Graph Memory for Embodied Agents",
+   "what_persists": "memory",
+   "scope": "single-session",
+   "flags": [
+    "ablation_and_hazardfree_denominators_inferred_from_table6_and_table12",
+    "background_paper",
+    "latex_rendering_artifacts_in_corpus_numbers",
+    "no_variance_or_ci_reported"
+   ],
+   "n_results": 11,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.08747",
+   "title": "MemSentry: A Framework for Detecting Persistent Memory Poisoning in Agentic AI",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_not_read",
+    "denominator_unclear",
+    "evaluation_on_synthetic_GPT-4_generated_scenarios_only"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "regression",
+     "match": "Regression"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2609.12413",
+   "title": "SoK: Rethinking Jailbreaking in the Era of Agentic AI: Attacks, Defenses, and Practical Consideratio",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "agentharm_tables_9_11_trial_counts_not_stated",
+    "denominator_unclear",
+    "no_appendix_in_corpus_ends_with_references_and_author_biographies",
+    "no_code_or_data_release_stated",
+    "sok_necessary_background_results_are_the_sok_own_controlled_study_tables_2_11",
+    "xstest_asr_percentages_not_integer_multiples_of_stated_200_harmful_prompts"
+   ],
+   "n_results": 21,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks = 450 attack queries"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击，而部署中的代理在长轨迹上运行并随时间积累状态——自适应"
+    },
+    {
+     "tag": "zh-iterative",
+     "match": "对抗攻击"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.13734",
+   "title": "PolicyMem: Geometric Policy Memory for LLM Governance",
+   "what_persists": "policy",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_numeric_duplication_artifact",
+    "loop_convergence_and_loto_population_sizes_not_stated",
+    "no_code_or_data_release_stated",
+    "percent_improvements_derived_from_table_1_averages_no_sample_n_stated"
+   ],
+   "n_results": 11,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "closed-loop"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2609.13889",
+   "title": "When Malicious Instructions Persist: Persistent Memory Poisoning Attack on Harness-Based Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "limitations_not_stated"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisons persistent memory of harness"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poison persistent memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "Poisoned memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned, the prompt-level defense"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2609.17320",
+   "title": "Emergence World: Adversarial Stress-Testing of Long-Horizon Multi-Agent Systems",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "no adaptive"
+    }
+   ],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.22818",
+   "title": "The Price of Safety: Benign-Case Utility and Token Overhead of Memory-Poisoning Defenses in LLM Agen",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "latex_duplication_in_corpus_quotes",
+    "v2_retracted_v1_stacking_offset_interpretation"
+   ],
+   "n_results": 5,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.28575",
+   "title": "TWIST: A Proposed Benchmark for Intervention Quality in Conversational Memory, with a Human-Validate",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "annotation_involved_benchmark_author_author_led_adjudication_disclosed",
+    "only_track_B_instantiated_tracks_A_C_D_specified_for_v2",
+    "reader_model_and_memory_architecture_confounded",
+    "vendor_authored_benchmark_author_bias_disclosed"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adaptive-adversary",
+     "match": "no adaptive"
+    },
+    {
+     "tag": "no-adversary",
+     "match": "no adaptive attacker"
+    }
+   ],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.31186",
+   "title": "Evolutionary Safety of Recursive Self-Improving AI: Taxonomy, Risk Discovery, and Evaluation",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "illustrative_numbers_only",
+    "no_appendix_in_corpus",
+    "no_denominators_reported",
+    "no_empirical_results"
+   ],
+   "n_results": 0,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "frozen-control",
+     "match": "frozen-update causal comparison"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.32091",
+   "title": "Memory as Middleware for Self-Improving AI Agents",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "background_paper",
+    "denominator_unclear",
+    "figures_present_as_captions_only_in_corpus",
+    "no_appendix_in_corpus",
+    "no_formal_threat_model: 论文未定义对手；adversary=unclear，capabilities 为从 §2.2/§3.5/§3.7 原文引出的隐含威胁，未经实验",
+    "no_safety_evaluation: results 为 AppWorld 完成率与宿主可移植性等可靠性/工程测量，非对抗安全实验；memory poisoning 与跨租户泄漏仅作设计动机引用（§3.7）",
+    "preliminary_technical_report_under_revision: 论文自述内容仍在修订，引用前需查新版本",
+    "version_assumed_v1"
+   ],
+   "n_results": 4,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无任何对抗"
+    }
+   ],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.33910",
+   "title": "When Consent Outlives Context: Residual Authority Replay in Long-Lived Agents",
+   "what_persists": "policy",
+   "scope": "mixed",
+   "flags": [
+    "conditional_rate_denominators_not_reported",
+    "live_per_agent_deltaASR_values_only_in_figure3"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.34132",
+   "title": "From Attack Success to Attack Severity: Counterfactual Memory Attacks on LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_math_duplicated_rendering"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack construction only: runs resettable isolated copies of the agent and observe"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks receive optimality certificates, with adapt"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.34151",
+   "title": "Self-Evolving Agents via Likelihood-Guided Tool-Space Optimization",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim（如 0.870.87、10.7110.71、Top-KK 为排版粘连，引文逐字复制）",
+    "gta_eval_112_stated_by_paper_but_type_counts_sum_130（read_arith 65+web_fact 35+count_arith 30=130≠112，math_eq 17 不用；以论文原话 112 为分母）",
+    "no_adversary_threat_model（adversary=none 为合法取值；capability 字段留空）",
+    "no_appendix_tables_missing_in_corpus（Table 4/5/7/11 等以散排文本呈现，Table 15/16 部分单元格以 caption+正文形式给出）",
+    "no_safety_experiments",
+    "reproducibility_planned_not_released（作者计划发布实现/配置/评测脚本，论文中无可用链接，code/data 记 null）",
+    "必要背景论文：results 为任务准确率/持久性/token 成本测量，非对抗安全实验；按 SPEC『results 可为空数组』本可留空，但论文确有可逐字验证的主结果，按原文抽取非空，safety_property.type=none"
+   ],
+   "n_results": 10,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2609.34385",
+   "title": "Just-In-Time Agent Memory with Runtime Agentic Research",
+   "what_persists": "memory",
+   "scope": "mixed",
+   "flags": [
+    "background_paper_no_adversary（adversary=none 为合法取值；capabilities 留空）",
+    "benchmark_eval_n_not_stated（Table 1/9/11 成绩与百分比的每基准评测集大小语料未给出，对应条目 denominator=null）",
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim（§3.1.2 校验句在语料中形如 '59.4 %' 后跟 '59.4\\%'、'16,794 16{,}794'，PDF 排版粘连；引文按语料逐字复制）",
+    "denominator_unclear",
+    "figures_present_as_captions_only_in_corpus（Figure 1–7 仅标题级描述，无渲染图像可核）",
+    "no_safety_experiments"
+   ],
+   "n_results": 10,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2609.34438",
+   "title": "Remember by Asking: Retrieval-Induced Memory Evolution for LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "limitations_not_stated",
+    "no_security_experiments"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "zh-attack-on-artifact",
+     "match": "污染的记忆"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2609.34463",
+   "title": "CoDeL: Co-Evolutionary Defense against Indirect Prompt Injection in LLM Agents",
+   "what_persists": "policy",
+   "scope": "cross-task",
+   "flags": [
+    "demoted_to_background_weight_space",
+    "denominator_unclear",
+    "latex_duplication_in_corpus",
+    "manually_extracted_no_agent",
+    "weight_space_not_persistent_state"
+   ],
+   "n_results": 3,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "每轮更新（权重空间）；攻击侧为共演化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "每轮 GDPO 更新 + 共演化"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "每轮更新"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    }
+   ],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.35596",
+   "title": "SEABench: Benchmarking Endogenous Misalignment In Self-Evolving Agents",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    }
+   ],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.36580",
+   "title": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear",
+    "num_runs_unspecified"
+   ],
+   "n_results": 8,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "updated after each episode"
+    },
+    {
+     "tag": "update-after-episode",
+     "match": "updates take effect only on subsequent episode"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "test-time updat"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "test-time updat"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "continual adapt"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "continual adapt"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "continual adapt"
+    },
+    {
+     "tag": "artifact-updated",
+     "match": "Harness and Guard) is updated"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.36603",
+   "title": "Self-Evolving Defense: Continual Security Policy Learning for LLM Agents",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "corpus_inline_math_duplication",
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "Self-Evolv"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "Adversary pursuing a harmful objective g may perturb either channel: the user query"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attackers (AutoDAN-Turbo, X-Teaming) observe"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacked at the fixed query"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack samples that differ substantially from previously observe"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack samples that differ substantially from previously observe"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "frozen-control",
+     "match": "frozen-memory control"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2609.38372",
+   "title": "Self-Evolving Harness on Multiple Tasks with the Agent as Its Own Optimizer",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "appendix_listings_not_in_corpus",
+    "background_paper_no_safety_experiments",
+    "metrics_mix_success_rates_and_scaled_official_scores"
+   ],
+   "n_results": 8,
+   "L1_strong": [
+    {
+     "tag": "test-time-update",
+     "match": "continual train"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "Continual train"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "Continual Train"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "Continual Train"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "Self-evolv"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "multi-turn"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "regression",
+     "match": "Regression"
+    },
+    {
+     "tag": "regression",
+     "match": "regression"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.00093",
+   "title": "Safety in Self-Evolving Agents: A Survey",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "appendix_absent_from_corpus_reading_incomplete",
+    "appendix_documented_items_unverifiable_in_this_corpus",
+    "corpus_truncated_after_section3_at_table1_header",
+    "survey_paper_no_own_quantified_experiments"
+   ],
+   "n_results": 3,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "共同演化"
+    }
+   ],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.00347",
+   "title": "Authorization for Self-Modifying AI Agent Populations: Conserving Authority across Replacement, Fork",
+   "what_persists": "policy",
+   "scope": "cross-session",
+   "flags": [
+    "artifact_executables_outside_public_preprint_archive_no_code_link_in_corpus",
+    "caller_authentication_public_key_left_as_A2_deployment_premise",
+    "external_adapter_replays_not_independent_evolution_runs",
+    "logical_baselines_are_stated_abstractions_not_third_party_runs",
+    "multi_parent_merge_outside_core_formal_implemented_executed_result"
+   ],
+   "n_results": 16,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "zh-frozen-control",
+     "match": "冻结 32 例注册语料；四个逻辑基线"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.00366",
+   "title": "What Should an Agent Remember? Disentangling Retention from Retrieval in Bounded-Memory Evaluation",
+   "what_persists": "memory",
+   "scope": "single-session",
+   "flags": [
+    "no_appendix_in_corpus"
+   ],
+   "n_results": 13,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.01349",
+   "title": "PACE: Provenance-Aware Capability Enforcement for Tool-Using LLM Agents",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "frozen-control",
+     "match": "frozen paired cases, 9336 scored outcomes, arm"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned memory entries; on the defense"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.02861",
+   "title": "Containing the Autonomous Operator: A Defense-in-Depth Framework and Reference Architecture for Secu",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_absent",
+    "cited_numbers_not_own_measurements",
+    "qualitative_evaluation_only"
+   ],
+   "n_results": 4,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者在场，模型错误、幻觉或反馈"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.02920",
+   "title": "HASTE: Evolving Agent Harnesses Against Emerging Attacks Using Sparse Evidence",
+   "what_persists": "policy",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear",
+    "manually_extracted_no_agent",
+    "table_results_not_extracted"
+   ],
+   "n_results": 2,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "每轮由规格生成与攻击用例生成对抗互促后更新"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.02996",
+   "title": "Evolutionary Computation for Trustworthy AI: From Attacks and Defenses to Self-Evolving Era",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "appendix_not_present_in_corpus",
+    "limitations_are_field_level_not_survey_self",
+    "no_quantitative_results_reported_in_survey_prose",
+    "no_secondhand_quantitative_numbers_found_in_corpus",
+    "reading_complete_false_no_appendix_in_corpus",
+    "survey_card_all_results_are_synthesis_not_experiments"
+   ],
+   "n_results": 10,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "updates are often evaluated on only a limited set of task"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "continual learn"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "Self-Evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "Self-Evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "协同演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "query-budget",
+     "match": "query budget"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者仅能获得黑盒反馈（预测标签、分数或生成响应），适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击/防御候选在给定查询/评估预算内迭代"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击研究的局限：攻击表现不只取决于进化算法，还取决于表示、适应"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.03020",
+   "title": "DyadMem: A Long-Term Memory Benchmark of How Agents Work with Users",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim",
+    "dataset_fully_synthetic",
+    "denominator_unclear",
+    "figures_only_as_captions_in_corpus",
+    "limitations_not_stated"
+   ],
+   "n_results": 24,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "Update 'is evaluated on the 20,590 session"
+    },
+    {
+     "tag": "update-after-episode",
+     "match": "Update difference pooled per episode over evaluated session"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.03902",
+   "title": "When Evidence Changes: Evaluating Memory Repair and Re-reading in Language-Model Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_partially_read_main_body_complete_tables_4_and_14_spot_checked"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.04083",
+   "title": "Self-Propagating Misalignment in LLM Agents, and Why Auditing or Disabling Memory Is Not Enough",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.04195",
+   "title": "MemLeak: Cross-User Semantic Leakage in Multi-Tenant AI Agent Memory",
+   "what_persists": "memory",
+   "scope": "cross-user",
+   "flags": [
+    "corpus_contains_duplicated_latex_artifacts_eg_+0.416+0.416_and_n=10n=10_quotes_preserved_verbatim",
+    "table_cells_line_wrapped_and_latex_duplicated_in_transcript_tables"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attacker-knowledge baselines of increasing query"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacker knowledge: 10% (organic) →\\to 40% (domain keyword bag) →\\to 80% (per-query"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.05943",
+   "title": "Runaway Reaction: When Benign Skills Compose into Malicious Behavior",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [
+    "appendix_c_representative_prompts_absent_from_corpus",
+    "figure_numeric_data_absent_from_corpus",
+    "limitations_not_stated",
+    "referenced_tables_4_and_4c_absent_from_corpus"
+   ],
+   "n_results": 5,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.07258",
+   "title": "Lineage-Aware Memory Governance: A Derivation-Gated Framework for Privacy-Preserving Column-Level Ac",
+   "what_persists": "memory",
+   "scope": "cross-user",
+   "flags": [
+    "appendix_not_in_corpus",
+    "denominator_unclear"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.07309",
+   "title": "The Right Memory in the Wrong Context: Verifying Retrieval Admissibility in Long-Term Agent Memory",
+   "what_persists": "memory",
+   "scope": "mixed",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "frozen-control",
+     "match": "frozen-route reader comparison"
+    },
+    {
+     "tag": "frozen-control",
+     "match": "frozen-route reader comparison"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.07639",
+   "title": "HarnessSecurity-Bench: Do Security Mechanisms Really Protect Coding Agent Harnesses?",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "appendix_b_body_absent_in_corpus_only_heading",
+    "no_persistent_state",
+    "pif_overall_row_only_covers_single_paired_comparison_gptme",
+    "table6_vs_appendix_table10_rounding_drift: NI ΔASR 56.3 vs 56.2; CDL ASR-on 1.3% vs 1.2% (3/240)"
+   ],
+   "n_results": 13,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ON/OFF"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.07645",
+   "title": "SkillPoison: Progressive Skill Poisoning via Successful Experiences",
+   "what_persists": "skill",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.07935",
+   "title": "SIGMA: Self-Improving Alignment Generalization from a Model Spec",
+   "what_persists": "none",
+   "scope": "cross-task",
+   "flags": [
+    "background_paper",
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim",
+    "figures_present_as_captions_only_in_corpus",
+    "no_code_or_data_release_stated",
+    "no_persistent_state",
+    "table_number_quotes_use_contiguous_table_rows（Table 1/Table 2 的'表题+行'拼接因中间隔 [TABLE] 标记与表头无法通过语料子串匹配，quote 改用相邻表行逐字文本，表号与表题写入 locator/claim）"
+   ],
+   "n_results": 10,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "跨轮复用与更新"
+    },
+    {
+     "tag": "zh-artifact-update",
+     "match": "更新的策略/规则库"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "zh-adaptive-attack",
+     "match": "自适应攻击"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者：评测情境施加的是基准内置的非自适应"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无对抗性/越狱攻击者：未测对自适应"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.09008",
+   "title": "Whose Memory Is It? Scope-Aware Commit Rules for Long-Term LLM Memory",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.09832",
+   "title": "SkillForge: Co-Evolving Skills and Agents via Dynamic Skill Lifecycles",
+   "what_persists": "skill",
+   "scope": "cross-task",
+   "flags": [
+    "no_code_url_stated"
+   ],
+   "n_results": 9,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "协同演化"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.11008",
+   "title": "Why LLM Agents Favor Their Group: Stakes, Observed Norms, and Reputation",
+   "what_persists": "memory",
+   "scope": "single-session",
+   "flags": [
+    "corpus_numbers_latex_duplicated",
+    "denominator_unclear",
+    "no_appendix_in_corpus"
+   ],
+   "n_results": 17,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.11188",
+   "title": "What to Admit and How to Present: Governing Persistent Memory in LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_supplements_S2_S10_referenced_but_absent_from_corpus",
+    "corpus_numbers_latex_duplicated",
+    "external_budget_matched_and_probe_results_not_separately_preregistered"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.11270",
+   "title": "Gated Memory: Admission-Controlled Memory Formation for Conversational AI",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "corpus_numbers_latex_duplicated",
+    "denominator_unclear",
+    "no_appendix_in_corpus"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "regression",
+     "match": "regression"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.11781",
+   "title": "Skill-V: Verifiable Self-Evolving Skill Library for Interactive Agents",
+   "what_persists": "skill",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 15,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "共同演化"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "regression",
+     "match": "regression"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.13227",
+   "title": "Understanding and Mitigating Cross-Session Attacks via Persistent Artifacts in Agent Skill Compositi",
+   "what_persists": "shared_state",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_not_read"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attacker cannot observe execution results or adapt"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.13267",
+   "title": "Forgetting is Not Always Bad: A Neuro-Inspired Memory Repair Mechanism for Poisoned LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-task",
+   "flags": [
+    "code_availability_claimed_no_url",
+    "denominator_unclear",
+    "minor_text_table_number_mismatch",
+    "no_variance_reported"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned <key,value> records into the agent memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.14431",
+   "title": "MemForm: Benchmarking Memory Formation Poisoning in LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_partially_read: A.1-A.4 prompt/validation details, B.1 Tables 12-13 numbers, B.8 CI tables and B.9 case examples were skimmed, not read line by line"
+   ],
+   "n_results": 7,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "updater: on common eligible queries, batch"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "online updat"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "Poisoning) plus evaluation of five defenses (Keyword Filter, LLM-Judge, Memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoned-subset memory vs full-pool memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "Poisoning transfers beyond policy-based memory"
+    },
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoning objectives and exclude memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.14488",
+   "title": "Names Are Not Objects: Object-Bound Confinement for Compromised AI Coding Agents",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "corpus_keeps_latex_markers_verbatim",
+    "no_persistent_state"
+   ],
+   "n_results": 10,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks succeed, escalat"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击成功、14 个升级"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "regression",
+     "match": "regression"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    },
+    {
+     "tag": "zh-regression",
+     "match": "回归"
+    }
+   ],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E1_no_persistent_artifact",
+   "bucket_reason": "object.what_persists=none and no in-stream artifact-update statement"
+  },
+  {
+   "id": "2610.14515",
+   "title": "SEPM: Self-Evolving Procedural Memory Grounded in Task Graphs for Multi-Agent Collaboration",
+   "what_persists": "skill",
+   "scope": "cross-task",
+   "flags": [
+    "appendix_present_and_read_in_corpus（附录 A-B.6 方法细节、C.1-C.5 协议、D.1-D.2 补充结果均存在于语料并已通读；Figure 1-5/Algorithm 1 图体不在语料中，仅 [CAPTION] 文本与 §5.2 prose 数字）",
+    "latex_rendering_artifacts_in_corpus（正文数字存在排版粘连如 4.894.89、0.70.7、4.44.4；本卡引文均逐字复制且选自未受影响区间，干净数值取自表格行或去重 prose）",
+    "no_safety_experiments（纯性能论文：safety_property.type=integrity 指机制层的记忆池完整性门控 Eq.8/9/12-16，未作为安全性质实验评估，作者明示不构成安全保证）",
+    "single_run_per_condition（C.4：每任务条件仅评测一次 base seed 0，无多种子/方差；D.2：组件交互对比为单次运行的描述性统计）"
+   ],
+   "n_results": 12,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线协调与程序记忆演化"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "Self-Evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无对手"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.14836",
+   "title": "MetaCascade: End-to-End Attacks on Agent Skills via Metadata-Only Poisoning",
+   "what_persists": "skill",
+   "scope": "cross-task",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "Iterative"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iteratively"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iterative"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iterative"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "Ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.17544",
+   "title": "Many Steps into One: Reasoning Contraction and the Limits of Safe Memory Reuse for LLM Agents",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "single_decoding_per_instance_version",
+    "utility_gain_benchmark_specific_per_authors"
+   ],
+   "n_results": 21,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "closed-loop"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adversary",
+     "match": "no attacker"
+    }
+   ],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.17659",
+   "title": "Can Agents Truly Forget? Explore Machine Unlearning for LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendices_unread",
+    "offline_snapshot_no_live_web",
+    "two_8b_model_families_only"
+   ],
+   "n_results": 6,
+   "L1_strong": [
+    {
+     "tag": "test-time-update",
+     "match": "continuously updat"
+    },
+    {
+     "tag": "test-time-update",
+     "match": "continuously updat"
+    }
+   ],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.17719",
+   "title": "Keep Your Receipts: Trustworthy Cleanup of Agent-Built Knowledge Graphs",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_not_read"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.18052",
+   "title": "Can Agents Forget When Asked? A Benchmark for Memory Unlearning in LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.18792",
+   "title": "SEAR: Self-Evolving Agentic Robotics",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 26,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "self-evolv"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.19005",
+   "title": "CyberArena: Benchmarking AI Agents in Live Symmetric Attack-and-Defense Combat",
+   "what_persists": "none",
+   "scope": "within-task",
+   "flags": [
+    "benchmark_only_no_persistent_state_mechanism",
+    "denominator_partially_reported",
+    "llm_audited_trajectories"
+   ],
+   "n_results": 5,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attackers to adapt"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击条件，攻击方必须对演化后的防御重新适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击流量监控（自写 packet sniffer）也被观察"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击方重新适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击方对演化后防御的再适应"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.19422",
+   "title": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety",
+   "what_persists": "policy",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear",
+    "manually_extracted_no_agent",
+    "weight_space_not_persistent_state"
+   ],
+   "n_results": 6,
+   "L1_strong": [],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "演化中"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "红队攻击者初始化后与防御者联合对抗训练：攻击者依据攻击结果反馈"
+    },
+    {
+     "tag": "zh-iterative",
+     "match": "对抗训练"
+    },
+    {
+     "tag": "zh-iterative",
+     "match": "对抗训练"
+    },
+    {
+     "tag": "zh-iterative",
+     "match": "对抗训练"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.20049",
+   "title": "CoRedSkill: Stealthy Skill Composition Attacks via AST-Guided Injection",
+   "what_persists": "skill",
+   "scope": "mixed",
+   "flags": [
+    "single_run_per_case_no_variance_reported (each case runs once in a separate sandbox per audit configuration)"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "attack specifications and workflow interfaces; automatic adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack specifications and workflow interfaces, and automatic adapt"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.20845",
+   "title": "Evolving Together, Failing Apart: The Skill-Policy Co-evolution Trap in Self-Improving Agents",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear",
+    "figures_only_as_captions_in_corpus",
+    "latex_mangled_duplicate_numbers_in_corpus_quotes_copied_verbatim"
+   ],
+   "n_results": 19,
+   "L1_strong": [
+    {
+     "tag": "artifact-updated",
+     "match": "policy is retrained"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adversary",
+     "match": "no adversary: no attacker"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.21405",
+   "title": "MemCut: Every Secret Leaves a Trail in the Long-Term Memory of LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "dedicated_erasure_methods_not_evaluated"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.22959",
+   "title": "SAFE-Mem: Secure Agentic Memory with Fine-Grained Authority and Governance-Aware Retrieval",
+   "what_persists": "memory",
+   "scope": "mixed",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "adversary and plant records carrying its own authority through ordinary queries"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack query"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poison but keeps it out of acting contexts: the injected memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.23078",
+   "title": "Cryptographically Secure Agent-to-Agent Communication in Multi-Agent Systems",
+   "what_persists": "shared_state",
+   "scope": "mixed",
+   "flags": [
+    "background_paper",
+    "figures_present_as_captions_only_in_corpus",
+    "no_appendix_in_corpus",
+    "no_code_or_data_release_stated",
+    "no_safety_experiments",
+    "persistent_state_is_identity_ledger_infrastructure_not_agent_memory"
+   ],
+   "n_results": 4,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.23559",
+   "title": "An Interactive GraphRAG Workspace for Reifying, Auditing, and Steering Conversational AI Memories",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "appendix_not_in_corpus",
+    "denominator_unclear"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [],
+   "L3b": [
+    {
+     "tag": "zh-attack-on-artifact",
+     "match": "投毒幻觉被大幅抑制（本文与记忆"
+    }
+   ],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "没有对手"
+    }
+   ],
+   "candidate": true,
+   "bucket": "E3_author_disclaims_adversary",
+   "bucket_reason": "not_covered disclaimer: 没有对手"
+  },
+  {
+   "id": "2610.24359",
+   "title": "Can Agents Keep Secrets They Were Never Told? Benchmarking Latent Privacy Risks Across Sessions with",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "mitigations_applied_post_hoc_to_frozen_inputs",
+    "single_fixed_reader_model_qwen3.5-9b",
+    "synthetic_cases_only_no_real_user_data"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "frozen-control",
+     "match": "frozen, not as a sequential defense"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.24453",
+   "title": "Hippo: Training-Free Agent Self-Evolution via Hippocampal Replay",
+   "what_persists": "experience",
+   "scope": "cross-task",
+   "flags": [
+    "figure_only_numeric_results",
+    "no_code_or_data_release_stated"
+   ],
+   "n_results": 17,
+   "L1_strong": [
+    {
+     "tag": "update-after-episode",
+     "match": "updates across tasks; it does not establish performance on exceptionally long individual task"
+    },
+    {
+     "tag": "zh-in-stream-update",
+     "match": "在线设定的适配"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自演化"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无记忆投毒/对抗性经验/攻击者"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.24603",
+   "title": "Refuse the Harm, Complete the Task via Graph-of-Rules Planning for LLM-Enabled Robots",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "no_persistent_state"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack raises the ASR of every baseline relative to the non-adapt"
+    },
+    {
+     "tag": "zh-adaptive-attack",
+     "match": "自适应攻击"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击：多轮迭代改写"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者据此迭代改写"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击）；generate-judge-refine ≤7 迭代"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击者对防御系统直接跑 PAIR 并在每次尝试后获得内部决策反馈"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击；RuleGraph 暴露的反馈"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击使所有基线 ASR 相对非自适应"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.24896",
+   "title": "Peer Pressure: Execution-Verified Co-Evolution of Attacker and Defender Populations for Code Securit",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "demoted_to_background_weight_space",
+    "denominator_partially_reported",
+    "deployment_defense_frozen",
+    "evaluation_static_attack_sets",
+    "math_rendering_duplicated_in_corpus",
+    "weight_space_coevolution_not_semantic_memory"
+   ],
+   "n_results": 6,
+   "L1_strong": [
+    {
+     "tag": "zh-in-stream-update",
+     "match": "跨轮复用于 matched Blue 更新"
+    },
+    {
+     "tag": "zh-artifact-update",
+     "match": "改写器，针对外部 WildGuard"
+    },
+    {
+     "tag": "zh-artifact-update",
+     "match": "改写、Blue=guard"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "self-evolve",
+     "match": "co-evolv"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "共演化"
+    }
+   ],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adapting opponent"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "攻击再做适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "对手不适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "对手是否适应"
+    },
+    {
+     "tag": "zh-attacker-iterates",
+     "match": "对手则保持有界（斜率不显著）——攻击确实在针对演化的防御重新适应"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "zh-frozen-control",
+     "match": "冻结对方委员会+解码预算）'的同角色 peer 做留一比较"
+    },
+    {
+     "tag": "zh-frozen-control",
+     "match": "冻结 Red 对照"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.25123",
+   "title": "Memories That Outlive Their Reasons: Dependency-Tethered Memory for Tool-Using LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "corrupted record: every memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.25707",
+   "title": "Whose Credential Is It? How Owner Attribution in Agent Memory Shapes Cross-User Account Misuse",
+   "what_persists": "memory",
+   "scope": "cross-user",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "no-adversary",
+     "match": "no attacker"
+    }
+   ],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.27495",
+   "title": "Self-Evolving Agents through Privileged Retrospective Distillation",
+   "what_persists": "mixed",
+   "scope": "cross-task",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 9,
+   "L1_strong": [
+    {
+     "tag": "test-time-update",
+     "match": "Test-Time Adapt"
+    }
+   ],
+   "L1_weak": [
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    },
+    {
+     "tag": "zh-coevolve",
+     "match": "自进化"
+    }
+   ],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "resurrection",
+     "match": "reintroducing"
+    }
+   ],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无对抗模型：不研究攻击者"
+    }
+   ],
+   "candidate": true,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  },
+  {
+   "id": "2610.28093",
+   "title": "ClawMMU: Protection-Coherent Virtual Memory for Stateful LLM Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "design_not_yet_implemented_no_experiments",
+    "position_paper_no_empirical_results"
+   ],
+   "n_results": 0,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive attack"
+    }
+   ],
+   "L3a": [],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poisoning: injected text is stored in memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.28315",
+   "title": "Disclosure Begets Disclosure: A Self-Reinforcing Privacy Loop in LLM Agents with Persistent Memory",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominators_given_as_units_not_counts",
+    "leakage_vs_session_curves_only_in_figures_numeric_values_from_tables",
+    "simulated_users_primary_evidence_human_pilot_n_8"
+   ],
+   "n_results": 9,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.28364",
+   "title": "Context-Aware Prompt Injection Detection via Small Language Models in RAG Pipelines: nokast-secureRA",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "no_persistent_state"
+   ],
+   "n_results": 10,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive adversar"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "Attackers are not adapt"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.28425",
+   "title": "After the Attacker Leaves: Benchmarking Carryover Attacks on LLM Agents",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "author_flagged_small_n_in_table3_qwen_latent_plant_cell",
+    "corpus_prose_contains_latex_duplicated_numbers (e.g. '2.8%2.8\\%'), so some prose numbers were quoted from tables instead",
+    "denominators_stated_via_task_counts_not_raw_trial_counts"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.28810",
+   "title": "Combining Long-Term Memory and LLMs Comes at a High Cost: From Prompt Injection to Persistent Compro",
+   "what_persists": "mixed",
+   "scope": "mixed",
+   "flags": [
+    "denominator_unclear",
+    "qualitative_success_only_no_asr_percentages",
+    "version_assumed_v1"
+   ],
+   "n_results": 9,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "in-the-loop"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.28987",
+   "title": "PerMIT: Securing Persistent Memory for LLM Agents via Machine-Checked Integrity Theorems and Scalabl",
+   "what_persists": "memory",
+   "scope": "mixed",
+   "flags": [
+    "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim",
+    "long_corpus_selectively_read"
+   ],
+   "n_results": 7,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "attacker-adapts",
+     "match": "adversarial identities, at most f_s panel-eligible, with adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks under controlled reviewer responses; they do not replace adapt"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "held-out"
+    }
+   ],
+   "L3b": [
+    {
+     "tag": "attack-on-defense-artifact",
+     "match": "poison stored in untrusted memory"
+    }
+   ],
+   "REG": [],
+   "NC": [],
+   "candidate": true,
+   "bucket": "E4_attack_or_regression_only",
+   "bucket_reason": "attack-side/regression markers only; no defense-side evolution statement"
+  },
+  {
+   "id": "2610.29784",
+   "title": "Evolving with Open Worlds: Towards Recursive Self-Improvement for Future Forecasting",
+   "what_persists": "mixed",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 16,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "closed-loop"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [
+    {
+     "tag": "resurrection",
+     "match": "reappears"
+    }
+   ],
+   "NC": [
+    {
+     "tag": "no-adversary",
+     "match": "No attacker"
+    }
+   ],
+   "candidate": true,
+   "bucket": "E3_author_disclaims_adversary",
+   "bucket_reason": "not_covered disclaimer: No attacker"
+  },
+  {
+   "id": "2610.30485",
+   "title": "Why Bother Me Again? Benchmarking Personal Agent Memory for Interaction Preferences",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear",
+    "finding2_judged_334_of_336_sampled_2_probes_unaccounted_in_text",
+    "no_dedicated_limitations_section",
+    "pet_denominator_240_derived_from_stated_|E|=20_and_F.3_pooling_structure_not_stated_verbatim"
+   ],
+   "n_results": 12,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "iterative-loop",
+     "match": "Iterative"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "Iterative"
+    }
+   ],
+   "L3a": [],
+   "L3b": [],
+   "REG": [],
+   "NC": [
+    {
+     "tag": "zh-no-adversary",
+     "match": "无对抗"
+    }
+   ],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "2610.31446",
+   "title": "When Is a Memory Safe Enough to Act On? Action-Conditioned Verification for Long-Lived Agents",
+   "what_persists": "memory",
+   "scope": "cross-session",
+   "flags": [
+    "denominator_unclear"
+   ],
+   "n_results": 8,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "6caf23c8ecb9",
+   "title": "The Task Shield: Enforcing Task Alignment to Defend Against Indirect Prompt Injection in LLM Agents",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "denominator_unclear",
+    "no_persistent_state",
+    "one_trial_per_task_no_variance_reported"
+   ],
+   "n_results": 17,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    },
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "NOT_CANDIDATE",
+   "bucket_reason": null
+  },
+  {
+   "id": "d6f6b6c78cd3",
+   "title": "Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM Agents",
+   "what_persists": "none",
+   "scope": "single-session",
+   "flags": [
+    "denominator_unclear",
+    "figure_data_not_in_text",
+    "no_persistent_state"
+   ],
+   "n_results": 15,
+   "L1_strong": [],
+   "L1_weak": [],
+   "L2": [
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive Attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "Adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "adaptive-attack",
+     "match": "adaptive attack"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "adversarial finetuning) with per-defense adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attack side: adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks, consistently        Figure 1: Defenses and adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "attacks with adversarial strings (adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "adversarial strings (0% on original attacks by design), yet adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "Attack        ASR-defense        ASR-adapt"
+    },
+    {
+     "tag": "attacker-adapts",
+     "match": "adversarial strings are trained to produce the ReAct"
+    },
+    {
+     "tag": "iterative-loop",
+     "match": "iterative"
+    }
+   ],
+   "L3a": [
+    {
+     "tag": "held-out-control",
+     "match": "ablation"
+    }
+   ],
+   "L3b": [],
+   "REG": [],
+   "NC": [],
+   "candidate": false,
+   "bucket": "JUDGED",
+   "bucket_reason": "adjudicated in data/same_loop_matrix.json"
+  }
+ ]
+}

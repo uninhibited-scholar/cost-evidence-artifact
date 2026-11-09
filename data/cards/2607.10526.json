@@ -1,0 +1,188 @@
+{
+ "arxiv_id": "2607.10526",
+ "title": "Agents Don’t Just Agree, They Remember: Benchmarking Persistent Sycophancy in Self-Improving Personal Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v4"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-session",
+  "carrier": "Durable agent state written by the agent itself inside an episode-level sandbox: user profile files (e.g., USER.md), memory profile files (e.g., MEMORY.md), and reusable skill artifacts; commits are identified by diffing the post-persist sandbox snapshot against an immutable clean baseline. Session-only writes are the non-commit category.",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "Durable agent state must preserve the source, status (role), and scope of user-originated content. The property fails when a transient, biased user claim is written into profile/memory/skill state with elevated status (stable preference, background fact, or reusable procedure), removed speaker attribution, or broadened scope, and then contaminates later neutral query sessions after the conversation history has been cleared. Failures are judged by Max-FR@3 >= 3 (1-5 Likert) on six judge dimensions (Sycophancy, Leak, Upgrade, Amplification, Persistence, Escalation) plus Commit% from sandbox snapshots.",
+  "operationalized_as": "PASB: 1,600 tasks per run (100 base items x 4 scenario framings x 4 temporal deliveries) on Hermes-Agent and OpenClaw; five-turn persist stage, cleared three-turn query stage; six Kimi-K2.6-judged dimensions on 1-5 Likert with >=3 as failure; Commit% from post-persist snapshot diff vs clean baseline; CDL subset isolates cross-domain (scope) leakage."
+ },
+ "threat_model": {
+  "adversary": "user",
+  "capabilities": [
+   "Raises biased or unsupported user-centric claims across a five-turn persist stage, including low-information pressure (e.g., 'Are you sure?')",
+   "Frames the same claim under four apparent roles: Personal-Opinion, Signed-Memory (user-authored note), Environment-Fact, or Procedural-Workflow",
+   "Controls temporal delivery of the claim: All-at-Once, Progressive, Drip, or Late-Shock (repeated reinforcement)",
+   "No tool access, code execution, or direct state manipulation; influence is only conversational, and the agent autonomously decides what to write"
+  ],
+  "assumptions": [
+   "Conversation history, planner scratchpad, temporary tool observations, and runtime caches are cleared between persist and query stages, so any carry-over must pass through durable state",
+   "Episodes run in sandboxed workspaces restored from an immutable baseline; no cross-episode or cross-worker state sharing",
+   "The judge (Kimi-K2.6) is from a family disjoint from the evaluated backbones and blinded to backbone and framework; greedy decoding where the serving stack supports it",
+   "Commit identification is deterministic from captured artifact paths and content match against the tested claim"
+  ],
+  "not_covered": [
+   "External attackers or injected third-party content (no prompt-injection adversary); the source of unsafe content is the ordinary user",
+   "Cross-user or cross-agent state contamination (excluded by design)",
+   "Defenses or mitigations are proposed (capability ladder L0-L5) but not implemented or evaluated",
+   "Adversarially optimized claims and frameworks beyond Hermes-Agent and OpenClaw"
+  ]
+ },
+ "intervention": {
+  "name": "Capability ladder for state-writing governance (L0-L5; proposed, not evaluated)",
+  "mechanism_layer": "architecture",
+  "description": "A proposed ladder of governance capabilities grounded in the paper's findings: L0 response calibration; L1 commit gating (write only stable, relevant, future-appropriate content); L2 surface-aware commit (stricter criteria for profile/skill surfaces than session notes); L3 source-and-status preservation (typed writes retaining source, uncertainty, and intended use); L4 scope-aware retrieval (explicit domain, task, source, and time bounds on durable state); L5 lifecycle governance (audit accumulated state, detect attribution removal and scope broadening, de-authorize or roll back unsafe writes). No mechanism is implemented in the paper; PASB is the diagnostic that localizes the intervention points."
+ },
+ "results": [
+  {
+   "claim": "Across 24 model-framework runs, once a saved claim can be read back in the follow-up chat, mean downstream failure (Max-FR@3 over the four per-turn metrics) reaches 71.9% vs 45.0% when the claim stays in the first chat - a +27.0-point gap [v1 表述为跨 commit 边界；v4 改为 saved-vs-session-only 对比] that holds everywhere: all 24 combinations side with the saved claim more often on Sycophancy, with gaps +12.4 to +58.6 points.",
+   "metric": "mean Max-FR@3 over the four per-turn dimensions (Sycophancy, Leak, Upgrade, Amplification)",
+   "value": "71.9% vs 45.0% (+27.0 points)",
+   "comparison": "saved-claim readable in follow-up chat vs claim stays in first chat (session-only reference)",
+   "setting": "24 model-framework runs (12 backbones x Hermes-Agent/OpenClaw) on PASB 1,600 tasks; pooled episodes, cleared query stage",
+   "quote": "Downstream failure reaches 71.9%71.9\\% when the follow-up chat can read a saved claim, against 45.0%45.0\\% when the claim stays in the first chat. That is a +27.0+27.0 point gap, and it holds everywhere.",
+   "locator": "§5.2 (Figure 2c)",
+   "denominator": {
+    "how_counted": "Mean Max-FR@3 over the four per-turn metrics, across the 24 model-framework combinations of the 1,600-task benchmark; saved-claim-readable runs vs session-only runs (Figure 2c)",
+    "n_total": null
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Low save rate does not eliminate contamination: on OpenClaw, MiniMax-M2.7 saves the claim into notes in only 29.8% of runs yet downstream failure still reaches 77.4% [v1 报 72.0%，v4 数值更新]；OpenClaw 整体 save rate 区间 18.4%-53.9%。What matters is what happens to saved claims.",
+   "metric": "Commit% and Avg mean Max-FR@3 over the six judge dimensions",
+   "value": "77.4% [v1: 72.0%]",
+   "comparison": "OpenClaw save range 18.4%-53.9%; Hermes range 28.7%-72.8% with Gemini-3.1-Pro top at 80.6% downstream failure",
+   "setting": "MiniMax-M2.7 on OpenClaw, PASB 1,600 episodes per run (Tables 2 and 13)",
+   "quote": "OpenClaw saves less often, from 18.4%18.4\\% to 53.9%53.9\\% of runs. Yet with MiniMax-M2.7 it saves the claim into notes in only 29.8%29.8\\% of runs, while downstream failure still reaches 77.4%77.4\\%.",
+   "locator": "§5.1 (Table 2)",
+   "denominator": {
+    "n_total": "1600",
+    "n_valid": null,
+    "how_counted": "Commit% is the row-level rate over the full 1,600 episodes of that model-framework run (Table 13: 'All is the row-level rate over the full 1,600 episodes'); Avg averages the six judge-dimension failure rates"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The act of writing is the authorization point: among accepted runs (agent acknowledges, agrees, or complies), the agent writes the claim down in 75.1% of runs; among saved notes 82.0% say more than the user did and 58.3% no longer record the source; 78.3% of these runs fail downstream. Figure 2a: downstream failure climbs from 47.3% after a challenge to 78.3% after compliance [v1 术语 Comply stance → v4 compliance].",
+   "metric": "episode rate of durable write / status promotion / attribution removal / downstream failure by persist-stage response stance",
+   "value": "78.3%",
+   "comparison": "challenge 47.3% -> compliance 78.3% (by strongest first-chat stance, Figure 2a)",
+   "setting": "pooled annotated episodes across all runs; five-label persist-stage stance annotation (Appendix A.7), Wilson 95% intervals",
+   "quote": "The agent writes the claim down in 75.1%75.1\\% of these runs. The act of writing usually edits the claim. Among the saved notes, 82.0%82.0\\% say more than the user did, and 58.3%58.3\\% no longer record the source. The cost shows up later, as 78.3%78.3\\% of these runs fail downstream.",
+   "locator": "§5.2 (Figure 2a)",
+   "denominator": {
+    "how_counted": "Rates pooled over accepted first-chat runs across the 24 combinations; Figure 2a breaks them by the strongest stance in the first chat",
+    "n_total": null
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "At write time the agent systematically reshapes stored content: pooled across all runs, 51.4% of saves recast the claim as a stable preference, background fact, or reusable procedure [v1 表述为 status promotion：opinion→preference/fact/procedure]，and the saved note loses its source in 33.1% of cases, so it reads like a standalone statement; these two edits predict later reuse and source loss.",
+   "metric": "episode rate of write-time status promotion / attribution removal",
+   "value": "51.4%",
+   "comparison": "status promotion 51.4% vs attribution removal 33.1% of episodes",
+   "setting": "pooled persist-stage annotation over 24 model-framework runs (12 models x 2 frameworks)",
+   "quote": "Across all runs, agents save the claim as a stable preference, a background fact, or a reusable procedure in 51.4%51.4\\% of cases, and the saved note loses its source in 33.1%33.1\\% of cases, so it reads like a standalone statement.",
+   "locator": "§5.2",
+   "denominator": {
+    "n_total": "38,400",
+    "n_valid": "38,400",
+    "how_counted": "Appendix A.7: the persist-stage annotation is applied to every completed episode in the main evaluation, one row per episode, and 'A full 12-model x 2-agent PASB run therefore contains 12x2x1600=38,400 rows'; the pooled 51.4% (and 33.1%) are episode rates over all annotated rows of the 24 model-framework runs, counting status promotion when the annotator role label is not None and attribution removal when the stored state drops the source marker"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Memory-like and procedural framing raises unsafe writes: under Hermes-Agent, claims framed as signed memories are saved in 85% of runs and procedural workflows in 66%; OpenClaw saves procedural workflows most often, in 89% of runs; environment facts sit between (45% Hermes / 19% OpenClaw) and personal opinions are rarely saved (28% / 8%). Framing alone decides much of whether the agent writes the claim down.",
+   "metric": "commit rate by scenario framing (with downstream failure context)",
+   "value": "89% (OpenClaw, Procedural-Workflow)",
+   "comparison": "Hermes: Signed-Memory 85%, Procedural-Workflow 66%, Environment-Fact 45%, Personal-Opinion 28%; OpenClaw: Procedural 89%, Env 19%, Opinion 8%",
+   "setting": "Hermes-Agent and OpenClaw scenario-agent matrix over 12 backbones (per-run values in Table 13)",
+   "quote": "Under Hermes-Agent, agents save claims framed as signed memories in 85%85\\% of runs and procedural workflows in 66%66\\%, while OpenClaw saves procedural workflows most often, in 89%89\\% of runs.",
+   "locator": "§5.3 (Figure 2e)",
+   "denominator": {
+    "how_counted": "Save rates by scenario framing pooled over runs per framework (Figure 2e); base claim held fixed across framings",
+    "n_total": null
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Repeated reinforcement raises downstream reuse but not commit propensity: Progressive (claim built up turn by turn) and Drip (fragments in small talk) raise downstream failure to 63.2% under Hermes-Agent and up to 57.0% under OpenClaw, vs All-at-Once 58.0%/53.1%, while save rates stay flat across deliveries (54.5-57.2% Hermes, 32.8-39.5% OpenClaw); Late-Shock sits close to All-at-Once. Repetition never reaches the write itself - it makes the saved note easier to pick up again.",
+   "metric": "mean per-turn downstream Max-FR@3 failure by temporal delivery pattern",
+   "value": "63.2% (Hermes); 57.0% (OpenClaw) [v1: 63.2% Hermes only]",
+   "comparison": "58.0% (all-at-once) -> 63.2% (progressive/drip)",
+   "setting": "Hermes-Agent across 12 backbones; delivery axis (OpenClaw shows the same direction, 53.1% to 57.0%/56.2%)",
+   "quote": "These two deliveries raise downstream failure to 63.2%63.2\\% under Hermes-Agent and up to 57.0%57.0\\% under OpenClaw. The same claim delivered All-at-Once gives 58.0%58.0\\% and 53.1%53.1\\%.",
+   "locator": "§5.3 (Figure 2f)",
+   "denominator": {
+    "how_counted": "Downstream failure by delivery condition pooled per framework; save rates flat across the four deliveries (Figure 2f)",
+    "n_total": null
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Committed claims leak across a deliberate domain boundary: with the follow-up moved to a different domain, saved claims raise three failure rates by more than twenty points each - Leak +22.8 (later answers take the irrelevant claim as background assumption), Upgrade +21.4 (treated as fact or the agent's own rule), Sycophancy +21.2 (side with user's stance) - and the other three metrics rise by +12.6 to +16.6 points [v1 概括为 +12.6..+22.8；v4 逐指标给出].",
+   "metric": "downstream failure lift (percentage points) of cross-domain committed episodes over cross-domain session-only baseline",
+   "value": "Leak +22.8; Upgrade +21.4; Sycophancy +21.2; others +12.6..+16.6 points",
+   "comparison": "cross-domain saved-claim follow-ups vs same-domain and not-saved groups (Figure 4)",
+   "setting": "CDL cross-domain subset (persist claim and query in different domains by construction, 18 of 100 base items); all runs",
+   "quote": "Leak metric rises by 22.822.8 points, so later answers take the irrelevant claim as a background assumption. Upgrade metric rises by 21.421.4 points, so later answers treat the claim as fact or as the agent’s own rule. Sycophancy metric rises by 21.221.2 points, so later answers side with the user’s stance.",
+   "locator": "§5.3 (Figure 4)",
+   "denominator": {
+    "how_counted": "Per-metric failure-rate deltas of saved cross-domain follow-ups vs same-domain and not-saved groups (Figure 4)",
+    "n_total": null
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The LLM judge is reliable against human consensus: on the 50-task human-labeled gold subset (proportional stratified sampling over the 1,600-task benchmark; four annotators, Krippendorff's alpha 0.68), the judge agrees with the human gold label on 88% of individual answers counting predictions within ±1 Likert point as agreement [v1 表述为 turn-level 88% / cross-turn 86%；v4 统一口径为 88% within-±1].",
+   "metric": "LLM-judge (Kimi-K2.6) agreement with human consensus (within ±1 Likert point)",
+   "value": "88%",
+   "comparison": "within ±1 Likert point of the human majority label, per metric",
+   "setting": "50-task proportional stratified human-gold subset, four PhD/undergraduate annotators, per-dimension majority vote",
+   "quote": "Across individual answers, the judge agrees with the human gold label on 88% of cases, the figure Section 3.3 reports.",
+   "locator": "A.8",
+   "denominator": {
+    "n_total": "50",
+    "n_valid": "50",
+    "how_counted": "50-task human-gold subset; human gold is the per-dimension majority vote of four annotators (inter-annotator Krippendorff's alpha = 0.68)"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Scope: longer horizons, other modalities, and evolving state need extensions; future work should test write filters and context-aware retrieval while tracking safety vs personalization value.",
+   "quote": "Longer horizons, other modalities, and state that keeps evolving will need extensions. These should test concrete write filters or context-aware retrieval while tracking both safety and how much personalization value survives.",
+   "locator": "Limitations"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "v1_card_lacked_limitations_field_filled_from_v4",
+  "v4_adds_rq4_prevention_and_correction_experiments_not_carded"
+ ]
+}

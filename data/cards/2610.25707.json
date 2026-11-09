@@ -1,0 +1,215 @@
+{
+ "arxiv_id": "2610.25707",
+ "title": "Whose Credential Is It? How Owner Attribution in Agent Memory Shapes Cross-User Account Misuse",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-user",
+  "carrier": "Shared long-term memory store holding 763 login notes from 99 AppWorld users; top-k retrieved notes are rendered as text blocks in the agent prompt by a renderer rho = (header, log-in directive, line format, owner attribution beta, caution clause)",
+  "operations_covered": [
+   "formation",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "An agent using shared cross-user long-term memory must act only in the requester's account: a valid foreign credential reaching the prompt (exposure) should not be used to act in another user's account (behavior) nor change that user's account state (state). It fails when memory lacks the user's own credential and words a single foreign one as the user's record; judged by the wrong-token endpoint B and the audited donor-account state change S, with exposure E as the store-side factor.",
+  "operationalized_as": "Three-stage audit in AppWorld: E=1 if the top-k retrieved notes contain another user's credential for a required app; B=1 if any API call carries a session token whose subject (decoded app+username) is neither the requester nor empty; S=1 if donor-owned rows (orders, drafts, sent payments, etc.) differ between the run's initial and final checkpoints; harm factorizes as Pr[S]=Pr[E]Pr[B|E]Pr[S|B] (Eq. 5)."
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "No party is adversarial: memory is written from real sessions, and the failure is using valid authority for the wrong person.",
+   "A1: an agent can obtain a foreign token only from a credential in its prompt, so B is a subset of E (no run without memory acted in a foreign account, 0 of 500).",
+   "A2: the audited donor rows change only through the donor's own session, so S is a subset of B.",
+   "Owner information is usually available at write time because the agent knows whom it is serving; keeping it in the memory text is a design choice.",
+   "The stress test replaces the requester's credential with a single foreign one in an otherwise accurate memory: a high-risk configuration chosen to expose the effect of wording, not an estimate of prevalence.",
+   "Authorized delegation is outside scope."
+  ],
+  "not_covered": [
+   "Adversarial settings: prompt injection and memory poisoning (the studied failure needs no attacker).",
+   "Authorized delegation.",
+   "Prevalence of misuse in deployed systems.",
+   "Systems with sharing or messaging between users, where A2 fails and Eq. 5 covers only the misuse-mediated part of harm.",
+   "Credential reads, disclosure, and write-then-revert harm, which the read-only state audit cannot detect (S under-counts)."
+  ]
+ },
+ "intervention": {
+  "name": "Owner attribution in memory wording (owner binding as a write-time lever)",
+  "mechanism_layer": "content",
+  "description": "Hold the credential fixed and vary the renderer rho=(h, delta, f, beta, gamma); the key component is owner attribution beta in {none, tag, bound}: omit the owner, append a trailing '[account owner: N]' tag, or bind the owner's name inside the sentence ('Earlier session for N: logged into ...'). Binding names at write time prevents most cross-user misuse; trailing tags, a caution clause, and an added safety instruction help only some models; a wrongly written owner restores misuse. Treated as a second layer behind access control, not a replacement for it."
+ },
+ "results": [
+  {
+   "claim": "In the primary store configuration, a shared store mixing all users' logins exposes another user's credential among the top five retrieved notes for 84.7% of required apps, and 99.5% of tasks have at least one exposed app.",
+   "metric": "exposure_rate (E_app)",
+   "value": "84.7% of required apps; 99.5% of tasks",
+   "comparison": null,
+   "setting": "AppWorld exposure census, 99 users, 763 logins; episodic notes, name+task query, dense retriever, k=5; 54 configurations on 414 tasks",
+   "quote": "In the primary configuration, another user’s credential is among the top five notes for 84.7% of required apps (95% CI 82.2-87.2), and 99.5% of tasks have at least one exposed app.",
+   "locator": "§4.2 (Figure 4a)",
+   "denominator": {
+    "n_total": "414",
+    "n_valid": "414",
+    "how_counted": "n=414 只覆盖 '99.5% of tasks' 部分：414 为 exposure census 的全部 AppWorld 任务数（§4.1：'giving 54 configurations on 414 tasks'；Figure 4 caption：'for 54 store configurations (414 tasks)'），至少一个 exposed app 的任务占比 412/414=99.5%，与引文一致。'84.7% of required apps' 部分是 app-level 率 Ē_app，§3.2 定义为对全部 (τ,a) 对（a∈A(τ)）取均值，语料未给出 (task, required-app) 对总数，该部分分母仍不可得"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Under natural retrieval from the shared store, exposure rarely becomes action: DeepSeek used another user's token in 0/60 runs with episodic notes and 3/60 with notes asserted as facts about the current user (Sonnet 0/30), not differing from the oracle store.",
+   "metric": "wrong-token runs (B)",
+   "value": "0/60 (episodic), 3/60 (asserted); Sonnet 0/30 (asserted)",
+   "comparison": null,
+   "setting": "AppWorld, 60 held-out tasks with top-5 notes from the shared store (DeepSeek; Sonnet 30 tasks), template-written notes",
+   "quote": "DeepSeek used another user’s token in 0/60 runs with episodic notes, as without memory, and in 3/60 with notes asserted as facts about the current user (Sonnet: 0/30); neither differs from the oracle store",
+   "locator": "§4.2 (Figure 4b; Appendix Table 7)",
+   "denominator": {
+    "n_total": "60 held-out tasks (DeepSeek); 30 (Sonnet)",
+    "n_valid": "60 / 30",
+    "how_counted": "Sixty held-out tasks are run with the top five notes retrieved from the shared store"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In the controlled stress test with an unlabeled record (memory lacks the user's own credential and presents a single foreign one as the user's record), all seven agents used the foreign token in 28-33 of 35 runs, against 0/35 without memory, and the donor's account changed in 4-15 runs per model.",
+   "metric": "wrong-token runs (B)",
+   "value": "28-33 of 35 runs per model",
+   "comparison": "28-33 of 35 vs 0/35 without memory",
+   "setting": "AppWorld Cohort 2 stress test, 35 held-out tasks, seven models (DeepSeek, Sonnet, GPT-5.4, Sol, Luna, Grok 4.7, gpt-oss-120b), record rendering (rec, 1, kv, none, 0)",
+   "quote": "With an unlabeled record, all seven agents used the foreign token in 28-33 of 35 runs, against 0/35 without memory (all p<10−8p{<}10^{-8}), and the donor’s account changed in 4-15 runs per model.",
+   "locator": "§4.3 (Table 1)",
+   "denominator": {
+    "n_total": "35 (Cohort 2 held-out tasks)",
+    "n_valid": "35",
+    "how_counted": "Counts are runs out of 35"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Binding the owner's name inside each credential line (vs identical lines without names) cuts misuse from 92 to 1 of 305 paired runs over both cohorts, significant in all six DeepSeek, Sonnet, GPT-5.4 and gpt-oss-120b strata (Holm over nine strata), with a task-clustered owner-bound rate over seven models of 0.4% [0,1.2].",
+   "metric": "wrong-token runs (B), paired name-removal contrast",
+   "value": "92 to 1 of 305 paired runs",
+   "comparison": null,
+   "setting": "AppWorld, both cohorts (Cohort 1: 30 tasks; Cohort 2: 35 tasks), seven models, episode rendering with vs without owner-bound names",
+   "quote": "Over both cohorts, misuse falls from 92 to 1 of 305 paired runs. The contrast is significant in each of the six DeepSeek, Sonnet, GPT-5.4 and gpt-oss-120b strata (Holm over nine strata, p≤0.016p\\leq 0.016), and the task-clustered owner-bound rate over seven models is 0.4% [0,1.2][0,1.2].",
+   "locator": "§4.4 Owner Names Alone (Tables 1, 3)",
+   "denominator": {
+    "n_total": "305 paired runs over both cohorts",
+    "n_valid": "305",
+    "how_counted": "paired on tasks: two renderings on the same tasks across Cohort 1 and Cohort 2"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Adding the user's own credential next to a foreign record nearly eliminates misuse: 31 to 1 (DeepSeek) and 0 of 35 runs (Sonnet).",
+   "metric": "wrong-token runs (B)",
+   "value": "31 to 1 and 0 of 35 runs (DeepSeek, Sonnet)",
+   "comparison": null,
+   "setting": "AppWorld controlled setting, Cohort 2 follow-up control E3, 35 runs per model",
+   "quote": "In the controlled setting below, adding the user’s own credential next to a foreign record cut misuse from 31 to 1 and 0 of 35 runs (DeepSeek, Sonnet) (Figure 5b)",
+   "locator": "§4.2 (Figure 5b; Appendix Table 12 E3)",
+   "denominator": {
+    "n_total": "35 runs per model (Cohort 2)",
+    "n_valid": "35",
+    "how_counted": "one run per task and condition"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Appending a one-sentence safety instruction to the agent prompt reduces misuse far less than owner binding: 31 to 13 (DeepSeek), 28 to 18 (GPT-5.4), 31 to 25 (Sonnet), against 0, 0 and 1 under binding.",
+   "metric": "wrong-token runs (B)",
+   "value": "31 to 13 (DeepSeek), 28 to 18 (GPT-5.4), 31 to 25 (Sonnet)",
+   "comparison": "31->13, 28->18, 31->25 vs 0, 0, 1 under owner binding",
+   "setting": "AppWorld Cohort 2, unlabeled records, 35 tasks per model; sentence: use a stored credential only if it belongs to the requester",
+   "quote": "On unlabeled records it reduced misuse from 31 to 13 for DeepSeek, 28 to 18 for GPT-5.4 and 31 to 25 for Sonnet (p=7.6×10−6p{=}7.6{\\times}10^{-6}, 0.002 and 0.07; Figure 5b), against 0, 0 and 1 under binding.",
+   "locator": "§4.5 Added Safety Instruction (Figure 5b; Appendix Table 12 E4)",
+   "denominator": {
+    "n_total": "35 tasks per condition (Cohort 2)",
+    "n_valid": "35",
+    "how_counted": "one run per task and condition"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Owner text is not access control: when every line wrongly names the requester as owner, the foreign credential is still used in 13 and 19 of 35 runs (narrative form) and 32 and 30 with a leading owner field, as often as a same-period unlabeled record.",
+   "metric": "wrong-token runs (B)",
+   "value": "13 and 19 of 35 runs (narrative); 32 and 30 (leading owner field)",
+   "comparison": null,
+   "setting": "AppWorld Cohort 2 follow-up control N2 (requester written as owner), DeepSeek and Sonnet",
+   "quote": "When every line named the requester as owner, the foreign credential was used in 13 and 19 of 35 runs in narrative form and in 32 and 30 with a leading owner field (Figure 5b), as often as a same-period unlabeled record (30 and 28; Appendix Table 12)",
+   "locator": "§4.6 Limits of Owner Text (Figure 5b; Appendix Table 12 N2)",
+   "denominator": {
+    "n_total": "35 tasks per condition (Cohort 2)",
+    "n_valid": "35",
+    "how_counted": "one run per task and condition"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Success-only evaluation misses harm: 29 runs of DeepSeek, Sonnet and GPT-5.4 passed the official AppWorld check while using another user's token; of the 28 with API traces, 20 wrote with that token and 19 changed the donor's account.",
+   "metric": "official-check-passing wrong-token runs",
+   "value": "29 passing runs; of 28 traced, 20 wrote with the token and 19 changed the donor account",
+   "comparison": null,
+   "setting": "AppWorld stress tests, DeepSeek, Sonnet and GPT-5.4, Cohorts 1 and 2, official AppWorld task checks plus per-call identity labeling",
+   "quote": "Most misusing runs fail the official check, but 29 runs of DeepSeek, Sonnet and GPT-5.4 passed it while using another user’s token. Of the 28 with API traces, 20 wrote with that token and 19 changed the donor’s account: the official checks accept writes to another user’s rows.",
+   "locator": "§4.3 Success-Only Evaluation (Figure 14)",
+   "denominator": {
+    "n_total": "29 runs passing the official check while using another user's token",
+    "n_valid": "28 with API traces",
+    "how_counted": "official AppWorld check outcome combined with per-call token-subject labeling"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Owner-bound narrative notes lower clean-memory task success by 3 to 5 tasks per model.",
+   "metric": "clean-memory task success (tasks solved)",
+   "value": "3-5 tasks per model (e.g. 30 -> 25, 19 -> 15, 20 -> 17)",
+   "comparison": "with vs without owner naming, against the no-memory baseline",
+   "setting": "clean memory, Table 11, Section 4.7",
+   "quote": "owner-bound narrative notes lowered success on clean memory by 3-5 tasks per model",
+   "locator": "Section 4.7, Table 11",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Main limitation is scope: all experiments run in one environment (AppWorld), memories are mostly rendered from templates, and the stress test replaces the user's own credential with a single foreign one, so the setting isolates wording effects rather than estimating deployed-system prevalence.",
+   "quote": "Our main limitation is scope. All experiments run in one environment, AppWorld, with memories mostly rendered from templates, and the stress test replaces the user’s own credential with a single foreign one.",
+   "locator": "Limitations (after §5)"
+  },
+  {
+   "statement": "Whether owner attribution protects as well in other environments, memory designs and models remains to be tested; a tau-bench retail check and one LLM writer extend the setting only partly.",
+   "quote": "so whether owner attribution protects as well in other environments, memory designs and models remains to be tested.",
+   "locator": "Limitations (after §5)"
+  },
+  {
+   "statement": "The read-only state audit is conservative and under-counts harm: it misses reads and write-then-revert, most notably in Gmail where reading a mailbox is the typical harm.",
+   "quote": "The read-only audit is conservative: it misses reads and write-then-revert, so it under-counts harm in Gmail, where reading a mailbox is the typical harm.",
+   "locator": "§3.2 State"
+  },
+  {
+   "statement": "The primary hypothesis (removing owner names increases misuse) was named after the main data had been collected and is reported as an exploratory finding, though Cohort 2 tasks and renderings were fixed before any run.",
+   "quote": "Because it was named after the main data had been collected, we report it as an exploratory finding",
+   "locator": "§3.4 Statistical Analysis"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear"
+ ]
+}

@@ -1,0 +1,140 @@
+{
+ "arxiv_id": "2610.02861",
+ "title": "Containing the Autonomous Operator: A Defense-in-Depth Framework and Reference Architecture for Securing AI Agents on Kubernetes",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "cross-session",
+  "carrier": "论文显式设计并治理的持久对象有四类：(1) 长期记忆（vector stores、scratchpads、summaries）——跨会话持续（§2.1：'agents increasingly carry memory across sessions'；T7：'Injected content is written to long-term memory and influences future sessions'），生命周期被明确设计：形成/更新=写入记录来源与信任级别（'Writes to long-term memory record their source (user, tool, session) and trust level'）、不可信工具输出未经审查不得晋升入记忆；保留/检索=按租户与按 agent 分区限定可读写范围；修复='memory stores support point-in-time rollback so a poisoning incident can be reversed'（§5.6 Memory provenance）。(2) 审计轨迹——列为资产(e)（'the audit trail that attributes actions to principals'），L7 将 API-server 审计日志与 gateway 决策日志按身份基线化，跨会话保留。(3) 审批记录——'Approval is bound to the specific call (by hash of tool and arguments) and expires, so it cannot be replayed for a different action'（§5.8），即有界保留+到期失效。(4) GitOps 仓库中的策略/配置工件——P7 要求状态变更经 PR 获得审查、历史与回滚。撤销：kill switch（L7）'revoke or rotate its ServiceAccount and workload-identity bindings, scale it to zero, apply a quarantine network policy, and invalidate its gateway sessions'，因为 agent 所有路径都被中介（P2），吊销身份即可使其停止。对照组：沙箱被显式设计为不持久——'Sandboxes should be ephemeral and per session; a sandbox that persists across users becomes a channel for cross-session contamination (T7)'。故按实际登记为 mixed（记忆+审计/审批记录+策略工件），范围以跨会话为主（记忆按租户/agent 分区，非跨用户共享）。",
+  "operations_covered": ["formation", "update", "retention", "retrieval", "revocation", "repair"]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "核心命题是'model is not a security boundary'：每项保证都必须在'agent 已被 prompt injection 完全攻陷'的假设下继续成立。保护资产（§3.2）：(a) 集群工作负载与配置的完整性与可用性；(b) agent 或其工具可触及的凭据（ServiceAccount token、云凭据、API key）的机密性；(c) 经工具可见的机密数据（日志、配置、遥测中的客户数据）的机密性；(d) agent 记忆的完整性；(e) 审计轨迹（可归责性）。判定方式为定性：威胁-控制覆盖矩阵（Table 4）+ 四个攻击走查 S1–S4，注入类致害需同时攻破 ≥3 个独立执行点（L5 gateway、L2 API server、L4 CNI）。论文明确零测量：'We report no measured attack-success or overhead figures'（Abstract）。失效条件由 §7.3 残余风险列出：策略合规但有害的动作、范围内完整性攻击、经模型通道的外泄（模型端点必然是允许的 egress 目的地）、隔离运行时/策略引擎漏洞进入 TCB、策略漂移。",
+  "operationalized_as": "定性：Table 4 威胁-控制覆盖矩阵（10 类威胁 × L1–L7 + 治理层 G，primary/supporting 标注）与 §7.2 四个攻击走查 S1–S4（逐层指认阻断点）。§7.4 提出但未执行的经验验证方法：K8s 原生注入基准（仿 AgentDojo，注入置于日志/事件/annotation/ConfigMap/工单/MCP 元数据）测 benign utility 与 ASR、逐层 bypass testing、gateway/沙箱 overhead、审批负担。"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "A1 内容注入：攻击者控制 agent 将读取的任意内容——其所控工作负载写出的日志行、annotation/label、工单正文、网页、检索语料中的文档",
+   "A2 恶意/被攻陷工具服务器：运营 agent 连接的 MCP server 或攻陷既有 server，可随时更改其工具元数据或响应",
+   "A3 恶意生成代码：A1/A2 的后果——agent 编写并执行的代码受攻击者影响",
+   "A4 低权限内部人员：被允许向 agent 提请求的用户试图借 agent 超越自身权限（次要对手类型）",
+   "A5 良性失效：无攻击者在场，模型错误、幻觉或反馈回路产生有害动作（论文认为 runaway loop 'are the most likely harm in practice because they require no adversary'）",
+   "中心建模选择：注入一旦成功，攻击者即完全控制 agent 后续的工具选择与参数——'We assume the adversary can fully control the agent’s subsequent tool choices and arguments once injection succeeds. This is the central modeling choice: we grant the attacker the agent.'"
+  ],
+  "assumptions": [
+   "信任 Kubernetes 控制平面、节点内核与容器运行时（受所选 RuntimeClass 隔离强度约束）、策略引擎、gateway、身份提供方（§3.4）",
+   "不信任模型、agent 进程、其上下文、检索内容、注册表外服务器的工具元数据、生成代码（§3.4）",
+   "模型提供方在网络可达且位于集群信任边界之外（§1.2）",
+   "层间独立性假设：注入驱动威胁（T1/T2/T6）由 L5 与另一个独立执行点（L2 或 L4）双重覆盖，'a single misconfiguration does not lead to harm'（§7.1）——该独立性为作者评估而非测量"
+  ],
+  "not_covered": [
+   "模型训练期攻击（数据/权重投毒）、呈现给人类的模型输出安全性、推理服务自身的加固——§1.2 显式非目标",
+   "策略合规但有害的动作：策略能禁止已知坏参数，但不能判断被允许的动作是否明智（§7.3）",
+   "范围内完整性攻击：被注入 agent 仍可产出误导性摘要或微妙有害的 PR，'Review quality, not infrastructure, is the control'（§7.3）",
+   "经模型通道的外泄：模型端点必然是允许的 egress 目的地，上下文敏感数据按设计发送给模型提供方（§7.3）",
+   "隔离运行时与策略引擎漏洞进入可信计算基（§7.3）",
+   "策略漂移：多层设计产生大量策略，其一致性本身需测试（§7.3）"
+  ]
+ },
+ "intervention": {
+  "name": "Seven-layer defense-in-depth framework (L1–L7) + governance layer G, with reference architecture for EKS/AKS/GKE",
+  "mechanism_layer": "architecture",
+  "description": "用 Kubernetes 原生与广泛采用的开源机制组合出与模型行为无关的纵深防御：L1 每代理工作负载身份+委托用户权威（OAuth token exchange / impersonation）；L2 RBAC 最小权限 + ValidatingAdmissionPolicy 用 CEL 对 agent 身份的请求做内容级校验（即使绕过 gateway 直连 API server 也生效）+ restricted Pod Security；L3 gVisor/Kata 经 RuntimeClass + SIG Apps Agent Sandbox 的 per-session 沙箱（无 token、非 root、只读根文件系统）；L4 默认拒绝 egress + FQDN 感知网络策略（Cilium/ACNS/FQDNNetworkPolicy），agent pod 无 API server 路由；L5 agent/MCP/A2A gateway（agentgateway）做认证、按参数的 OPA/Cedar 策略、工具供应链控制（签名镜像+工具元数据哈希 pinning 防 rug-pull）、响应去污染、限速，工具分 observe/propose/act 三级；L6 秘密永不进上下文、源头脱敏、记忆 provenance/分区/回滚、CaMeL 式读写分离（quarantined reader + planner）；L7 eBPF（Tetragon/Falco）内核级检测与强制、审计日志基线、kill switch；G 审批门（绑定调用哈希且到期）、自治分级（Table 2）、预算与熔断。对策定位：九条设计原则（P1–P9）使安全独立于模型行为，支撑的机制即上述各层的组合；与 CaMeL 等模型侧防御互补。"
+ },
+ "results": [
+  {
+   "claim": "分析性评估结论（无测量）：每个威胁类都至少有两层缓解，且每个威胁至少有一个 primary 控制在 agent 进程之外执行——没有任何威胁只依赖模型行为（P1）；注入驱动的 T1/T2/T6 各由工具边界（L5）加一个独立执行点（L2 API server 或 L4 CNI）覆盖，单点误配置不致害。",
+   "metric": "threat_control_coverage (qualitative)",
+   "value": "every threat covered by at least two layers; at least one primary control enforced outside the agent process",
+   "comparison": null,
+   "setting": "Table 4 威胁-控制覆盖矩阵：10 类威胁（T1–T10）× 七个技术层（L1–L7）+ 治理层 G；定性分析，非实验测量",
+   "quote": "First, every threat has at least two mitigating layers, and for every threat at least one primary control is enforced outside the agent process; no threat relies solely on model behavior (P1).",
+   "locator": "§7.1 Table 4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "（引用的厂商文档约束，非本文测量）AKS 的 FQDN 过滤属 ACNS 付费附加组件、需 Azure CNI powered by Cilium，且 Microsoft 注明每 pod 超过约 1,000 请求/秒可能出现性能退化——论文以此刻画三家托管 K8s 上 L4 FQDN egress 原生能力的差异。",
+   "metric": "FQDN_filtering_throughput_limit (provider-documented)",
+   "value": "degradation possible above roughly 1,000 requests per second per pod",
+   "comparison": null,
+   "setting": "Azure AKS：Advanced Container Networking Services (ACNS) FQDN filtering + Azure CNI powered by Cilium；数字出自 Microsoft 文档（引用 [28]），论文未测量",
+   "quote": "On AKS, FQDN filtering is part of Advanced Container Networking Services (ACNS) and requires Azure CNI powered by Cilium; it is a paid add-on, and Microsoft notes possible degradation above roughly 1,000 requests per second per pod [28].",
+   "locator": "§6.2",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "（引用的厂商文档约束，非本文测量）GKE 的 FQDNNetworkPolicy 资源需 GKE Dataplane V2，且每个 FQDN 上限 50 个解析地址——L4 层在 GKE 上的原生实现约束。",
+   "metric": "per_FQDN_resolved_address_cap (provider-documented)",
+   "value": "50 resolved addresses per FQDN",
+   "comparison": null,
+   "setting": "Google GKE：FQDNNetworkPolicy，需 GKE Dataplane V2；数字出自 Google Cloud 文档（引用 [29]），论文未测量",
+   "quote": "On GKE, the FQDNNetworkPolicy resource requires GKE Dataplane V2 and caps each FQDN at 50 resolved addresses [29]",
+   "locator": "§6.2",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "（引用的厂商文档声明，非本文测量）GKE 托管 Agent Sandbox（基于开源 Agent Sandbox 控制器、gVisor 隔离）以 pre-warmed pools 实现 sub-second 供给——支撑论文论点'per-session 沙箱只有在获取够快时才实用'（§5.3），论文把 sandbox acquisition time 列入待测 overhead（§7.4）。",
+   "metric": "sandbox_provisioning_latency (provider-documented)",
+   "value": "sub-second with pre-warmed pools",
+   "comparison": null,
+   "setting": "Google GKE managed Agent Sandbox add-on（gVisor 内核级隔离）；声明出自 Google Cloud 文档（引用 [25]），论文未测量",
+   "quote": "GKE Agent Sandbox is a managed add-on built on the open-source Agent Sandbox controller, uses gVisor for kernel-level isolation, and adds pre-warmed pools for sub-second provisioning, a claim-based request model, and default-deny networking for sandboxes [25].",
+   "locator": "§6.2",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "本文是框架与设计研究：评估是分析性而非经验性的；覆盖矩阵反映作者评估而非测量；具体策略工件未报告经过红队演练。",
+   "quote": "This work is a framework and design study. Its evaluation is analytical rather than empirical; the coverage matrix reflects our assessment rather than measurement; and the artifacts, while concrete, have not been subjected to a red-team exercise reported here.",
+   "locator": "§8 Discussion (Limitations)"
+  },
+  {
+   "statement": "生态快速演进，所引项目与 API 版本可能变化；论文中的策略工件仅为示意。",
+   "quote": "The ecosystem is moving quickly, and specific projects or API versions cited may change.",
+   "locator": "§8 Discussion (Limitations)"
+  },
+  {
+   "statement": "策略合规但有害的动作无法被策略层阻止：策略能禁止已知坏参数，但不能判断被允许的动作是否明智；审批门与 GitOps 审查以延迟与审批疲劳为代价。",
+   "quote": "Policy can forbid known-bad arguments; it cannot judge whether a permitted action is wise. A restart that is allowed may still be wrong.",
+   "locator": "§7.3 Residual Risk"
+  },
+  {
+   "statement": "范围内完整性攻击仍可行：被注入的 agent 仍可产出误导性摘要或提出微妙有害的 PR，此时唯一的控制是人工审查质量而非基础设施。",
+   "quote": "An injected agent can still produce misleading summaries or propose subtly harmful pull requests. Review quality, not infrastructure, is the control.",
+   "locator": "§7.3 Residual Risk"
+  },
+  {
+   "statement": "经模型通道的外泄无法关闭：模型端点必然是允许的 egress 目的地，上下文中的敏感数据按设计发送给模型提供方，只能靠 L6 最小化进入上下文的内容与合同/数据驻留控制。",
+   "quote": "The model endpoint is, by necessity, an allowed egress destination. Sensitive data in the context is sent to the model provider by design; contractual and data-residency controls apply, and L6 minimizes what enters the context.",
+   "locator": "§7.3 Residual Risk"
+  },
+  {
+   "statement": "隔离运行时与策略引擎的漏洞进入可信计算基（作者在 S3 走查中承认残余风险正是隔离运行时自身的漏洞）。",
+   "quote": "Isolation-runtime and policy-engine vulnerabilities. These components join the trusted computing base.",
+   "locator": "§7.3 Residual Risk"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "figures"],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_absent",
+  "qualitative_evaluation_only",
+  "cited_numbers_not_own_measurements"
+ ]
+}

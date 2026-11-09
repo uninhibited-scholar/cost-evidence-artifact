@@ -1,0 +1,190 @@
+{
+ "arxiv_id": "2608.27299",
+ "title": "When Context Gets Root: Privilege Escalation in LLM Harnesses",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "harness context-reconstruction surfaces that persist or re-inject attacker-controlled tool-level content: delegated subagent user messages; persistent goals (resent as user-level prompts); scheduled tasks (cron-like future user-level prompts); installed custom-subagent configuration plus AGENTS.md loaded at harness restart; skill metadata (system-effective) and invoked skill bodies (user-level)",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "Instruction privilege granted by message role labels must reflect true provenance: tool-level (untrusted) content must never be presented at user or system-effective level, and attacker-derived text must never be interpreted as user authorization by the permission reviewer. The property fails whenever harness context reconstruction (delegation, persistent goals, scheduled tasks, custom-subagent installation, skill installation) relabels content without preserving provenance; it is judged by whether attacker-induced security-sensitive actions are proposed by the working agent and allowed by Auto PR.",
+  "operationalized_as": "13 attack objectives spanning confidentiality, integrity, availability, and RCE executed on six coding-agent harnesses under full-access execution and automatic permission review; success measured as objectives achieved (x/13), post-escalation success, installation success rate, and per-attempt attack success rate"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "controls workspace artifacts the agent may read (repository files, task documents) and any state the agent derives from them",
+   "chooses text and code in those artifacts to induce normal harness operations: delegation, goal creation, task scheduling, custom-subagent installation",
+   "knows the victim harness design and its context-construction behavior"
+  ],
+  "assumptions": [
+   "all victim components (harness, working model, reviewer model) are uncompromised and behave exactly as configured and trained",
+   "attacker content first enters the model at the tool level through a file-reading or search tool",
+   "every attack originates at the tool level; malicious behavior remains visible to the model (plain-text Python, no obfuscation)",
+   "evaluation caps each case at 10 attempts (10 attempts per method for baselines)"
+  ],
+  "not_covered": [
+   "direct injection of higher-privilege context (e.g., auto-loaded subagents or skills)",
+   "attacker control of user request, harness, working/reviewer models, developer instructions, tool permissions, sandbox policy, or approval policy",
+   "initial shell access or execution capability outside the victim agent",
+   "prompt injection or model jailbreaks, user deception, and obtaining genuine authorization",
+   "obfuscated attacks that hide malicious behavior from the model (Friendly Fire style)"
+  ]
+ },
+ "intervention": {
+  "name": "Instruction privilege escalation (attack): tool-to-user and tool-to-system escalation via agent-side context reconstruction",
+  "mechanism_layer": "provenance",
+  "description": "Normal harness context-construction operations (multi-agent delegation, persistent goals, scheduled tasks, custom-subagent installation, skill installation) carry attacker-controlled tool-level content into new model-facing contexts at a higher instruction level (user message or system-effective prompt), dropping its original provenance. The elevated content then directs the working agent and is read by automatic permission review as user authorization."
+ },
+ "results": [
+  {
+   "claim": "In the paper's evaluation, delegation-based tool-to-user escalation achieves all 13 attack objectives on every harness under full-access execution and on all three harnesses that provide Auto PR (Claude Code, Codex, Qwen Code) under automatic permission review, with per-attempt attack success rates of 31.7%-100% and over 86% success once escalation occurs.",
+   "metric": "objectives achieved and attack success rate (ASR)",
+   "value": "13/13 objectives; ASR 31.7%-100%; post-escalation success over 86%",
+   "comparison": null,
+   "setting": "six coding-agent harnesses (Claude Code, Codex, Gemini CLI, Qwen Code, Kimi, OpenCode) under full-access execution and Auto PR; attacker controls repository content; each case capped at 10 attempts",
+   "quote": "Overall, tool-to-user escalation achieves all 13 attack objectives, with attack success rates ranging from 31.7% to 100%. Once escalated, the attack succeeds in over 86% of cases.",
+   "locator": "§8.3",
+   "denominator": {
+    "n_total": "all execution attempts per objective (each case capped at 10 attempts)",
+    "n_valid": null,
+    "how_counted": "Table 7: attack success is measured over all execution attempts; post-escalation success is conditional on escalation"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Across the evaluated harness-permission configurations, tool-to-user escalation yields a 97.3% mean success rate after escalation and tool-to-system escalation an 80.3% mean per-attempt attack success rate.",
+   "metric": "mean post-escalation success rate / mean per-attempt ASR",
+   "value": "97.3% (tool-to-user, post-escalation); 80.3% (tool-to-system, per-attempt)",
+   "comparison": null,
+   "setting": "six coding-agent harnesses, 13 attack objectives, full-access and Auto PR regimes",
+   "quote": "Across the evaluated harness–permission configurations, tool-to-user escalation achieves a 97.3% mean success rate after escalation, while tool-to-system escalation achieves an 80.3% mean per-attempt attack success rate.",
+   "locator": "§1 Contributions (Empirical Results)",
+   "denominator": {
+    "n_total": "the 6 Full Access + 3 Auto PR harness-permission rows of Table 7 and Table 10 (9 configurations)",
+    "n_valid": null,
+    "how_counted": "Both figures are means across the evaluated harness-permission configurations: 97.3% is the mean of the 'Success after escalation' column of Table 7 (Full Access: 100.0/100.0/96.2/100.0/96.2/96.2; Auto PR: 86.7/100.0/100.0) and 80.3% is the mean of the 'Attack success rate' column of Table 10 (Full Access: 86.7/100.0/86.7/65.0/86.7/86.7; Auto PR: 76.5/72.2/61.9, using the Table 10 value 72.2% for Codex although the prose states 70.0%). All nine per-configuration cell values are verbatim in the tables and both means reproduce the stated 97.3% and 80.3%."
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Tool-level baseline attacks (MCPTox, CoT Forgery, ChatInject) achieve 0 of 13 objectives on all three Auto PR harnesses, whereas escalation succeeds on all objectives under the same regime.",
+   "metric": "objectives achieved (x/13)",
+   "value": "0/13 objectives for each baseline method under Auto PR",
+   "comparison": "0/13 baseline vs 13/13 escalation under Auto PR",
+   "setting": "Claude Code, Codex, Qwen Code under automatic permission review; attack prompt in README.md targeting setup.py; 10 attempts per method",
+   "quote": "| Automatic Permission Review |\n| Claude Code | 0/13 | 0/13 | 0/13 |\n| Codex | 0/13 | 0/13 | 0/13 |\n| Qwen Code | 0/13 | 0/13 | 0/13 |",
+   "locator": "§8.2 Table 5 (Automatic Permission Review block)",
+   "denominator": {
+    "n_total": "13 attack objectives per method-harness cell",
+    "n_valid": "0",
+    "how_counted": "Each entry reports the number of attack objectives achieved out of 13"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Tool-to-system escalation via custom-subagent installation achieves high installation success on all six harnesses: 46.2%-100% of trials under Auto PR and 84.6%-100% under full access.",
+   "metric": "installation success rate",
+   "value": "46.2%-100% under Auto PR; 84.6%-100% under full access",
+   "comparison": null,
+   "setting": "custom subagent installed via tool-to-user escalation; Auto PR when available (Claude Code, Codex, Qwen Code), full access otherwise (Gemini CLI, Kimi, OpenCode)",
+   "quote": "Table 9 shows that tool-to-system escalation achieves high installation success rates. Under Auto PR, Claude Code, Codex, and Qwen Code succeed in 46.2%–100% of trials. Under full-access mode, Gemini CLI, Kimi, and OpenCode succeed in 84.6%–100% of trials.",
+   "locator": "§8.4 Table 9",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "With the malicious payload hidden in a separate script, tool-to-system escalation reaches a 65.0%-100% per-attempt attack success rate on all six harnesses in full-access mode; per Table 10, Codex reaches 100.0% while Claude Code reaches 86.7% (13/15), so the prose statement that 'Claude Code and Codex reaching 100%' conflicts with Table 10.",
+   "metric": "attack success rate (ASR)",
+   "value": "65.0%-100% (hidden-script variant, full access)",
+   "comparison": null,
+   "setting": "hidden-script custom-subagent variant; six harnesses under full-access execution; attacks detector-confirmed",
+   "quote": "Table 10 reports the attack success rate of the hidden-script variant. In full-access mode, all six harnesses achieve high success rates, ranging from 65.0% to 100%, with Claude Code and Codex reaching 100%.",
+   "locator": "§8.4 Table 10",
+   "denominator": {
+    "n_total": "total number of attempts per harness (13-20 in Table 10)",
+    "n_valid": "13 detector-confirmed successful attacks on each harness",
+    "how_counted": "Attack success rate is the number of detector-confirmed successful attacks divided by the total number of attempts"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The hidden-script tool-to-system attack stays effective under automatic permission review, reaching 76.5% on Claude Code, 70.0% on Codex, and 61.9% on Qwen Code; note the prose value for Codex differs from the 72.2% shown in Table 10.",
+   "metric": "attack success rate (ASR) under Auto PR",
+   "value": "76.5% / 70.0% / 61.9% (Claude Code / Codex / Qwen Code)",
+   "comparison": null,
+   "setting": "hidden-script custom-subagent variant under automatic permission review; reviewer sees the modifications but approves execution",
+   "quote": "The attack remains effective under Auto PR, reaching 76.5% on Claude Code, 70.0% on Codex, and 61.9% on Qwen Code.",
+   "locator": "§8.4 Table 10",
+   "denominator": {
+    "n_total": "attempts per harness under Auto PR (17 / 18 / 21 in Table 10)",
+    "n_valid": "13 detector-confirmed successful attacks on each harness",
+    "how_counted": "Attack success rate is the number of detector-confirmed successful attacks divided by the total number of attempts"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "When the malicious intent is stated directly in the system-effective prompt, tool-to-system escalation completes only 55 of 117 objective-configuration combinations, so concealment of the payload matters for this path.",
+   "metric": "objective-configuration combinations completed",
+   "value": "55 of 117 combinations (direct variant)",
+   "comparison": null,
+   "setting": "direct variant of custom-subagent system prompt; 13 objectives across six harnesses in full-access mode and three under Auto PR",
+   "quote": "when the malicious intent is exposed directly in the system prompt, tool-to-system escalation completes 55 of 117 objective–configuration combinations, covering 13 objectives across six harnesses in full-access mode and three under Auto PR.",
+   "locator": "§8.4 (after Table 10)",
+   "denominator": {
+    "n_total": "117 objective-configuration combinations",
+    "n_valid": "55",
+    "how_counted": "13 objectives across six harnesses in full-access mode and three under Auto PR"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Tool-to-user escalation through persistent goals and scheduled tasks achieves all 13 attack objectives on all four evaluated agent-accessible paths, showing the vulnerability generalizes beyond multi-agent delegation.",
+   "metric": "objectives achieved (x/13)",
+   "value": "13/13 objectives on all four goal and scheduled-task paths",
+   "comparison": null,
+   "setting": "four agent-accessible goal/scheduled-task paths in Claude Code, Codex, and Qwen Code; Auto PR when the reconstructed task is visible to the reviewer, full access otherwise",
+   "quote": "Table 12 shows that all four paths achieve all 13 attack objectives. This demonstrates that instruction privilege escalation is not specific to multi-agent delegation, but generalizes across multiple context-reconstruction mechanisms, including persistent goals and scheduled tasks.",
+   "locator": "§8.5 Table 12",
+   "denominator": {
+    "n_total": "13 attack objectives",
+    "n_valid": "13",
+    "how_counted": "all four paths achieve all 13 attack objectives"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The unified system-effective level is only an analytical category, not a single instruction level with uniform privilege; privilege can differ within it across protocols and prompt positions.",
+   "quote": "We use system-effective as an analytical category for prompt surfaces placed above ordinary user-level instructions, not as a single instruction level with uniform privilege. Privilege can differ within this category for two reasons",
+   "locator": "§10 Discussion"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_not_read",
+  "denominator_unclear",
+  "no_dedicated_limitations_section",
+  "prose_vs_table_discrepancy_codex_auto_pr_asr_70.0_vs_72.2",
+  "prose_vs_table_discrepancy_claude_code_full_access_asr_100_vs_86.7"
+ ]
+}

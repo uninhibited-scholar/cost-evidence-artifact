@@ -1,0 +1,218 @@
+{
+ "arxiv_id": "2610.31446",
+ "title": "When Is a Memory Safe Enough to Act On? Action-Conditioned Verification for Long-Lived Agents",
+ "screening_status": "核心研究",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Persistent memory claims with provenance (write time, source, supporting observation, recorded confidence) held in a memory graph G_M; instantiated as agent memory in ToolSandbox/AppWorld simulators with a hidden perturbation applied between sessions",
+  "operations_covered": ["retrieval"]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "A stale or wrong memory premise must not turn into a harmful action: before each candidate commit, the gate must either re-verify the action's memory premises, proceed only when the expected-loss and posterior harm-probability screens hold, or abstain (decline without verifying at high consequence). Failure condition: executing a commit on a false premise (wrong recipient, policy violation, task failure). Judged by Gate harmful rate and Unsafe Pass rate over Gate-evaluable instances, with safe-proceed recall and Proceed coverage reported alongside so safety is not bought by declining everything.",
+  "operationalized_as": "Gate harmful rate = harmful executions over all Gate-evaluable instances; Unsafe Pass rate (harmful-candidate analogue); safe-proceed recall (fraction of ground-truth-safe Gate-evaluable candidates executed); Proceed coverage; all measured by ToolSandbox/AppWorld native state-based evaluators rather than LLM judgment."
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "Non-adversarial memory staleness: hidden environment perturbations drawn from ten families (V0-V9) spanning no change, single and multiple critical changes, irrelevant and correlated changes, unverifiable premises, noisy (r=0.9 or 0.7) and contradictory verifiers, cost-inverted verifier sets, and misleading source trust (trust 0.95 while the world is stale)",
+   "Memory claims can be stale, contradicted, or missing while retaining plausible provenance and recorded confidence",
+   "Some action premises have no available verifier; verifier sets can pair a cheap noisy channel with an expensive reliable one"
+  ],
+  "assumptions": [
+   "Simulator ground truth is never injected into memory; history sessions write only tool-observed or user-supplied facts",
+   "Verifier costs, reliabilities, and availability are explicit and held fixed across methods; environment replay is deterministic from snapshot and seed",
+   "The gate sees only the agent's information set: unperturbed and single-critical-change instances are indistinguishable before the first verification",
+   "An executable consequence signal or explicit policy specification exists to define the asymmetric loss L"
+  ],
+  "not_covered": [
+   "Adversarial attacks: no memory poisoning, prompt injection, or adversary writing to memory is modeled",
+   "Cross-user or multi-agent tampering with shared memory",
+   "Real irreversible consequences outside simulator scoring (reputational damage, downstream human cost, delayed effects)",
+   "Confidentiality/leakage properties of memory content",
+   "Premise completeness, calibration correctness, and observation-model correctness (oracle guarantees scoped in Appendix C.2)"
+  ]
+ },
+ "intervention": {
+  "name": "AMV-Guard",
+  "mechanism_layer": "execution",
+  "description": "An action-conditioned verification gate between planner and executor. For each candidate commit it: (1) extracts the action's premises (direct/transitive/joint) via an LLM extractor plus a public tool-contract rule layer with a counterfactual relevance filter; (2) estimates calibrated memory-error probabilities per supporting claim (logistic base model + Platt/beta/bounded-isotonic calibration over recency, source, consistency, graph position, and model-confidence features) and converts them to action-precondition violation probabilities; (3) applies a screened stopping value (expected-loss threshold delta, posterior harm-probability limit epsilon, abstention cost kappa); (4) selects checks by greedy one-step VOI with a bounded two-step fallback, re-deciding after each observation. If a required premise is invalidated (posterior violation probability above rho), the gate returns ReplanRequired instead of executing the stale candidate. Theoretical core: Proposition 1 shows increasing action consequence can move the same memory through proceed, verify, and direct-abstain regimes."
+ },
+ "controls": [
+  {"name": "Always Proceed", "purpose": "baseline"},
+  {"name": "Always Verify (all)", "purpose": "baseline"},
+  {"name": "AMV-Static (static verification policy given same calibrated beliefs, predicted dependencies, costs, reliabilities)", "purpose": "ablation"},
+  {"name": "AMV-NoLoss (no loss/consequence conditioning)", "purpose": "ablation"},
+  {"name": "EnvProbe-Simple / EnvProbe (adapted environment-probing)", "purpose": "baseline"},
+  {"name": "CTA (Calibrate-Then-Act, cost-aware acquisition)", "purpose": "baseline"},
+  {"name": "ExactPlanner-PredictedDep (information-constrained exact planner, evaluation reference)", "purpose": "positive-control"},
+  {"name": "Raw (uncalibrated) model confidence as belief", "purpose": "negative-control"}
+ ],
+ "results": [
+  {
+   "claim": "On ToolSandbox (Qwen3.5-35B-A3B backbone, 3 observation seeds), adaptive action-conditioned verification (AMV-Guard) reduces mean verification cost by 33.9% vs AMV-Static given identical calibrated beliefs and predicted dependencies, while both methods retain 100% safe-proceed recall, 0% Unsafe Pass and 0% Gate harmful, buying 5.33 points more Proceed coverage and 1.56 points more task success at 0.21 points higher raw harm.",
+   "metric": "verification_cost_reduction",
+   "value": "-33.9% mean verification cost vs AMV-Static",
+   "comparison": "100% safe-proceed recall, 0% Unsafe Pass, 0% Gate harmful retained; +5.33 points Proceed coverage, +1.56 points task success, +0.21 points raw harm",
+   "setting": "ToolSandbox live end-to-end, Qwen3.5-35B-A3B backbone; 640 test instances x 3 observation seeds; per Table 4 (counts are train/development/test) the test split covers V0, V1, V2, and V5-V9 only — V3 (two critical changes) and V4 (correlated event) are 160/0/0 train/development/test, so the main test includes neither multi-critical-change nor correlated-change perturbations; AMV-Guard vs AMV-Static given same predicted dependencies, calibrated beliefs, verifier costs and reliabilities",
+   "quote": "Relative to AMV-Static, it reduces cost by 33.9% while both methods retain 100% safe-proceed recall, 0% Unsafe Pass, and 0% Gate harmful. This saving accompanies 5.33 points more Proceed coverage and 1.56 points more task success, with raw harm 0.21 points higher.",
+   "locator": "§5.2",
+   "denominator": {
+    "n_total": "640 test instances per seed x 3 observation seeds",
+    "n_valid": "Gate metrics (safe-proceed recall, Unsafe Pass, Gate harmful, Proceed coverage, verification cost): 600 Gate-evaluable per seed, 1,800 over three seeds; end-to-end metrics (task success, raw harm): all 640 test instances per seed, including the 40 with initial-candidate action or intent errors",
+    "how_counted": "Section 5.1: the Gate metrics exclude the 40 test instances with initial-candidate action or intent errors, leaving 600 per seed and 1,800 over three seeds; task success is end-to-end, and raw harm records any executed action whose observed loss exceeds the threshold, including planning or intent failures"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "At the main ToolSandbox operating point (delta=0.5, lambda=0.1), AMV-Guard attains 0.00% Gate harmful and 100.00% safe recall at 1.219 mean verification cost and 44.17% Proceed coverage, coinciding with the ExactPlanner-PredictedDep reference on every reported metric (agreement within the modelled problem, not evidence of optimality).",
+   "metric": "gate_harmful_rate_and_verify_cost_operating_point",
+   "value": "0.00% Gate harmful, 100.00% safe recall, 1.219 mean verify cost, 44.17% Proceed coverage",
+   "comparison": "AMV-Static 1.843 -> AMV-Guard 1.219 verify cost; coverage 38.83% -> 44.17%",
+   "setting": "ToolSandbox live end-to-end (Table 1: 3 observation seeds x 640 test instances); native state-based evaluators; Gate harmful and Coverage use all Gate-evaluable instances",
+   "quote": "| AMV-Static | 100.00% | 0.00% | 1.843 | 72.34% | 6.82% | 38.83% | | AMV-Guard (ours) | 100.00% | 0.00% | 1.219 | 73.91% | 7.03% | 44.17% |",
+   "locator": "§5.2 Table 1",
+   "denominator": {
+    "n_total": "640 test instances per seed x 3 observation seeds",
+    "n_valid": "600 Gate-evaluable per seed; 1,800 over three seeds",
+    "how_counted": "Section 5.1: metrics exclude the 40 test instances with initial-candidate action or intent errors, leaving 600 per seed and 1,800 over three seeds"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In a gate-core transfer to AppWorld (recalibration only, no retraining, carrying the stopping/VOI core but not the full structured pipeline), AMV-Guard lowers verification cost by 21.28% vs AMV-Static (2.090 vs 2.655) and Gate harmful to 7.89% vs 8.42%, but does not improve task success (28.00% vs 30.50%) or safe-proceed recall (70.53% vs 72.63%); bootstrap intervals are broad.",
+   "metric": "verification_cost_reduction",
+   "value": "-21.28% verification cost vs AMV-Static",
+   "comparison": "cost 2.655 -> 2.090; Gate harmful 8.42% -> 7.89%; task success 30.50% -> 28.00%; safe recall 72.63% -> 70.53%",
+   "setting": "AppWorld gate-core transfer: 100 state-mutating tasks under clean and stale-memory conditions (200 episodes per method, 190 Gate-evaluable); each commit mapped to one compound premise plus one compound verifier; paired task-level bootstrap (2,000 resamples)",
+   "quote": "AMV lowers verification cost by 21.28% relative to AMV-Static (2.090 vs. 2.655) and raw harm by 0.50 percentage points, with 7.89% vs. 8.42% Gate harmful, but does not improve task success (28.00% vs. 30.50%) or safe-proceed recall (70.53% vs. 72.63%).",
+   "locator": "§5.5 Table 3",
+   "denominator": {
+    "n_total": "200 clean/stale episodes per method (100 tasks)",
+    "n_valid": "190 Gate-evaluable",
+    "how_counted": "Table 3: AppWorld gate-core transfer (100 tasks, 200 clean/stale episodes per method; 190 Gate-evaluable)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Holding the candidate action and memory evidence fixed and rescaling only total loss (500 instances per consequence level), consequence conditioning makes AMV verify 0%/15.8%/62.8% at low/medium/high loss and cuts its high-loss harmful-proceed rate to 0% vs 64.2% without loss conditioning; baselines without loss conditioning verify at the same rate at every level.",
+   "metric": "harmful_proceed_rate",
+   "value": "0% high-loss harmful-proceed rate with loss conditioning",
+   "comparison": "0% (AMV-Guard with loss conditioning) vs 64.2% (without loss conditioning)",
+   "setting": "ToolSandbox controlled action-consequence intervention; action and memory evidence fixed, only total loss rescaled; 500 instances per consequence level",
+   "quote": "AMV verifies 0%, 15.8%, and 62.8% of low-, medium-, and high-loss cases; its high-loss harmful-proceed rate is 0%, versus 64.2% without loss conditioning.",
+   "locator": "§5.3 Table 7",
+   "denominator": {
+    "n_total": "3 loss levels x 500 instances per level",
+    "n_valid": "500 per consequence level",
+    "how_counted": "Table 7: Action-consequence intervention (500 instances per consequence level)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "At the selected ToolSandbox development configuration (kappa=1, lambda=0.1, rho=0.95), enabling the bounded two-step VOI fallback raises safe-proceed recall from 17.0% to 100% and Proceed coverage from 5.31% to 31.25% while both settings retain 0% harmful proceeds, at mean verification cost rising from 0.059 to 1.213.",
+   "metric": "safe_proceed_recall",
+   "value": "safe-proceed recall 17.0% -> 100% with two-step fallback",
+   "comparison": "coverage 5.31% -> 31.25%; verify cost 0.059 -> 1.213; 0% harmful proceeds in both settings",
+   "setting": "ToolSandbox development configuration (kappa=1, lambda=0.1, rho=0.95); two-step fallback enabled vs disabled; denominators for this dev comparison not stated in the paper",
+   "quote": "enabling the two-step fallback raises safe-proceed recall from 17.0% to 100% and Proceed coverage from 5.31% to 31.25%, while both settings retain 0% harmful proceeds; mean verification cost rises from 0.059 to 1.213.",
+   "locator": "§5.4",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Under premise-extraction distribution shift (160 candidates per stratum), the deployed Union+CF extractor keeps critical premise recall at 95.91%/92.45%/94.97% on unseen tool families / unseen domain schemas / unstructured language, but Gate harmful rises to 8.23%/15.19%/10.13% on those strata (dependency accuracy falls most on unstructured language); safe-proceed recall stays 100% in all four strata.",
+   "metric": "critical_premise_recall_and_gate_harmful",
+   "value": "critical recall 95.91% / 92.45% / 94.97%; Gate harmful 8.23% / 15.19% / 10.13% on the three OOD strata",
+   "comparison": null,
+   "setting": "Controlled premise-extraction OOD strata: unseen tool families, unseen domain schemas, unstructured language; 160 candidates each, 158 Gate-evaluable per stratum; Union+CF (LLM+Graph with counterfactual filtering) extractor",
+   "quote": "the deployed Union+CF extractor (LLM+Graph with counterfactual filtering) has critical recall 95.91%, 92.45%, and 94.97% and Gate harmful 8.23%, 15.19%, and 10.13% on unseen tool families, unseen domain schemas, and unstructured language",
+   "locator": "§5.5 Table 9",
+   "denominator": {
+    "n_total": "160 candidates per stratum x 4 strata (640 candidate IDs total)",
+    "n_valid": "158 Gate-evaluable candidates per stratum",
+    "how_counted": "Extraction metrics use all 160 candidates per stratum; Gate harmful and verification cost use the 158 Gate-evaluable candidates remaining after excluding two initial action/intent-ineligible cases per stratum"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "On ToolSandbox, AMV-Guard has 0% Unsafe Pass and 0% Gate harmful while raw end-to-end harm is 7.03% once planning/intent failures are included, i.e. residual harm traces to planner/intent errors outside the gate rather than unsafe gate approvals.",
+   "metric": "gate_harmful_vs_raw_harm",
+   "value": "0% Gate harmful; 7.03% raw end-to-end harm",
+   "comparison": null,
+   "setting": "ToolSandbox main test (same runs as Table 1); failure-ownership decomposition; 6.25% of episodes have initial-candidate action/intent errors",
+   "quote": "on ToolSandbox, AMV-Guard has 0% Unsafe Pass and 0% Gate harmful, while raw end-to-end harm is 7.03% once planning/intent failures are included",
+   "locator": "§5.6",
+   "denominator": {
+    "n_total": "640 test instances per seed x 3 observation seeds",
+    "n_valid": "Gate metrics (Unsafe Pass, Gate harmful): 600 Gate-evaluable per seed, 1,800 over three seeds; raw end-to-end harm: all 640 test instances per seed (6.25% of episodes have an initial-candidate action or intent error)",
+    "how_counted": "Section 5.1/5.6: the Gate metrics exclude the 40 test instances with initial-candidate action or intent errors, leaving 600 per seed and 1,800 over three seeds; raw harm is end-to-end and includes planning or intent failures, which is exactly the population contrast the claim's failure-ownership inference rests on"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Across Qwen3.5-35B-A3B, Qwen3.5-27B, and DeepSeek-V4.1-Flash backbones (each with its own frozen candidates, calibration, and thresholds), adaptive VOI reduces mean verification cost by 33.9%, 42.3%, and 58.9% respectively, with zero measured Gate harm for both static and adaptive policies on all three backbones; Proceed coverage increases by 5.33 points, is unchanged, and decreases by 5.68 points across the three backbones, and on DeepSeek-V4.1-Flash the paper reports less favourable downstream outcomes (task success 74.79 -> 70.16, raw harm 14.27 -> 15.78).",
+   "metric": "verification_cost_reduction",
+   "value": "-33.9% / -42.3% / -58.9% mean verification cost across the three backbones",
+   "comparison": "AMV-Static -> AMV-Guard per backbone; zero measured Gate harm for all three",
+   "setting": "ToolSandbox cross-backbone evaluation; 640 test episodes per seed x 3 verifier-observation seeds per backbone; backbone-specific candidates, calibration, and threshold selection; shared metric definitions",
+   "quote": "adaptive VOI reduces mean verification cost for all three backbones, by 33.9%, 42.3%, and 58.9% (Tables 5 and 11). Both Static and adaptive policies have zero measured Gate harm for all three backbones.",
+   "locator": "§5.2 Tables 5 and 11",
+   "denominator": {
+    "n_total": "640 test episodes per seed x 3 seeds per backbone",
+    "n_valid": "Gate-evaluable instances (600 per seed stated for the main backbone; per-backbone counts not stated)",
+    "how_counted": "Table 11: Values are means over three verifier-observation seeds with 640 test episodes per seed"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Premise extraction is partly model-driven: the counterfactual filter cannot recover a premise never proposed, so extractor recall upper-bounds the whole pipeline.",
+   "quote": "Premise extraction remains partly model-driven: the counterfactual procedure of Section 4.2 filters proposed premises but cannot recover one never proposed, so extractor recall upper-bounds the pipeline",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "The deployed planner is a bounded approximation (one-step VOI plus depth-two fallback) and need not match the exact planner on longer complementary verification sequences.",
+   "quote": "The deployed planner is a bounded approximation: it prefers any positive one-step VOI and invokes only a depth-two fallback when no such query exists, so it need not match the full exact planner on longer complementary sequences.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "The observation model uses binary support/refute outcomes with stated reliability; a verifier covering several premises produces one shared binary observation, an approximation rather than an exact joint observation model.",
+   "quote": "The current ToolSandbox observation model uses binary support/refute outcomes with stated verifier reliability. A verifier covering several premises produces one shared binary observation",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "The risk engine cannot represent several distinct joint hyperedges in one candidate (jointly marked premises share one latent draw).",
+   "quote": "It therefore cannot represent several distinct joint hyperedges in one candidate.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "The loss function needs an executable consequence signal or explicit policy specification; where neither exists the asymmetry is hand-supplied, and sensitivity analysis characterises but does not remove that dependence.",
+   "quote": "The loss function requires an executable consequence signal or an explicit policy specification; where neither exists the asymmetry must be supplied by hand, and sensitivity analysis characterises but does not remove that dependence.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "Simulators do not capture every real irreversible consequence (reputational damage, downstream human cost, delayed effects), so reported harm rates are harm on the modelled consequences only.",
+   "quote": "Our simulators do not capture every real irreversible consequence — reputational damage, downstream human cost, and delayed effects are outside what the evaluators score — so reported harm rates are harm on the modelled consequences.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "No per-perturbation-family or per-action-class breakdowns and no scalability analysis over premise count, verifier count, and dependency depth are reported yet.",
+   "quote": "We also do not yet report per-perturbation-family and per-action-class breakdowns or scalability over premise count, verifier count, and dependency depth.",
+   "locator": "Limitations"
+  }
+ ],
+ "reproduction": {
+  "code": "Anonymous repositories: https://anonymous.4open.science/r/AMV-Guard-AEF6/ (main), .../AMV-Guard-3668/ (Qwen cross-backbone), .../AMV-Guard-AB3A/ (DeepSeek cross-backbone); environment lock file, prompts, seeds, fitted calibrators and hash manifest versioned with the code",
+  "data": "ToolSandbox (pinned commit 165848b9a78cead7ca7fe7c89c688b58e6501219) and AppWorld (commit 42b5bcf3cd334fee33f0c37c02070a9f5807add5); 3,520 frozen ToolSandbox instances (2,240/640/640) plus 100 paired AppWorld tasks; large row-level premise files promised with the final artifact",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+  "complete": true
+ },
+ "quality_flags": ["denominator_unclear"]
+}

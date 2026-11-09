@@ -1,0 +1,179 @@
+{
+  "arxiv_id": "2609.01852",
+  "title": "The Memory Trust Gap: Capability-Dependent Failures in Persistent-Memory Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "stored agent-memory notes in a frozen synthetic action-scored benchmark (300 base scenarios, 150 per suite, 33 template families, SHA-256 pinned v1); each stored item carries observable surface features: label, timestamp, source, position",
+    "operations_covered": ["retrieval"]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "An agent consuming persistent memory must not let a stale stored fact override current authoritative evidence (an authoritative tool holding the correct value); the Memory Trust Gap is the over-trust failure in which following the stale value drops action accuracy below the no-memory baseline (net harm), and both the harm, its triggering memory features, and the effective mitigation are capability-dependent.",
+    "operationalized_as": "stale-value reliance = P(answer = stale value) and paired net harm Delta_mem = acc(cond) - acc(no_memory) on an action-scored frozen benchmark (exact/regex/canonical match, no LLM judge; circular option-permutation averaging, n_options=3; 95% percentile bootstrap over scenario ids); capability threshold rho* = first trap level whose stale Delta_mem CI upper bound < 0"
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [
+      "no active adversary is posited; the benchmark itself injects the stale stored fact and controls its observable surface features (label removed, stale note dated newer, inflated/official source, stale note placed first) across trap levels L0-L3"
+    ],
+    "assumptions": [
+      "stale stored facts exist in persistent memory (the world changed but the stored note was not superseded)",
+      "in the Safety suite an authoritative tool always holds the correct current value, so the no-memory baseline is ceilinged",
+      "frozen closed-set benchmark with 3 answer options and circular permutation averaging; greedy decoding and identical prompts across the Qwen3 0.6/1.7/4/8B same-family series",
+      "unparsed responses are counted as non-compliant, never as following-stale, so reported over-trust is a conservative lower bound"
+    ],
+    "not_covered": [
+      "no adaptive or memory-poisoning attacker",
+      "failure measured only at memory-consumption time, not across an end-to-end write/update/retrieve system",
+      "no broad family-by-scale grid (primary series is one family, Qwen3); rho* is defined on this paper's trap-level sequence"
+    ]
+  },
+  "intervention": {
+    "name": "Representation comparison: metadata frame vs. pre-resolution oracle (plus [AUTHORITATIVE] structural marking)",
+    "mechanism_layer": "provenance",
+    "description": "The same stale/current conflict is re-rendered three ways: raw (stale and current items both present, unmarked); metadata (each item annotated with its provenance and timestamp); and a representation-oracle that removes the stale item entirely (supersession pre-applied, act-only). Additionally, structurally marking the authoritative item as [AUTHORITATIVE] while leaving the stale note present (deterministic-adjudication intervention of Reddy and Challaram 2026) reduces stale-value reliance only for the capable models. Metadata exposure restores accuracy only for 4B/8B; only pre-resolution restores it for 0.6B/1.7B."
+  },
+  "results": [
+    {
+      "claim": "In the Benefit suite (task unsolvable without the stored fact), models answer with the stale value 0.92-1.00 of the time at every model size, so over-trust is universal across the 0.6B-8B scale series.",
+      "metric": "stale-value reliance (P(answer = stale value))",
+      "value": "0.92/0.99/1.00/1.00",
+      "comparison": null,
+      "setting": "Qwen3 0.6/1.7/4/8B, non-thinking, greedy decoding, frozen benchmark v1 Benefit suite (150 base scenarios), circular option-permutation averaging",
+      "quote": "In the Benefit suite, the stale-value reliance is 0.92 / 0.99 / 1.00 / 1.00 across 0.6/1.7/4/8B, and the paired harm is",
+      "locator": "§4.1 (Table 2)",
+      "denominator": {
+        "n_total": "150 Benefit-suite base scenarios",
+        "n_valid": null,
+        "how_counted": "reliance = P(answer = stale value); each scenario scored under every cyclic rotation of its 3 options and averaged; statistical unit is the base scenario, 95% percentile bootstrap over scenario ids"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the Safety-suite trap sweep, significant net harm from following the stale memory over the authoritative tool begins at trap level L0 for the 0.6B model but only at L1 for 1.7B/4B/8B, so the capability threshold separates 0.6B from the rest without a monotone capability ordering.",
+      "metric": "capability threshold rho* (first trap level with stale Delta_mem CI upper bound < 0)",
+      "value": "rho*=0/1/1/1",
+      "comparison": null,
+      "setting": "Qwen3 0.6/1.7/4/8B, Safety suite (authoritative tool always correct, no-memory baseline >= 0.98), trap levels L0-L3, 95% percentile bootstrap",
+      "quote": "The 0.6B model crosses into significant net harm already at L0, whereas 1.7B/4B/8B first cross at L1: ρ ∗ = 0 / 1 / 1 / 1 \\rho^{\\ast}=0/1/1/1 . The threshold therefore separates the 0.6B model from the other 3 models; it does not produce a monotone ordering by capability.",
+      "locator": "§4.2 (Table 3)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "At the highest recency-inflated trap level the largest model collapses completely (reliance 1.00, net harm -1.00), and making the stale note appear newer increases harm for the larger models.",
+      "metric": "stale-value reliance and Delta_mem at trap level",
+      "value": "reliance=1.00, Delta_mem=-1.00 (8B, L3)",
+      "comparison": "at L2 the 4B model has reliance 0.83",
+      "setting": "Qwen3 8B and 4B, Safety-suite recency-inflated trap levels L2/L3, authoritative tool always holds the correct value",
+      "quote": "At L3, the 8B model has reliance 1.00 1.00 and Δ mem \\Delta_{\\mathrm{mem}} 1.00 -1.00 ; at L2, the 4B model has reliance 0.83 0.83 . Making the stale note appear newer therefore increases harm for the larger models.",
+      "locator": "§4.2 (Table 3, Figure 2)",
+      "denominator": {
+        "n_total": "150 Safety-suite base scenarios",
+        "n_valid": null,
+        "how_counted": "per-trap-level stale-value reliance and paired Delta_mem vs no_memory; 95% percentile bootstrap over scenario ids"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Which memory feature triggers over-trust scales: dating the stale note newer (recency) fools the larger models significantly harder, while placing the stale note first reverses sign across the size series; label removal is universal and inflated source authority shows no scale interaction.",
+      "metric": "cross-size contrast of factorial main effect on stale-value reliance (Delta reliance)",
+      "value": "recency +.302* (8B vs 0.6B); position -.326* (8B vs 0.6B)",
+      "comparison": "mean(large)-mean(small)=+.333* for recency",
+      "setting": "2x2x2x2 factorial on the Safety suite (16 cells per scenario, 4 binary memory features: label, recency, authority, position), Qwen3 0.6/1.7/4/8B, paired cross-size bootstrap",
+      "quote": "Recency is significantly stronger on the larger models (8B 0.6B = + .302 ∗ =+.302^{*} ; mean(large) mean(small) = + .333 ∗ =+.333^{*} ), position significantly reverses (8B 0.6B = .326 ∗ =-.326^{*} ), authority shows no interaction (ns)",
+      "locator": "§5.2 (Table 6)",
+      "denominator": {
+        "n_total": "150 Safety-suite scenarios x 16 factorial cells",
+        "n_valid": null,
+        "how_counted": "main effect = mean reliance over the 8 cells where the feature is on minus mean over the 8 where it is off; paired bootstrap of between-size differences; template-family cluster bootstrap leaves all significant effects significant"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Mitigation is capability-dependent: exposing per-item metadata restores accuracy only for the capable checkpoints (+.53/+.54 at 4B/8B), while only pre-resolving the conflict (removing the stale item) restores accuracy for the 0.6B/1.7B models, and does so at every scale.",
+      "metric": "accuracy gain over raw frame (metadata gain / oracle gain)",
+      "value": "metadata gain +.30/+.28/+.53/+.54; oracle gain +.46/+.57/+.63/+.59",
+      "comparison": "metadata vs oracle representation of the same conflict, vs raw frame",
+      "setting": "Qwen3 0.6/1.7/4/8B, three representations of the same stale/current conflict (raw / metadata / pre-resolution oracle), 95% CI on paired gains",
+      "quote": "The accuracy gain over raw is larger on the capable models ( + .30 / + .28 / + .53 / + .54 +.30/+.28/+.53/+.54 ). Only the oracle restores accuracy for the small ones, and it does so at every scale ( + .46 / + .57 / + .63 / + .59 +.46/+.57/+.63/+.59 ).",
+      "locator": "§6 (Table 7, Figure 4)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "On the external RGB dataset the paired net harm is again scale-gated, growing more negative with scale, confirming the effect is not limited to the paper's synthetic templates.",
+      "metric": "Delta_mem (accuracy vs no-memory baseline)",
+      "value": "-0.32* at 8B (RGB pooled); -0.37* (free-text arm)",
+      "comparison": null,
+      "setting": "External RGB benchmark (Chen et al. 2024), same paired Delta_mem/reliance machinery, Qwen3 series, pooled and free-text arms",
+      "quote": "On RGB, Δ mem \\Delta_{\\mathrm{mem}} is again scale-gated, growing more negative with scale ( 0.32 ∗ -0.32^{*} at 8B, confirmed by the free-text arm at 0.37 ∗ -0.37^{*} )",
+      "locator": "§7 (Table 8)",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "The over-trust pattern reproduces on the capable sizes of an independent same-lineage Llama-Instruct model-size series: Benefit-suite over-trust rises with scale (reliance 0.46/0.96/1.00 at 1B/3B/8B) and, by the paper's replication criterion (capable size ≥ 3B, above the capability floor), label, recency, and authority signs match Qwen3, while the positive-position corner seen at Qwen3-0.6B does not cross-replicate (position sign-flip is Qwen-specific) and Llama-1B is a stated capability floor (no-memory ≈ chance, memory features muted).",
+      "metric": "stale-value reliance and Delta_mem (cross-family)",
+      "value": "reliance 0.46/0.96/1.00; Delta_mem -0.10*/-0.31*/-0.36*",
+      "comparison": null,
+      "setting": "Llama-3.2-1B/3B-Instruct and Llama-3.1-8B-Instruct on the identical frozen scenarios, same metrics and bootstrap (n=150)",
+      "quote": "Benefit-suite over-trust rises with scale (reliance 0.46 / 0.96 / 1.00 0.46/0.96/1.00 ; Δ mem \\Delta_{\\mathrm{mem}} 0.10 ∗ / 0.31 ∗ / 0.36 ∗ -0.10^{*}/-0.31^{*}/-0.36^{*} ), and the memory feature signs match Qwen3",
+      "locator": "§7 / Appendix C (Table 9)",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "per-scenario bootstrap CIs on the frozen Benefit suite; parse-rate minimum 0.851; parsed-only reliance >= all-rows reliance, so reported over-trust is a conservative lower bound"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The failure is not memory-specific: a framing control finds no consistent advantage for the memory label, with a stale document trusted more than a stale memory at the 3 smaller scales and no significant difference at 8B.",
+      "metric": "paired reliance(memory) - reliance(document)",
+      "value": "-.311*/-.058*/-.013*/+.016 (ns)",
+      "comparison": null,
+      "setting": "Identical wrong item framed 3 ways ([MEMORY] / [DOCUMENT] / [EARLIER MESSAGE]), Safety suite, Qwen3 0.6/1.7/4/8B, n=150, per-scenario seeded bootstrap 95% CI",
+      "quote": "Paired reliance(memory) reliance(document) is .311 ∗ / .058 ∗ / .013 ∗ / + .016 -.311^{*}/-.058^{*}/-.013^{*}/+.016 (ns): the control finds no consistent memory-frame advantage, and a stale document is trusted more at the 3 smaller scales, with no significant difference at 8B.",
+      "locator": "§7 / Appendix D (Table 11a)",
+      "denominator": {
+        "n_total": "150",
+        "n_valid": null,
+        "how_counted": "per-scenario seeded bootstrap 95% CI on the paired contrast; n=150 scenarios each (Appendix D)"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The Benefit suite cannot express net harm on explicit_conflict because its baseline is at chance, so all net-harm claims rest on the Safety suite.",
+      "quote": "The Benefit suite cannot express net harm on explicit_conflict (its baseline is at chance), so net-harm claims rest on the Safety suite.",
+      "locator": "§8 Limitations"
+    },
+    {
+      "statement": "Scoring is closed-set and action-based, which strengthens measurement but limits open-ended generality (partly offset by the RGB free-text arm).",
+      "quote": "Scoring is closed-set and action-based by design, which strengthens measurement but limits open-ended generality (partly offset by the RGB free-text arm).",
+      "locator": "§8 Limitations"
+    },
+    {
+      "statement": "The primary model-size series is a single family (Qwen3), with cross-family reproduction only on the capable Llama sizes and no broad family-by-scale grid.",
+      "quote": "The primary model-size series is one family, with cross-family reproduction on the capable Llama sizes but no broad family × \\times scale grid.",
+      "locator": "§8 Limitations"
+    },
+    {
+      "statement": "The capability threshold rho* is defined on the paper's own trap-level sequence, and failure is measured at memory-consumption time rather than across an end-to-end write/update/retrieve system.",
+      "quote": "ρ ∗ \\rho^{\\ast} is defined on our trap-level sequence, and we measure failure at memory-consumption time rather than across an end-to-end write/update/retrieve system.",
+      "locator": "§8 Limitations"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "corpus_is_latex_extracted_text_with_interleaved_math_tokens",
+    "no_adversary_threat_model_paper_is_empirical_capability_study"
+  ]
+}

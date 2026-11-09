@@ -1,0 +1,179 @@
+{
+ "arxiv_id": "2609.08747",
+ "title": "MemSentry: A Framework for Detecting Persistent Memory Poisoning in Agentic AI",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "agent long-term/persistent memory entries (proposed persistent-memory writes derived from emails, webhooks, user-uploaded files, webpages, shared documents); MemSentry intercepts each write before it is committed to active memory",
+  "operations_covered": [
+   "formation",
+   "update"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Committing a proposed persistent-memory write must not degrade the agentic system's security posture (e.g., suppress security alerts, facilitate privilege escalation, alter trust relationships, override security policies); external-unverified writes are unconditionally quarantined and non-negotiable authority/security policy rules hold regardless of the learned poisoning-risk score. The property structurally weakens for verified insiders with maximal trust (T=1): their dangerous writes are escalated to human Review rather than automatically quarantined.",
+  "operationalized_as": "A deterministic Accept/Review/Quarantine decision per proposed write, computed from source trust T, pluggable semantic risk, attack radius over a 20-asset dependency DAG, access risk, and a signed security-state delta; judged by per-class decision accuracy over 1,000 GPT-4-generated scenarios (100% external quarantine-class detection with all four semantic methods; best classifier 91.7% overall accuracy), an insider authorization sweep, and a held-out contrast set."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "External adversary: unauthenticated actor injecting content through external channels (emails, webhooks, third-party APIs); can craft arbitrary message content; cannot authenticate as an internal user",
+   "Compromised insider (secondary attacker class): authenticated internal user passing identity verification with authorized access to some components, submitting adversarial content that exploits trust",
+   "Attacks act through stored memory content only, without modifying model weights or system prompts"
+  ],
+  "assumptions": [
+   "Source trust T can be computed from origin (external vs. internal), identity verification status, and channel integrity",
+   "The protected system can be modeled as a static component-dependency DAG with criticality scores plus an access-control matrix",
+   "A pluggable classifier can map an operation to a semantic category and risk score",
+   "MemSentry implementation was frozen prior to GPT-4 dataset generation to reduce the risk of overfitting to the evaluation scenarios"
+  ],
+  "not_covered": [
+   "Coordinated multi-step campaigns (evaluation considers individual memory operations only)",
+   "Retrieval-time or post-commit defense (MemSentry is pre-commit; poisoned entries already in persistent memory are out of scope)",
+   "Automatic quarantine of verified insiders (T=1 zeroes projected degradation, so insider operations are routed to Review instead)",
+   "Dynamic changes in security posture or dependency structure during evaluation (treated as static)"
+  ]
+ },
+ "intervention": {
+  "name": "MemSentry",
+  "mechanism_layer": "formal",
+  "description": "A formal, configuration-driven 9-step pre-admission pipeline that intercepts proposed persistent-memory writes: (1) source trust from provenance/identity/channel; (2) pluggable semantic classification (Regex, TF-IDF+SVM, SBERT+LR, or SetFit) into risk-scored categories; (3) attack radius over a component-dependency DAG; (4) access risk against an access-control matrix; (5-7) current and projected security posture with a signed security-state delta scaled by a persistence factor; (8) a weighted risk score; (9) deterministic rule-based Accept/Review/Quarantine decisions, including a mandatory policy-constraint rule that quarantines any external-unverified source regardless of content. Decisions emit template-based (non-LLM) audit explanations; a counterfactual impact evaluation compares executions with and without the candidate memory to quantify observed blast radius."
+ },
+ "results": [
+  {
+   "claim": "Across all four semantic methods, MemSentry detected 100% of external quarantine-class attacks in the GPT-4-generated scenario evaluation.",
+   "metric": "detection_rate",
+   "value": "100%",
+   "comparison": "100% for all four semantic methods (Regex, TF-IDF+SVM, SBERT+LR, SetFit)",
+   "setting": "1,000 GPT-4-generated scenarios, 70/30 stratified split (300 test samples), 20-asset dependency DAG, 10x20 access-control matrix, external unverified adversary",
+   "quote": "Across all four semantic methods, MemSentry detected 100% of external quarantine-class attacks, while SBERT+LR achieved the best overall performance with 91.7% accuracy and a macro-F1 of 0.908.",
+   "locator": "§VIII Conclusion (also Abstract, §VI-G Table IV)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "SBERT+LR is the best overall semantic classifier for the pipeline with 91.7% accuracy and 0.908 macro-F1 on the held-out test split.",
+   "metric": "accuracy_and_macro_f1",
+   "value": "91.7% accuracy, 0.908 macro-F1",
+   "comparison": "best among the four compared semantic methods",
+   "setting": "300 test samples (70/30 stratified split of 1,000 GPT-4-generated scenarios), SBERT+LR (all-MiniLM-L6-v2 frozen encoder + Logistic Regression)",
+   "quote": "SBERT+LR achieves the best overall performance with 91.7% accuracy and a 0.908 macro-F1 score, while all four methods detect 100% of external quarantine-class threats.",
+   "locator": "Abstract; §VI-G Table III",
+   "denominator": {
+    "n_total": "300",
+    "n_valid": null,
+    "how_counted": "TABLE III: Overall and Macro Metrics (300 Test Samples)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The ambiguous Review class is the main differentiator: SBERT+LR reaches 72.2% review accuracy while SetFit drops to 22.2%, despite both having perfect accept and quarantine behavior.",
+   "metric": "per_class_accuracy",
+   "value": "72.2%",
+   "comparison": "SBERT+LR 72.2% vs SetFit 22.2% review accuracy",
+   "setting": "300 test samples, 70/30 split, security-sensitive Review-class operations",
+   "quote": "SBERT+LR is best overall (91.7% accuracy, 0.908 macro-F1), with 72.2% review accuracy. SetFit underperforms on review (22.2%) despite perfect accept and quarantine.",
+   "locator": "§VI-G Fig. 6 / Table IV",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "TF-IDF+SVM is a strong, computationally inexpensive alternative at 88.0% overall accuracy, while Regex serves as a simple conservative baseline at 78.3%.",
+   "metric": "accuracy",
+   "value": "88.0%",
+   "comparison": "TF-IDF+SVM 88.0% vs Regex 78.3% overall accuracy",
+   "setting": "300 test samples, 70/30 stratified split of the GPT-4 scenario corpus",
+   "quote": "TF-IDF+SVM offers a strong and computationally inexpensive alternative at 88.0% accuracy, while SetFit performs poorly on the review class at 22.2%. Regex serves as a simple but conservative baseline with 78.3% overall accuracy.",
+   "locator": "§VII-B (Table III)",
+   "denominator": {
+    "n_total": "300",
+    "n_valid": null,
+    "how_counted": "TABLE III: Overall and Macro Metrics (300 Test Samples)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "For a fully-trusted verified insider (T=1.0), quarantine accuracy is 0% across the entire authorization sweep, a deliberate fail-to-review behavior rather than a detection miss.",
+   "metric": "per_class_accuracy",
+   "value": "0%",
+   "comparison": null,
+   "setting": "single insider attacker (internal, verified, T=1.0), authorization swept 0% to 100% in 10% increments, all 1,000 scenarios run through the full pipeline per method",
+   "quote": "The 0% quarantine accuracy in the sweep is therefore a deliberate fail-to-review behavior for trusted insiders, not a detection miss.",
+   "locator": "§VI-H (Fig. 7, Table V); §VII-A",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "authorization sweep: 'All 1000 scenarios are run through the full pipeline for each method'"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Under full insider authorization, SBERT+LR best preserves review accuracy at 0.91 while SetFit degrades to 0.027.",
+   "metric": "per_class_accuracy",
+   "value": "0.91",
+   "comparison": "SBERT+LR 0.91 vs SetFit 0.027 at 100% insider authorization",
+   "setting": "single insider (T=1.0) at 100% authorization, all 1,000 scenarios per method",
+   "quote": "SBERT+LR best preserves review accuracy under high authorization (0.91 at 100%); SetFit degrades most (0.027).",
+   "locator": "§VI-H; §VII-A (Table V)",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "On the held-out semantic contrast set, no method reliably distinguishes surface-similar operations with opposing security implications: TF-IDF+SVM resolves only 3/10 pairs, Regex 1/10, and SBERT+LR and SetFit 0/10.",
+   "metric": "pair_accuracy",
+   "value": "3/10",
+   "comparison": "TF-IDF+SVM 3/10; Regex 1/10; SBERT+LR 0/10; SetFit 0/10",
+   "setting": "20 held-out contrast items (10 pairs), never used during model fitting, contrasting e.g. authenticated vs. authorized, temporary vs. indefinite",
+   "quote": "None of the evaluated methods reliably resolves the contrast scenarios, with TF-IDF+SVM correctly distinguishing 3/10 pairs, Regex 1/10, and SBERT+LR and SetFit 0/10.",
+   "locator": "§VII-C (Table VI/VII)",
+   "denominator": {
+    "n_total": "10 pairs (20 items)",
+    "n_valid": null,
+    "how_counted": "TABLE VI: Contrast Scenario Predictions (20 items, 10 pairs)"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The evaluation considers individual memory operations only, not coordinated multi-step campaigns.",
+   "quote": "The current evaluation considers individual memory operations rather than coordinated multi-step campaigns.",
+   "locator": "§VII-E"
+  },
+  {
+   "statement": "Insider operations are escalated to Review rather than quarantined unless additional content-based hard rules are introduced.",
+   "quote": "Insider operations are escalated to review rather than quarantined unless additional content-based hard rules are introduced.",
+   "locator": "§VII-E"
+  },
+  {
+   "statement": "Security posture and dependency structure are treated as static during evaluation.",
+   "quote": "The security posture and dependency structure are treated as static during evaluation",
+   "locator": "§VII-E"
+  },
+  {
+   "statement": "Observed contrast-case failures highlight the remaining limitations of lightweight semantic classification.",
+   "quote": "the observed contrast-case failures highlight the remaining limitations of lightweight semantic classification.",
+   "locator": "§VII-E"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_not_read",
+  "denominator_unclear",
+  "evaluation_on_synthetic_GPT-4_generated_scenarios_only"
+ ]
+}

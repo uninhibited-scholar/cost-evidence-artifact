@@ -1,0 +1,122 @@
+{
+  "2503.18813|2506.12104": [
+    "population",
+    "same benchmark and quantity family, but 949 attack cases against 629 cases on a different backbone; the closest pair"
+  ],
+  "2503.18813|2608.21159": [
+    "population",
+    "949 attack cases against 144 injection episodes and 48 benign episodes"
+  ],
+  "2503.18813|2609.34132": [
+    "endpoint",
+    "attack-success rate against a counterfactual memory-modification rate"
+  ],
+  "2503.18813|2609.36603": [
+    "population",
+    "949 attack cases against a targeted subset with no stated denominator"
+  ],
+  "2503.18813|2610.01349": [
+    "population",
+    "949 attack cases against 30 adaptive authority pairs out of eight benchmarks"
+  ],
+  "2506.12104|2608.21159": [
+    "population",
+    "629 cases against 144 injection episodes and 48 benign episodes"
+  ],
+  "2506.12104|2609.07529": [
+    "population",
+    "suite injection against a learned adaptive attacker: 629 cases against 1,187 adaptive cases per seed over three seeds"
+  ],
+  "2506.12104|2609.33910": [
+    "endpoint",
+    "a level (1.4% ASR) against an increment (up to +35.1 points over the study's own control, with no absolute baseline); a level and an increment are not one endpoint"
+  ],
+  "2506.12104|2609.34132": [
+    "endpoint",
+    "attack-success rate against a counterfactual memory-modification rate"
+  ],
+  "2506.12104|2609.36603": [
+    "population",
+    "629 cases against a targeted subset with no stated denominator"
+  ],
+  "2506.12104|2610.01349": [
+    "population",
+    "629 cases against 30 adaptive authority pairs"
+  ],
+  "2604.16968|2610.19422": [
+    "population",
+    "100 BrowserART behaviours against four benchmarks with no stated denominator"
+  ],
+  "2606.05743|2609.36603": [
+    "population",
+    "the same 320 HarmBench behaviours, but one target is Qwen3-8B and the other DeepSeek-V4-Flash, and the X-Teaming side states no denominator"
+  ],
+  "2608.00426|2608.03509": [
+    "endpoint",
+    "ASR@3 and MDSR@3 against an LLM-judge detection rate on poisoned skills"
+  ],
+  "2608.00426|2610.25707": [
+    "population",
+    "200 instances against 60 held-out tasks and 305 paired runs"
+  ],
+  "2608.03509|2610.31446": [
+    "endpoint",
+    "detection rate against verification-cost reduction"
+  ],
+  "2608.21159|2609.34132": [
+    "endpoint",
+    "unsafe-effect count against a counterfactual memory-modification rate"
+  ],
+  "2608.21159|2609.36603": [
+    "population",
+    "144 injection episodes and 48 benign episodes against a targeted subset"
+  ],
+  "2608.21159|2610.01349": [
+    "population",
+    "144 episodes against 30 adaptive authority pairs"
+  ],
+  "2609.07529|2609.33910": [
+    "endpoint",
+    "a level (0.22+-0.13% ASR) against an increment (up to +35.1 points over the control)"
+  ],
+  "2609.07529|2609.34132": [
+    "endpoint",
+    "adaptive attack-success rate against a counterfactual memory-modification rate"
+  ],
+  "2609.07529|2609.36603": [
+    "population",
+    "1,187 adaptive cases against a targeted subset with no stated denominator"
+  ],
+  "2609.07529|2610.01349": [
+    "population",
+    "1,187 adaptive cases against 30 adaptive authority pairs"
+  ],
+  "2609.33910|2609.34132": [
+    "endpoint",
+    "attack-success increase against a counterfactual memory-modification rate"
+  ],
+  "2609.33910|2609.36603": [
+    "endpoint",
+    "an increment with no absolute baseline against a level (17.8% and 7.8% adaptive ASR)"
+  ],
+  "2609.33910|2610.01349": [
+    "endpoint",
+    "an increment (up to +35.1 points, no absolute baseline) against a level (0 of 30, Wilson upper bound 11.4%)"
+  ],
+  "2609.34132|2609.36603": [
+    "endpoint",
+    "counterfactual memory-modification rate against a targeted attack-success rate"
+  ],
+  "2609.34132|2610.01349": [
+    "endpoint",
+    "counterfactual memory-modification rate against an attack-success rate"
+  ],
+  "2609.36603|2610.01349": [
+    "population",
+    "targeted subset with no denominator against 30 adaptive authority pairs"
+  ],
+  "2610.19422|6caf23c8ecb9": [
+    "population",
+    "four benchmarks with no denominator against one trial per task"
+  ]
+}

@@ -1,0 +1,207 @@
+{
+ "arxiv_id": "2610.17719",
+ "title": "Keep Your Receipts: Trustworthy Cleanup of Agent-Built Knowledge Graphs",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "agent-built knowledge graph over source documents (extracted claims, entity merges, schema-entailed edges, community summaries), where every artifact carries a support-label receipt: alternative bundles of source assertions each claimed sufficient on its own",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval",
+   "revocation",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "When a source is retracted or a predicate revoked, the persisted agent-built graph must stop serving artifacts that no longer re-derive from surviving evidence (no leakage of invalidated content) while retaining artifacts a surviving derivation still supports (no over-deletion). The property fails silently when the model's own receipts wrongly claim an artifact still stands.",
+  "operationalized_as": "label faithfulness graded against a re-derivation oracle (agreement / leaky / over-deleted rates per layer, Tables 2-3), and retrieval-level exposure as tainted@10 with recall@10 against a deployed-deletion baseline (Table 4)"
+ },
+ "threat_model": {
+  "adversary": "model-itself",
+  "capabilities": [
+   "the constructor LLM authors its own receipts (self-reports), which can be leaky: claiming an artifact survives a deletion when re-derivation says it is dead",
+   "the constructor samples, so rebuilding is noisy and cannot serve as a verifier",
+   "non-adversarial harness faults also corrupt the artifact store (provider banner / refusals cached as model answers)"
+  ],
+  "assumptions": [
+   "no deliberate adversary; the untrusted party is the model's unreliable self-report, not an attacker",
+   "receipts are demanded in the same model call that creates the artifact; no later process can recover them",
+   "liveness is graded by re-derivation with R=5 independent draws per touched artifact at threshold tau=0.2, matching the stochastic constructor",
+   "entailed edges are re-derived symbolically and agree by construction"
+  ],
+  "not_covered": [
+   "adversarial attacks such as prompt injection or deliberate poisoning of receipts",
+   "source-groundedness: artifacts the model regenerates from parametric memory grade alive without surviving source support (matters for right-to-erasure)",
+   "additions/updates to the graph (only deletion is studied)",
+   "consumers that reason over retrieval paths rather than top-k keyword retrieval",
+   "failures in the harness/cache layer, which no audit of the model's reasoning sees (Section 7 incident)"
+  ]
+ },
+ "intervention": {
+  "name": "PolyGraph: receipt-and-audit protocol with a layered trust policy",
+  "mechanism_layer": "provenance",
+  "description": "The constructor must emit, in the same call that creates an artifact, a support label: alternative bundles of source assertions, each claimed sufficient on its own. Cleanup of a withdrawal is then set arithmetic over the receipts (milliseconds on the whole graph, no model calls). Because receipts are model self-reports, a re-derivation audit grades them by deleting the cited evidence and testing whether the constructor still produces the artifact (R=5 draws, tau=0.2). The audit's layer-dependent verdict is acted on by a layered policy: trust merge and entailed-edge labels, distrust flat summary labels and remove touched summaries; sentence-level receipts repair the summary layer."
+ },
+ "results": [
+  {
+   "claim": "In this corpus, the deployed policy of deleting only directly extracted facts barely cleans the graph under a real retraction and does nothing under predicate revocation, because the damage sits in derived edges and summaries.",
+   "metric": "contaminated queries (tainted@10, deployed deletion)",
+   "value": "28.0% under retract-source; 36.8% under revoke-relation",
+   "comparison": "32.2% -> 28.0% (retract-source); 36.8% -> 36.8% (revoke-relation)",
+   "setting": "300 PubMed oncology abstracts (61 genuinely retracted), Claude Sonnet constructor, BM25 retrieval over MeSH-descriptor queries",
+   "quote": "On our corpus that reduces contaminated queries from 32.2% to 28.0% under a real retraction and leaves predicate revocation unchanged at 36.8%.",
+   "locator": "Abstract; see also Section 1 and Table 4",
+   "denominator": {
+    "n_total": "300 MeSH-descriptor queries",
+    "n_valid": null,
+    "how_counted": "Table 4: BM25, k=10, 300 MeSH-descriptor queries; truth is the re-derivation oracle"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On this stochastic constructor, rebuilding the graph cannot stand in for verification: two builds of the unchanged corpus differ in about five times as many artifacts as removing the retracted documents changes.",
+   "metric": "graph symmetric difference (artifact count)",
+   "value": "resampling floor 29,475 vs deletion effect 6,248 artifacts",
+   "comparison": "29,475 vs 6,248",
+   "setting": "two independent builds of the same 300-document corpus vs a build omitting the 61 retracted documents, Claude Sonnet constructor",
+   "quote": "Rerunning the constructor on unchanged input changes 29,475 artifacts. Removing the retracted documents changes 6,248.",
+   "locator": "Section 5, Table 1",
+   "denominator": {
+    "n_total": "24,381-artifact graph",
+    "n_valid": null,
+    "how_counted": "Table 1: symmetric difference between two independent builds (floor) and between full and retracted builds (effect)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Self-reported receipts are trustworthy at the merge layer but not at the summary layer as originally elicited: the same agent in the same pipeline can be trusted about entity merges and not about its flat-summary receipts.",
+   "metric": "label agreement with re-derivation",
+   "value": "merges 68.4% and 84.6%; summaries 33.3% and 36.4%",
+   "comparison": "68.4%/84.6% (merges) vs 33.3%/36.4% (summaries)",
+   "setting": "full populations of touched model-authored artifacts under retract-source and revoke-relation, re-derivation oracle R=5, tau=0.2, Claude Sonnet constructor, biomedical graph",
+   "quote": "Merge labels agree with re-derivation 68.4% and 84.6% of the time; summary labels, 33.3% and 36.4%.",
+   "locator": "Section 6.1, Table 2",
+   "denominator": {
+    "n_total": "21 touched merges and 7 touched summaries under retract-source; 29 merges and 25 summaries under revoke-relation (populations, not samples)",
+    "n_valid": null,
+    "how_counted": "Table 2: every model-authored artifact the deletion touched was adjudicated; undecided artifacts counted separately"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The summary layer's failure is traced to receipt shape and repaired: eliciting one receipt per sentence makes summary receipts as faithful as the merge layer's, with errors no longer one-sided.",
+   "metric": "sentence-level receipt agreement with re-derivation",
+   "value": "100% and 87.6% agreement; 4.1% leaky vs 8.3% over-deleted under revoke-relation",
+   "comparison": null,
+   "setting": "same 59 communities, same deletions and re-derivation oracle (R=5, tau=0.2), sentence-level receipt elicitation vs the pipeline's original flat format",
+   "quote": "Audited sentence by sentence, these receipts agree with re-derivation 100% and 87.6% of the time, the merge layer's range, and their errors are no longer one-sided (4.1% leaky against 8.3% over-deleted under revoke-relation).",
+   "locator": "Section 6.2, Table 3",
+   "denominator": {
+    "n_total": "62 and 124 touched sentences audited as their own artifacts",
+    "n_valid": null,
+    "how_counted": "Table 3: sentence-level rows audit each touched sentence as its own artifact, so n counts sentences"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Acting on the audit verdict (distrust the failing summary layer) cuts contaminated queries to below one percent at identical recall with no additional model calls.",
+   "metric": "tainted@10 (contaminated queries at k=10)",
+   "value": "0.4% and 0.8%",
+   "comparison": "deployed 28.0%/36.8% -> trust-all-labels 0.8%/2.1% -> distrust-failing-layer 0.4%/0.8%",
+   "setting": "BM25, k=10, 300 MeSH-descriptor queries, truth = re-derivation oracle, biomedical graph",
+   "quote": "Trusting all labels already reduces contamination from the deployed baseline's 28.0% and 36.8% of queries to 0.8% and 2.1%. Applying the verdict halves the remainder, to 0.4% and 0.8%, at identical recall and no additional model calls.",
+   "locator": "Section 6.4, Table 4",
+   "denominator": {
+    "n_total": "300 MeSH-descriptor queries",
+    "n_valid": null,
+    "how_counted": "Table 4: BM25, k=10, 300 MeSH-descriptor queries; truth is the re-derivation oracle"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The layer ordering holds when populations grow: pooled over ten further random retractions, summary receipts leak far more often than merge receipts, with summary over-deletion at zero in every deletion.",
+   "metric": "leaky-label rate (pooled over deletions)",
+   "value": "merges 18.1% leaky; summaries 41.3% leaky",
+   "comparison": "18.1% vs 41.3% leaky",
+   "setting": "ten further random 10% retractions of the biomedical graph, same protocol, pooled (deletion, artifact) adjudications",
+   "quote": "On 238 decided merges and 109 decided summaries the gap stands on its own: merges 18.1% leaky [13.7, 23.5], summaries 41.3% leaky [32.5, 50.7], with summary over-deletion at zero in every deletion.",
+   "locator": "Section 6.3",
+   "denominator": {
+    "n_total": "238 decided merges and 109 decided summaries",
+    "n_valid": null,
+    "how_counted": "Section 6.3: pooled every (deletion, artifact) adjudication over ten further random 10% retractions; undecided excluded"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "On a second domain (Supreme Court opinions) with the policy fixed in advance, the layer ordering and the layered policy's benefit carry over: distrusting the summary layer removes all measured contamination while keeping recall.",
+   "metric": "contamination at recall (legal-domain transfer)",
+   "value": "contamination 15.7% and 4.7% -> 0.0% at 99.9% and 100% recall",
+   "comparison": "15.7%/4.7% -> 0.0%",
+   "setting": "150 U.S. Supreme Court opinions graph (same pipeline, legal schema), merge receipts 80.0%/76.2% and summary receipts 43.8%/12.5% agreement with re-derivation, random-document retract-source",
+   "quote": "merge receipts agree with re-derivation 80.0% and 76.2% of the time, summary receipts 43.8% and 12.5%, every summary error a leak, and distrusting the summary layer brings contamination from 15.7% and 4.7% to 0.0% at 99.9% and 100% recall.",
+   "locator": "Section 6.3",
+   "denominator": {
+    "n_total": "300 party and citation string queries",
+    "n_valid": null,
+    "how_counted": "Section 3: the Supreme Court corpus's queries are 300 party and citation strings"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "撤销（withdrawal）操作本身是集合运算，在 24,381 个 artifact 的图上耗时 1–21 ms，即撤销开销可计量且很小。",
+   "metric": "withdrawal processing latency (ms)",
+   "value": "1-21 ms",
+   "comparison": "no model calls (零模型调用) vs 需要重新推导的清理策略",
+   "setting": "24,381-artifact 知识图；带 receipt 的清理管线；全程本地",
+   "quote": "Cleanup then needs no model calls, because the information that removal requires was stored before it was needed; processing a withdrawal is set arithmetic over the receipts, 1 to 21 ms on our whole 24,381-artifact graph.",
+   "locator": "Section on receipt-based cleanup (cleanup cost paragraph)"
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The audit measures constructor-relative liveness, not source-groundedness: an artifact the model can regenerate from parametric memory grades alive even if no surviving source supports it, which is the failure that matters most for right-to-erasure.",
+   "quote": "Re-derivation asks the constructor that built the graph, so an artifact the model can regenerate from parametric memory grades alive even if no surviving source supports it.",
+   "locator": "Section 8, first paragraph"
+  },
+  {
+   "statement": "The size of the summary layer's leakage is setting-specific (varies widely across constructor, corpus and operation), so the layered policy's margin over trusting all labels does not generalize; both constructors are Claude models, corpora are small, and behavior at larger scale is unmeasured.",
+   "quote": "the size of the summary layer's leakage did not, ranging from 8% to 88% across constructor, corpus and operation, so the layered policy's margin over trusting all labels is setting-specific.",
+   "locator": "Section 8, second paragraph"
+  },
+  {
+   "statement": "The retrieval-level stakes are measured with a keyword BM25 retriever over single queries; a consumer that reasons over paths can be contaminated by a dead edge it never retrieves directly.",
+   "quote": "A consumer that reasons over paths meets every artifact on the path, so one dead edge can contaminate an answer that never retrieves the edge directly.",
+   "locator": "Section 8, third paragraph"
+  },
+  {
+   "statement": "Only deletion is studied; when a still-alive summary has become incomplete and should be regenerated is a design question the authors have not studied.",
+   "quote": "What additions do not settle is when a still-alive summary has become incomplete and should be regenerated; that is a design question for the constructor, and we have not studied it.",
+   "locator": "Section 8, fourth paragraph"
+  },
+  {
+   "statement": "The verdict granularity is coarse: five re-derivation draws at tau=0.2 leave artifacts near the threshold in an undecided band that is excluded from scoring.",
+   "quote": "artifacts near the threshold land in the undecided band (2 to 3 per cell) and are excluded.",
+   "locator": "Section 8, fifth paragraph"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_not_read"
+ ]
+}

@@ -1,0 +1,181 @@
+{
+  "arxiv_id": "2609.33910",
+  "title": "When Consent Outlives Context: Residual Authority Replay in Long-Lived Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "policy",
+    "scope": "mixed",
+    "carrier": "Persistent authorization state created by legitimate user approval: Codex allow rules in $CODEX_HOME/rules/default.rules (argv prefix), Gemini CLI auto-saved.toml (command root), Goose permission.yaml (tool identity, e.g. always_allow: shell), OpenCode allow rules, plus a deterministic authorization layer emulating these semantics around AgentDojo tool execution in controlled experiments",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "User approval for a security-sensitive action should confer authority only within the task/execution context that justified the consent; the paper shows this fails when retained grants (residual authority) continue to admit matching actions without renewed user approval after the context has changed (across tasks, sessions, or execution bindings), and that this amplifies prompt-injection and context-rebinding attacks.",
+    "operationalized_as": "Difference in attack success rate (ASR) between a fresh authorization state G0 and an accumulated state Gh on the identical attack task; successful residual-authority replay is defined as S_replay = W(1-Q2)H2 = 1, i.e. a verified approval-boundary change (M(G0,a)=ask vs M(Gh,a)=allow) traced to farmed grants, execution without renewed approval, and a satisfied harmful-effect oracle."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "supply untrusted content in a later task, repository, or session (indirect prompt injection) to induce a target action",
+      "influence otherwise benign tasks so their legitimate user-approved execution yields grants useful for a later attack (benign authority farming / backchaining)",
+      "modify execution-environment bindings behind a stable authorization identity (context drift: executable, content, dependency, configuration, project/CWD)"
+    ],
+    "assumptions": [
+      "all grants are explicitly approved by the user",
+      "the agent runtime and authorization mechanism are trusted to create, store, and evaluate grants as specified",
+      "the agent's baseline authorization policy and native authorization checks remain active in both fresh and accumulated conditions"
+    ],
+    "not_covered": [
+      "direct tampering with or forging of authorization state",
+      "compromise of the agent runtime or authorization engine itself",
+      "model-initiated malicious behavior without injected content",
+      "cross-user authority sharing (single-user setting)",
+      "confidentiality of stored grants and network-level adversaries"
+    ]
+  },
+  "intervention": {
+    "name": "context-bound authorization (proposed direction, not implemented); task-aware authorization baselines (Progent, PAuth) evaluated",
+    "mechanism_layer": "architecture",
+    "description": "The attack-side paper argues in Defense implications that a reuse-preserving defense should retain and revalidate the security-relevant bindings under which consent was granted, requesting renewed approval when changed bindings alter the action's meaning (context-bound authorization; identifying minimal bindings is left as future work). Evaluated contrasts: Progent (programmed least privilege from the current task) and PAuth (task-scoped authorization preventing cross-task reuse) eliminate amplification but restrict cross-task reuse."
+  },
+  "controls": [
+    {"name": "fresh authorization state (h=0, no prior grants)", "purpose": "baseline"},
+    {"name": "no-replay condition (no authorization from earlier tasks)", "purpose": "negative-control"},
+    {"name": "Progent task-start policy", "purpose": "fair-comparison"},
+    {"name": "PAuth task-scoping implementation", "purpose": "fair-comparison"},
+    {"name": "exact-resource / scope-level / tool-level matching policies", "purpose": "ablation"},
+    {"name": "unapproved action in native validation", "purpose": "negative-control"}
+  ],
+  "results": [
+    {
+      "claim": "Across 508 AgentDojo cases and six LLM families, accumulated residual authority raises prompt-injection attack success by up to 35.1 percentage points versus a fresh authorization state.",
+      "metric": "ASR increase (percentage points)",
+      "value": "up to +35.1 pp",
+      "comparison": null,
+      "setting": "Controlled AgentDojo v1.2 (banking/Slack/travel/workspace), 508 eligible (X,Z,p) cases, six LLM families, production-derived persistent authorization emulation with tool-level matching, accumulated vs fresh state on identical attack tasks",
+      "quote": "We evaluate 508 AgentDojo attack cases across six LLM families using production-derived authorization semantics. With residual authority, attack success rate (ASR) increases by up to 35.1 percentage points compared with a fresh authorization state.",
+      "locator": "Abstract",
+      "denominator": {"n_total": "508", "n_valid": null, "how_counted": "508 eligible (X,Z,p) AgentDojo v1.2 attack cases (Appendix B)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "In live context-rebinding attacks on 55 Terminal-Bench cases across three production agents (Codex, Gemini CLI, Goose), residual-authority replay increases ASR by 24.9 percentage points on average (case-weighted).",
+      "metric": "ASR increase (percentage points)",
+      "value": "+24.9 pp",
+      "comparison": null,
+      "setting": "Live attacks, 55 Terminal-Bench cases spanning five context-drift classes, three production agents, fresh vs farmed authorization states, five repetitions per condition",
+      "quote": "Across the cohort, the case-weighted average increase in ASR is 24.9 percentage points.",
+      "locator": "§5.4",
+      "denominator": {"n_total": "55", "n_valid": null, "how_counted": "55 retained Terminal-Bench task-class pairs from 133 candidates (Appendix A Table 4), five repetitions per condition, averaged over three agents"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Benign history accumulation (conditional history exposure) differs sharply by native semantics: Goose reaches CHE 1.00 after a single benign task while Gemini CLI grows gradually from 0.12 at h=1 to 0.84 at h=64; Codex and OpenCode stay selective.",
+      "metric": "conditional history exposure (CHE)",
+      "value": "Goose CHE 1.00 at h=1; Gemini CLI 0.12 -> 0.84 (h=1 -> h=64)",
+      "comparison": null,
+      "setting": "Terminal-Bench as benign workload, native authorization mechanisms of Goose, Gemini CLI, Codex, OpenCode; CHE measured on future actions held out from the history",
+      "quote": "Goose reaches a CHE of 1.00 after a single benign task and remains saturated thereafter. Gemini CLI accumulates more gradually, increasing from 0.12 at h=1h=1 to 0.44 at h=2h=2 and 0.84 at h=64h=64.",
+      "locator": "§5.2 Figure 2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "At h=64 history on AgentDojo, attack amplification contracts as retained authorization becomes more precise: tool-level ASR 0.114-0.351, scope-level 0.016-0.116, exact-resource 0.012-0.039 across the four affected model families.",
+      "metric": "ASR",
+      "value": "0.114-0.351 (tool-level) -> 0.016-0.116 (scope-level) -> 0.012-0.039 (exact-resource)",
+      "comparison": null,
+      "setting": "AgentDojo 508 cases, benign history fixed at h=64, attack cases and agent scaffold fixed while authorization policy varies, six LLM families",
+      "quote": "Among the four model families with clear amplification, tool-level retention yields ASR between 0.114 and 0.351. Restricting reuse to scope-level matching reduces this range to 0.016–0.116, while exact-resource matching leaves only 0.012–0.039.",
+      "locator": "§5.3 Table 3",
+      "denominator": {"n_total": "508", "n_valid": null, "how_counted": "508 eligible AgentDojo v1.2 cases per model"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Task-aware authorization nearly eliminates amplification: Progent reduces ASR to at most 0.009 across the four affected model families and PAuth reduces ASR to zero for all models by preventing cross-task reuse (at the cost of reverting to per-task authorization).",
+      "metric": "ASR",
+      "value": "Progent <= 0.009; PAuth 0",
+      "comparison": null,
+      "setting": "AgentDojo 508 cases at h=64; Progent task-start policy (policy model gpt-4o-2024-08-06) and PAuth task-scoping implementation as task-aware authorization policies",
+      "quote": "restricts tool use and arguments, reducing ASR to at most 0.009 across the four affected model families. PAuth (Sharma et al., 2026) binds reusable authority to the current task and reduces ASR to zero for all models by preventing cross-task reuse.",
+      "locator": "§5.3 Table 3",
+      "denominator": {"n_total": "508", "n_valid": null, "how_counted": "508 eligible AgentDojo v1.2 cases per model"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "Amplification operates through the authorization term, not model behavior: conditional silent-execution rates rise from zero in the fresh state to between 0.982 and 1.000 at h=64 for models that issue harmful attempts.",
+      "metric": "P(silent execution | attempt)",
+      "value": "between 0.982 and 1.000 at h=64 (zero in fresh state)",
+      "comparison": "fresh (zero) -> h=64 (0.982-1.000)",
+      "setting": "AgentDojo 508 cases, history length swept h in {0,1,2,4,8,16,32,64}, tool-level persistent matching, models that issue harmful attempts",
+      "quote": "Conditional silent execution rates accordingly rise from zero in the fresh state to between 0.982 and 1.000 at h=64h=64 for models that issue harmful attempts.",
+      "locator": "§5.3 Table 2",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Model propensity to attempt harmful actions does not increase with authorization history; Gemini's attempt rate actually decreases from 0.903 at h=0 to 0.476 at h=64, consistent with separation between model and agent state.",
+      "metric": "P(attempt)",
+      "value": "0.903 -> 0.476 (h=0 -> h=64)",
+      "comparison": null,
+      "setting": "AgentDojo 508 cases, Gemini-3.1-Flash-Lite, history length sweep with nested prefixes of one frozen benign stream",
+      "quote": "Harmful action attempts do not increase systematically with authorization history. Most models remain broadly stable, while Gemini decreases from 0.903 at h=0h=0 to 0.476 at h=64h=64.",
+      "locator": "§5.3 Table 2",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "The largest controlled amplification (Gemini-3.1-Flash-Lite, h=64 vs fresh) is statistically robust under a paired target-cluster bootstrap: ΔASR 35.1 pp with CI [30.6, 39.5].",
+      "metric": "ΔASR (pp) with bootstrap CI",
+      "value": "+35.1 pp, CI [30.6, 39.5]",
+      "comparison": null,
+      "setting": "AgentDojo 508 cases, Gemini-3.1-Flash-Lite, paired target-cluster bootstrap over injection targets, B=2000 resamples (seed 20260907), percentile CI, h=64 vs fresh",
+      "quote": "| Gemini-3.1-Flash-Lite | 35.1 | [30.6, 39.5] |",
+      "locator": "Appendix G Table 9",
+      "denominator": {"n_total": "508", "n_valid": null, "how_counted": "paired target-cluster bootstrap (B=2000) over AgentDojo injection targets"},
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The controlled AgentDojo history-length and policy experiments do not perform target-conditioned grant acquisition; benign histories are frozen without testing coverage of the later harmful action, so they measure incidental overlap between accumulated and required authority rather than the deliberate backchaining attack construction.",
+      "quote": "The experiment therefore measures incidental overlap between authority accumulated through prior benign use and authority required by a later attack.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "Two of the five live context-drift classes (C2 content, C5 project/CWD) retain only two cases each, limiting category-specific conclusions.",
+      "quote": "Each contributes only two retained cases, limiting category-specific conclusions.",
+      "locator": "Appendix A, Table 4"
+    },
+    {
+      "statement": "The PAuth baseline is a partial reimplementation: only the task-scoping rule is isolated, without PAuth's operand-provenance analysis, so results should be read as an evaluation of task scoping rather than a complete reproduction of PAuth.",
+      "quote": "Our implementation isolates PAuth's task-scoping rule and does not reproduce its additional operand-provenance analysis; the result should therefore be interpreted as an evaluation of task scoping rather than a complete reproduction of PAuth.",
+      "locator": "Appendix D"
+    },
+    {
+      "statement": "Attempt-rate variation (including Gemini's decline with history) is interpreted descriptively, not as evidence of history-dependent model behavior, because approval feedback may redirect episodes.",
+      "quote": "we interpret variation in attempt rates, including Gemini's decline, descriptively rather than as evidence of history-dependent model behavior.",
+      "locator": "§5.3"
+    },
+    {
+      "statement": "The Goose end-to-end walkthrough reports archived episode summaries (permission store, approval counts, marker outcome) without the complete message-level ACP trace, so no intermediate events are inferred.",
+      "quote": "The archived summaries retain the permission store, target-action counts, approval counts, and marker outcome, but not the complete message-level ACP trace.",
+      "locator": "Appendix F"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": null,
+    "data": "AgentDojo v1.2 and Terminal-Bench public benchmarks; frozen/deterministic inputs (history stream seed via SHA-256, bootstrap seed 20260907); profiled agent releases listed in Appendix C Table 5",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "conditional_rate_denominators_not_reported",
+    "live_per_agent_deltaASR_values_only_in_figure3"
+  ]
+}

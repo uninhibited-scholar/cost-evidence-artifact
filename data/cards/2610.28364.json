@@ -1,0 +1,278 @@
+{
+ "arxiv_id": "2610.28364",
+ "title": "Context-Aware Prompt Injection Detection via Small Language Models in RAG Pipelines: nokast-secureRAG",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": null,
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "The detector guards the data/instruction boundary of a local RAG pipeline: instruction-like content in the retrieved context C that conflicts with the intent of the user query Q must be flagged (safe/suspicious/malicious-instruction) before reaching the generator, protecting the assistant from indirect prompt injection (instruction override, role/permission redefinition, PII/data exfiltration) while not over-flagging benign instructional text. It holds only in-distribution and by detection-side proxy; it fails on fact-fabrication poisoning (PoisonedRAG recall 0.7%) and is untested against adaptive adversaries.",
+  "operationalized_as": "Detection recall / FPR / ASR-proxy / three-class accuracy on 659 held-out (Q,C) test records; judgment-flip both-correct rate on 120 intact pairs; single-request latency vs sub-100 ms target"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Controls some retrievable content in the RAG corpus (web pages, documents, memory entries) and embeds instructions intended to redirect the assistant",
+   "Attack payload is embedded in the retrieved context C (e.g., inside an HTML comment, footer, or 'ignore previous instructions' clause), never in the user query Q",
+   "Goals: overriding system/user instructions, exfiltrating data, or redefining the assistant's role"
+  ],
+  "assumptions": [
+   "The user query itself is benign; the attack lives in the context",
+   "Local RAG pipeline: retrieved chunks are fused with the user query and passed to a generator; defense must run on 16 GB-class VRAM local hardware at interactive latency without a cloud guard",
+   "Attackers are not adaptive: gradient-based, multi-chunk, retrieval-optimized injections and human red-teaming are out of the evaluated scope"
+  ],
+  "not_covered": [
+   "PoisonedRAG-style fact-fabrication/knowledge poisoning without instructions (B3 recall 0.7%, explicitly outside the instruction-consistency threat model)",
+   "Downstream generator behavior: ASR is a detection-side proxy only",
+   "Adaptive adversaries and human red-teaming",
+   "Non-English content and domain-specific corpora (financial, medical, legal)"
+  ]
+ },
+ "intervention": {
+  "name": "nokast-secureRAG",
+  "mechanism_layer": "content",
+  "description": "A ~0.5B SLM (Qwen2.5-0.5B + rank-8 LoRA, 17.6 MB adapter) acting as a semantic firewall between the retriever and the generator: it jointly reads the user query Q and retrieved context C and emits a short reasoning trace plus one of three labels (safe/suspicious/malicious-instruction). Produced by a teacher->judge->student distillation pipeline (Qwen3.6-35B teacher generates 5,233 records across four attack families; independent 120B Nemotron judge of a different family re-labels blind, 95.0% agreement; agreed data fine-tunes the student via reasoning-first LoRA), deployed locally via llama.cpp/Ollama/vLLM."
+ },
+ "controls": [
+  {
+   "name": "B1 regex/heuristic filter on C (context-blind)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "B2 base Qwen2.5-0.5B zero-shot (no fine-tuning)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "B4 ProtectAI deberta-v3-base-prompt-injection-v2 (public classifier, context-blind)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "B5 Llama Guard 3 1B (general safety guard, context-blind)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "B6 Prompt-Guard-86M (purpose-built prompt-injection detector, context-blind)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Input-masking ablations on B3: Q-only / C-only / mismatched (fixed-seed derangement)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Out-of-distribution check on PoisonedRAG (negative control)",
+   "purpose": "negative-control"
+  }
+ ],
+ "results": [
+  {
+   "claim": "The tuned nokast-secureRAG SLM (B3) dominates every security metric on the held-out test set: 0.994 recall, 0.006 ASR-proxy, 0.026 FPR, 0.974 three-class accuracy.",
+   "metric": "detection recall / ASR-proxy / FPR / 3-class accuracy",
+   "value": "0.994 recall, 0.006 ASR-proxy, 0.026 FPR, 0.974 3-class accuracy",
+   "comparison": null,
+   "setting": "Qwen2.5-0.5B + LoRA (r=8) student on 659 judge-verified agreed synthetic test records (of a 740-record raw teacher-labeled test split); per-class malicious-instruction n=311, safe n=342, suspicious n=6 (Appendix A.1); baselines run context-blind on C alone; NVIDIA DGX Spark GB10, 121 GB unified memory",
+   "quote": "The tuned SLM (B3) dominates every security metric: 0.9940.994 recall, 0.0060.006 ASR-proxy, 0.0260.026 FPR, 0.9740.974 three-class accuracy.",
+   "locator": "§6.1 Table 3",
+   "denominator": {
+    "n_total": "659",
+    "n_valid": "659",
+    "how_counted": "Detection metrics computed on the 659 judge-verified agreed test records; recall over malicious records (malicious-instruction n=311, suspicious n=6), FPR over benign safe records (n=342)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Fine-tuning raises the same 0.5B model's detection recall from 0.116 (zero-shot) to 0.994 on the held-out test set.",
+   "metric": "recall",
+   "value": "0.994",
+   "comparison": "0.116 (zero-shot) -> 0.994 (tuned)",
+   "setting": "Same base model Qwen2.5-0.5B with and without LoRA fine-tuning (B2 vs B3); 659-record held-out test set",
+   "quote": "The same model used zero-shot (B2) reaches only 0.1160.116 recall—it collapses to predicting safe for the large majority of inputs—so fine-tuning raises recall from 0.1160.116 to 0.9940.994.",
+   "locator": "§6.1 Table 3",
+   "denominator": {
+    "n_total": "659",
+    "n_valid": "659",
+    "how_counted": "Same 659 judge-verified agreed test records as Table 3"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On 120 held-out judgment-flip pairs (identical sentence benign in one context, malicious in another) the tuned SLM labels both halves correctly 75.0% of the time, far above all context-blind baselines — the paper's most direct evidence for context-aware detection.",
+   "metric": "judgment-flip both-correct rate",
+   "value": "75.0%",
+   "comparison": "17.5% (regex baseline) / 54.2% (ProtectAI classifier) / 26.7% (Llama Guard) / 9.2% (Prompt-Guard) / 11.7% (untuned model)",
+   "setting": "120 intact flip pairs (240 records) held out in the test split, never used in training; identical sentence S benign in one context, malicious in another; B3 flip-record accuracy 0.875",
+   "quote": "The tuned SLM labels both halves of a pair correctly 75.0%75.0\\% of the time, versus 17.5%17.5\\% for the regex baseline, 54.2%54.2\\% for the public ProtectAI classifier, 26.7%26.7\\% for Llama Guard, 9.2%9.2\\% for Prompt-Guard, and 11.7%11.7\\% for the untuned model.",
+   "locator": "§6.2 Table 4",
+   "denominator": {
+    "n_total": "120 intact pairs (240 records)",
+    "n_valid": "120 intact pairs",
+    "how_counted": "both-correct rate: both halves of a pair labeled correctly; labels reliable by construction; judge disputes broke roughly half the flip pairs in the agreed test set, so the intact-pair metric is reported on the teacher-labeled split"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Masking the context (Q-only input) collapses detection recall to 0.000, confirming the attack signal lives entirely in the retrieved context C, as the threat model assumes.",
+   "metric": "recall (input ablation)",
+   "value": "0.000",
+   "comparison": null,
+   "setting": "B3 re-run on the full 659-record test set with context replaced by an empty string (Q-only condition)",
+   "quote": "QQ-only collapses recall to 0.0000.000: with no context there is nothing to flag, confirming attack signal lives entirely in CC, exactly as the threat model assumes (§3).",
+   "locator": "§6.3 Table 5",
+   "denominator": {
+    "n_total": "659",
+    "n_valid": "659",
+    "how_counted": "Same 659-record test set under the Q-only masking condition"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Pairing a context with an unrelated query (mismatched condition) keeps recall high (0.990) but nearly triples FPR (0.085 vs 0.026 full model, 0.038 CC-only): query–context consistency measurably reduces over-flagging, while CC alone carries most detection signal (CC-only 0.987 recall).",
+   "metric": "FPR (input ablation)",
+   "value": "0.085",
+   "comparison": "0.085 (mismatched) vs 0.026 (full model) vs 0.038 (CC-only)",
+   "setting": "B3 on the 659-record test set, each row's context replaced by another row's context via fixed-seed derangement with ground truth from the donor row",
+   "quote": "The mismatched condition preserves high recall (0.9900.990, since the donor's own attack content is still present) but nearly triples FPR relative to the full model (0.0850.085 vs. 0.0260.026, vs. 0.0380.038 for CC-only): pairing a context with an unrelated query measurably increases over-flagging.",
+   "locator": "§6.3 Table 5",
+   "denominator": {
+    "n_total": "659",
+    "n_valid": "659",
+    "how_counted": "Same 659-record test set under the mismatched and CC-only masking conditions"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Prompt-Guard-86M, a public model purpose-built for prompt-injection detection, shows the context-blind failure mode: high raw recall (0.900) but a very high FPR (0.690) from over-flagging ordinary instructional text — exactly the failure the (Q,C) reframing targets.",
+   "metric": "FPR (with recall)",
+   "value": "0.690",
+   "comparison": "0.900 recall with 0.690 FPR (context-blind over-flagging)",
+   "setting": "B6 Prompt-Guard-86M run context-blind on C alone (no query input), 659-record test set",
+   "quote": "Prompt-Guard-86M (Meta AI, 2024) (B6), a small model purpose-built for prompt-injection detection, shows the opposite failure mode: high recall (0.9000.900) but a very high 0.6900.690 FPR, flagging most benign RAG content (documentation, how-to text) as an attack",
+   "locator": "§6.1 Table 3",
+   "denominator": {
+    "n_total": "659",
+    "n_valid": "659",
+    "how_counted": "Same 659 judge-verified agreed test records as Table 3; FPR over safe records (n=342)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Out-of-distribution negative result: on PoisonedRAG the tuned detector's recall collapses to 0.7% — worse than the untuned base model (14.3%) and regex (0%) — reported as a scope boundary, since fact-fabrication attacks contain no instructions and fall outside the instruction-consistency threat model.",
+   "metric": "recall (out-of-distribution)",
+   "value": "0.7%",
+   "comparison": "0% (B1 regex) / 14.3% (B2 zero-shot) / 0.7% (B3 tuned)",
+   "setting": "B3 on PoisonedRAG: 300 (query, adversarial-passage) pairs across NQ, HotpotQA, MSMARCO, every pair ground-truth malicious; LLM-generated factually-fabricated passages with no injected instructions; recall-only check (no FPR)",
+   "quote": "The result is a clear negative: B1 regex catches 0%0\\% (no injection keywords are present), B2 zero-shot catches 14.3%14.3\\%, and B3 tuned recall is 0.7%0.7\\%—worse than the untuned base model. B3 predicts safe on 298/300298/300 pairs.",
+   "locator": "§6.6",
+   "denominator": {
+    "n_total": "300",
+    "n_valid": "300",
+    "how_counted": "300 (query, adversarial-passage) PoisonedRAG pairs, every pair ground-truth malicious, so this is a recall-only check (no FPR)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Deployment-relevant single-request latency is 293–404 ms depending on serving runtime — above the paper's own sub-100 ms target — while batched amortized throughput is 37 ms per (Q,C).",
+   "metric": "single-request latency / batched throughput",
+   "value": "293-404 ms single-request",
+   "comparison": "37 ms amortized batched throughput; sub-100 ms target exceeded",
+   "setting": "NVIDIA DGX Spark (GB10, 121 GB unified memory), NVFP4 vLLM runtime; eager transformers vs vLLM (merged model, 100 sequential single requests, greedy decoding); latency dominated by the ~36-word reasoning trace",
+   "quote": "Deployment-relevant single-request latency is 293293–404404 ms depending on serving runtime—above this paper's own sub-100100 ms target—with 3737 ms amortized throughput under batching.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "An independent, larger 120B judge of a different model family, re-labeling every record blind to the teacher's label, agrees with the 35B teacher on 95.0% of the 5,233 synthetic records — a dataset-quality signal.",
+   "metric": "teacher-judge agreement",
+   "value": "95.0%",
+   "comparison": null,
+   "setting": "Qwen3.6-35B-A3B teacher vs Nemotron-3-Super-120B-A12B judge (different family, blind re-labeling) over 5,233 synthetic (Q,C) records; agreed data trains the student",
+   "quote": "The independent judge agreed with the teacher on 95.0% of records (4,9734{,}973 agreed, 260260 disputed, 00 without a verdict).",
+   "locator": "§5.2",
+   "denominator": {
+    "n_total": "5,233",
+    "n_valid": "5,233",
+    "how_counted": "4,973 agreed, 260 disputed (quarantined), 0 without a verdict, out of 5,233 records"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "The data-starved suspicious class (only 6 of 659 test records) has recall 0.167 (Wilson 95% CI [0.030,0.564]) — an honest signal that the ambiguous middle class is where the detector is least reliable, and the aggregate 3-class accuracy should not be read as covering it.",
+   "metric": "per-class recall (suspicious)",
+   "value": "0.167",
+   "comparison": "CI [0.030,0.564]",
+   "setting": "B3 per-class Wilson 95% CIs on the 659-record test set; only n=6 test records carry the suspicious label, of which B3 recalls 1 (Appendix A.1: four of five misses predicted malicious-instruction, i.e. fail closed)",
+   "quote": "the data-starved suspicious class (n=6n{=}6) is not (0.1670.167 recall, CI [0.030,0.564][0.030,0.564])—an honest signal that this boundary class is where the detector is least reliable",
+   "locator": "§6.5",
+   "denominator": {
+    "n_total": "6",
+    "n_valid": "6",
+    "how_counted": "Only 6 of 659 test records carry the suspicious label; B3 recalls just 1 of 6 (Appendix A.1)"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "In-distribution headline numbers only: training and test share the same synthetic generator, and no public benchmark currently tests judgment-flip specifically, so the central claim remains validated only in-distribution.",
+   "quote": "No public benchmark currently tests judgment-flip specifically—this paper's central claim remains validated only in-distribution.",
+   "locator": "§8 Limitations"
+  },
+  {
+   "statement": "ASR is a detection-side proxy, not the downstream generator's behavior.",
+   "quote": "ASR is a detection-side proxy—whether the guard flags the attack—not the downstream generator's behavior.",
+   "locator": "§8 Limitations"
+  },
+  {
+   "statement": "Adaptive adversaries are untested: no gradient-based, multi-chunk, or retrieval-optimized injections, and no human red-teaming.",
+   "quote": "We have not evaluated gradient-based, multi-chunk, or retrieval-optimized injections (Chang et al., 2026; Chan et al., 2024), or human red-teaming.",
+   "locator": "§8 Limitations"
+  },
+  {
+   "statement": "Single-domain validation: the synthetic corpus is general-purpose; financial, medical, and legal documents are unvalidated (and the data is English-only).",
+   "quote": "Our synthetic corpus is general-purpose; we have not validated on financial, medical, or legal documents, where dense instruction-like text may shift the safe/malicious boundary.",
+   "locator": "§8 Limitations"
+  },
+  {
+   "statement": "Latency is measured on one device and varies with hardware; both serving runtimes remain above the sub-100 ms target.",
+   "quote": "Latency is measured on one device and will vary with hardware; both eager transformers and vLLM (§6.4) remain above the sub-100100 ms target.",
+   "locator": "§8 Limitations"
+  },
+  {
+   "statement": "The suspicious class is data-starved, so its 0.167 recall is too noisy to trust without more suspicious-labeled data.",
+   "quote": "Only 66 of 659659 test records carry this label, so its 0.1670.167 recall (§6.5) is too noisy to trust without more suspicious-labeled data.",
+   "locator": "§8 Limitations"
+  },
+  {
+   "statement": "The data is English-only.",
+   "quote": "Data is English-only.",
+   "locator": "§8 Limitations"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://github.com/abhishek085/nokast-secureRAG",
+  "data": "https://github.com/abhishek085/nokast-secureRAG (synthetic-data generation pipeline and evaluation harness; model weights https://huggingface.co/abhishek085/nokast-secureRAG-0.5B)",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state"
+ ]
+}

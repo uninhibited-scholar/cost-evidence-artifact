@@ -1,0 +1,178 @@
+{
+ "arxiv_id": "2609.22818",
+ "title": "The Price of Safety: Benign-Case Utility and Token Overhead of Memory-Poisoning Defenses in LLM Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v2"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Per-turn extracted memories stored in a local vector store (text-embedding-3-small embeddings, one namespace per cell), optionally carrying provenance/trust-weight metadata; defenses intercept at write (before storage) or read (retrieval into context)",
+  "operations_covered": [
+   "formation",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "The four defenses under study exist to preserve memory integrity (stop attacker-inserted text from becoming a stored memory that is later retrieved and treated as fact). This paper measures the benign-case price of that protection on entirely attack-free traffic: paired core-accuracy utility loss, defense-attributed token overhead, and false quarantine of legitimate memories (an availability cost). Write-time defenses show no resolvable utility cost; the read-time reranker shows a borderline accuracy cost and a clear false-quarantine cost, so the integrity protection trades against benign-memory availability and utility.",
+  "operationalized_as": "Benign utility delta (paired per-question core-accuracy change vs the undefended baseline; majority vote over three replicates, conversations weighted equally; stratified bootstrap 95% CI and exact McNemar and sign-flip tests; 255 core questions per replicate); token overhead ratio tau_d = defense-tagged tokens / baseline-tagged tokens across the 15 cells of each condition (Eq. 4); false quarantine rate FQR = pooled quarantines / pooled decisions (turns screened at write time, memories judged at read time; Eq. 5), where no content was planted so every quarantine is a false alarm by construction; companion rates: share of questions with at least one memory dropped and share of memories dropped at least once."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Attacker inserts text into the conversation which becomes a memory that is later retrieved and treated as fact (the attack itself is outside the scope of this analysis; all measured traffic is benign)"
+  ],
+  "assumptions": [
+   "Evaluation corpus is benign by construction: no injected adversarial memory, so every item a defense quarantines is a false positive by definition",
+   "Memory backend, retrieval configuration, question set, answering model, and judge are held identical across conditions; only the defense varies, so any difference is attributable to the defense",
+   "The pipeline is non-deterministic even at temperature zero, so each condition is run three times and collapsed by majority vote before statistics"
+  ],
+  "not_covered": [
+   "Act-time interception is identified in the threat model but not evaluated; only write-time and read-time stages are measured",
+   "Attack success rates on adversarial traffic are not measured (no attacks are run)",
+   "Only one backbone (gemini-3.1-flash-lite) and one judge (claude-haiku-4-5-20251001); generalization to other models is untested"
+  ]
+ },
+ "intervention": {
+  "name": "Comparison of four memory-poisoning defenses at two pipeline stages: write-time input sanitization, write-time provenance tagging, write-time LLM-based anomaly detection, read-time retrieval reranking, plus a stacked composition of all four",
+  "mechanism_layer": "content",
+  "description": "Sanitization lexically scans each candidate memory for injection patterns and discards or rewrites matches before storage (content layer, no model call); provenance tags record source and trust level, weighting memories from untrusted origins lower at storage and retrieval (provenance layer); anomaly detection passes each candidate to an LLM for consistency with the ongoing conversation and quarantines inconsistent candidates before commitment (content layer, model-based); the reranker re-evaluates retrieved candidates against the query and other retrieved memories on every question and quarantines poor matches from context (content layer at read time). The paper's central finding: benign-case utility cost tracks where the defense intercepts the pipeline (write vs read), not whether it uses an LLM."
+ },
+ "controls": [
+  {
+   "name": "Undefended baseline (no defense)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Stacked composition of all four defenses",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "On entirely benign LoCoMo traffic, the read-time reranker lowers core accuracy by 4.4 points vs the undefended baseline (95% bootstrap CI [-9.0,-0.05]; McNemar p=0.064; 17 core questions changed right-to-wrong vs 7 in the opposite direction), with the sign consistent across all three replicates. (v2 note: the interval 'barely excludes zero'.)",
+   "metric": "benign utility delta (paired core accuracy, pp)",
+   "value": "-4.4 pp",
+   "comparison": "CI [-9.0,-0.05]; McNemar p=0.064; sign-flip p=0.375",
+   "setting": "gemini-3.1-flash-lite backbone on LoCoMo, 5 conversations x 3 replicates, 150-turn truncation, paired vs undefended baseline, no attack present",
+   "quote": "The reranker reduced core accuracy by 4.4 points (95% CI [−9.0,−0.05][-9.0,-0.05]). The interval barely excludes zero, while McNemar’s test gives p=0.064p=0.064: 17 core questions changed from right to wrong, versus 7 that changed in the opposite direction.",
+   "locator": "§7.1 (Table 4)",
+   "denominator": {
+    "n_total": 255,
+    "n_valid": null,
+    "how_counted": "Paired core-accuracy change over 255 core questions per replicate (765 graded answers per condition; 5 conversations x 3 replicates), majority vote over replicates; 17 right-to-wrong vs 7 wrong-to-right discordant pairs drive the McNemar test (Sections 5.6, 7.1, 9)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "[replaced_by_different_metric in v2] The reranker quarantined 756 of 7,650 memory decisions (FQR 9.9%), vs 681 (8.9%) in the stacked condition; per cell the rate ranged 1.5%-19.3% (stacked 3.1%-22.7%), each dropped memory was dropped 2.2 times on average, 8.8% of stored memories were hidden at least once, and 45% of questions lost at least one retrieved memory (40% stacked). v1 reported 33.6% under a different counting: v1 FQR = quarantined items / adjudicated items per cell (averaged), v2 FQR = pooled quarantines / pooled memory decisions. The v1 'up to 106 false quarantines in a single conversation' now appears only as per-cell counts in Appendix B (Rerank conv-43: 106 quarantines, 19.3%).",
+   "metric": "false quarantine rate (FQR) on benign traffic",
+   "value": "9.9% (756/7,650) [v1: 33.6% under per-cell-averaged adjudicated-item counting]",
+   "comparison": "stacked condition 681/7,650 = 8.9%; write-time defenses 0.0% (never fired)",
+   "setting": "gemini-3.1-flash-lite backbone on LoCoMo, 5 conversations x 3 replicates, benign corpus with no injected adversarial memory (every quarantine is a false positive by design)",
+   "quote": "The reranker quarantined 756 of 7,650 memory decisions (FQR 9.9%), compared with 681 (8.9%) in the stacked condition. Per cell, the rate ranged from 1.5% to 19.3% (3.1% to 22.7% in the stacked condition).",
+   "locator": "§7.3 (Table 4, Appendix B)",
+   "denominator": {
+    "n_total": 7650,
+    "n_valid": 756,
+    "how_counted": "FQR = pooled quarantines / pooled decisions (memories judged at read time) over the 15 cells of the condition (Eq. 5, Section 5.5); v1 counted quarantined items over adjudicated items per cell and averaged, yielding 33.6% - different counting, not the same quantity"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Across entirely benign traffic, the three write-time defenses never fired (each screened 2,250 turns and quarantined none); their accuracy deltas are small and positive (+1.8 / +1.9 / +3.1 points for sanitize / provenance / anomaly) and every 95% CI includes zero, so no utility cost is resolvable at this scale. (v2 now reports the per-defense deltas that v1 summarized only as 'roughly ±4.5-point intervals'.)",
+   "metric": "benign utility delta (95% CI)",
+   "value": "write-time deltas +1.8/+1.9/+3.1 pp, each CI includes zero; FQR 0.0%",
+   "comparison": null,
+   "setting": "gemini-3.1-flash-lite backbone on LoCoMo, 5 conversations x 3 replicates, 150-turn truncation, paired vs undefended baseline, no attack present",
+   "quote": "The three write-time defenses never fired on benign traffic. Each screened 2,250 turns and quarantined none. Because they did not change what the agent stored, their Δd\\Delta_{d} reflects run-to-run noise. All three are small and positive, ranging from +1.8+1.8 to +3.1+3.1 points, and each interval includes zero.",
+   "locator": "§7.1 (Table 4)",
+   "denominator": {
+    "n_total": 2250,
+    "n_valid": 0,
+    "how_counted": "Each write-time defense screened 2,250 benign turns (5 conversations x 150 turns x 3 replicates) and made 2,250 verdicts with zero quarantines (Sections 7.1, 9)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "[interpretation revised in v2] Stacking all four defenses does not compound the cost: the stacked condition lost 3.1 points (95% CI [-7.4,+1.0]) with FQR 8.9%, close to the reranker alone. v1 suggested the write-time defenses 'may partly offset what the reranker discards'; v2 retracts that reading - the 1.3-point gap in Delta_d lies well inside the replicate spread, so the data do NOT show the defenses offsetting each other, and stacking did not compound only because the write-time stages never fired.",
+   "metric": "benign utility delta (paired core accuracy, pp)",
+   "value": "-3.1 pp (CI [-7.4,+1.0]); FQR 8.9%",
+   "comparison": "reranker alone -4.4 pp; gap 1.3 pp lies inside replicate spread (v2 wording)",
+   "setting": "stacked configuration (sanitization, provenance, anomaly detection, reranking applied sequentially as wrappers), gemini-3.1-flash-lite on LoCoMo, 5 conversations x 3 replicates, benign traffic",
+   "quote": "Stacking did not compound the cost. The stacked condition lost 3.1 points (95% CI [−7.4,+1.0][-7.4,+1.0]) with FQR 8.9%, close to the reranker alone.",
+   "locator": "§7.4 (Table 4)",
+   "denominator": {
+    "n_total": 255,
+    "n_valid": null,
+    "how_counted": "Same paired core-accuracy protocol as the reranker row: 255 core questions per replicate, majority vote over 3 replicates (765 graded answers per condition); the stacked FQR 8.9% is 681 quarantines over 7,650 memory decisions (Sections 5.5, 7.4)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "The reranker's clearer cost is mechanical: 2.7% token overhead (tau_d), from one guard-model call per retrieved memory (2,550 calls per replicate); anomaly detection costs 1.2% (750 calls per replicate) and the stacked condition 4.1%, close to the sum 3.9%. (v1's 'up to 106 false quarantines in a single conversation' is carried in v2 only as per-cell counts in Appendix B and is recorded under the FQR entry.)",
+   "metric": "token overhead ratio (tau) and max false quarantines per conversation",
+   "value": "2.7%",
+   "comparison": "anomaly 1.2%; stacked 4.1%; sanitize/provenance 0.0%",
+   "setting": "rerank condition on benign LoCoMo traffic, per-purpose token accounting through a local proxy, 5 conversations x 3 replicates",
+   "quote": "The reranker makes one call per retrieved memory, 2,550 per replicate, for 2.7%. The stacked condition pays both, 4.1%, close to their sum of 3.9%.",
+   "locator": "§7.2 (Table 4)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "tau_d = defense-tagged tokens / baseline-tagged tokens across the 15 cells of each condition (Eq. 4, Section 5.4); call counts 750 (anomaly, one per turn) and 2,550 (reranker, one per retrieved memory) per replicate"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Scale: intervals of 3.6-4.5 points mean costs of one or two points are undetectable; the write-time nulls do not establish zero cost, and the sign-flip test cannot go below p=0.0625 with five conversations.",
+   "quote": "Interval half-widths remain between 3.6 and 4.5 points, making costs of one or two points hard to detect. Thus, the write-time nulls do not establish that the cost is zero.",
+   "locator": "§9 Scale"
+  },
+  {
+   "statement": "Single configuration: one backbone, memory framework, embedding model, and judge; a different backbone may change the reranker's FQR, and hosted models evolve so exact numbers may not reproduce.",
+   "quote": "We test a single backbone, memory framework, embedding model, and judge. A different backbone may assess extracted memories differently and change the reranker’s FQR. Hosted models also evolve over time, so the exact numbers may not be reproducible.",
+   "locator": "§9 One configuration"
+  },
+  {
+   "statement": "Benign traffic only: attack effectiveness is not measured, act-time defenses are untested, and stacked-filter interaction on triggering traffic is unknown.",
+   "quote": "We measure costs only on benign traffic. We do not measure how effectively any defense stops attacks, test an act-time defense, or examine how stacked filters interact when they fire.",
+   "locator": "§9 No attacks"
+  },
+  {
+   "statement": "Measurement provenance: a single annotator produced all hand labels and all 24 judge items come from one evaluation conversation (conv-26).",
+   "quote": "A single annotator produced all hand labels. All 24 judge items come from conv-26, an evaluation conversation. Of the 89 abstention labels, we corrected 8 after the detector disagreed.",
+   "locator": "§9 Measurement"
+  },
+  {
+   "statement": "The no-compounding finding is conditional: stacking did not compound cost because the write-time stages never fired; on traffic that triggers them, stacked filters may interact, and a benign corpus cannot test that.",
+   "quote": "Stacking did not compound cost here because the write-time stages never fired. On traffic that triggers them, stacked filters may interact. A benign corpus cannot test that.",
+   "locator": "§8 What stacking does not show"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "Authors state all related code is provided with the paper (evidence alignment filter, judge prompts, abstention detector, complete per-cell outputs)",
+  "data": "LoCoMo dataset; 5 conversations truncated to 150 turns; 90 cells = 6 conditions x 5 conversations x 3 replicates",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "latex_duplication_in_corpus_quotes",
+  "v2_retracted_v1_stacking_offset_interpretation"
+ ]
+}

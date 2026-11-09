@@ -1,0 +1,366 @@
+{
+ "arxiv_id": "2610.00347",
+ "title": "Authorization for Self-Modifying AI Agent Populations: Conserving Authority across Replacement, Forking, and Rollback",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "cross-session",
+  "carrier": "外部 population ledger 与 generation registry（位于可变代边界之外、持久且单调）：content-addressed generation principal（8 字段 manifest digest + 种群/根/epoch/根授权摘要/种群签发序列号/唯一授权父代/完整 lineage-atom 集合的域分离哈希）、root grants 与种群持久 ceiling、活跃代 allocation 与 staged reservation、单调 lineage cut 集、digest-bound 授权记录与效果回执；身份、授权谱系与策略分配是被形式化的跨替换/fork/回滚持续对象",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "revocation"
+  ]
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "运行时授权的种群守恒（population-safe succession）：每个被接受的受保护效果在提交点归因到唯一当前活跃且未撤销的代并有完整权威见证；全部活跃依赖后代的聚合权威（定性效果关系、可消耗预算、并发份额）始终低于根终身授权（含不可逆终身借记）与种群持久当前暴露上限；祖先撤销 cut 后任何依赖后代不能通过效果准入；替换在单一线性化点原子换掉前代（无双活跃）；回滚/字节相同历史身体不能重铸退役授权；候选自我认证被排除。失效条件：未中介效果路径绕过全部注册 broker、认证/摘要碰撞被攻破、已提交 ledger 记录被改写、受控 evidence root、谱系登记不全或效果规范化不保守（均为显式前提违反）。判定：定理 7–12+推论（A1–A10 下）与 32 例注册判定回放。",
+  "operationalized_as": "形式层：A1–A10 前提下不变量 I1–I7 保持（定理 7）及 fork 守恒/撤销闭包/原子交接/回滚不重铸/无自我认证（定理 8–12）与 re-root non-laundering（推论 13）；可执行层：冻结 32 例注册语料判定回放 64/64（28 allow/36 deny）、独立 checker 接受 64/64 轨迹并拒绝 28/28 outer-resealed 语义变异体、12/12 profile 不变量探针、16/16 崩溃切点与 32/32 竞争调度、2 个外部冻结运行时适配器各 32/32"
+ },
+ "threat_model": {
+  "adversary": "model-itself",
+  "capabilities": [
+   "控制每个候选与活跃代的全部组成部分：planner、model route、代码、Skill 闭包、memory policy、policy compiler 与运行时配置",
+   "反复 fork、构造深层谱系、提交不受支持的多父合并",
+   "保留旧凭证、延迟离线后代，使缓存授权在祖先撤销后仍被出示",
+   "在同一控制 root 下别名化多个 certifier principal 以伪造证据独立性",
+   "出示部分效果投影、重排 promotion 消息、重放证书/收据/效果请求",
+   "竞争前代与后代效果（race predecessor and successor effects）、在每个持久边界崩溃 coordinator",
+   "恢复任意历史身体，或以新启动供给字节相同的工件（rollback replay / 身份重放）"
+  ],
+  "assumptions": [
+   "A1 完全效果中介：profile 命名的每个安全相关承诺都经过校验当前代/完整谱系闭包/分配/完整效果元组的 broker",
+   "A2 认证规范身份（调用者认证与公钥签名留作部署前提）；A3 持久单调代/根 epoch 与不可改写记录；A4 完全谱系记账（每个非根代恰一注册授权父代）；A5 健全种群代数；A6 原子种群事务（可串行化持久转换）",
+   "A7 证据根独立性（别名/后代/克隆/候选控制根下 principal 不满足独立槽位）；A8 转移非放大（精确后态须低于前代剩余、根终身授权与种群上限）；A9 完全撤销 fencing（缓存子记录不能覆盖单调 cut）；A10 效果请求幂等（仅保护效果请求享有精确重试）",
+   "对手不能使认证的根授权/认证谓词在没有准入外部控制根时接受、不能找到注册规范摘要碰撞、不能改写已提交 ledger 记录、不能绕过全部注册 broker、不能破坏可信 ledger 的原子性与可串行化排序"
+  ],
+  "not_covered": [
+   "被攻陷 broker、被省略的效果路径、虚假准入的 evidence root、不完整谱系登记、不健全效果规范化——均属显式前提违反，不能转化为定理结论",
+   "多父权威合并（multi-parent merge）在形式系统、实现与执行结果之外；分支协调只能经单一当前见证或新发独立根",
+   "任意代码的语义等价判定与评估者实质性判断的正确性（由证据准入与 profile 治理供给，定理不推断）",
+   "调用者认证、密钥持有、公钥签名（参考实现未实现，A2 部署前提）",
+   "已承诺的物理后果不可逆（cut 前已提交效果仍是历史效果）；补偿/法律结算/任务成功/模型对齐是独立属性",
+   "分布式共识与效果投递原子性（原子性证据限于单 handoff 的 file-image 替换协议）；激活的最终送达（liveness）在安全结果之外",
+   "完整开放式 DGM 进化循环未执行（需外部模型凭证、容器、网络与基准资产）"
+  ]
+ },
+ "intervention": {
+  "name": "Authorization Succession Protocol（外部 population ledger + generation registry + protected-effect broker）",
+  "mechanism_layer": "formal",
+  "description": "把变异接受变成持久种群转换的外部协议：代身份与授权终身分离（content digest ≠ 授权身份，回滚/重启动获新序列号与新授权记录）；候选隔离+独立证据，staged 精确保留（绑定前代剩余与种群版本）或 fork 全家族 inline 校验，单一 ledger 线性化点原子 fence 前代并激活后继；祖先 cut 单调插入并使全部含该原子的依赖后代失格（离线后代在下一次中介转换处遇到 cut）；独立 re-root 需不源自旧谱系的外部根授权；回滚即新代。效果 broker 在同一串行化 ledger 操作内校验当前代、谱系 cut 集、allocation、保留与预算。形式层给出 A1–A10 假设下的六个定理+推论；可执行参考实现绑定 8 字段 manifest、整数预算、effect-label 单持有者互斥，并配直接调用/邮箱两个逻辑映射与独立 checker。"
+ },
+ "controls": [
+  {
+   "name": "session continuity（逻辑基线：会话存活且本地授权未过期即接受）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "exact-hash all-deny（逻辑基线：候选体与 manifest 须与 predecessor 完全一致）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "per-generation fixed ceiling（逻辑基线：逐后继独立对照父代 envelope 与上限）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "delegation-edge cascade（逻辑基线：仅拒绝已撤销注册委派路径上的凭证）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "28 个 outer-resealed 语义变异体（一致重封完整性层后须被拒）",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "safe refactor / safe narrowing 注册案例（必须被保留的良性后继）",
+   "purpose": "positive-control"
+  }
+ ],
+ "results": [
+  {
+   "claim": "定理 7（Population-Safe Succession）：在假设 A1–A10 下，不变量 I1–I7 在每条从 InitOK(S0) 出发的可接受轨迹的每个前缀后都成立；由此每个根的活跃后代聚合权威（定性效果包络、根终身借记+活跃剩余预算、并发持有份额）不超过根终身授权与种群持久当前暴露上限，且每个已提交受保护效果可归因到唯一在准入位置当前且未撤销的代并落在其分配内",
+   "metric": "formal_safety_invariant_preservation",
+   "value": "Theorem 7",
+   "comparison": null,
+   "setting": "形式系统：注册单亲授权谱系 profile，假设 A1–A10（Table 2），从 InitOK(S0) 出发的全部可接受轨迹；对每个授权根 r 与可达状态 S",
+   "quote": "Under A1–A10, I1–I7 hold after every prefix of every accepted trace that\nstarts from 𝖨𝗇𝗂𝗍𝖮𝖪⁡(S0)\\mathsf{InitOK}(S_{0}). In particular, for every root rr and\nreachable state SS,",
+   "locator": "§4.6 Theorem 7",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "定理 8（Fork Conservation）：接受的原子 fork 的全部子代分配组合以前代重构的 fork 前剩余为界（式 (10)），前代在同一提交位点被 fence 且其剩余至多被该 fork 消费一次；沿 fork 树归纳可保持当前活跃叶分配的源分配约束——抽象 profile 下不同后代持有同等定性权限消耗各自持有单元，参考 effect-label profile 则直接禁止重复持有",
+   "metric": "formal_fork_conservation",
+   "value": "Theorem 8",
+   "comparison": null,
+   "setting": "形式系统：A1–A10 下的原子单亲家族交接（|N|≥2，同一唯一前代）；抽象授权代数与参考 effect-label profile 两种实例化",
+   "quote": "Theorem 8 (Fork Conservation).\n\nConsider an accepted atomic fork from predecessor pp to children NN.\nThe composition of all child allocations is bounded by pp’s reconstructed\npre-fork residual as in (10), pp is fenced at the same commit position, and\nthe residual can be consumed by that fork at most once.",
+   "locator": "§4.6 Theorem 8",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "定理 9（Cross-Generation Revocation Closure）：祖先 cut c 将原子 a 插入种群单调 cut 集后，任何完整谱系集合包含 a 的代（含每个嵌套依赖后代，不论离线/延迟/后启动）都无法授权 c 之后的新受保护效果准入；独立 re-root 的代因权威不含旧原子而在结论之外",
+   "metric": "formal_revocation_closure",
+   "value": "Theorem 9",
+   "comparison": null,
+   "setting": "形式系统：A3（持久单调记录）+ A9（完全撤销 fencing）+ A4（完全谱系记账）下的单亲谱系森林",
+   "quote": "Theorem 9 (Cross-Generation Revocation Closure).\n\nLet c=𝖱𝖾𝗏𝗈𝗄𝖾𝖠𝗇𝖼𝖾𝗌𝗍𝗈𝗋⁡(p⁡(r),a)c=\\mathsf{RevokeAncestor}(p(r),a) insert aa into\n𝖢𝗎𝗍S​(p​(r))\\mathsf{Cut}_{S}(p(r)). No fresh\nprotected-effect admission ordered after cc can be authorized by a\ngeneration whose complete lineage set contains aa.",
+   "locator": "§4.6 Theorem 9",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "定理 10（Atomic Generation Handoff）：接受的家族交接在单一提交位点 λh 原子完成——子代在 λh 前无生产权威、前代在 λh 后无生产权威，每个并发的新受保护效果准入恰好被排序在 λh 一侧；因此不存在同时可行使前代转移前分配与子代转移后分配的可接受前缀（无双活跃替换状态）",
+   "metric": "formal_atomic_handoff",
+   "value": "Theorem 10",
+   "comparison": null,
+   "setting": "形式系统：A6（原子种群事务、可串行化）下的 staged singleton 与 inline fork 两条路径",
+   "quote": "Theorem 10 (Atomic Generation Handoff).\n\nFor an accepted family handoff at λh\\lambda_{h}, a child in NN has no\nproduction authority before λh\\lambda_{h}, and predecessor pp has no\nproduction authority after λh\\lambda_{h}. Every concurrent fresh\nprotected-effect admission is ordered on exactly one side of λh\\lambda_{h}.",
+   "locator": "§4.6 Theorem 10",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "定理 11（Rollback Non-Reminting）：回滚代即使 manifest 摘要与历史代相同，其 gid 也不同，且不能使用历史代的证据记录、授权对象、保留、激活记录或 cut 谱系；其获得的任何权威都来自新的接受交接并计入式 (13) 的守恒界——字节相同的历史身体不能重铸已退役授权",
+   "metric": "formal_rollback_non_reminting",
+   "value": "Theorem 11",
+   "comparison": null,
+   "setting": "形式系统：规范生成身份式 (1)（新种群签发序列号）+ 证据/授权对象的精确绑定（式 (8)(11)）+ A3/A4",
+   "quote": "Theorem 11 (Rollback Non-Reminting).\n\nIf rollback generation gr​bg_{rb} has the same manifest digest as historical\ngeneration aa, then 𝗀𝗂𝖽⁡(gr​b)≠𝗀𝗂𝖽⁡(a)\\mathsf{gid}(g_{rb})\\neq\\mathsf{gid}(a). It cannot use\naa’s evidence record, authorization object, reservation, activation record,\nor cut lineage.",
+   "locator": "§4.6 Theorem 11",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "定理 12（No Self-Certification）：仅由非 bootstrap 候选代自身产生或控制的记录构成的轨迹不能使其进入 ACTIVE；每个接受的候选激活至少包含一个来自独立于候选 proposer 控制 root 的 profile 必需证据根的接受证据记录，外加外部谱系权威的认证授权决定",
+   "metric": "formal_no_self_certification",
+   "value": "Theorem 12",
+   "comparison": null,
+   "setting": "形式系统：A2（认证规范身份）+ A7（证据根独立性，frozen 控制根注册表）下的两条激活路径（既有根下 CommitFamily 与独立 re-root）",
+   "quote": "Theorem 12 (No Self-Certification).\n\nNo trace consisting only of records originating in or controlled by a\nnon-bootstrap candidate generation gg can move gg to\n𝖠𝖢𝖳𝖨𝖵𝖤\\mathsf{ACTIVE}.",
+   "locator": "§4.6 Theorem 12",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "推论（Re-root non-laundering；正文证明一节引用为 Corollary 13，HTML 标题渲染为 Corollary 0）：接受的独立 re-root 与旧根没有授权路径、不导入旧根分配、其后每个被准入的效果仅归因于新根；仅删除或重命名旧谱系字段而不做外部根授权转换不能确立这些事实",
+   "metric": "formal_re_root_non_laundering",
+   "value": "Corollary 0",
+   "comparison": null,
+   "setting": "形式系统：Definition 3（独立 re-root：新外部根授权、fresh epoch/序列、无授权父代）+ A2/A7/A8/A9",
+   "quote": "Corollary 0 (Re-root non-laundering).\n\nAn accepted independent re-root of g′g^{\\prime} has no authorization path to the old\nroot, imports no old-root allocation, and attributes every later admitted\neffect solely to its fresh root.",
+   "locator": "§4.6 Corollary 0",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "冻结的 32 例注册语料（14 Allow/18 Deny 期望）经 direct-call 与 mailbox 两个分别实现的逻辑运行时映射各执行一次，64 次回放全部匹配注册判定（合计 28 allow/36 deny），判定与效果处置零分歧",
+   "metric": "registered_decision_match",
+   "value": "64/64 replays (28 allows, 36 denies)",
+   "comparison": null,
+   "setting": "参考实现 ledger+broker；两个 provider-free 逻辑映射（logical-direct-call/v1、logical-mailbox/v1）；冻结 32 例语料 = 24 变异面例（6 面×4 结局）+ 8 谱系/种群/完整性例",
+   "quote": "the 32 logical cases was executed once through the direct-call mapping and\nonce through the mailbox mapping. Both mappings therefore produced 14\nallows and 18 denies, for 28 allows and 36 denies across 64 replays, with no\nverdict or effect-disposition disagreement.",
+   "locator": "§8.1 Table 6",
+   "denominator": {
+    "n_total": "64",
+    "n_valid": "64",
+    "how_counted": "32 例注册判定 × 2 个逻辑运行时映射（direct-call + mailbox）；Table 6 冻结分母"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "独立实现的 checker（不导入 ledger/controller/adapter/语料期望判定函数，另持独立 case oracle）接受全部 64 条原始轨迹，并拒绝全部 28 个注册的 outer-resealed 语义变异体（改动安全相关事实后一致重封事件/转录/摘要/状态/案例承诺）",
+   "metric": "semantic_mutant_rejection_and_trace_acceptance",
+   "value": "28/28 mutants rejected; 64/64 traces accepted",
+   "comparison": null,
+   "setting": "独立 checker 对抗性回归；28 个 outer-resealed 变异覆盖身份/谱系替换、缺失祖先、活跃撤销谱系、上限突破、非法相位、控制根别名、保留重开、判定翻转、双适配器分歧、分母增删等注册类别",
+   "quote": "checker accepted all 64 original traces and rejected all 28 registered\nouter-resealed semantic mutants.",
+   "locator": "§8.1 Table 6",
+   "denominator": {
+    "n_total": "28",
+    "n_valid": "28",
+    "how_counted": "28 个注册 outer-resealed 语义变异体全部被拒（Table 6）；另 64 条完整轨迹全部被独立重建后接受"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "受控基线分离（Table 7，四个刻意最小的逻辑抽象、非第三方系统执行）：session continuity 14/32、exact-hash all-deny 18/32、per-generation fixed ceiling 29/32、delegation-edge cascade 23/32，仅完整授权继承 profile 32/32 全部匹配注册 oracle；严格门槛要求连续性/每代上限类基线至少接受一个注册种群违例、exact-hash 至少错拒一个注册良性后继",
+   "metric": "oracle_classification_match",
+   "value": "32/32 vs 14/32, 18/32, 29/32, 23/32",
+   "comparison": "session continuity 14/32；exact-hash all-deny 18/32；per-generation fixed ceiling 29/32；delegation-edge cascade 23/32 → complete authorization-succession profile 32/32",
+   "setting": "同一冻结 32 例注册语料；四个逻辑基线为作者实现的最小保证抽象；外部 only-path enforcement 作为部署前提保持恒定（不计为第五基线）",
+   "quote": "| Session continuity | 14/32 |\n| Exact-hash all-deny | 18/32 |\n| Per-generation fixed ceiling | 29/32 |\n| Delegation-edge cascade | 23/32 |\n| Complete authorization-succession profile | 32/32 |",
+   "locator": "§8.2 Table 7",
+   "denominator": {
+    "n_total": "32",
+    "n_valid": "32",
+    "how_counted": "同一 32 例注册语料上与注册 oracle 的分类匹配数（Table 7）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "持久化崩溃注入：在一个后继提交周边的 16 个命名文件持久化切点（intent/next-state 文件的打开/写/fsync/关闭前后、原子 rename 前后、目录 fsync 与 intent 清理）分别以独立进程终止 worker，每次恢复都恰好呈现完整 pre-commit（前代活跃+保留后继）或完整 post-commit（前代 fence+后继活跃）状态，无双活跃或零活跃替换状态",
+   "metric": "crash_cut_recovery",
+   "value": "16/16 crash cuts recover to complete pre/post state",
+   "comparison": null,
+   "setting": "持久化层故障注入（file-image 替换协议：intent 记录 + 临时镜像 + 原子重命名 + 目录 fsync）；每 cut 独立进程终止并从磁盘恢复、校验哈希链",
+   "quote": "The crash experiment terminates a worker at 16 named file-persistence cuts\naround one succession commit. Every cut recovered to one of the two complete\nstates; none exposed a committed dual-active or zero-active replacement.",
+   "locator": "§8.1 Table 6",
+   "denominator": {
+    "n_total": "16",
+    "n_valid": "16",
+    "how_counted": "16 个注册进程终止切点：12 个恢复完整 pre-commit 状态、4 个恢复完整 post-commit 状态（Table 6）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "竞争调度：两个竞争后继的 5 个布尔顺序选择（提议顺序、认证顺序、保留顺序、先尝试败者还是胜者提交、交接后先探测活跃后继还是 stale 前代效果）的全部 32 个确定性命令序都保持唯一胜者并拒绝 stale 前代；这是顺序确定性命令实验，论文明确不声明覆盖任意线程/文件系统/分布式执行或 cut/回滚交错",
+   "metric": "contender_schedule_preservation",
+   "value": "32/32",
+   "comparison": null,
+   "setting": "5 个注册顺序位的全枚举（2^5=32），调用在单个 schedule 内串行化；练习唯一保留、一次成功交接、败者提交拒绝与 stale 前代效果拒绝",
+   "quote": "| Contender schedules | 32 deterministic command orders | 32/32 preserved one winner and rejected the stale predecessor |",
+   "locator": "§8.1 Table 6",
+   "denominator": {
+    "n_total": "32",
+    "n_valid": "32",
+    "how_counted": "5 个布尔顺序位的全部 32 个确定性命令序（Table 6）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "12 个参考 profile 不变量定向探针（fork 分配、cut、回滚、终身借记、幂等、保留、re-root）全部通过；其中 succession 借记探针显示 90 个已消耗 token 仍记在授权根上、后继只能消耗最后 10、再借记被拒；fork 探针在 100-token 根授权下记录 25 已消耗 + 75 活跃剩余——fencing 前代不能从根终身账目中移除其已消耗借记，回滚不能恢复前代已消耗分配，精确效果重试返回原回执不再借记",
+   "metric": "root_lifetime_debit_conservation_probes",
+   "value": "90 consumed + 10 residual of 100-token root grant; fork 25 spent + 75 residual",
+   "comparison": null,
+   "setting": "参考实现参考 profile 的 12 个定向探针（Table 6 行 Reference-profile invariants：fork allocation、cut、rollback、lifetime debit、idempotency、reservation、re-root）；整数 token 预算",
+   "quote": "In the succession debit probe, 90 consumed tokens remain\ncharged to the authorization root, the successor can consume only the final\n10, and a further debit is rejected. The fork probe similarly records 25\nspent tokens plus 75 units of active residual against a 100-token root grant.",
+   "locator": "§8.1 Table 6",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "外部精化 OurArk：冻结 Genesis v0.1.1（commit e7bb8964…）与 Enoch v0.3.1（commit 1021e1da…，Apache-2.0）并走其公开 descent 路径；保留后代的 manifest 映射 176 个继承文件（162 改变内容、14 内容相同、零映射遗漏），新 Python 进程重开该后代并发现 753 个继承测试（5 跳过、无失败或错误）；broker 随后恰好提交一次 succession、允许后继效果、并以 E_GENERATION_INACTIVE 拒绝对同一前代的同一操作",
+   "metric": "external_refinement_ourark",
+   "value": "176 inherited files (162 changed, 14 identical); 753 tests, 5 skips, no failure",
+   "comparison": null,
+   "setting": "冻结公开版本 OurArk Genesis v0.1.1 → Enoch v0.3.1（Apache-2.0）源生 descent + 独立进程中的 out-of-process 原型 ledger/broker；源身份/体闭包/原生验证/重启观察先于 succession 度量",
+   "quote": "manifest maps 176\ninherited files: 162 changed content, 14 retained identical content, and no\nmapping miss. A fresh Python process reopened that descendant and discovered\n753 inherited tests, with 5 skips and no failure or error.",
+   "locator": "§8.4 OurArk Genesis/Enoch.",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "外部精化 Darwin Gödel Machine：冻结公开 commit a565fd2d…（Apache-2.0）并度量 35 文件源闭包；调用上游 tools/edit.py EditTool 做一次确定性的适配器作者 body 变异，并在独立 Python 进程启动复制的后代；上游编辑器套件在父/后代均 10/10 通过（更宽的 editor/bash 兼容跑为 21/22，同一交互式 shell 启动诊断导致唯一失败，非认证谓词）；broker 同样激活后继并以 E_GENERATION_INACTIVE 拒绝前代",
+   "metric": "external_refinement_dgm",
+   "value": "35-file source closure; editor suite 10/10",
+   "comparison": null,
+   "setting": "冻结公开版本 DGM commit a565fd2d1dca504ef5104a7cc0f3bdc4ab9b4fd2（Apache-2.0）；一次真实上游 EditTool 变异 + 一次独立进程重启；完整开放式 DGM 进化循环未执行（21/22 兼容跑数字见 §8.4 正文，未作为本条 value 登记）",
+   "quote": "measures a 35-file source closure (dgm2025). It invokes the upstream\ntools/edit.py EditTool for one deterministic, adapter-authored body\nmutation, then launches the copied descendant in a separate Python process.\nThe upstream editor suite passes 10/10 on both parent and descendant.",
+   "locator": "§8.4 Darwin Gödel Machine.",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "两个外部适配器各对唯一测得的保留后代/后代封印回放全部 32 例注册案例，各得 32/32（各 14 allow/18 deny）；合计 64 次源绑定 profile 回放（28 allow/36 deny）——论文明确这不是 64 次独立 descent/变异/进化，也不对上游运行时插桩",
+   "metric": "external_source_bound_replays",
+   "value": "64 source-bound replays (28 allows, 36 denies); 32/32 per adapter",
+   "comparison": null,
+   "setting": "OurArk 与 DGM 两个冻结公共运行时适配器 × 32 例注册回放；回放不作为独立进化计数",
+   "quote": "Both obtain 32/32, with 14 allows and\n18 denies each. The combined external count is thus 64 source-bound profile\nreplays (28 allows and 36 denies), not 64 independent descents, mutations, or\nevolutions.",
+   "locator": "§8.4",
+   "denominator": {
+    "n_total": "64",
+    "n_valid": "64",
+    "how_counted": "2 个外部适配器 × 32 例注册回放（§8.4）；论文强调非 64 次独立进化"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "完整开放式 DGM 进化循环未执行：其需要外部模型服务凭证、容器执行、网络访问与本离线 profile 排除的基准资产；观察到的 DGM 事件因此是一次真实上游 EditTool 变异加一次独立重启，而非自主开放式进化。",
+   "quote": "The full open-ended DGM evolution loop was not executed: it requires external\nmodel-service credentials, container execution, network access, and downloaded\nbenchmark assets excluded from this offline profile.",
+   "locator": "§8.4 Darwin Gödel Machine."
+  },
+  {
+   "statement": "认证是抽象前提：参考原型只验证冻结的声明式 principal→control-root 映射与摘要绑定记录，不认证调用者、不证明密钥持有、不实现公钥签名；这些认证义务留作满足定理的部署中 A2 的一部分。",
+   "quote": "The reference prototype validates a frozen declared-principal-to-\ncontrol-root mapping and digest-bound records; it does not authenticate the\ncaller, prove key possession, or implement public-key signatures.",
+   "locator": "§3.3 Adversary and fault model"
+  },
+  {
+   "statement": "外部观察的边界：不插桩上游运行时；broker 是 out-of-process 授权继承原型，观察结果既不确立上游集成、生产部署，也不代表 OurArk 或 DGM 作者的背书。",
+   "quote": "The broker is\nan out-of-process authorization-succession prototype, and the observations establish\nneither an upstream integration, a production deployment, nor endorsement by\nOurArk or the DGM authors.",
+   "locator": "§8.4"
+  },
+  {
+   "statement": "评估协议引用的外部 tampering 来源只提供编辑角色分类，本次评估未冻结任何官方、许可的机器可读语料：其贡献为零语料记录、零经验分母；28 个语义变异体仍是注册核心回归，不被重标为外部 tampering 样本。",
+   "quote": "official, licensed machine-readable corpus was frozen for this evaluation.\nAccordingly, it contributes zero corpus records and no empirical denominator.",
+   "locator": "§8.5 Independent seals and corpus boundary"
+  },
+  {
+   "statement": "可执行证据的推广边界：每原子 epoch 向量、一般 profile 摘要、公钥签名、任意权威关系与多父合并都不从这些运行中推断；可执行案例只验证固定八字段 manifest、冻结控制根注册表、摘要绑定记录、单亲继承、原子 fork、不相交 effect label 与整数预算。",
+   "quote": "Per-atom epoch vectors, general profile\ndigests, public-key signatures, arbitrary authority relations, and\nmulti-parent merge are not inferred from those runs.",
+   "locator": "§A.3"
+  }
+ ],
+ "counterexamples": [
+  {
+   "execution": "Sibling duplication",
+   "locally_acceptable": "两子代各自低于父代个体上限",
+   "population_violation": "该对获得同一预算/执行份额的两份拷贝"
+  },
+  {
+   "execution": "Relational splice",
+   "locally_acceptable": "每支只暴露允许的字段投影",
+   "population_violation": "分支协调合成单个权威见证从未认证的完整效果元组"
+  },
+  {
+   "execution": "Ancestor-revoke leak",
+   "locally_acceptable": "离线后代出示先前有效的子代授权记录",
+   "population_violation": "其见证仍依赖被撤销祖先原子"
+  },
+  {
+   "execution": "Dual-active promotion",
+   "locally_acceptable": "新代激活；前代 fence 在崩溃后重试",
+   "population_violation": "新旧两代都到达受保护 sink"
+  },
+  {
+   "execution": "Rollback replay",
+   "locally_acceptable": "历史 body digest 与旧授权记录匹配",
+   "population_violation": "退役序列/已耗预算/已撤销授权被复用"
+  },
+  {
+   "execution": "Self-certification",
+   "locally_acceptable": "不同 certifier 标识批准候选",
+   "population_violation": "全部 certifier 声明在候选控制根之下"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "logical_baselines_are_stated_abstractions_not_third_party_runs",
+  "external_adapter_replays_not_independent_evolution_runs",
+  "caller_authentication_public_key_left_as_A2_deployment_premise",
+  "multi_parent_merge_outside_core_formal_implemented_executed_result",
+  "artifact_executables_outside_public_preprint_archive_no_code_link_in_corpus"
+ ]
+}

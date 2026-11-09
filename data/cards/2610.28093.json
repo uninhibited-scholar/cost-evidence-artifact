@@ -1,0 +1,83 @@
+{
+  "arxiv_id": "2610.28093",
+  "title": "ClawMMU: Protection-Coherent Virtual Memory for Stateful LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "ClawVM-style typed memory pages: every representation of a page carries a protection descriptor (owner, scope, origins, authority level such as Evidence up to Policy) plus per-page revocation counters kept outside checkpoints",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "Information may rise in authority only through owner approval ('authority never lifts itself'): untrusted content (web pages, tool outputs, model-written summaries) can neither gain the user's authority nor supply security-relevant tool-call arguments, even when the model is fooled. Explicitly out of scope: confidentiality of readable content, correctness of derived memory, and the model making the right call when passed values do have enough authority. Judged by construction/argument, not by experiments (system not yet implemented).",
+    "operationalized_as": "Protection descriptors (owner/scope/origins/authority) checked by the harness at four context-boundary crossings - map (entry), derive (write to storage), reload (retrieval/checkpoint restore), authorize (tool call) - plus revocation-counter comparison at reload and authorize; violations surface as classical protection faults (address-space violation, type confusion, use-after-revoke, confused deputy). No implementation or measured numbers yet."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Adversary controls text in fetched web pages and tool outputs that the agent retrieves, transforms, and stores",
+      "Sleeper memory poisoning: injected text is stored in memory and fires later, after passing through several summaries and transformations",
+      "Direct prompt injection by another user of a shared agent (same pattern, mentioned as in-scope motivation)",
+      "Adaptive attackers tuning inputs against a specific deployed defense (motivating content-independent checks)"
+    ],
+    "assumptions": [
+      "The harness is trusted; ClawMMU needs only a hook where content enters context, is written to storage, returns from storage, or drives a tool call",
+      "Stable page identities exist so every representation can be labeled",
+      "Current revocation counters are kept outside checkpoints so a restore cannot roll them back",
+      "Capability schemas are reviewed and correctly mark security-relevant arguments as checked",
+      "The model itself is treated as a lowest-authority input; only the owner can raise authority"
+    ],
+    "not_covered": [
+      "Model making the wrong call, or passing a wrong value that does have enough authority",
+      "Correctness of derived memory",
+      "Confidentiality of readable content",
+      "A wrong 'safe' marking in a capability schema (stated as the main residual risk)",
+      "Actions that happen before a revocation",
+      "Authority in multi-agent systems and auditing approvals that widen scope (open problems)",
+      "No empirical evaluation yet; ClawMMU is not yet implemented"
+    ]
+  },
+  "intervention": {
+    "name": "ClawMMU",
+    "mechanism_layer": "architecture",
+    "description": "An MMU-style protection layer in the agent harness: every memory representation carries a protection descriptor (owner, scope, origins, ordered authority levels with Evidence lowest and Policy highest); an inheritance rule gives derived memory the lowest authority of its inputs, counting the model itself as a lowest-authority input so model-written memory stays Evidence; per-page revocation counters (copied into descriptors of derived memory, kept outside checkpoints) invalidate all descendants of a revoked source; authorize performs per-argument checks so each security-relevant tool-call argument must trace to sufficient authority; compartment sharing across owners/scopes is denied by default via unforgeable assembly capabilities."
+  },
+  "results": [],
+  "limitations": [
+    {
+      "statement": "ClawMMU's guarantee excludes correctness of the model's calls, correctness of derived memory, and confidentiality of readable content.",
+      "quote": "It does not guarantee that the model makes the right call, that derived memory is correct, or that readable content stays confidential.",
+      "locator": "§1 Introduction"
+    },
+    {
+      "statement": "Authorize protects only the provenance/integrity of call arguments; the model may still make the wrong call or pass a wrong value that has enough authority.",
+      "quote": "The model may still make the wrong call, or pass a wrong value that does have enough authority.",
+      "locator": "§3 Acting (authorize)"
+    },
+    {
+      "statement": "The main residual risk is a wrong 'safe' marking in a capability schema, so schemas must be reviewed.",
+      "quote": "A wrong safe marking is therefore the main residual risk, which is why the schemas must be reviewed.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "ClawMMU is not yet implemented; its Table 1 row lists design properties only, and the planned evaluation (AgentDojo, InjecAgent, sleeper memory poisoning; attack success, check latency, owner approvals) is future work.",
+      "quote": "The ClawMMU row lists design properties, since ClawMMU is not yet implemented.",
+      "locator": "Appendix C, Table 1"
+    },
+    {
+      "statement": "Open problems include capability-schema review at scale, authority in multi-agent systems, actions before a revocation, and auditing scope-widening approvals.",
+      "quote": "Open problems include reviewing capability schemas at scale, placing authority in multi-agent systems, handling actions that happen before a revocation, and auditing approvals that widen scope.",
+      "locator": "§5 Vision"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "position_paper_no_empirical_results",
+    "design_not_yet_implemented_no_experiments"
+  ]
+}

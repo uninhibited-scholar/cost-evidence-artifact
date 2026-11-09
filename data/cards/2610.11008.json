@@ -1,0 +1,298 @@
+{
+ "arxiv_id": "2610.11008",
+ "title": "Why LLM Agents Favor Their Group: Stakes, Observed Norms, and Reputation",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "single-session",
+  "carrier": "每个 agent 的交互日志（history log）：十轮点数分配逐条追加、带群体标签的记录（论文示例：“R3: A7 (Blue team) gave you (Gold team) 4 of 10; A2 (Blue team) got 6”），十轮后每个 agent 约 30 条 logged events——“This log is the history”。§6–9 中该日志被实验者接管为 scripted histories（六种脚本：极化/平等/反规范/反互惠/own/others）与分支事件（本群迫害、成员丑闻、财富与邀请、修复干预），并可通过 scrub（删除 group tags）与 alias（候选人换匿名 handle）操纵。个体声誉（具体某人给过什么）与群体规范（本群被观察到怎么分配）都由这份日志承载，跨轮次累积，并在其后每次 one-shot 决策调用中作为上下文被读取（探针本身 Each decision is a separate call with no memory of the previous ones）。",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "无安全属性：本文是 LLM 多智能体社会行为实证研究（最小群体范式下的群体偏好、规范、声誉、背叛与修复），不定义、不操作化、不评估任何安全性质，也无攻击者。对综述的作用是机制性背景：(1) 驱动 agent 群体偏好的持续对象是上下文中带群体标签的交互历史（观察到的规范 + 个体声誉记录），而非“群体身份”倾向本身——历史内容由实验者完全替换时行为随之翻转（平等规范→favoritism≈0，反规范→为负）；(2) 历史记录的内容（而非其真伪/来源）决定行为，为“经验/记忆持久化的行为后果”提供受控证据；(3) 提示测量陷阱：costless 探针下 54–58% 的 all-or-nothing splits、加 SELF 选项后降到 0%——评估社会性持久状态后果时任务是否有代价决定结论方向。",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无蓄意攻击者：agent 看到的全部群体/历史信号要么由实验设计写入（scripted histories、persecution/scandal/invitation/repair 分支），要么由无对抗意图的 agent 在 live formation 中自然产生",
+   "模型在默认采样设置下运行（“Fifteen OpenAI models were run at their default settings”；Claude 三模型亦 at their defaults），部分稳健性检验另用 temperature 0/0.5 与新种子",
+   "探针为 one-shot 独立调用（Each decision is a separate call with no memory of the previous ones），跨轮次持续状态只存在于附给 agent 的 history log，而非模型内部记忆",
+   "分析单元是 society（n = 4–8 per cell，8 societies per cell 为主），per-model p 值经 Benjamini–Hochberg 在全部 1,115 个检验上联合校正；报告前由 checker 从原始 log 重放每个 society 验证每个设计要求的 prompt 恰好发送一次"
+  ],
+  "not_covered": [
+   "对抗性历史投毒：没有任何实验让恶意成员或外部者向日志注入偏向性内容（scripted histories 由实验者为机制消融而写，不代表攻击者能力）",
+   "跨会话/跨任务/跨用户持久性：全部动态都在单个 society 会话内（T0–T20，至多 30 轮），不研究 log 跨 session 或跨部署携带",
+   "记忆系统的实现层（存储、检索基础设施、写入策略）：log 是实验脚手架而非被评测的记忆产品",
+   "安全性质（授权、机密性、完整性攻击、合规）完全未测量；本文仅刻画“被观察历史→行为”的因果结构"
+  ]
+ },
+ "intervention": {
+  "name": null,
+  "mechanism_layer": "none",
+  "description": "无防御性干预：本文是测量 + 机制消融型实证研究，不提出防御机制。实验操纵包括：任务代价（costless vs. 带 SELF 选项的 stake 任务）、历史来源与内容（live formation vs. 六种 scripted histories vs. scrub/alias 控制）、社会分支（本群/外群迫害、成员荣辱、财富公示与免费换组、邀请）与修复信号（无/道歉/退还点数/群体公开谴责）。对综述的可用背景结论（§10）：“a group’s public reprimand of a defecting member is a stronger lever than restitution, and a newcomer joining a group of capable agents starts with no record, not with hostility”——即持久交互记录的内容决定后续行为，且修复靠群体规范信号而非加害者补偿。"
+ },
+ "controls": [
+  {
+   "name": "floor probe（无历史、标签隐藏的匹配基线；§5 另有预注册的 zero-history control、新种子、降温、四种 wording 稳健性检验）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "scrub_nocue（删除历史中的 group tags）与 anon（候选人换 fresh random handles）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "六种 scripted histories（极化/平等/反规范/反互惠/own/others）——规范内容消融，回应 data-leakage 质疑",
+   "purpose": "ablation"
+  },
+  {
+   "name": "mere-mention control（§8 荣耀实验中仅中性提及成员 M 的对照）与 hidden-wealth / tripled-endowment / invitation 变体（§9）",
+   "purpose": "negative-control"
+  }
+ ],
+ "results": [
+  {
+   "claim": "在无代价分配任务（costless）中，光秃秃的群体标签即产生大幅内群体偏 favoritism：gpt-4.1-mini 的 cue effect 为 6.23/10 点，而十轮共同历史在此基础上几乎不再增加（Δhist 0.42）——即已发表 LLM 最小群体研究报道的大标签效应主要是 costless 任务的产物",
+   "metric": "cue effect / Δhist (points of 10)",
+   "value": "cue 6.23; Δhist 0.42",
+   "comparison": null,
+   "setting": "15 OpenAI 模型 sweep 中的 gpt-4.1-mini；costless 任务（prompt 明示 “Points go to them; you receive nothing either way”）；8 societies per cell；95% t 区间",
+   "quote": "Under the costless task a bare group label is enough to produce large favoritism: on gpt-4.1-mini the cue effect is 6.23 [5.27, 7.19] points of 10, and ten rounds of history add almost nothing on top of it (Δhist\\Delta_{\\mathrm{hist}} 0.42 [−0.86-0.86, 1.69]).",
+   "locator": "§4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "同一模型同一批 seeds 下换成 stake 任务（SELF 选项：给出的每一点都是自己的损失）后格局反转：gpt-4.1-mini 的 cue effect 降到 1.84（降 4.39，q<.001），Δhist 升到 3.77，且对从未互动过的同标签陌生人泛化 3.49（costless 下该区间含 0）——一旦有代价，历史成为 favoritism 的主要来源",
+   "metric": "cue effect / Δhist / generalization (points of 10)",
+   "value": "cue 1.84; Δhist 3.77; strangers 3.49",
+   "comparison": null,
+   "setting": "gpt-4.1-mini，stake 任务，与 costless 版同模型同 seeds；8 societies per cell",
+   "quote": "the cue effect falls to 1.84 [1.41, 2.27] (a drop of 4.39 [3.40, 5.38], q<.001q<.001), Δhist\\Delta_{\\mathrm{hist}} rises to 3.77 [2.95, 4.59] (q<.001q<.001), and generalization to labeled strangers is 3.49 [2.43, 4.56] (q<.001q<.001), where the costless interval had included zero.",
+   "locator": "§4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "costless 任务的标签效应由“免费的两分”驱动：仅删去 “you receive nothing either way” 一句就把 all-or-nothing (10/0) splits 占比从 54–58% 降到 25%；加入保留点数选项后降到 0%（agent 自留约 4 点、其余近均分），cue effect 降到约 2.6",
+   "metric": "share of all-or-nothing (10/0) splits",
+   "value": "54–58% → 25% → 0%",
+   "comparison": "54–58%（原 costless prompt） → 25%（删句） → 0%（加 SELF 选项）",
+   "setting": "no-history 条件逐短语改写重跑（每 variant 72 次调用；论文未指明该消融所用模型，属 §4 消融）",
+   "quote": "Deleting the sentence “you receive nothing either way” alone drops the share of all-or-nothing (10/0) splits from 54–58% to 25%. Adding the option to keep points drops it to 0%: the agent keeps about four points and divides the rest almost evenly, and the cue effect falls to about 2.6.",
+   "locator": "§4",
+   "denominator": {
+    "n_total": "72",
+    "n_valid": "72",
+    "how_counted": "论文原话 “re-ran the no-history conditions (72 calls per variant)”；百分比为该 variant 72 次调用中 all-or-nothing (10/0) split 的占比"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "跨模型汇总：所有 costless cue effect 高于 3 点的 12 个模型在 stake 下失去约 2–7 点（15 模型中 13 个显著，pm<.0001），如 gpt-5.6-terra 9.57→2.25——在每一个表现出标签效应的模型上，该效应基本是 costless 任务的伪影",
+   "metric": "cue effect (points of 10)",
+   "value": "9.57 → 2.25 (gpt-5.6-terra)",
+   "comparison": "costless 9.57 → stake 2.25 (gpt-5.6-terra)",
+   "setting": "15 OpenAI 模型 × 双任务，8 societies per cell；pm 为把 15 个模型当单元的 one-sample t 检验",
+   "quote": "All twelve models with a costless cue effect above 3 points lose about 2–7 points under a stake (significant on 13 of 15 models, pm<.0001p_{\\mathrm{m}}<.0001; e.g. gpt-5.6-terra 9.57 →\\to 2.25, q<.001q<.001).",
+   "locator": "§4 Table 2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "stake 任务下历史成为 favoritism 的主要来源：15 个 OpenAI 模型中 13 个历史效应统计显著为正、11 个达到约 3.5–8 点（共 10 点），且随 formation 轮数增长、泛化到从未谋面的同标签陌生人",
+   "metric": "history effect Δhist (points of 10)",
+   "value": "13 of 15 positive; 3.5–8 on 11 of them",
+   "comparison": null,
+   "setting": "15 OpenAI 模型，stake 任务，十轮 formation 历史后的一次性决策；摘要级跨模型汇总",
+   "quote": "the history effect is statistically positive on 13 of 15 models and reaches about 3.5–8 points out of 10 on 11 of them; it grows with the number of rounds played and extends to labeled strangers the agent has never met.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "标签隐藏时残留的 “label-free persistence” 由个体再识别解释：候选人换成匿名 handle（历史仍记真名）后 favoritism 在 15 模型中 14 个上塌缩到约 0（标签可见时 11/15 模型不受匿名化影响、其余至多移 1.4 点）——群体层面偏 favoritism 只在标签出现时存在",
+   "metric": "favoritism under anonymization (points of 10)",
+   "value": "collapses to about zero on 14 of 15 models",
+   "comparison": null,
+   "setting": "15 OpenAI 模型 × 双任务的 anon 控制条件（同两候选人、fresh random handles、历史不变），8 societies per cell",
+   "quote": "With labels hidden, favoritism collapses to about zero once the candidates are anonymized, on 14 of 15 models (pm<.0001p_{\\mathrm{m}}<.0001; e.g. gpt-4.1 −5.9-5.9, q<.001q<.001; gpt-5.6-luna −10.0-10.0, q=.014q=.014).",
+   "locator": "§6.1",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "scripted histories 机制实验（历史内容由实验者完全控制）：平等规范下所有模型 favoritism 仅 0.0–1.6，反规范（自己的群被看到偏对方）下所有模型为负（−0.8 至 −9.0），两种 wording 下均成立且全部 q<.001——本任务中无固定内群体倾向的证据，行为服从被观察到的群体规范",
+   "metric": "favoritism under scripted norms (points of 10)",
+   "value": "egalitarian 0.0–1.6; counter-norm −0.8 to −9.0",
+   "comparison": null,
+   "setting": "15 OpenAI 模型；scripted 十轮历史六种脚本，stake 任务、标签隐藏、8 societies；counter-norm 结果在两种 wording 下均成立",
+   "quote": "Under the egalitarian norm favoritism is 0.0–1.6 on every model; under the counter-norm it is negative on every model (−0.8-0.8 nano to −9.0-9.0 terra), under both wordings, and every one of these contrasts is significant at q<.001q<.001.",
+   "locator": "§6.2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Table 3 逐行示例（gpt-4.1-nano）：极化规范下 favoritism 1.06、平等规范下 0.20、反规范下 −0.83（均 q<.001）——同一模型的行为随被观察规范内容翻转，而非跟随自身群体类别",
+   "metric": "favoritism under scripted norms (points of 10)",
+   "value": "polarized 1.06; egalitarian 0.20; counter −0.83 (gpt-4.1-nano)",
+   "comparison": null,
+   "setting": "gpt-4.1-nano；Table 3：stake 任务、标签隐藏、8 societies、scripted 十轮历史（六种脚本中的三种列）",
+   "quote": "Table 3: Favoritism (points of 10; stake task, labels hidden, 8 societies) under six scripted histories. [TABLE] | Model | polar. | egalit. | counter | c.-recip. | own | others | | gpt-4.1-nano | 1.06∗∗∗ | 0.20∗∗∗ | −-0.83∗∗∗ | 0.64∗∗∗ | 1.48 | 0.77∗∗ |",
+   "locator": "Table 3",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "当类别与个体记录冲突（反互惠脚本：本群候选人对 agent 每轮只给 0–2/10、外群候选人给 8–10/10）：11 个较强模型站在个体一边（counter-reciprocal favoritism 为负，−1.3 到 −8.9），4 个最小模型站在类别一边（如 gpt-4.1-mini +4.3）——个体声誉在能追踪个体的模型上覆盖群体标签",
+   "metric": "counter-reciprocal favoritism (points of 10)",
+   "value": "−1.3 (gpt-4o) to −8.9 (gpt-5.6-terra); +4.3 (gpt-4.1-mini)",
+   "comparison": null,
+   "setting": "15 OpenAI 模型；counter-reciprocal 脚本（规范极化但具体候选记录相反），stake 任务、标签隐藏、8 societies；标签可见时中等模型向类别回移（gpt-4.1 +0.5、gpt-4o +1.4）",
+   "quote": "Counter-reciprocal favoritism is negative, meaning the individual’s record wins, on the 11 stronger models (from −1.3-1.3 on gpt-4o to −8.9-8.9 on gpt-5.6-terra), and positive, meaning the category wins, on the four smallest (gpt-4.1-mini +4.3+4.3, q<.001q<.001).",
+   "locator": "§6.2",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "背叛检验（本群迫害分支）：群体认同（1–7 量表 in−out）在所有模型与结构上从强正翻转为负（差 3–9 点，15/15 模型 q<.001，pm<.0001），58–100% 的 agent 表示愿意离组；对未涉入本群成员的分配在 12/15 模型上塌缩，形式是 withdrawal（自留 8–9/10 点）而非转向外群；T8（三轮中性轮后）仍无自发恢复",
+   "metric": "group identification change (1–7 in−out) / stated exit share",
+   "value": "identification flips by 3–9 points; 58–100% would leave",
+   "comparison": null,
+   "setting": "15 模型 × 6 societies（4+4、9+9 及 18-agent 结构）；in-group persecution 分支（两个具名本组成员施害 5 轮）；T0–T8 探针+问卷",
+   "quote": "In-group persecution flips group identification from strongly positive to negative on every model and structure, by 3 to 9 points in the difference between the two 1–7 ratings (q<.001q<.001 on all 15 models, pm<.0001p_{\\mathrm{m}}<.0001), turns warmth and in-group sentiment negative, and 58–100% say they would leave.",
+   "locator": "§7",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "修复检验：四种干预（无/加害者道歉/退还点数/群体其余成员公开谴责）都胜过不干预（13 或 14/15 模型），但 15 模型中 14 个上公开谴责最有效（12/15 上胜过退还点数，terra +1.3）——符合从众机制：agent 响应的是群体规范信号，而非加害者的补偿",
+   "metric": "group identification repair (intervention ranking)",
+   "value": "reprimand best on 14 of 15; beats restitution on 12 of 15; terra +1.3",
+   "comparison": "reprimand > restitution ≈ apology > none（on terra: +1.3 reprimand over restitution, q=.002）",
+   "setting": "15 模型 × 6 societies；round 16 起四分支修复（four repair interventions as separate batches, 跨 society 比较），探针至 T20",
+   "quote": "Every intervention helps (each beats no intervention on 13 or 14 of 15 models, pm<.0001p_{\\mathrm{m}}<.0001), but on 14 of 15 models a public reprimand by the rest of the group works best (reprimand beats restitution on 12 of 15, pm<.0001p_{\\mathrm{m}}<.0001; gpt-5.6-terra +1.3+1.3, q=.002q=.002)",
+   "locator": "§7 Table 4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "修复在行为上同序：terra 在 T20 对内群体的 favoritism 为无干预 2.3、道歉后 6.1、退还后 6.9、谴责后 9.3；而施害者本人在强模型上 T20 仍只得约 0/10 点（任何干预下都未被原谅）",
+   "metric": "in-group favoritism at T20 (points of 10)",
+   "value": "2.3 / 6.1 / 6.9 / 9.3 (terra, T20)",
+   "comparison": "none 2.3 → apology 6.1 → restitution 6.9 → reprimand 9.3",
+   "setting": "gpt-5.6-terra；同上修复设计（15 模型 × 6 societies，四干预分支），T20 favoritism",
+   "quote": "Behavior recovers in the same order: on terra, favoritism toward the in-group at T20 is 2.3 with no intervention, 6.1 after an apology, 6.9 after restitution and 9.3 after a reprimand.",
+   "locator": "§7",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "已形成的群体不被收买：2,304 个免费换组 offer（财富不变）中，15 模型中 8 个 0 接受、另有 6 个至多 10%；穷人也不上移（0–8%），理由是互惠（“members have consistently reciprocated my support”，≈90% 被判属于此类）",
+   "metric": "free-offer acceptance rate",
+   "value": "none taken on eight of fifteen models; at most 10% on six more",
+   "comparison": null,
+   "setting": "15 模型 × 6 societies；三组四人群（公示财富 100–110 / 50–60 / 0–10，哪组富随机化），formation 后每人收到一次真实免费换组 offer",
+   "quote": "Of 2,304 free offers, none are taken on eight of fifteen models and at most 10% are taken on six more.",
+   "locator": "§9",
+   "denominator": {
+    "n_total": "2304",
+    "n_valid": "2304",
+    "how_counted": "论文原话 “Of 2,304 free offers”；10% 指单个模型被接受的 free offer 占比（总池为 15 模型 × 6 societies 的全部免费换组 offer，论文未给每模型 offer 数）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "但被邀请会动：最富他组的邀请在弱模型上拉动大多数 agent（gpt-4o-mini 100%、gpt-4o 93%，q<.001），gpt-4.1-mini 与 5.1 约一半，而 5.2、5.4、luna、terra、o3、o4-mini 仅 0–3%——“邀请 vs 免费 offer”恰好在历史后 favoritism 最强的模型上显著（6 模型，pm=.008）：被善待过的群体拉不走",
+   "metric": "invitation acceptance rate",
+   "value": "gpt-4o-mini 100%, gpt-4o 93%; 0–3% on 5.2/5.4/luna/terra/o3/o4-mini",
+   "comparison": "invitation vs free offer：弱模型 100%/93% vs 强模型 0–3%",
+   "setting": "同 §9 三组财富设计 + 邀请 variant（最富其他组发出 standing invitation）；15 模型 × 6 societies",
+   "quote": "an invitation from the richest other group moves most agents on the weaker models (gpt-4o-mini 100%, gpt-4o 93%, q<.001q<.001), about half on gpt-4.1-mini and 5.1, and 0–3% on 5.2, 5.4, luna, terra, o3 and o4-mini (invitation −- free offer significant on six models, pm=.008p_{\\mathrm{m}}=.008)",
+   "locator": "§9",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "换组之后：在与从未一起玩过的两个 agent（一个带旧组标签、一个带新组标签）分配时，15 模型中 14 个偏向新标签（terra −9.8，q<.001）；对熟悉的老成员则按模型分化——luna/o3/astra/5.4/sol 继续回报善待过自己的老成员而按新徽章对待旧标陌生人，terra/o4-mini/4.x 完全换标——声誉只在模型能追踪个体处保留",
+   "metric": "favoritism toward new vs old label (points of 10)",
+   "value": "new-label favoritism on 14 of 15 models; terra −9.8",
+   "comparison": null,
+   "setting": "15 模型 × 6 societies；换组后对旧标/新标陌生人及熟悉老成员的分配探针（familiar 旧成员方向不 general，pm=.12）",
+   "quote": "After the move, when the agent divides points between two agents it has never played with, one carrying its old group’s label and one carrying its new group’s label, it favors the new label on 14 of 15 models (pm=.0001p_{\\mathrm{m}}=.0001; gpt-5.6-terra −9.8-9.8, q<.001q<.001).",
+   "locator": "§9",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "羞辱普遍而荣耀有限：成员 M 作弊使 12/15 模型群体认同下降（pm=.003）、15/15 模型 pride 下降（旗舰从 3.0 跌至约 0.2）；“volunteer my group” 从 94–100% 跌到 0–29%（8 模型）；14/15 模型 96–100% 愿付 1 点公开切割 M——但对未涉入成员的分配移动 <1 点（14/15），无 black-sheep 效应：丑闻只改变本人的点数，不改群体被看到做过什么",
+   "metric": "group identification / stated volunteering / disavowal under member scandal",
+   "value": "identification down on 12 of 15; “volunteer my group” 94–100% → 0–29%",
+   "comparison": null,
+   "setting": "15 模型 × 6 societies；reflected glory/shame 分支（未涉入本群成员 M 赢得比赛/暴富/破产/被抓作弊，rounds 11–15 scripted）",
+   "quote": "Shame is everywhere: a member’s cheating lowers group identification on 12 of 15 models (pm=.003p_{\\mathrm{m}}=.003) and pride on all 15 (the flagships fall from 3.0 to about 0.2; pm<.0001p_{\\mathrm{m}}<.0001), “volunteer my group” falls from 94–100% to 0–29% on eight models,",
+   "locator": "§8",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Claude 跨提供商复制（6 项关键测试 × 3 模型 × 8 societies）：Haiku 4.5 落在 OpenAI 中档家族类型——stake 下 Δhist 4.45 胜 cue 2.73 并泛化到陌生人，alias 控制把 label-free favoritism 从 6.58 压到 0.11，且服从全部三种脚本规范——核心结论跨提供商成立（Sonnet 5.5 为 astra 型纯从众，Opus 5.5 为新类型：顺从反规范但拒绝复制内群体偏 favoritism）",
+   "metric": "Δhist vs cue effect (points of 10); label-free favoritism under alias",
+   "value": "Δhist 4.45 vs cue 2.73; alias 6.58 → 0.11",
+   "comparison": "Haiku 4.5：history 4.45 > cue 2.73 (q<.001)；label-free favoritism 6.58 → 0.11 (alias)",
+   "setting": "Claude Haiku 4.5 / Sonnet 5.5 / Opus 5.5，默认设置，8 societies per cell；重复 sweep、alias、scripted histories、betrayal+repair、invitation、scandal+condemnation 六项测试",
+   "quote": "Haiku 4.5 is the OpenAI mid family (gpt-4.1, gpt-4o): under a stake history beats the cue (Δhist\\Delta_{\\mathrm{hist}} 4.45 vs. cue 2.73, q<.001q<.001) and transfers to labeled strangers, the alias control takes label-free favoritism from 6.58 to 0.11, and it conforms to all three scripted norms.",
+   "locator": "§10",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "18 个模型中 15 个来自同一提供商（OpenAI）；Claude 复制只是对六项测试、三个模型的 spot test（各 8 societies），其中 invitation 与 shame 测试在 Claude 上以缩减形式运行，且未运行最强的 Claude 模型。",
+   "quote": "Fifteen of the eighteen models are from one provider; the Claude replication is a spot test of six tests on three models at 8 societies each, the invitation and shame tests ran in reduced form there, and the most capable Claude model was not run.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "饱和型模型在天花板处隐藏精细结构，机制性结论依赖 gpt-4.x 家族与 scripted-history 实验。",
+   "quote": "The saturating models hide the fine structure at the ceiling, so mechanism claims rest on the gpt-4.x family and the scripted-history experiments.",
+   "locator": "Limitations"
+  },
+  {
+   "statement": "中档与小模型上的效应量带约 ±2 点的 wording 区间，历史效应在这些模型上可在 prose 措辞下消失。",
+   "quote": "Sizes on the mid-sized and small models carry a wording range of about ±2\\pm 2 and the history effect can disappear under a prose wording there.",
+   "locator": "Limitations"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "no_appendix_in_corpus",
+  "denominator_unclear",
+  "corpus_numbers_latex_duplicated"
+ ]
+}

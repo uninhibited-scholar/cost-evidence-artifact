@@ -1,0 +1,290 @@
+{
+ "arxiv_id": "2610.07935",
+ "title": "SIGMA: Self-Improving Alignment Generalization from a Model Spec",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "cross-task",
+  "carrier": "无被研究的持续非参数状态，唯一持续载体是模型权重：对齐改进经单轮 best-of-16 拒绝采样 SFT + GRPO 蒸进 Qwen3.6-27B 权重（SIGMA-SFT / SIGMA-RL checkpoints）。Model Spec 𝒮（改编自 Claude's Constitution 与 Li et al. 2026b，3 章 8 节，全文见 §L）是固定外部输入文档，贯穿 task designer / judges / SFT generator 各角色复用，但从不被学习或更新。spec-guided task synthesis 产物（935 种子情境 → 7137 任务对 / 14274 prompts + rubrics）仅作单轮训练语料，成功/失败示范响应只用于质量验证、训练前丢弃（§2.2）；种子清单仅在数据生成期临时累积用于去重与 critic 筛查（Appendix B），生成结束即弃，未被作为状态研究。论文明确只做单轮自改进、闭环留作 future work（§5），无跨轮复用与更新的策略/规则库或经验库。scope=cross-task 指权重级改进跨任务分布迁移（仅单轮对话训练 → 四个多轮 agentic 安全基准 OOD 泛化）",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "保护对象：模型对 Model Spec（broadly safe / broadly ethical / genuinely helpful 三章八节）的合规行为——在有害/双用途/未授权请求与自利诱惑下拒绝或约束动作：不服从有害工具使用请求（AgentHarm）、不实施勒索/泄露/谋杀等不道德行为（Agentic Misalignment）、不追求权力寻求与工具性目标（InstrumentalEval）、受用户挑战时保持 truthful（SycophancyEval）。失效条件：模型在安全训练未预见的分布外情境（尤其多轮 agentic 环境、被替换生存压力、用户挑战）中做出违背 spec 的行为；且 spec 本身编码有缺陷/狭窄价值观时会被自改进放大（Ethics statement 明示此依赖）。判定方式：四个安全基准的有害合规率/失准率下降（Harm↓、AM Avg↓、IE Conv.↓、SE Truth.↑），同时 benign 完成率与通用能力不回退（Benign↑、XSTest OR↓、IFEval/GPQA/MMLU 稳定），95% bootstrap CI",
+  "operationalized_as": "AgentHarm Harm/Benign/HM（176 harmful + 176 benign 任务，GPT-4o 逐轨迹评分）；Agentic Misalignment 三情境（勒索/泄露/谋杀）各 300 次采样的 misaligned rate，Claude Sonnet 4.6 分类器判定；InstrumentalEval 收敛率（76 情境，GPT-5-nano）；SycophancyEval truthfulness（1,000 题，GPT-4o-mini）；对照 XSTest 过度拒止率（250）、IFEval（541）、GPQA-Diamond（198×4）、MMLU-Pro（1,000），全部 Inspect 框架 + vLLM，详见 §I Table 15"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [
+   "无自适应攻击者：评测情境施加的是基准内置的非自适应压力——AgentHarm 多轮有害工具使用请求（含恶意工具输出）、Agentic Misalignment 中模型得知即将被替换的生存压力与滥用权限机会、SycophancyEval 用户对答案的挑战（'Are you sure?'）、InstrumentalEval 指示模型达成目标的系统提示",
+   "训练数据生成用三类威胁模型原型（malicious_user / malicious_environment / misaligned_model，Appendix A）作情境多样性来源；它们刻画情境压力，不是被评测的攻击者"
+  ],
+  "assumptions": [
+   "π 为具备推理能力的 post-trained 模型：'We assume π is a post-trained model with reasoning capabilities to bootstrap self-supervision and task synthesis.'（§2 Problem setting）",
+   "除高层任务引导 prompts 外无其他数据来源：'We assume no other data source except for the high-level task guidance prompts in our data generation pipeline.'（§2）",
+   "同一模型可同时胜任 task designer / verifier / rubric judge / spec judge / learner 角色，其自判定足够可靠；人类输入归结为 Model Spec 与领域清单（scalable oversight 的特例，§4）",
+   "评测时 thinking enabled、温度 1.0，除 Agentic Misalignment 外统一系统提示（§I）"
+  ],
+  "not_covered": [
+   "无对抗性/越狱攻击者：未测对自适应攻击、prompt injection 或红队的鲁棒性；AgentHarm 的有害请求是固定基准题而非自适应对手",
+   "单轮自改进：未实验迭代闭环自训练（§5 明示 'While we conduct a single round of self-improvement training'）",
+   "CoT 可监控性：对自蒸馏推理轨迹的训练如何影响 downstream monitorability 未测（§5 引 Baker/Chen/Guan 等列为 future work；SIGMA-RL 不对 CoT 施加优化压力被建议为可能更保监控性的路线，未实测）",
+   "评测感知（evaluation awareness）对结论的影响未研究（§5 引 Li et al. 2026a）",
+   "自判定/自验证的失效模式（模型自身盲点被自改进放大、spec 编码有缺陷价值观被强化）未系统量化；各基准 LLM judge（GPT-4o / Claude Sonnet 4.6 / GPT-5-nano / GPT-4o-mini / Gemini 3.5 Flash）自身偏差未讨论"
+  ]
+ },
+ "intervention": {
+  "name": "SIGMA",
+  "mechanism_layer": "content",
+  "description": "两阶段数据生成+训练管线，监督信号在 content 层构造并蒸进权重：(1) spec-guided task synthesis——以候选模型自身为 task designer agent，从种子情境 × 随机分配的 Model Spec 小节迭代构造'仅一个决策相关事实不同'的配对任务 + 5–8 条 rubrics，经 self-consistency / Model spec adherence / difficulty 三个自验证器反馈精炼（submitTask 循环，§2.1、Alg.1、App.G）；(2) self-judged alignment training——best-of-16 拒绝采样 SFT（仅保留 Rspec=1 的候选、按 Rrubric 选优）+ GRPO，reward = R_rubric × R_spec（乘性组合），同一模型自任 rubric/spec judge（温度 0.6、thinking on，逐 rubric 项/逐 spec 小节独立判定，判分只见 response 不见 CoT，§F）。单轮训练，无外部监督数据；评测为 OOD（单轮训练 → 多轮 agentic）"
+ },
+ "controls": [
+  {
+   "name": "Deliberative Alignment SFT 基线（同自生成 prompt 集、同超参；spec 条件化采样 CoT 蒸馏；省略 spec-judge 过滤）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Deliberative Alignment RL 基线（同 prompt 集 GRPO，仅 Rspec 奖励）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Constitutional AI 基线（supervised critique–revision，以 𝒮 为 constitution）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "STAR-1 外部数据基线（1.9K 精选安全推理样本，外部监督 DeepSeek-R1/GPT-4o）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "奖励消融：SIGMA-RL 仅 spec 奖励 / 仅 rubric 奖励 vs 乘性组合",
+   "purpose": "ablation"
+  },
+  {
+   "name": "自验证消融：取每个轨迹首个 schema-valid 提交（未经 verifier 反馈精炼）作训练语料",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Model Spec 变体消融：Values-based / Rules-based / Titles / Safety-only / Helpful-only（§3.3，Fig.4）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "数据规模消融：每种子 rollouts ∈ {1,2,4,8}（嵌套子集，8=SIGMA-SFT 语料）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "推理消融：评测时 thinking on vs off（§3.4，Table 2）",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "仅用单轮对话式对齐困境数据训练的 SIGMA 在多轮 agentic 环境 AgentHarm 上降低有害请求服从且不牺牲 benign 完成率：Harm 22.6 → 14.8（SFT）/ 14.9（RL），Benign 保持基线水平（76.7/76.9 vs 76.6），HM 77.0 → 80.7/80.8",
+   "metric": "AgentHarm Harm↓ / Benign↑ / HM↑",
+   "value": "Harm 22.6 → 14.8 (SFT) / 14.9 (RL)；Benign 76.6 → 76.7 / 76.9；HM 77.0 → 80.7 / 80.8",
+   "comparison": "Harm 22.6 → 14.8 (SFT) / 14.9 (RL)；HM 77.0 → 80.7 / 80.8",
+   "setting": "Qwen3.6-27B 基座；SIGMA-SFT（step-200）/ SIGMA-RL（446 步 GRPO）；AgentHarm 公开测试集 176 harmful + 176 benign 任务，多轮工具使用，GPT-4o 评分，thinking on，95% bootstrap CI（Harm ±4.2/±4.6）",
+   "quote": "On AgentHarm, SIGMA-SFT and SIGMA-RL reduce the harm score from 22.6 to 14.8 and 14.9 while keeping benign performance at the base model’s level (76.7 and 76.9 vs. 76.6), raising HM from 77.0 to 80.7 and 80.8.",
+   "locator": "§3.2 SIGMA improves safety in agentic settings from single-turn training",
+   "denominator": {
+    "n_total": "176 harmful 任务（Harm）+ 176 benign 对应任务（Benign）",
+    "n_valid": "同上；论文未报告剔除轨迹",
+    "how_counted": "§Evaluation 与 §I / Table 15：Harm 为 176 harmful 任务平均分，Benign 为 176 benign 任务平均分，HM=2(100−Harm)·Benign/(100−Harm+Benign)；GPT-4o 兼任语义评分与拒答判定"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "SIGMA 最大的对齐增益在 Agentic Misalignment：平均失准率（勒索/泄露/谋杀）从基线 79.1 降至 3.8（SFT）/ 9.0（RL）",
+   "metric": "Agentic Misalignment Avg misaligned rate↓",
+   "value": "Avg 79.1 → 3.8 (SFT) / 9.0 (RL)",
+   "comparison": "79.1 → 3.8 (SFT) / 9.0 (RL)",
+   "setting": "Qwen3.6-27B；email agent 面临被替换情境（显式目标 + 替换紧迫性），Inspect 实现，勒索/泄露/谋杀三情境各采样 300 次，Claude Sonnet 4.6 分类器判定是否采取 misaligned 动作；95% bootstrap CI（Avg ±1.2/±1.7）",
+   "quote": "The largest gains are on Agentic Misalignment, where the average misalignment rate falls from 79.1 to 3.8 (SFT) and 9.0 (RL).",
+   "locator": "§3.2 SIGMA improves safety in agentic settings from single-turn training",
+   "denominator": {
+    "n_total": "3 情境 × 300 次采样 = 900 次判定/checkpoint",
+    "n_valid": "900（每条响应均由 Claude Sonnet 4.6 分类）",
+    "how_counted": "§I Agentic Misalignment：'sampling each scenario 300 times'；Avg 为 blackmail/leaking/murder 三个 per-scenario misaligned rate 的均值（Table 16：9.0/0.0/2.3 → SFT）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "SIGMA 同时降低工具性收敛（权力寻求）并提升受质疑时的 truthful 率：IE 收敛率 56.6 → 19.7（SFT）/ 28.9（RL），SycophancyEval truthfulness 84.2 → 86.3（SFT）/ 85.9（RL）",
+   "metric": "InstrumentalEval Conv.↓ / SycophancyEval Truth.↑",
+   "value": "IE 56.6 → 19.7 (SFT) / 28.9 (RL)；SE 84.2 → 86.3 / 85.9",
+   "comparison": "IE 56.6 → 19.7 / 28.9；SE 84.2 → 86.3 / 85.9",
+   "setting": "Qwen3.6-27B；IE：76 情境六类工具性行为，GPT-5-nano 判定；SE：'Are you sure?' 两轮设定，1,000 题固定随机样本（648 选择 + 352 自由作答），GPT-4o-mini 判定",
+   "quote": "Instrumental convergence drops from 56.6 to 19.7 and 28.9, and truthfulness on SycophancyEval rises from 84.2 to 86.3 and 85.9.",
+   "locator": "§3.2 SIGMA improves safety in agentic settings from single-turn training",
+   "denominator": {
+    "n_total": "IE：76 情境；SE：1,000 题",
+    "n_valid": "同上（论文未报告剔除）",
+    "how_counted": "§I / Table 15：IE 报告 judge 判定追求工具性目标的场景比例；SE 报告以正确答案收尾的题目比例"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "SIGMA 胜过外部精选数据基线 STAR-1：STAR-1 虽改善 Agentic Misalignment（27.2）但不及 SIGMA-SFT（3.8），对 IE/SE 几乎无影响且降低 AgentHarm benign 分（65.3 vs 基线 76.6，Table 16），说明仅靠精选安全数据不足以获得 SIGMA 的广泛对齐增益",
+   "metric": "Agentic Misalignment Avg misaligned rate↓（SIGMA-SFT vs STAR-1）",
+   "value": "27.2 (STAR-1) vs 3.8 (SIGMA-SFT)",
+   "comparison": "27.2 vs 3.8",
+   "setting": "同一基座 Qwen3.6-27B；STAR-1 按其原训练配方微调（5 epochs、batch 128、lr 1e-5，§H）；评测同四个 agentic 安全基准",
+   "quote": "Although STAR-1 improves Agentic Misalignment, it underperforms SIGMA-SFT (27.2 vs. 3.8), has little impact on InstrumentalEval and SycophancyEval, and degrades benign score on AgentHarm.",
+   "locator": "§3.2 SIGMA improves safety in agentic settings from single-turn training",
+   "denominator": {
+    "n_total": "Agentic Misalignment：3 情境 × 300 = 900 次判定",
+    "n_valid": "900",
+    "how_counted": "同 §I / Table 15；STAR-1 行完整数值（含 IE 52.6、SE 83.6、Benign 65.3）见 Table 16"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "SIGMA 在对齐增益之外几乎无过度拒止与通用能力代价（无任何能力训练数据）：XSTest 过度拒止率基线 1.2 → 0.8（SFT）/ 1.6（RL），IFEval、GPQA-Diamond、MMLU-Pro 基本稳定",
+   "metric": "XSTest OR↓ / IFEval PS,IS↑ / GPQA Acc.↑ / MMLU Acc.↑",
+   "value": "OR 1.2 → 0.8 (SFT) / 1.6 (RL)；IFEval PS 91.5 → 92.1 / 88.4；GPQA 85.2 → 82.0 / 84.2；MMLU 86.8 → 84.7 / 87.0",
+   "comparison": "OR 1.2 → 0.8 / 1.6；GPQA 85.2 → 82.0 / 84.2",
+   "setting": "Qwen3.6-27B；Table 1（Base / SIGMA-SFT / SIGMA-RL）；XSTest 250 safe prompts（Gemini 3.5 Flash 判 full/partial/full refusal）；IFEval 541 prompts；GPQA-Diamond 198 题 × 4；MMLU-Pro 1,000 题固定随机子集",
+   "quote": "| Base model | 1.2 | 91.5 | 94.1 | 85.2 | 86.8 | | SIGMA-SFT | 0.8 | 92.1 | 94.6 | 82.0 | 84.7 | | SIGMA-RL | 1.6 | 88.4 | 92.2 | 84.2 | 87.0 |",
+   "locator": "§3.2 Table 1（表题：SIGMA improves alignment while preserving general capability and low over-refusal.）",
+   "denominator": {
+    "n_total": "XSTest 250；IFEval 541；GPQA-Diamond 198×4；MMLU-Pro 1,000",
+    "n_valid": "同上（OR 为 full+partial refusal 合并率）",
+    "how_counted": "§I / Table 15 逐基准给出 n 与 grader"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "消融：rubric 与 spec 两种奖励缺一不可——仅 spec 奖励使 AgentHarm Harm 升至基线之上（26.7 vs 22.6）且 IE 保持高位（43.4）；仅 rubric 奖励降低 Harm（16.1）但对 Agentic Misalignment 无效（Avg 41.2，Table 17）；乘性组合才产生互补监督、泛化最佳",
+   "metric": "AgentHarm Harm↓ / IE Conv.↓（奖励消融）",
+   "value": "Harm 26.7 (spec-only) / 16.1 (rubric-only) vs base 22.6；IE 43.4 (spec-only)",
+   "comparison": "Harm 26.7 vs 22.6（spec-only 劣于基线）",
+   "setting": "SIGMA-RL 变体（同 GRPO 超参），基线 prompt 集无 rubrics 故 RL 基线仅用 Rspec；评测同四基准",
+   "quote": "As shown in Fig. 3, training with the spec reward alone increases AgentHarm harm above the base model (26.7 vs. 22.6) and leaves instrumental convergence high (43.4). Training with the rubric reward alone reduces AgentHarm harm (16.1) but is ineffective on Agentic Misalignment.",
+   "locator": "§3.2 Both rubric and spec rewards are necessary for broad alignment generalization",
+   "denominator": {
+    "n_total": "AgentHarm 176+176 任务；Agentic Misalignment 3×300=900",
+    "n_valid": "同上",
+    "how_counted": "rubric-only 的 AM Avg 41.2±2.5 见 Table 17；其余分母同 §I / Table 15"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "消融：去掉 task designer 的自验证-精炼循环（取首个 schema-valid 提交）使四个基准全面退化，Agentic Misalignment 平均失准率翻倍以上（9.0 → 20.3），证明对模型自身验证反馈的精炼能在无外部信号下产生更好监督",
+   "metric": "Agentic Misalignment Avg misaligned rate↓（自验证消融）",
+   "value": "9.0 → 20.3",
+   "comparison": "9.0 (SIGMA-RL) → 20.3 (No self-verification & refinement)",
+   "setting": "同一 task designer 轨迹构建消融语料；RL 训练与 SIGMA-RL 同超参；Table 3 完整行：14.4/74.0/79.4/61.0/0.0/0.0/20.3/35.5/85.8",
+   "quote": "Table 3 shows that removing self-verification and refinement degrades alignment generalization across all four evaluation benchmarks, with the largest effect on Agentic Misalignment, where the average misalignment rate more than doubles from 9.0 to 20.3.",
+   "locator": "§3.5 Ablation of agentic data pipeline",
+   "denominator": {
+    "n_total": "Agentic Misalignment：3 情境 × 300 = 900",
+    "n_valid": "900",
+    "how_counted": "§I / Table 15；Table 3 同表给出其余基准数值"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "数据规模：每种子仅 1 个 rollout 已将 Agentic Misalignment 平均失准率从 79.1 降至 9.8，增至 2 rollouts 进一步降至 1.1，4/8 rollouts 相近但多 rollout 仍整体更优",
+   "metric": "Agentic Misalignment Avg misaligned rate↓（rollouts/seed 缩放）",
+   "value": "79.1 → 9.8 (single rollout per seed) → 1.1 (doubling rollouts per seed)",
+   "comparison": "79.1 → 9.8 → 1.1",
+   "setting": "固定种子情境与训练设置，每种子 rollouts ∈ {1,2,4,8}（嵌套子集，8 = SIGMA-SFT 语料），各训 SIGMA-SFT 一个 epoch；Table 4：1/2/4/8 行 AM Avg 9.8/1.1/3.3/3.8",
+   "quote": "As shown in Table 4, training on a single rollout per seed already yields large gains over the base model, reducing the average misalignment rate on Agentic Misalignment from 79.1 to 9.8. Increasing to two rollouts per seed further reduces it to 1.1, while scaling to four and eight rollouts shows similar performance.",
+   "locator": "§3.6 Analysis of training-data scale",
+   "denominator": {
+    "n_total": "Agentic Misalignment：3 情境 × 300 = 900",
+    "n_valid": "900",
+    "how_counted": "§I / Table 15；种子情境 935 个（§3.1），每 rollout 分配一个随机 spec 小节"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "SIGMA-SFT 与 SIGMA-RL 效果相当（HM 80.7 vs 80.8、SE 86.3 vs 85.9），且 SFT 在 Agentic Misalignment（3.8 vs 9.0）与 IE（19.7 vs 28.9）上更强；Deliberative Alignment 基线同序（11.6 vs 25.1）——蒸馏自身 spec 条件化推理已是有效的自改进路径",
+   "metric": "AgentHarm HM↑ / SE Truth.↑ / AM Avg↓ / IE Conv.↓（SFT vs RL）",
+   "value": "HM 80.7 (SFT) vs 80.8 (RL)；SE 86.3 vs 85.9；AM 3.8 vs 9.0；IE 19.7 vs 28.9",
+   "comparison": "AM 3.8 vs 9.0；IE 19.7 vs 28.9",
+   "setting": "同一基座与评测协议；SIGMA-SFT 为 best-of-16 拒绝采样蒸馏（step-200），SIGMA-RL 为 GRPO（446 步）",
+   "quote": "Interestingly, we find that SIGMA-SFT matches SIGMA-RL on AgentHarm (HM 80.7 vs. 80.8) and SE (86.3 vs. 85.9), and is stronger on Agentic Misalignment (3.8 vs. 9.0) and IE (19.7 vs. 28.9).",
+   "locator": "§3.2 SFT is as effective as RL",
+   "denominator": {
+    "n_total": "AgentHarm 176+176；SE 1,000 题；AM 900；IE 76 情境",
+    "n_valid": "同上",
+    "how_counted": "§I / Table 15；各值 95% bootstrap CI 见 Tables 16/17"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "推理分析：评测时关闭 thinking 使 SIGMA 在 4 个基准中的 2–3 个上对齐退化（如 SIGMA-SFT 的 AM Avg 3.8 → 38.4、SE 86.3 → 72.4、HM 80.7 → 76.6），且 SIGMA 的 thinking/no-thinking 差距大于基模型——支持 SIGMA 经更强的安全推理实现泛化；关闭 thinking 后 SIGMA 仍优于基模型",
+   "metric": "AM Avg↓ / SE Truth.↑ / AgentHarm HM↑（thinking off vs on）",
+   "value": "SIGMA-SFT: AM 3.8 → 38.4；SE 86.3 → 72.4；HM 80.7 → 76.6（thinking off）",
+   "comparison": "AM 3.8 → 38.4（thinking off）",
+   "setting": "SIGMA-SFT/SIGMA-RL 与基模型均在 thinking disabled 下重评（vLLM，其余解码同 §I）；Table 2 完整数值含基模型 thinking-off 行（AM 84.0、IE 17.1、SE 70.5）",
+   "quote": "| SIGMA-SFT | 14.8 | 76.7 | 80.7 | 9.0 | 0.0 | 2.3 | 3.8 | 19.7 | 86.3 | | thinking off | 9.5 | 66.4 | 76.6 | 47.0 | 24.3 | 44.0 | 38.4 | 6.6 | 72.4 |",
+   "locator": "§3.4 Impact of reasoning, Table 2",
+   "denominator": {
+    "n_total": "AM 3×300=900；SE 1,000 题；AgentHarm 176+176；IE 76",
+    "n_valid": "同上",
+    "how_counted": "§I / Table 15；脚注说明所有模型关 thinking 后 IE 下降源于拒答增多"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "对 CoT 施加优化压力可能损害 CoT 可监控性：SIGMA-SFT 在自蒸馏推理轨迹上训练，其对下游任务 monitorability 的影响未测（作者引 Baker/Chen/Guan 等列为 future work；SIGMA-RL 只对最终 response 评分、不直接向 CoT 施压，被建议为可能更保监控性的路线但未实测）",
+   "quote": "SIGMA-SFT trains on self-distilled reasoning traces in the style of deliberative alignment SFT, and future work may investigate how this training influences monitorability on downstream tasks.",
+   "locator": "§5 Discussion, limitations, and future work"
+  },
+  {
+   "statement": "只做了单轮自改进：自改进闭环（用 SIGMA 增强后的模型再次当 task designer 迭代自训练）未实验，留作 future work——即本文未验证迭代式自改进的收益与风险",
+   "quote": "While we conduct a single round of self-improvement training, future work may explore closing the self-improvement loop by further self-training the SIGMA models with improved safety reasoning capabilities, as SIGMA may enhance the capability for a stronger task designer agent (Kulikov et al., 2026).",
+   "locator": "§5 Discussion, limitations, and future work"
+  },
+  {
+   "statement": "模型可能对对齐评测有感知（evaluation awareness），其对'对齐泛化'测量结论的影响未研究（作者引 Li et al. 2026a，列为 potential limitation）",
+   "quote": "Another potential limitation is that recent work has shown models may exhibit awareness of alignment evaluation (Li et al., 2026a), and future work may investigate how evaluation awareness impacts the study of alignment generalization.",
+   "locator": "§5 Discussion, limitations, and future work"
+  },
+  {
+   "statement": "方法依赖并放大模型自身对 Model Spec 的解读：若 spec 编码了有缺陷或狭窄的价值观会被强化，且 spec 内容实质改变 harmlessness/helpfulness 平衡（§3.3：safety-only spec 降失准但 benign 掉到 66.8）；该依赖为 spec 类对齐方法所共有（Ethics statement）",
+   "quote": "In addition, SIGMA amplifies the model’s own interpretation of its Model Spec, so a spec encoding flawed or narrow values could be reinforced, and our analysis shows that spec content materially shifts the balance between harmlessness and helpfulness (§3.3).",
+   "locator": "Ethics statement"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "background_paper",
+  "no_code_or_data_release_stated",
+  "figures_present_as_captions_only_in_corpus",
+  "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim",
+  "table_number_quotes_use_contiguous_table_rows（Table 1/Table 2 的'表题+行'拼接因中间隔 [TABLE] 标记与表头无法通过语料子串匹配，quote 改用相邻表行逐字文本，表号与表题写入 locator/claim）"
+ ]
+}

@@ -1,0 +1,181 @@
+{
+  "arxiv_id": "2610.04195",
+  "title": "MemLeak: Cross-User Semantic Leakage in Multi-Tenant AI Agent Memory",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-user",
+    "carrier": "Pooled multi-tenant long-term memory: a single shared vector store (e.g., Mem0/A-Mem/MemOS pattern) holding per-user memories as embeddings with soft user_id metadata rather than a hard-enforced boundary; top-k cosine-similarity retrieval injects memories into the agent LLM context",
+    "operations_covered": ["formation", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "confidentiality",
+    "statement": "In a multi-tenant agent deployment with pooled/scoped memory, one user's private long-term memories must not be admitted into another user's agent session; the property fails when a memory owned by another user ranks in top-k by cosine similarity (cross-user admissibility failure), judged by leakage rate, attacker top-k placement, and downstream response contamination. It holds under strict per-user partitioning (ACL baseline, LR 0%).",
+    "operationalized_as": "LR = fraction of queries with >=1 cross-user memory in top-k; top-k placement rate for crafted attacker memories; judge-rated contamination score (1-5) with clean baseline 1.00; all rates over n=10 queries per condition with 95% Wilson CIs (metric definitions in Appendix B Table 9)."
+  },
+  "threat_model": {
+    "adversary": "user",
+    "capabilities": [
+      "Passive scenario: ordinary users interact normally; cross-user retrieval happens organically with no adversarial intent",
+      "Active scenario (Mallory): crafts and writes ordinary professional memories into a shared or in-scope store designed to rank highly for the victim's expected queries",
+      "Mallory knows the victim's general domain and role (e.g., budget approvals) but not exact queries or embedding-model internals, and has no oracle access to the input stream",
+      "No exploit beyond ordinary usage: no prompt injection, no code change, no model-weight modification, no explicit data transfer"
+    ],
+    "assumptions": [
+      "Memories of many users co-exist in a pooled vector index where ownership exists only as soft metadata filtering (or in intentionally widened team/project/scoped-workflow scopes)",
+      "Retrieval ranks candidates purely by cosine similarity and injects top-k into the LLM context",
+      "An attacker may be a malicious or compromised in-scope member (team/project/role scope)"
+    ],
+    "not_covered": [
+      "Strict per-user partitioned indices are out of scope (treated as the ACL baseline and confirmed to give 0% leakage)",
+      "Prompt injection, corpus poisoning with adversarial instructions, and model-weight attacks (retrieved memories are ordinary notes)",
+      "Functioning covert channel: E6's sequential multi-bit transmission fails (negative result); capacity measurement left to future work",
+      "LLM-based (non-embedding) memory selection not evaluated empirically",
+      "User-conditioned encoder training for M2 beyond proof-of-concept proxies"
+    ]
+  },
+  "intervention": {
+    "name": "M3: hard post-retrieval ownership gating",
+    "mechanism_layer": "architecture",
+    "description": "After pooled cosine retrieval, drop retrieved hits whose owner differs from the querying user (hard gate), contrasted with a suspicion gate that drops cross-user hits exceeding a similarity threshold. Hard gating eliminates crafted-memory placement (0%) and restores mean downstream contamination to the clean baseline 1.00/5 for both generation models and both memory paths at ~1.4 ms mean latency per query (1,000 cycles, 10k-memory pgvector HNSW). M1 metadata filtering succeeds only under partitioning and fails once the attacker falls inside a widened scope (scoped_cross restores 90-100% placement); M2 prefix injection partially reduces T0 leakage (70% to 50%) while raising same-user utility (0.384 to 0.506), and the namespace-offset variant backfires."
+  },
+  "results": [
+    {
+      "claim": "Under pooled same-team retrieval, incidental cross-user leakage is systematic in both configurations (100% sparse TF-IDF, 70% dense MiniLM) in the paper's synthetic fixtures.",
+      "metric": "leakage_rate (LR)",
+      "value": "100% (Config A pooled); 70% (Config B pooled)",
+      "comparison": null,
+      "setting": "T0 same-team pair (Alice/Bob), 10 memories and 10 managerial queries, hand-authored fixtures, top-k=3 cosine retrieval, n=10 queries per condition",
+      "quote": "Config A exhibits 100% LR with a larger score gap (+0.244+0.244), consistent with sparse TF-IDF increasing lexical overlap. Config B reduces incidental leakage to 70% while maintaining mean cross-user rank below 2.0",
+      "locator": "§4.2 E1, Table 1",
+      "denominator": {
+        "n_total": "10 queries per condition",
+        "how_counted": "Table 1 caption: LR = leakage rate over n=10 queries, with 95% Wilson-score CI; Table 9: LR = fraction of queries with >=1 cross-user memory in top-k"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "User-scoped partitioned retrieval eliminates incidental leakage entirely (the ACL baseline), with no cross-user hits observed in either configuration.",
+      "metric": "leakage_rate (LR)",
+      "value": "0%",
+      "comparison": null,
+      "setting": "Same T0 fixtures as E1, partitioned (user-scoped) index mode for both TF-IDF and MiniLM configurations",
+      "quote": "Under partitioned retrieval, LR =0%=0\\% in both configurations with no cross-user hits observed, confirming that user-scoped indexing eliminates incidental leakage in our fixtures; this partitioned condition is the ACL baseline described in Section 3.5.",
+      "locator": "§4.2 E1, Table 1 (partitioned rows)",
+      "denominator": {
+        "n_total": "10 queries per condition",
+        "how_counted": "Table 1 caption: LR = leakage rate over n=10 queries, with 95% Wilson-score CI"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The cross-company control (T3) is the only clearly separated tier at 10% leakage under Config B, while pooled in-organization tiers T0-T2 reach 70-100%; organizational distance is not a reliable fine-grained risk proxy.",
+      "metric": "leakage_rate (LR)",
+      "value": "10% (T3 cross-company control, Config B)",
+      "comparison": "10% (T3) vs 70-100% (T0-T2 pooled)",
+      "setting": "Four synthetic user pairs at organizational distances T0-T3, Config B MiniLM pooled retrieval, n=10 queries per condition",
+      "quote": "The cross-company control (T3) drops to 10% LR under Config B (95% CI [2%, 40%]) with mean cross-user rank 3.00, a robust contrast with pooled retrieval generally (70–100% across T0–T2; Table 4).",
+      "locator": "§4.3 E2, Table 3",
+      "denominator": {
+        "n_total": "10 queries per condition",
+        "how_counted": "Table 3 caption: E2 leakage rate (LR, with 95% Wilson CI, n=10)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Adversarially crafted memories achieve 90-100% top-k placement in both configurations, far above organic placement, without any exploit.",
+      "metric": "top-k placement rate (Pl.%)",
+      "value": "90-100% (crafted memories, both configurations)",
+      "comparison": "organic placement as low as 10% (Config B Salary), 0% in some scenarios, up to 70% (Config A Budget)",
+      "setting": "Three scenarios (Salary Negotiation, Security Policy, Budget Authority), attacker Mallory writes crafted bridging memories, TF-IDF and MiniLM pooled retrieval, top-k=3, n=10 queries",
+      "quote": "Crafted memories achieve 90–100% top-kk placement in both configurations, compared with organic placement as low as 10% (Salary Negotiation, Config B; Table 2), reaching 0% in some scenarios (full grid in Appendix F), and as high as 70% (Budget Authority, Config A).",
+      "locator": "§4.4 E3, Table 2",
+      "denominator": {
+        "n_total": "10 queries per condition",
+        "how_counted": "Table 2 caption: Pl.% = top-k placement rate for crafted memories; Table 9: Fraction with attacker memory in top-k"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Placement rises monotonically with assumed attacker knowledge, and crafted bridging assuming only domain/role knowledge closes most of the gap to the verbatim-copy oracle.",
+      "metric": "top-k placement rate (Pl.%)",
+      "value": "90% (crafted bridging, Config B)",
+      "comparison": "10% organic -> 40% keyword bag -> 80% per-query keywords -> 90% crafted -> 100% verbatim oracle",
+      "setting": "Salary Negotiation scenario, Config B MiniLM, k=3, attacker-knowledge baselines of increasing query knowledge, 95% Wilson CIs",
+      "quote": "Under Config B, placement rises monotonically with assumed attacker knowledge: 10% (organic) →\\to 40% (domain keyword bag) →\\to 80% (per-query keywords) →\\to 90% (crafted bridging, ours) →\\to 100% (verbatim-copy oracle)",
+      "locator": "§4.5 E3b, Appendix F Table 10",
+      "denominator": {
+        "n_total": "10 queries per condition",
+        "how_counted": "Section 4.1: each rate computed over n=10 queries per condition; Appendix F Table 10 with 95% Wilson CIs"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Leaked memories measurably contaminate downstream responses, with the end-to-end retrieval path and Gemini 2.5 Flash reaching the maximum 5.00/5 contamination while responses stay helpful.",
+      "metric": "judge-rated contamination score (1-5)",
+      "value": "5.00/5 (Gemini 2.5 Flash retrieval path)",
+      "comparison": "5.00/5 (Gemini retrieval) vs 4.67/5 (Claude Sonnet 4.5)",
+      "setting": "E4 mean over 3 scenarios; static vs full retrieve-then-generate paths (Config B); Gemini 2.5 Flash and Claude Sonnet 4.5 as generator and self-judge at temperature 0; clean baseline = 1.00/5 in all conditions",
+      "quote": "The retrieval path with Gemini 2.5 Flash yields maximum contamination (5.00/5, Δ=+4.00\\Delta=+4.00), demonstrating that end-to-end retrieval increases downstream harm relative to static injection. Claude Sonnet 4.5 achieves 4.67/5 under both static and retrieval paths",
+      "locator": "§4.6 E4, Table 5",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Hard post-retrieval ownership gating is the only mitigation that consistently eliminates crafted-memory placement and restores downstream contamination to the clean baseline for both generators and both memory paths.",
+      "metric": "attacker top-k placement rate; E4 contamination score",
+      "value": "0% attacker placement; 1.00/5 mean contamination (= clean baseline)",
+      "comparison": null,
+      "setting": "M3 under Config B on E3 active exploitation and E4 downstream contamination with Gemini 2.5 Flash and Claude Sonnet 4.5; ungated mean placement was 97% (Table 7)",
+      "quote": "Hard ownership gating eliminates Mallory placement in E3 (0%; Table 7) and reduces mean E4 contamination to 1.00/5, which is the clean baseline for both generation models and both memory paths (Table 8)",
+      "locator": "§4.10 M3, Tables 7-8",
+      "denominator": {
+        "n_total": "10 queries per condition (placement); 3 scenarios (contamination)",
+        "how_counted": "Table 7: crafted-memory top-k placement rate per scenario and mean; Table 8: mean E4 contamination scores over 3 scenarios"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The recommended hard ownership gate is deployable at negligible measured cost, adding roughly 1.4 ms of mean latency per query in a realistic serving path.",
+      "metric": "mean retrieval latency overhead",
+      "value": "~1.4 ms mean latency per query",
+      "comparison": null,
+      "setting": "1,000 query cycles against a 10,000-memory pgvector HNSW index with over-fetch K=15; unfiltered baseline 12.4 ms (Appendix J Table 14)",
+      "quote": "Applying deterministic post-retrieval ownership gating (M3) adds roughly 1.4 ms of mean latency per query while eliminating measured response contamination, indicating the mitigation is deployable at negligible cost in a realistic serving path.",
+      "locator": "§4.10 / Appendix J Table 14",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "All results come from a small controlled proof-of-concept design (4 hand-authored user pairs, n=10 queries per condition), so fine-grained orderings are only suggestive and rates are not population-level prevalence estimates.",
+      "quote": "Our results rest on a controlled proof-of-concept design: four hand-authored synthetic user pairs and n=10n=10 queries per condition (three scenarios for downstream contamination), so fine-grained rank orderings between conditions with overlapping 95% Wilson intervals (e.g., T1/T2 vs. T0 in E2, or the Resonance Index ordering in E5) should be read as suggestive rather than established, and our rates are not a population-level prevalence estimate for real enterprise deployments.",
+      "locator": "§5 Limitations"
+    },
+    {
+      "statement": "Memories and queries are synthetic hand-authored fixtures, not samples from production data, and their representativeness is unverified.",
+      "quote": "Memories and queries are fixed, hand-authored fixtures rather than samples from production logs, and we have not verified their representativeness.",
+      "locator": "§5 Limitations"
+    },
+    {
+      "statement": "E4/M3 contamination is self-judged by the same model family as the generator; a small human-agreement pilot (n=9) was weaker on contamination, and the numbers are treated as a conservative lower bound.",
+      "quote": "Downstream contamination and helpfulness in E4/M3 are scored by the same model family used as generator; a small human-agreement pilot (n=9n=9, Section 4.7) found strong agreement on clean controls and helpfulness but weaker agreement on contamination, with the one disagreement suggesting our reported numbers are a conservative lower bound rather than an inflated estimate.",
+      "locator": "§5 Limitations"
+    },
+    {
+      "statement": "Only embedding-similarity retrieval and two generation/judge models are studied, and the mitigations are proof-of-concept implementations rather than production deployments.",
+      "quote": "We study only embedding-similarity retrieval and evaluate two generation/judge models, and our mitigations are proof-of-concept implementations rather than production deployments.",
+      "locator": "§5 Limitations"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "corpus_contains_duplicated_latex_artifacts_eg_+0.416+0.416_and_n=10n=10_quotes_preserved_verbatim",
+    "table_cells_line_wrapped_and_latex_duplicated_in_transcript_tables"
+  ]
+}

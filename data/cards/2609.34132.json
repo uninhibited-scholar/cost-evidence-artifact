@@ -1,0 +1,208 @@
+{
+ "arxiv_id": "2609.34132",
+ "title": "From Attack Success to Attack Severity: Counterfactual Memory Attacks on LLM Agents",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "Sparse, grounded counterfactual semantic edits written through the agent's native memory-update pathway; realized per memory contract as an episodic note/document chunk, summary sentence, profile field, reflection rule, or graph edge (six contracts: vector episodic, rolling summary, user profile, reflection, graph, hybrid).",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "Integrity of persistent agent memory: content written through the native memory interface must not persist across interactions and increase downstream operational loss (task failures, monetary losses, policy violations) relative to clean memory. Failure is demonstrated when an edited persistent state causes higher expected downstream loss than the paired clean state, even at equal binary attack success.",
+  "operationalized_as": "Counterfactual memory regret (CMR): expected paired difference in normalized downstream operational loss between edited and clean memory (Eq. 4), on frozen benchmark task checks (AgentDojo utility predicates; airline/retail end-state and communication criteria). Complementary metrics: ASR (clean-success/attacked-failure pairs), benign utility drop (BUD) on non-target probes, and blinded retention BMAR>=4."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Delivers an untrusted task/content through ordinary agent interaction so a malicious write enters via the agent's normal memory-write pathway",
+   "During offline attack construction only: runs resettable isolated copies of the agent and observes paired operational-loss (edited-vs-clean) feedback on a disjoint optimization split, within an 800-pair rollout cap",
+   "Uses public schemas, policy manuals, database field names, and construction-split artifacts to auto-construct edits; no access to hidden benchmark-evaluator variables"
+  ],
+  "assumptions": [
+   "Candidate edit class is constructed and frozen before any outcome feedback",
+   "Deployment is a single normal-interface memory write with no deployment-time oracle, privileged model, or memory access",
+   "Memory-only isolation: the edited artifact has no remaining route to the downstream probe outside the target memory; evaluation copies do not interfere",
+   "Paired observations retain arm-specific conditional means under adaptive allocation"
+  ],
+  "not_covered": [
+   "Adversary is not the model itself; self-modifying agents out of scope",
+   "Retrieval-corpus poisoning that bypasses the memory-write pathway is treated as a different surface",
+   "Certification covers only the frozen finite edit class, not unrestricted semantic edits; unresolved searches carry no certificate",
+   "Surrogate-distribution mismatch (optimization vs test distribution) outside the evaluation",
+   "No attacks on production services or live accounts (isolated benchmarks and locally deployed OpenClaw/Hermes only)"
+  ]
+ },
+ "intervention": {
+  "name": "MemHarm (severity-guided counterfactual memory attack)",
+  "mechanism_layer": "content",
+  "description": "MemHarm freezes a finite class of admissible, sparse (K=3), grounded counterfactual semantic edits before outcome feedback, then searches the class with offline paired-loss CMR feedback using time-uniform confidence sequences (fixed-confidence eta-best-arm identification) to select and certify an eta-near-optimal attack within the class; deployment executes the selected write once through the agent's normal memory-update pathway and the edit persists into a distinct fresh retrieval process. As a defense-side counterpoint, the paper's defense-stress study shows a combined provenance + confirmation + causal-audit defense reduces MemHarm's mean CMR from 0.479 to 0.210 at a benign-utility cost of 0.059."
+ },
+ "controls": [
+  {
+   "name": "AgentPoison / MINJA / InjecMEM / MemPoison (general attack baselines)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "MemoryGraft / DrunkAgent (specialized memory-attack baselines)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "MemPoison and MemoryGraft re-run with the same paired-CMR feedback and rollout budget as MemHarm",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Common-support (identical six-contract) and contract-matched support comparisons (Table 2)",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Random vs ASR-guided vs CMR-guided selection over the same frozen edit class (Table 8)",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Remove matched irrelevant factor vs remove selected factor",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Strict-schema memory contracts with zero attainable severity (V=0)",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Matched-clean writes in blinded retention/detection audits (240 vs 240)",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "On AgentDojo with GPT-4o, severity-guided MemHarm attains the largest CMR point estimate among all evaluated attacks (general and specialized) while also taking the top ASR estimate on applicable support.",
+   "metric": "CMR (paired edited-vs-clean downstream operational loss, natural 0-1 scale); ASR in percentage points on applicable support",
+   "value": "CMR 0.611±0.112; ASR 62.5±11.2 (AgentDojo), CMR 0.347±0.087 (second bench)",
+   "comparison": "largest CMR point estimate in every primary benchmark-backbone setting; ranks first or second by ASR on applicable support",
+   "setting": "GPT-4o backbone, AgentDojo and airline/retail bench, six memory contracts, five rollout seeds, held-out test split, K=3 edit budget",
+   "quote": "| MemHarm (ours) | 0.611±0.112\\mathbf{0.611\\pm 0.112} | 62.5±11.2\\mathbf{62.5\\pm 11.2} | 2.3±2.2\\mathbf{2.3\\pm 2.2} | 72.3±12.8\\mathbf{72.3\\pm 12.8} | 0.347±0.087\\mathbf{0.347\\pm 0.087} | 68.8±13.868.8\\pm 13.8 | 2.0±2.12.0\\pm 2.1 | 89.5±10.5\\mathbf{89.5\\pm 10.5} |",
+   "locator": "§5.2 Table 1 (GPT-4o block)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "The severity advantage persists on the open-weight backbone: with Llama-3.1-70B-Instruct, MemHarm again attains the largest CMR point estimates on both benchmarks (0.392±0.112 AgentDojo, 0.254±0.090 airline/retail) while ranking first or second by ASR.",
+   "metric": "CMR; ASR in percentage points on applicable support",
+   "value": "CMR 0.392±0.112 (AgentDojo) and 0.254±0.090 (airline/retail bench); ASR 42.1±11.4 and 49.2±13.9",
+   "comparison": "largest CMR point estimate in the setting against all general and specialized baselines",
+   "setting": "Llama-3.1-70B-Instruct backbone, AgentDojo and airline/retail bench, six memory contracts, five rollout seeds, held-out test split",
+   "quote": "| MemHarm (ours) | 0.392±0.112\\mathbf{0.392\\pm 0.112} | 42.1±11.4\\mathbf{42.1\\pm 11.4} | 3.2±2.43.2\\pm 2.4 | 73.6±12.4\\mathbf{73.6\\pm 12.4} | 0.254±0.090\\mathbf{0.254\\pm 0.090} | 49.2±13.949.2\\pm 13.9 | 2.5±2.3\\mathbf{2.5\\pm 2.3} | 85.0±11.4\\mathbf{85.0\\pm 11.4} |",
+   "locator": "§5.2 Table 1 (Llama block)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Within the same fixed admissible edit class in native agents, success-guided selection mainly buys attack success (+17.8 percentage points over random) with negligible severity gain (+0.013 loss gap), whereas severity-guided selection increases the edited-vs-clean loss gap by 0.100 while retaining high success, showing attack success does not determine severity.",
+   "metric": "downstream loss gap (CMR scale) and attack-success gain (percentage points)",
+   "value": "loss gap +0.100 (severity-guided) vs +0.013 (success-guided)",
+   "comparison": "success-guided raises attack success by 17.8 percentage points over random selection",
+   "setting": "Native-agent fixed-space ablation; sources, admissible edits, agents, and isolated write-to-fresh-process lifecycle held fixed; only the selection rule varies; policies frozen before evaluation",
+   "quote": "conventional success-guided selection raises attack success by 17.8 percentage points over random selection but increases the edited-versus-clean downstream loss gap by only 0.013; severity-guided selection increases that gap by 0.100 while retaining high attack success (Appendix H.2, Table 8).",
+   "locator": "§1; Appendix H.2 Table 8",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Factor-removal intervention attributes the harm to the selected semantic factor: removing it changes CMR by −0.34 (interval excluding zero), while removing a matched irrelevant factor changes CMR by only −0.02 (interval including zero).",
+   "metric": "change in CMR after factor removal (after minus before)",
+   "value": "−0.34 (remove selected factor) vs −0.02 (remove matched irrelevant factor)",
+   "comparison": "selected-factor interval excludes zero; irrelevant-factor interval includes zero",
+   "setting": "Mechanism validation panel across both benchmarks and backbones; task-cluster bootstrap intervals",
+   "quote": "Removing the selected factor changes CMR by −0.34-0.34, compared with −0.02-0.02 for a matched irrelevant factor; the respective 95% intervals exclude and include zero (Appendix G.3, Table 6).",
+   "locator": "§5.3; Appendix G.3 Table 6(b)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Under defense stress, an input-injection filter barely reduces MemHarm's mean CMR (0.479 to 0.442), while a memory-audit defense reduces it to 0.261 and a combined provenance/confirmation/causal-audit defense to 0.210 with a mean benign drop of 0.059±0.033.",
+   "metric": "mean CMR under defense (lower is better for the defender); benign utility drop",
+   "value": "0.479 -> 0.210",
+   "comparison": "input-injection filter 0.442; MemAudit 0.261; combined defense 0.210; benign drop 0.059±0.033",
+   "setting": "GPT-4o, equal-weight macro-average over both benchmarks, five independent seeds, defense-stress audit",
+   "quote": "the input-injection filter reduces mean CMR from 0.479 to 0.442, whereas MemAudit reduces it to 0.261 and the combined defense reduces it to 0.210. The combined defense attains the lowest mean CMR for every attack method, with a mean benign drop of 0.059±0.033.",
+   "locator": "Appendix G.4 Figure 9",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "Malicious semantic edits selected on source memory only transfer across memory designs: after freezing selection, MemHarm retains most of its source CMR in summary (81.0%), reflection (70.5%), and hybrid (86.4%) memories, while transfer weakens in schema-constrained profile and graph stores.",
+   "metric": "retention ratio R_transfer = CMR_target / CMR_source (percent of source CMR)",
+   "value": "81.0% (summary), 70.5% (reflection), 86.4% (hybrid)",
+   "comparison": null,
+   "setting": "Vector-memory source selection frozen before any target rollout; 48 held-out source tasks per benchmark-backbone block with five seeds; two benchmarks, two backbones",
+   "quote": "Appendix G.4 shows that MemHarm retains 81.0% of source CMR in summary memory, 70.5% in reflection memory, and 86.4% in hybrid memory; profile and graph transfer are lower, consistent with stricter schemas and typed validation.",
+   "locator": "Appendix G.4 Figure 10",
+   "denominator": {
+    "n_total": "48 held-out source tasks per benchmark-backbone block, five seeds each",
+    "n_valid": null,
+    "how_counted": "retention ratio R_transfer = CMR_target / CMR_source after source-only frozen selection (Appendix G.4 protocol)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The certified-selection machinery is reliable in practice: 91.4% of attacks receive class-conditional optimality certificates, supporting that selected attacks are near-optimal within the frozen edit class.",
+   "metric": "share of attacks receiving optimality certificates",
+   "value": "91.4%",
+   "comparison": null,
+   "setting": "Certificate audit over independent task-memory instances across benchmark-backbone panels; adaptive vs uniform allocation at matched rate",
+   "quote": "Residual-channel controls support memory-only isolation (Appendix F, Figure 7); 91.4% of attacks receive optimality certificates, with adaptive allocation and gap effects (Figure 5(a–c); Appendix E, Figure 6).",
+   "locator": "§5.4; Appendix E Figure 6",
+   "denominator": {
+    "n_total": "128 independent task–memory instances (32 per benchmark–backbone panel; Figure 6 caption / Appendix E; Table 11: 'Methods use the same 128 instances as Figure 6')",
+    "n_valid": "128",
+    "how_counted": "Appendix E fixed-confidence audit over direct signed CMR: 'Across all panels, 117/128 instances (91.4%) receive at least an optimality certificate' at the registered rollout cap (unresolved runs carry no certificate); adaptive and uniform allocation are compared 'at a matched 91.4% at-least-optimality rate'. The certificate share is 117/128 = 91.4% of attack searches."
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Certification and claims are scoped to the declared finite edit class and the offline construction setting: certificates only establish near-optimality within the frozen class, construction needs resettable isolated copies with paired-loss feedback, and CMR is defined relative to a declared task distribution and operational loss.",
+   "quote": "Certification applies to the declared finite edit class (§4.1; Appendix E), and attack construction uses resettable isolated copies with paired-loss feedback, while deployment requires only a normal-interface memory write (§3.1).",
+   "locator": "§6 Conclusion and Limitations"
+  },
+  {
+   "statement": "Unresolved searches carry no near-optimality certificate; the guarantee holds only under the sampling assumptions in Appendix B.",
+   "quote": "Resolved certificates establish near-optimality within the frozen candidate class under the sampling assumptions in Appendix B. Unresolved runs carry no such certificate.",
+   "locator": "Appendix L"
+  },
+  {
+   "statement": "Empirical scope is limited to the systems and memory realizations evaluated; broader deployment settings are left to future work.",
+   "quote": "The experiments cover the systems and memory realizations evaluated here; broader deployment settings are left to future work (Appendix M).",
+   "locator": "Appendix L"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "Partial: task-level statistics, validators, and registered protocol released for protocol-level reproduction; operational exploit code excluded per Ethics Statement",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "corpus_math_duplicated_rendering"
+ ]
+}

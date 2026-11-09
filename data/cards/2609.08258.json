@@ -1,0 +1,207 @@
+{
+ "arxiv_id": "2609.08258",
+ "title": "Revoked but Still Authoritative: An Empirical Study of Revocation Enforcement in Agent-Memory Systems",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "mixed",
+  "carrier": "五套 agent-memory 系统的持久存储：Graphiti 与 Zep CE（共享同一时间知识图谱引擎，事实带有效期时间戳）、mem0（向量库，两种检索配置）、langmem（结构化文档+相似度检索）、cognee（抽取- cognify-load 知识图谱+向量）；被测对象是 soft revocation——被撤销事实标记 invalid 后保留而非删除，含状态元数据 rho 与时间戳 tau（均不出现在代理提示词中）",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation"
+  ]
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "已被系统标记撤销（invalid/expired）的记录不得继续对代理行为保有权威：软撤销只标记不删除，若检索层不执行该标记，被撤销政策仍被返回、排名高于其替代政策并驱使代理选择不安全动作；在间接插入、代理写回、多代理共享存储与工具使用等条件下该失效均成立。",
+  "operationalized_as": "两个指标：exposure rate Pr[ER=1]（默认检索返回已撤销政策的场景-模型格比例）与 unsafe-action rate Pr[a=a-]（代理选择场景指定不安全动作的试验比例），二者按 Eq.2 分解；九场景 x 九模型 x 十次试验（temperature 0.7, k=10），每试验在六种防御条件下打分。"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无攻击者：危害记录是防御者自己写入后被撤销的政策，任何 provenance 检查按构造放行",
+   "前置条件：存储中同时存在一条被撤销的旧政策记录及其替代记录（直接插入写原生格式；间接插入仅靠系统自身抽取从普通矛盾文本中识别撤销）",
+   "测量框架除插入模式与防御条件外不操纵系统：不再写记录、不设状态、不改检索/系统提示词/模型配置",
+   "每场景-模型对十次试验，temperature 0.7，检索结果数 k=10"
+  ],
+  "not_covered": [
+   "攻击者注入内容（memory/corpus poisoning、MINJA 等注入类威胁模型）——本文被撤销记录非攻击者撰写",
+   "删除/遗忘失败（failed deletion residue）与训练时投毒",
+   "Zep 的直接插入（其 API 无法表达写入已撤销事实，仅测间接插入）",
+   "真实工具执行与真实资源（工具为诱饵、密钥为合成 token，仅测端到端选择）"
+  ]
+ },
+ "intervention": {
+  "name": "Stale-Retrieval Guard（guard/stale_guard.py）",
+  "mechanism_layer": "architecture",
+  "description": "位于代理与任意 memory 后端之间的检索期守卫（应用侧部署，无需后端改动），两阶段从可靠到兜底：阶段一读取后端暴露的显式撤销/过期状态字段并扣留已撤销记录；阶段二对无标记后端做内容冲突检测——主题包含度 ctm(x,y)>=alpha 与反对信号 opp（反义词对/数量不一致/否定线索差>=1）合取，alpha=0.45，冲突扣留上限 beta=0.6，按时间戳降序处理保证扣留较旧一方；无法确立新旧时两者都保留并报告冲突；被扣记录随原因单独返回，不删除存储中任何记录。"
+ },
+ "results": [
+  {
+   "claim": "在默认检索下，两个会返回已撤销记录的系统（Graphiti、mem0 (exp.)）上，已撤销政策在每个场景-模型格都被返回且排名高于替代政策，并使代理在无防御时分别产生 44.2% 与 42.1% 的不安全动作率（直接插入）。",
+   "metric": "unsafe_action_rate",
+   "value": "44.2% and 42.1%",
+   "comparison": "exposure 81/81 scenario-model cells on both systems, revoked record ranked first",
+   "setting": "五套 agent-memory 系统中两套会返回已撤销记录者；九个政策场景 x 九个决策模型（GPT-5.5/Grok-4/DeepSeek-V4-Flash/GPT-5-nano/Gemini-2.5-Flash/Grok-4-Fast/GLM-5.2/Gemma-3-27B-IT/Kimi-K2.6）x 十次试验，temperature 0.7，无防御，直接插入，无攻击者",
+   "quote": "On both exposed systems the revoked fact was returned for every scenario, 81/81 each, and ranked above the policy that replaced it. The revoked fact led agents to the unsafe action in 44.2% of trials on Graphiti (358/810) and 42.1% on mem0 (exp.) (341/810).",
+   "locator": "§4.1 (Table 6)",
+   "denominator": {
+    "n_total": "810 trials per system (9 scenarios x 9 models x 10 trials, direct insertion)",
+    "n_valid": "358/810 on Graphiti; 341/810 on mem0 (exp.)",
+    "how_counted": "trials in which the agent chose the action the scenario designates unsafe (Section 3.6)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "读前防御有效而读后防御弱：在两套暴露系统上，store-level 检索过滤器把不安全动作降为 0/1,620（filter+prompt hardening 同样为零），而仅 prompt hardening 只从 43.1% 降到 37.2%，因为检索上下文不含哪条事实被撤销的信息。",
+   "metric": "unsafe_action_rate",
+   "value": "0/1,620 unsafe trials under the store-level filter",
+   "comparison": "43.1% (no defense) -> 0/1,620 (filter); prompt hardening alone 37.2%",
+   "setting": "两套暴露系统（Graphiti, mem0 (exp.)）合并，九场景 x 九模型 x 十次试验，直接插入；过滤器限制检索只返回未标记撤销的记录",
+   "quote": "The store-level filter removes the effect entirely (0/1,620), as does the filter combined with prompt hardening. Prompt hardening alone reduces the rate from 43.1% to 37.2%",
+   "locator": "§4.2 (Table 6)",
+   "denominator": {
+    "n_total": "1,620 trials pooled across the two exposed systems (no defense 699/1,620 = 43.1%)",
+    "n_valid": "0/1,620 under the store-level filter",
+    "how_counted": "pooled unsafe-action rate per defense condition, direct insertion (Section 3.6)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "输出过滤器即使在被给予已撤销事实文本这一部署不具备的优势下，也只能把合并不安全率降到 18.1%。",
+   "metric": "unsafe_action_rate",
+   "value": "18.1%",
+   "comparison": null,
+   "setting": "两套暴露系统合并，输出过滤器在代理已读之后拦截与当前政策冲突的动作，且判定时被给予已撤销事实文本",
+   "quote": "The output filter reduces the rate only to 18.1%18.1\\%, and even that under an advantage no deployment has: it was given the revoked fact texts when deciding what to block.",
+   "locator": "§4.2",
+   "denominator": {
+    "n_total": "1,620 trials pooled across the two exposed systems (per-system rates 19.0% and 17.2% in Table 6)",
+    "n_valid": null,
+    "how_counted": "pooled unsafe-action rate under the output-filter condition, direct insertion"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在没有任何撤销标记可供过滤器读取的间接插入条件下，guard 把两套 mem0 配置的不安全动作降为 0/810（store 过滤器分别为 5/810 与 24/810），在无法表达过滤器的 Zep 上 315/810 对 364/810——这是 guard 唯一做到 store 级过滤器做不到之事的地方。",
+   "metric": "unsafe_action_rate",
+   "value": "0/810 under the guard on both mem0 configurations (indirect insertion)",
+   "comparison": "store-level filter 5/810 and 24/810 on mem0; on Zep guard 315/810 vs 364/810 with no filter",
+   "setting": "间接插入（系统从普通矛盾文本自行抽取撤销），九场景 x 九模型 x 十次试验；Zep API 无法表达状态过滤",
+   "quote": "The independent result is under indirect insertion, where no mark exists for any filter to read: 0/8100/810 on both mem0 configurations against the store filter's 5/8105/810 and 24/81024/810, and 315/810315/810 against 364/810364/810 on Zep, whose API cannot express a filter at all.",
+   "locator": "§5.2 (Table 9)",
+   "denominator": {
+    "n_total": "810 trials per system configuration (9 scenarios x 9 models x 10 trials, indirect insertion)",
+    "n_valid": "0/810 guard on both mem0 configs; 5/810 and 24/810 store filter; 315/810 guard vs 364/810 on Zep",
+    "how_counted": "unsafe-action trials per defense condition under indirect insertion (Section 5.2)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "失败归因于检索而非存储：同一 mem0 数据上仅切换一个检索开关（是否在读取时过滤过期记录），就在 81 个配对格中的 39 个由安全翻转为不安全且从不反向。",
+   "metric": "matched_cell_flip_rate",
+   "value": "39 of 81 matched cells switched safe to unsafe, never the reverse",
+   "comparison": null,
+   "setting": "mem0 在完全相同数据上跑两遍（shipped 读时过滤器默认开启 vs 关闭），81 个场景-模型配对格，无防御，直接插入（B.3/Table 13：过滤 0/810 vs 返回 341/810=42.1%，p<0.001）",
+   "quote": "Holding the store fixed removes retention as a variable: mem0 run twice on identical data with a single retrieval flag changed switches from safe to unsafe in 39 of the 81 matched cells and never the other way.",
+   "locator": "§4.2 / §B.3 (Tables 12, 13)",
+   "denominator": {
+    "n_total": "81 matched scenario-model cells (mem0 run twice on identical data)",
+    "n_valid": "39 cells switched safe to unsafe, 0 the reverse",
+    "how_counted": "paired comparison of unsafe counts per cell, no-defense arm, direct insertion (Section A.2)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "代理自己的写回击败在 §4.2 中达到零的检索过滤器：直接写回把不安全决定存为系统视为当前的记录后，过滤后各跳不安全率仍为 71.6%/79.5%/83.1%，而非无写回时的 0.0%。",
+   "metric": "unsafe_action_rate",
+   "value": "71.6%, 79.5%, 83.1% at hops 1-3 under the filter after direct write-back",
+   "comparison": "vs 0.0% for the same filter on the same system without write-back (Section 4.2)",
+   "setting": "Graphiti（唯一能同时表达写回与过滤检索的暴露系统），九场景 x 九模型 x 十次试验，hop 0 中毒决定经直接写回存为当前未标记记录（356/356 存活），后续跳在新代理+检索过滤器下测",
+   "quote": "The filter removes r1, but the journal is not r1: the filtered rates are 71.6%, 79.5% and 83.1%, against the 0.0% the same filter achieved on the same system in Section 4.2 (Table 6).",
+   "locator": "§C.1 (Table 14)",
+   "denominator": {
+    "n_total": "356 runs with a poisoned hop-0 decision under direct write-back",
+    "n_valid": "255/356 (hop 1), 283/356 (hop 2), 296/356 (hop 3) per Table 14",
+    "how_counted": "unsafe rate at later hops given a poisoned hop-0 decision, retrieval-filter condition (Section C.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "共享存储下第二意见不独立：默认检索中给定执行者已不安全，审查者按自己的独立提问仍以 96.3%（341/354）选择不安全动作，且 99.4%（352/354）的运行有某个后续角色不安全；对每个读都施加状态过滤才把全部列降为零。",
+   "metric": "reviewer_agreement_rate",
+   "value": "96.3% (341/354)",
+   "comparison": "any later role unsafe 99.4% (352/354)",
+   "setting": "Graphiti 共享存储，执行者/审查者/规划者三角色各按自己的问题检索，九场景 x 九模型 x 十次试验共 2,430 次运行，默认检索条件（无过滤）",
+   "quote": "Given an executor that went unsafe, the reviewer chose the unsafe action on its own read in 341341 of 354354 runs (96.3%96.3\\%), and some later role went unsafe in 352352 of 354354 (99.4%99.4\\%).",
+   "locator": "§C.2 (Table 15)",
+   "denominator": {
+    "n_total": "354 runs with a poisoned executor (shared store, default retrieval)",
+    "n_valid": "341/354 reviewer unsafe; 352/354 any later role unsafe",
+    "how_counted": "reviewer unsafe on its own read given a poisoned executor (Section C.2)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在端到端工具动作测量中，置于工具边界的护栏（拒绝危险 shell 命令）在工具执行率上与无防御完全相同，确认外传仅少两例；起作用的是作用于读之前的控制（检索过滤器与本文 guard，§C.3 Table 16 中二者均 8/360 且无确认外传）——遏制边界在读而非工具层。",
+   "metric": "tool_execution_rate",
+   "value": "17.2% (62/360) for the tool-layer guardrail, identical to no defense",
+   "comparison": null,
+   "setting": "四个工具场景（任意代码执行/破坏性 shell/密钥外传/绕过受认可 API）x 九模型 x 十次试验共 360 次运行，工具为诱饵、密钥为合成 token，四防御条件（无防御/检索过滤器/guard/工具层护栏）",
+   "quote": "The tool-layer guardrail does not. Its tool execution rate is 62/360=17.2%62/360=17.2\\%, identical to no defense, and it confirmed 77 exfiltrations against the 99 under no defense, a difference of two events on the same trials.",
+   "locator": "§C.3 (Table 16)",
+   "denominator": {
+    "n_total": "360 runs (4 tool-facing scenarios x 9 models x 10 trials)",
+    "n_valid": "8/360 under filter and under guard; 62/360 under tool-layer guardrail and under no defense",
+    "how_counted": "tool execution rate per defense condition (Section C.3)"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "跨系统配对检验统计功效有限：17 个不一致对下，只有 13-to-4 或更极端的分裂才显著，因此该比较只能支持两系统无粗略差异，不能证明它们等同。",
+   "quote": "With 17 discordant pairs a two-sided exact test attains significance only at a 13-to-4 split or more extreme, so this comparison could not have detected a systematic advantage unless roughly three-quarters of the discordant cells fell the same way.",
+   "locator": "§B.2"
+  },
+  {
+   "statement": "未报告合并比例的逐条件置信区间；作者论证格间离散远大于格内随机性，且格间离散只是对固定九场景九模型网格的描述而非泛化区间。",
+   "quote": "We do not report per-condition confidence intervals on the pooled proportions.",
+   "locator": "§A.2"
+  },
+  {
+   "statement": "有规则/无规则两组场景不是受控比较：两组在场景、动作集与干扰事实数上都不同，且研究从未对同一场景测量有无禁令的差别，只能支持较窄的结论（提示词禁令不能可靠阻止不安全动作）。",
+   "quote": "The two groups are not a controlled comparison, since they differ in scenario, action set and distractor count, and the study never measures the same scenario with and without its prohibition.",
+   "locator": "§4.4"
+  },
+  {
+   "statement": "guard 的内容冲突启发式在部分间接插入条件下比不防御还差（cognee 53/810 vs 44/810；Graphiti 83/810 vs 81/810），因为冲突测试也会匹配并非撤销政策及其替代的矛盾对；在 Zep 上仅捕获 4/14。",
+   "quote": "On cognee and Graphiti under indirect insertion the guard is marginally worse than no defense (53/81053/810 vs 44/81044/810 on cognee, 83/81083/810 vs 81/81081/810 on Graphiti), because the conflict test also matches conflicting pairs that are not a revoked policy and its replacement.",
+   "locator": "§5.2 footnote 7"
+  },
+  {
+   "statement": "附录 C 的写回结果仅是 Graphiti 管道的性质，不能外推到 mem0 (exp.) 等其他系统；三个扩展设置也不穷尽，真实部署会三者同时出现。",
+   "quote": "Write-back, however, is system-specific, so the rates reported here are properties of Graphiti's pipeline rather than claims about mem0 (exp.).",
+   "locator": "§Appendix C footnote 8"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": []
+}

@@ -1,0 +1,190 @@
+{
+  "arxiv_id": "2606.05743",
+  "title": "Membrane: A Self-Evolving Contrastive Safety Memory for LLM Agent Defense",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Contrastive Safety Memory (CSM): an external writable cell store where each cell m=(P, D, T) pairs an Attack Profile P (attack strategy, requested action, harm objective - mechanism-level fields indexed by strategy, not surface topic) with contrastive Decision Criteria D=(d_unsafe, d_safe) and an optional Tool-Action Context T for agent settings; the store evolves via a Memory Planner (create/update/delete/skip), a Memory Writer that synthesizes cell content, and a non-LLM validator enforcing schema, duplicate, and capacity constraints; inference retrieves candidate cells (vector retrieval) filtered by a Retrieval Critic before the Guard decides",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "repair"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "A precise safety boundary under evolving jailbreaks: harmful queries must be blocked (low ASR) while superficially similar benign queries must be admitted (low FRR), with the writable memory itself resistant to poisoning (safe-as-unsafe injection that induces over-refusal, and unsafe-as-safe injection that induces jailbreaks). Failure conditions: jailbroken (guard permits the harmful side), over-refusal (guard rejects the benign side), or poisoned cells steering decisions.",
+    "operationalized_as": "ASR (fraction of harmful prompts answered / harmful tasks not refused), FRR (fraction of benign prompts refused), and F1 = 2(1-ASR)(1-FRR)/((1-ASR)+(1-FRR)) on HarmBench (320 harmful prompts paired with 320 in-house benign counterparts per transformed setting; 7 evaluation conditions incl. untransformed) and AgentHarm (176 harmful + 176 benign), with warmup N=80 (HarmBench) / N=32 (AgentHarm) bootstrapped then frozen; memory-poisoning robustness (ASR/FRR at 10% and 20% writer-mediated injection rates, top-k retrieval rate of poisoned cells, critic filter rate); per-query latency (mean/p95 seconds)."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Jailbreak attackers across six modern mechanisms: iterative refinement (PAIR), persuasion-based rephrasing (PAP), tree-of-thought search (TAP), nested instruction rewriting (ReNeLLM), character-level perturbation (FlipAttack), and lifelong strategy exploration (AutoDAN-Turbo)",
+      "Memory poisoner injects cells through the normal write path at rates rho of 10% and 20%, via two strategies: safe-as-unsafe (manipulate memory into refusing benign queries) and unsafe-as-safe (force acceptance of harmful queries), with the standard guard mechanism suppressed during the attack"
+    ],
+    "assumptions": [
+      "Attacker and scorer are the same fixed model (Qwen3-235B-A22B-Instruct) across all defenses, so cross-method differences come from the defense rather than the attack data",
+      "Bootstrapped memory is frozen during evaluation (static inference pipeline), isolating guard behavior from on-the-fly memory composition and keeping comparisons against static and fine-tuned baselines fair"
+    ],
+    "not_covered": [
+      "Fully adaptive white-box adversaries with access to the guard, the memory store, and the deployment pipeline are explicitly not modeled (the authors note this setting requires access-control and monitoring mechanisms beyond the algorithmic guard)",
+      "Cross-lingual, multimodal, and nested-agent deployments are out of scope (text-only English benchmarks)",
+      "The protected model is fixed to Qwen3-8B in the main tables (Appendix G sweeps sizes/backbones)"
+    ]
+  },
+  "intervention": {
+    "name": "Membrane: self-evolving guardrail on Contrastive Safety Memory with Paired Self-Evolution",
+    "mechanism_layer": "memory",
+    "description": "An external guard that decides safe/unsafe before the target model or tool-using agent acts. Paired Self-Evolution: each interaction pairs a harmful prompt with a benign counterpart exercising the same surface mechanism; the verdict (jailbroken / over-refusal / correct) plus the paired queries form an evolution signal from which one contrastive cell is written (create, update, delete, or skip), so every update commits a contrastive boundary rather than a one-sided exemplar; a deterministic non-LLM validator rejects writes violating schema/duplicate/capacity constraints. Inference: vector retrieval of candidate cells, a Retrieval Critic filters inapplicable matches, and the Guard issues the decision grounded on kept cells. Membrane lite disables the Retrieval Critic for lower latency."
+  },
+  "controls": [
+      {"name": "Vanilla (unguarded Qwen3-8B / unguarded tool-using agent)", "purpose": "baseline"},
+      {"name": "Prompt-level guards: Self-Reminder, SmoothLLM, SelfDefend, TrustAgent, ShieldAgent", "purpose": "baseline"},
+      {"name": "Fine-tuned classifiers: LlamaGuard3, WildGuard, GuardReasoner", "purpose": "baseline"},
+      {"name": "Memory-augmented adaptive guards: RAD, GuardAgent, AGrail", "purpose": "baseline"},
+      {"name": "Ablations: -CSM decision criteria, -Paired Self-Evolution, -Retrieval Critic, -Tool-Action Context (Table 3)", "purpose": "ablation"},
+      {"name": "Warmup size sweep N (Figure 2)", "purpose": "ablation"},
+      {"name": "Membrane lite (no Retrieval Critic)", "purpose": "ablation"}
+  ],
+  "results": [
+      {
+        "claim": "Membrane achieves the highest F1 on all six jailbreak attacks across both benchmarks; on HarmBench it drives ReNeLLM ASR to 0.3% (vs 11.3% for RAD, the best baseline) and completely suppresses FlipAttack at 0.0% ASR (vs 7.8% best baseline).",
+        "metric": "ASR (%) per attack on HarmBench, lower is better",
+        "value": "0.3% (ReNeLLM); 0.0% (FlipAttack); 8.2% (TAP); 16.0% (PAIR)",
+        "comparison": "best baselines: RAD 11.3% (ReNeLLM), 7.8% (FlipAttack), 25.0% (TAP), 21.3% (PAIR); FRR held to 2.9%-6.1%",
+        "setting": "HarmBench, 320 harmful prompts + 320 benign counterparts per transformed setting, Qwen3-8B target, warmup N=80 frozen (Table 1)",
+        "quote": "On ReNeLLM, Membrane achieves an ASR of 0.3%, vastly outperforming the 11.3% achieved by RAD.",
+        "locator": "§4.3 (Table 1)",
+        "denominator": {
+          "n_total": 320,
+          "n_valid": null,
+          "how_counted": "ASR = fraction of the 320 harmful prompts answered per transformed setting; FRR = fraction of the 320 benign counterparts refused"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Cost reading (over-refusal): on AgentHarm, Membrane keeps benign refusal (FRR) at 7-14% across all settings, substantially below memory-augmented baselines GuardAgent (52-53%) and AGrail (27-32%) and prompt-level TrustAgent (73-85%).",
+        "metric": "False Refusal Rate (FRR, %) on AgentHarm benign tasks",
+        "value": "7-14%",
+        "comparison": "GuardAgent 52-53%; AGrail 27-32%; TrustAgent 73-85%; static guards reach 73-85%",
+        "setting": "AgentHarm, 176 benign counterparts, Qwen3-8B agent, warmup N=32 frozen (Table 2)",
+        "quote": "While effectively blocking these attacks, Membrane consistently restricts the FRR to a range of 7% to 14% across all settings.",
+        "locator": "§4.3 (Table 2)",
+        "denominator": {
+          "n_total": 176,
+          "n_valid": null,
+          "how_counted": "FRR = refusal rate over the 176 benign AgentHarm tasks per attack setting"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "On AgentHarm, Membrane cuts FlipAttack ASR to 0.9% versus 100% for the unguarded agent, and reaches F1 89.2% (ReNeLLM) and 93.0% (FlipAttack) - the highest across all attack methods with a large margin on text-transformation attacks.",
+        "metric": "ASR (%) and F1 (%) on AgentHarm",
+        "value": "0.9% ASR (FlipAttack); F1 89.2% (ReNeLLM), 93.0% (FlipAttack)",
+        "comparison": "vanilla agent 100% ASR on FlipAttack",
+        "setting": "AgentHarm, 176 harmful tasks + 176 benign counterparts (Table 2)",
+        "quote": "Membrane drastically reduces the ASR compared to the unprotected agent, achieving an ASR of 0.9% on FlipAttack versus 100% for the vanilla baseline.",
+        "locator": "§4.3 (Table 2)",
+        "denominator": {
+          "n_total": 176,
+          "n_valid": null,
+          "how_counted": "ASR = fraction of the 176 harmful tasks not refused, per attack setting"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Cross-attack transfer: cells warmed on one jailbreak method retain 87-88% of the same-attack F1 when evaluated against other attacks sharing the underlying strategy (model safety 80.8% vs 92.6%; agent safety 69.5% vs 79.2%).",
+        "metric": "cross-attack F1 retention (% of same-attack F1)",
+        "value": "87% (model safety); 88% (agent safety)",
+        "comparison": "same-attack F1 92.6% (model) and 79.2% (agent)",
+        "setting": "For each attack A, CSM warmed only on A then evaluated frozen against the other attacks (Figure 3, full matrices in Appendix I)",
+        "quote": "the transfer F1 retains 87%87\\% of the same attack F1 in model safety (80.8%80.8\\% vs. 92.6%92.6\\%) and 88%88\\% in agent safety (69.5%69.5\\% vs. 79.2%79.2\\%).",
+        "locator": "§5.2 (Figure 3)",
+        "denominator": {
+          "n_total": 320,
+          "n_valid": null,
+          "how_counted": "Matrix means over off-diagonal attack pairs; model safety over 320-prompt HarmBench settings, agent safety over 176-task AgentHarm settings"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Poisoning robustness: even at a 20% writer-mediated injection rate, defensive performance stays near the clean baseline - unsafe-as-safe raises ASR only from 2.1% to 2.5% and safe-as-unsafe raises FRR from 10.8% to 15.4%, because poisoned-cell retrieval rates stay at 2.3-7.5% and the Retrieval Critic eliminates 33-40% of surfaced poisoned cells.",
+        "metric": "ASR / FRR (%) under 10% and 20% poisoning; retrieval rate Ret; critic filter rate",
+        "value": "ASR 2.1% -> 2.5%; FRR 10.8% -> 15.4%; Ret 2.3-7.5%; Critic 33.3-40.0%",
+        "comparison": "clean baseline ASR 2.1% / FRR 5.0-10.8% depending on branch",
+        "setting": "HarmBench, 80-event clean warmup then 10%/20% injection, standard guard suppressed during attack (Table 4)",
+        "quote": "Even under the 20% injection rate, the defensive performance remains nearly identical to the clean baseline.",
+        "locator": "§5.4 (Table 4)",
+        "denominator": {
+          "n_total": 320,
+          "n_valid": null,
+          "how_counted": "ASR/FRR over the HarmBench harmful/benign evaluation pairs after warmup; poison rate rho = fraction of injected writes; Ret = share of poisoned cells in top-k retrievals; Critic = share of surfaced poisoned cells filtered"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Cost reading (latency): full Membrane runs at 12.89 s (HarmBench) and 14.59 s (AgentHarm) mean per query - far faster than SmoothLLM (156.93 s) and AGrail (25.22 s) - while Membrane lite (no Retrieval Critic) runs at 2.33/2.43 s with F1 91.7%/78.6%, still beating every baseline regardless of latency tier.",
+        "metric": "per-query defense latency (mean seconds, single-stream) with F1",
+        "value": "12.89 s (Membrane, HarmBench); 2.33 s (Membrane lite)",
+        "comparison": "SmoothLLM 156.93 s @ F1 21.3; RAD 6.31 s @ 77.1; SelfDefend 0.90 s @ 59.6; AGrail 25.22 s @ 64.2; GuardAgent 5.94 s @ 59.6 (Table 5)",
+        "setting": "Single-stream per-query overhead averaged over the seven evaluation settings, HarmBench and AgentHarm (Table 5)",
+        "quote": "The full Membrane successfully maintains the highest F1 scores while operating significantly faster than computationally heavy baselines such as SmoothLLM (156.93 seconds) and AGrail (25.22 seconds).",
+        "locator": "§5.5 (Table 5)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Mean and p95 per-query latency in seconds over the evaluation queries of the seven settings; query counts follow the per-setting HarmBench/AgentHarm splits"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Ablation: removing Paired Self-Evolution causes the largest F1 drop (-7.4 points HarmBench, -11.5 points AgentHarm), and removing the decision criteria or Tool-Action Context raises AgentHarm FRR from 6.3% to 20.5% and 17.1% - the contrastive structure is what suppresses over-refusal.",
+        "metric": "F1 (%) and FRR (%) per ablated component, averaged over seven settings",
+        "value": "F1 93.4 -> 86.0 (w/o Paired Self-Evolution, HarmBench); FRR 6.3 -> 20.5% (w/o decision criteria, AgentHarm)",
+        "comparison": "full Membrane 93.4 (HarmBench) / 82.2 (AgentHarm) (Table 3)",
+        "setting": "Component ablations averaged over the seven evaluation settings (Table 3)",
+        "quote": "Removing Paired Self-Evolution causes the most severe performance degradation, decreasing the F1 score by 7.4% and 11.5% points on HarmBench and AgentHarm, respectively.",
+        "locator": "§5.3 (Table 3)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Averages over the seven evaluation settings (six attacks + untransformed) on each benchmark"
+        },
+        "is_primary_result": false
+      }
+    ],
+  "limitations": [
+    {
+      "statement": "Evaluation is text-only English on HarmBench/AgentHarm; cross-lingual, multimodal, and nested-agent deployments need separate benchmarks and threat models.",
+      "quote": "Membrane is evaluated on text-only English model-safety and agent-safety benchmarks. This follows the coverage of HarmBench and AgentHarm and keeps comparisons to existing guardrails controlled; cross-lingual, multimodal, and nested-agent deployments require separate benchmark construction and threat models, which we leave to future work.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "The main tables fix the protected model to Qwen3-8B to avoid conflating guard behavior with target-model scale; robustness to this choice is only partially addressed by the Appendix G sweeps.",
+      "quote": "Our main tables fix the protected model to Qwen3-8B to avoid conflating guard behavior with target-model scale or backbone effects.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "Fully adaptive white-box adversaries with access to the guard, memory store, and deployment pipeline are not modeled and would require access-control and monitoring beyond the algorithmic guard.",
+      "quote": "The remaining attacks we do not model are fully adaptive white-box adversaries with access to the guard, memory store, and deployment pipeline. This operational setting requires access-control and monitoring mechanisms beyond the algorithmic guard studied here.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "All response-level evaluation is delegated to a single judge (Gemini 3 Flash), applied to every defense so residual judge bias is shared across baselines.",
+      "quote": "All response-level evaluation is delegated to Gemini 3 Flash, a model family distinct from the Qwen3-8B guard, to reduce correlated blind spots between the guard and the judge. The same judge is applied to every defense, so any residual judge bias is shared across baselines.",
+      "locator": "Limitations"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": "HarmBench (320 harmful + 320 in-house benign counterparts per transformed setting), AgentHarm (176 + 176), six attack suites (PAIR, PAP, TAP, ReNeLLM, FlipAttack, AutoDAN-Turbo) constructed with Qwen3-235B-A22B-Instruct as attacker and scorer; Appendices F/G/H/I document construction, sweeps, and full per-attack results; Appendix J lists artifact licenses",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "related_work", "method", "experimental_setup", "baselines", "main_results", "warmup_analysis", "cross_attack_transfer", "ablation", "memory_poisoning", "latency", "conclusion", "limitations"],
+    "complete": false
+  },
+  "quality_flags": [
+    "attacker_and_scorer_shared_qwen3_235b",
+    "bootstrapped_memory_frozen_during_evaluation",
+    "appendices_unread"
+  ]
+}

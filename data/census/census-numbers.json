@@ -1,0 +1,26 @@
+{
+ "submissions": 3435,
+ "screen_eligible": 739,
+ "screen_eligible_pct": 21.5,
+ "screen_numeric_label": 203,
+ "coded": 739,
+ "final_source": {
+  "majority": 416,
+  "author": 443
+ },
+ "eligible": 562,
+ "eligible_pct": 76.0,
+ "positives": 235,
+ "positives_A": 183,
+ "positives_B": 52,
+ "rate_pct": 41.8,
+ "frame_positives": 235,
+ "frame_rate_pct": 31.8,
+ "frame_coded": 739,
+ "precision": 0.64,
+ "recall": 0.553,
+ "cards": 32,
+ "coverage_pct": 5.7,
+ "ties": 0,
+ "ties_ids": []
+}

@@ -1,0 +1,209 @@
+{
+ "arxiv_id": "2610.28987",
+ "title": "PerMIT: Securing Persistent Memory for LLM Agents via Machine-Checked Integrity Theorems and Scalable Community Trust",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "mixed",
+  "carrier": "Persistent memory stores behind a finite memory interface (write/recall/fill/crystallize/display/confirm/evict) with a quarantined RLM reader; federated tier accumulates per-item user endorsements into community-confirmed shared knowledge entries (evaluated on Trojan Hippo email assistant and tau2-bench telecom/banking)",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "Environment-derived (untrusted) memory reaches a sensitive tool argument only if the exact value was endorsed at the confirmation gate for that exact tool (Action Integrity), and untrusted content influences the protected agent's behavior only through what the gate displays (Reasoning Integrity, noninterference modulo the display transcript). Holds under source-based labels, immutable stored blocks, faithful displays, and sound endorsement; it does not establish the correctness of endorsement decisions themselves, so a verifier that accepts poison breaks the guarantee in practice.",
+  "operationalized_as": "Two theorems (D.3, D.5) machine-checked in Lean 4 for the single-user core; empirically as attack success rate on Trojan Hippo live containment probes, and in the federated tier as certified bounds on poison-promotion probability (B_att, Equation 1) and wrongful eviction"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "controls or manipulates content obtained from the external environment: tool outputs, web content, external files and codebases",
+   "plants dormant payloads into persistent memory via untrusted tool calls (Trojan Hippo two-stage injection/activation)",
+   "in the federated tier: up to f lifetime adversarial identities, at most f_s panel-eligible, with adaptive presentation, stopping, and re-entry strategies"
+  ],
+  "assumptions": [
+   "only user-typed inputs and exact values confirmed at the gate are trusted; all environment-derived content is untrusted",
+   "source-based labels, immutable stored blocks, and faithful displays (A1-A3)",
+   "Action Integrity assumes sound atomic endorsement (A4); an LLM verifier can violate it",
+   "Reasoning Integrity assumes common exogenous typed-input stream, matched scheduling and coins (A6)",
+   "federated bounds assume reviewer detection-rate lower bounds q_pre, q_pan and identity budgets"
+  ],
+  "not_covered": [
+   "semantic correctness or soundness of endorsement/verifier decisions (accepted poison is trusted)",
+   "timing, termination, and compromised harness components",
+   "safety of combinations of separately endorsed values (delayed-combination attacks)",
+   "human review effort in deployment; fidelity of the deployed harness to the formal model",
+   "adaptive payload search against live verifiers (only controlled-response simulation)"
+  ]
+ },
+ "intervention": {
+  "name": "PerMIT",
+  "mechanism_layer": "architecture",
+  "description": "A finite memory interface mediates every flow between untrusted persistent memory and a protected LLM (P-LLM): untrusted content is exposed only as opaque handles through a quarantined reader (Q-LLM, realized as a recursive language model), and release requires exact-value, tool-scoped endorsement at an auditable confirmation gate operable by a human, an LLM verifier, or both. Single-user integrity theorems are machine-checked in Lean 4. A federated tier turns logged per-item endorsements into community-confirmed trust (promotion quorum N, dispute panel k/m/m_rej with eviction and vindication)."
+ },
+ "results": [
+  {
+   "claim": "On Trojan Hippo persistent-memory poisoning, PerMIT gate configurations with LLM self-verification or lightweight Qwen verifiers record zero observed attack success, while the accept-all OpenGate control stays at 0-10% ASR across four backbones",
+   "metric": "ASR",
+   "value": "0%",
+   "comparison": "0–10% (OpenGate accept-all) -> 0% (LLM verifier gates)",
+   "setting": "Trojan Hippo live containment: poison stored in untrusted memory, live agent rollout plus targeted reader-to-tool probe; four backbones (Claude-Sonnet-4.6, GLM-5, Kimi-K2.5, GPT-5.4) on AWS Bedrock; adversary controls inbound email content only",
+   "quote": "OpenGate records 0–10% ASR across the four backbones: low attack success persists even without a rejecting confirmation policy. Self-verification and both Qwen verifiers record zero observed ASR while preserving useful memory capabilities (Table 1).",
+   "locator": "§4.1 Table 1",
+   "denominator": {
+    "n_total": "20 attack cases per configuration",
+    "n_valid": null,
+    "how_counted": "Appendix A.3: 'two successful attacks among twenty cases per configuration' (Trojan Hippo held-out test cases per topic/backend)"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "PerMIT preserves high benign utility: with the OpenGate (accept-all) occupant, the protected agent reaches AM 97 / HM 96 on Claude-Sonnet-4.6, far above capability-restricting baselines that collapse the harmonic mean",
+   "metric": "benign utility (AM/HM over seven capability axes)",
+   "value": "AM 97%, HM 96%",
+   "comparison": null,
+   "setting": "Trojan Hippo seven benign capability suites, Claude-Sonnet-4.6 backbone, RLM reader, OpenGate; column 1 of the PerMIT block in Table 1 (GLM-5 93/91, Kimi-K2.5 91/90, GPT-5.4 89/86 in same row)",
+   "quote": "| OpenGate (accept all) | 97 | 96 | 0 | 93 | 91 | 10 | 91 | 90 | 10 | 89 | 86 | 0 |",
+   "locator": "§4.1 Table 1, PerMIT block",
+   "denominator": {
+    "n_total": "7 benign capability suites",
+    "n_valid": null,
+    "how_counted": "§4.1 Setup: 'Utility reports arithmetic and harmonic means (AM/HM) over seven capability axes, with HM primary'"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "In autonomous shared-knowledge construction on tau2-bench telecom, none of the 12 manually submitted direct memory-injection payloads reached the Community-Confirmed tier under the PerMIT protocol",
+   "metric": "promoted injection payloads",
+   "value": "12 payloads submitted, none promoted",
+   "comparison": null,
+   "setting": "tau2-bench telecom, promotion quorum N=10, dispute thresholds k=31, m=20, m_rej=12; payloads submitted through the benchmark's normal entry-submission path; communities of autonomous agents up to M=90",
+   "quote": "we manually submitted direct memory-injection payloads in crafted entries through τ2\\tau^{2}-bench’s normal submission path. None of the 12 direct memory-injection payloads reached the Community-Confirmed tier.",
+   "locator": "§5",
+   "denominator": {
+    "n_total": "12 direct memory-injection payloads",
+    "n_valid": "12",
+    "how_counted": "manual submission via the normal path; promotion to Community-Confirmed tier counted"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "Kimi-K2.5 agents with a PerMIT-constructed shared knowledge base improve held-out telecom environment-completion from 0.7917 (no knowledge) to 0.8854 at community size M=90",
+   "metric": "env_frac (held-out task environment-completion score)",
+   "value": "env_frac 0.8854",
+   "comparison": "0.7917 (no knowledge) -> 0.8854 (PerMIT)",
+   "setting": "tau2-bench telecom, M=90 construction run, 24 held-out tasks x 2 trials (48 paired episodes per arm), 200-step limit, builder and agent both Kimi-K2.5; pooled four-size delta +0.1120 [+0.0339,+0.1979]",
+   "quote": "| Kimi-K2.5 | 0.7917 | 0.7396 | 0.8854 | 0.9037 |",
+   "locator": "§5 Table 2",
+   "denominator": {
+    "n_total": "48 task/trial pairs per arm (24 held-out tasks x 2 trials)",
+    "n_valid": null,
+    "how_counted": "Appendix A.7: '24 held-out tasks with two trials each (48 task/trial pairs per arm) and a 200-step limit'"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "The pooled utility gains survive three-backbone Holm correction for Claude-Sonnet-4.6 and Kimi-K2.5 but not for GLM-5, whose telecom baseline is near ceiling",
+   "metric": "Holm-adjusted p-value (pooled paired analysis)",
+   "value": "adjusted p = 0.0066 (Claude-Sonnet-4.6), 0.0325 (Kimi-K2.5), 0.9356 (GLM-5)",
+   "comparison": null,
+   "setting": "tau2-bench telecom, four community sizes M in {12,24,60,90} pooled (192 paired differences, task-cluster bootstrap with 10,000 resamples and 20,000 sign-flip permutations)",
+   "quote": "Holm correction across the three same-backbone comparisons gives adjusted pp-values of 0.00660.0066 for Claude-Sonnet-4.6, 0.03250.0325 for Kimi-K2.5, and 0.93560.9356 for GLM-5.",
+   "locator": "Appendix A.7",
+   "denominator": null,
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "At the deployed federated geometry, the certified upper bound on the probability that a poisoned entry is promoted in a single promotion attempt is 0.896% (B_att = 8.96e-3), assuming reviewer catch rates q_pre = q_pan = 0.6 and adversary identity budgets",
+   "metric": "certified poison-promotion ceiling per promotion attempt",
+   "value": "0.896% per promotion attempt",
+   "comparison": null,
+   "setting": "analytical bound of Equation 1 at deployed geometry (N=10, k/m/m_rej=31/20/12, f=2, f_s=1), reviewer miss rates q_pre=q_pan=0.6; bound holds uniformly over adaptive presentation, stopping, and re-entry strategies; corroborated by five billion simulated promotion attempts",
+   "quote": "Under the illustrative simulation setting specified in Appendix A.1, the expression evaluates to Batt=8.96×10−3B_{\\mathrm{att}}=8.96\\times 10^{-3}, an analytical ceiling of 0.896%0.896\\% per promotion attempt for the assumed reviewer rates.",
+   "locator": "§3.3 Equation 1; Appendix A.1",
+   "denominator": {
+    "n_total": "per promotion attempt",
+    "n_valid": null,
+    "how_counted": "analytical evaluation of Equation 1; simulation at the deployed geometry of Appendix A.1"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "In a simulated 120-user community, reusing community-confirmed entries saves each user 2.36 required approvals on average (38%) versus verifying alone, and raising the quorum N from 3 to 14 cuts the certified risk bound by a factor of 58 for only 0.64 extra approvals per user",
+   "metric": "required approvals per user; certified risk-bound reduction factor",
+   "value": "2.36 approvals/user saved (38%)",
+   "comparison": "certified risk bound reduced 58x; +0.64 approvals/user (N: 3 -> 14)",
+   "setting": "simulation of 120 agents sharing a 122-item catalog (two poisoned entries), reviewer rates per Appendix A.1, q_pre=0.4 for the effort measurement",
+   "quote": "each user 2.362.36 required approvals on average (38%38\\%) compared with verifying alone, and a larger quorum provides substantial safety gains at a modest cost: raising NN from 33 to 1414 reduces the certified risk bound by a factor of 5858 while adding only 0.640.64 required approvals per user.",
+   "locator": "§4.2 Figure 5",
+   "denominator": {
+    "n_total": "simulated 120-user community sharing 122 entries",
+    "n_valid": null,
+    "how_counted": "Figure 5 simulation; per-user required approvals vs no-sharing counterfactual on same workloads"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The self-constructed shared knowledge yields no detectable utility gain in the banking domain: all confidence intervals include zero, unlike telecom",
+   "quote": "The self-constructed knowledge base produces no detectable utility gain in banking: all confidence intervals include zero.",
+   "locator": "Appendix A.6"
+  },
+  {
+   "statement": "The reported telecom utility gains are concentrated in the MMS troubleshooting task family; gains for every task family are not established",
+   "quote": "Generated experience primarily covers MMS troubleshooting; the reported Sonnet and Kimi gains are concentrated in that task family. This supports transfer of relevant experience, without establishing gains for every task family.",
+   "locator": "Appendix A.7"
+  },
+  {
+   "statement": "The federated safety simulations use controlled reviewer responses and do not substitute for adaptive payload search against live verifiers",
+   "quote": "Our simulations test the protocol’s conditional safety boundaries through adaptive protocol attacks under controlled reviewer responses; they do not replace adaptive payload search against live verifiers.",
+   "locator": "§6"
+  },
+  {
+   "statement": "Provenance and endorsement do not ensure usefulness: shared memory may contain redundant, inaccurate, or hallucinated knowledge",
+   "quote": "First, provenance and endorsement do not ensure usefulness: shared memory may contain redundant, inaccurate, or hallucinated knowledge, motivating quality-aware gates and active memory management.",
+   "locator": "§6"
+  },
+  {
+   "statement": "A proof about the formal model does not by itself establish that a deployed harness implements that model faithfully",
+   "quote": "A proof about either formal model does not by itself establish that a deployed harness implements that model faithfully.",
+   "locator": "Appendix C.2"
+  },
+  {
+   "statement": "Action Integrity assumes sound atomic endorsement; an LLM verifier can violate this assumption and the theorem does not establish verifier accuracy",
+   "quote": "An LLM verifier can violate this assumption; the theorem does not establish its accuracy.",
+   "locator": "Appendix D.1"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "long_corpus_selectively_read",
+  "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim"
+ ]
+}

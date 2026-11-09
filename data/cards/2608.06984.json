@@ -1,0 +1,202 @@
+{
+  "arxiv_id": "2608.06984",
+  "title": "HarnessSafe: Evaluating Safety Across Persistent Carriers in Agent Harnesses",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "mixed",
+    "carrier": "Seven persistent-carrier families in agent harnesses: memory (F1), reusable skills (F2), Tool/MCP state (F3), memory-to-skill transformation (T2), subagent delegation (T3-S), session summary (T3-C), shared artifact (T3-A)",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "Whether attacker-influenced content persisted in a harness carrier can cross a declared boundary (session, process, agent-instance, or workspace) and, when re-consumed by an independently benign later trigger, produce an oracle-verified confidentiality, integrity, availability, or authorization violation; safety failure is declared only on executed-effect evidence (N5a/N5b), and containment is judged by the furthest evidence-supported lifecycle stage rather than a binary outcome.",
+    "operationalized_as": "Five-element Persistent-Risk Lifecycle K=<E,C,B,T,V>; each run assigned the furthest trace-evidence-supported stage N0-N5b; ASR = share of eligible scored runs reaching N5a/N5b; CSS = stage-weighted score (100 at N0 down to 0 at N5b, higher = earlier containment); five-arm matched controls (clean-source, no-persist, no-trigger, cleanup) attribute violations to lifecycle elements."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Controls low-trust content that reaches the harness (tool/MCP outputs, schemas, metadata, workspace notes, skill packages, memory writes) and is retained in persistent carriers",
+      "Planting occurs before a declared session/process/agent/workspace boundary; payload need not survive verbatim through summarization, synthesis, delegation, or transfer",
+      "Cannot alter the later benign trigger or the harness/model internals"
+    ],
+    "assumptions": [
+      "The trigger T is independently benign: it neither contains the adversarial instruction nor requests or authorizes the oracle-defined violating action",
+      "Every configuration runs under the most permissive natively supported non-interactive approval profile",
+      "One scored attack attempt per case and configuration; replacement attempts only for execution-invalid runs",
+      "Violations require case-specific hard oracles (executed effect, committed file operation, or honeypot canary), never model self-reports or suspicious text"
+    ],
+    "not_covered": [
+      "Adaptive attackers reacting to deployed defenses",
+      "Real-world harm magnitude and severity (CSS measures lifecycle progression only)",
+      "Same-stage prompt injection (excluded by the independently-benign-trigger requirement)",
+      "Cross-user / multi-tenant sharing of carriers",
+      "Product-default permission profiles (evaluation uses the most permissive mode)"
+    ]
+  },
+  "intervention": {
+    "name": "HarnessSafe benchmark (evaluation instrument; no deployed defense)",
+    "mechanism_layer": "none",
+    "description": "The paper contributes a 328-case cross-harness benchmark specified as five-element Persistent-Risk Lifecycles with harness-native bindings across seven harnesses, plus a multi-stage trace-based evaluation (N0-N5b) with CSS/ASR metrics that localizes where each attack chain is contained. The matched-control arms (clean-source, no-persist, no-trigger, cleanup) manipulate lifecycle elements as experimental controls for attribution, not as proposed defenses."
+  },
+  "controls": [
+    {"name": "Clean-source arm (entry E replaced with interface-matched benign source)", "purpose": "negative-control"},
+    {"name": "No-persist arm (declared carrier blocked/removed before boundary)", "purpose": "ablation"},
+    {"name": "No-trigger arm (activating prompt replaced with neutral benign task)", "purpose": "ablation"},
+    {"name": "Cleanup arm (persisted carrier removed immediately before trigger)", "purpose": "ablation"},
+    {"name": "Family-wise common-support sets (e.g., 281-case six-backend intersection, 279-case five-arm intersection)", "purpose": "fair-comparison"}
+  ],
+  "results": [
+    {
+      "claim": "HarnessSafe is a benchmark of 328 executable persistent-risk cases spanning seven persistent-carrier families, evaluated natively on mainstream agent harnesses.",
+      "metric": "benchmark size (executable cases)",
+      "value": "328",
+      "comparison": null,
+      "setting": "Seven persistent-carrier families (F1-F3, T2, T3-S/C/A); seven harnesses (Claude Code, Codex CLI, Gemini CLI, OpenCode, Kimi Code, OpenClaw, Hermes Agent)",
+      "quote": "To this end, we present HarnessSafe, a benchmark comprising 328 executable cases across seven persistent-carrier families and evaluated on most mainstream agent harnesses.",
+      "locator": "Abstract",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Holding the backend GPT-5.6-Sol fixed, changing only the harness moves standardized CSS from 39.4 (Claude Code) to 62.3 (Codex CLI), so containment is shaped by the harness, not the model label alone.",
+      "metric": "CSS_std (stage-weighted containment score)",
+      "value": "62.3",
+      "comparison": "39.4 (Claude Code) -> 62.3 (Codex CLI) with GPT-5.6-Sol fixed; backend-only range 22.7 to 58.7 within Claude Code",
+      "setting": "328-case benchmark, most permissive non-interactive profiles, seven harness-model configurations (Exp1/Exp2)",
+      "quote": "With GPT-5.6-Sol fixed, changing the harness moves CSS from 39.4 under Claude Code to 62.3 under Codex CLI; with Claude Code fixed, changing the backend produces a CSS range from 22.7 to 58.7.",
+      "locator": "§1 Introduction; Table 2; §5 RQ2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Within the fixed Claude Code harness, varying only the model backend moves overall CSS from 58.7 (Claude Sonnet 4.6) down to 22.7 (MiniMax M2.5), showing containment is a property of the full configuration.",
+      "metric": "CSS_std",
+      "value": "22.7 to 58.7",
+      "comparison": "58.7 (Claude Sonnet 4.6) vs 22.7 (MiniMax M2.5)",
+      "setting": "Claude Code 2.1.133 fixed (skip-permissions, isolated home, tool surface, 328 cases); six backends varied (Exp2)",
+      "quote": "In Table 2, Overall CSS spans 22.7 for MiniMax M2.5 to 58.7 for Claude Sonnet 4.6.",
+      "locator": "§4.3 Exp2; Table 2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Containment is family-specific: within Exp1, the best overall configuration (Codex CLI) leads five of the seven family columns—60.0 on F1 Memory, 64.3 on F3 Tool/MCP, 88.2 on T2 Memory-to-Skill, 84.3 on T3-C Session Summary, and 93.3 on T3-A Shared Artifact—but records the lowest reusable-skill (F2) CSS of 47.0, where Claude Code leads at 70.0, and on the remaining family T3-S Subagent Delegation, OpenCode leads at 64.0, whereas Codex scores 46.7.",
+      "metric": "family CSS (F2 Skill)",
+      "value": "47.0 (Codex CLI, F2 Skill) vs 70.0 (Claude Code)",
+      "comparison": "Codex leads five of seven families (60.0 F1, 64.3 F3, 88.2 T2, 84.3 T3-C, 93.3 T3-A) but is lowest on F2 Skill at 47.0",
+      "setting": "Exp1 cross-harness comparison on family-specific common support, 328-case benchmark",
+      "quote": "Codex leads five of the seven family columns—60.0 on F1 Memory, 64.3 on F3 Tool/MCP, 88.2 on T2 Memory-to-Skill, 84.3 on T3-C Session Summary, and 93.3 on T3-A Shared Artifact—but records the lowest F2 Skill score, 47.0, where Claude Code leads at 70.0.",
+      "locator": "§4.2 Exp1; Table 2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Configurations with nearly identical ASR (OpenCode 10.08% vs Hermes Agent 10.81%) stop at different lifecycle stages (mostly N1 vs N2/N4), so endpoint ASR conceals distinct residual risks.",
+      "metric": "ASR and stage distribution",
+      "value": "10.08% vs. 10.81%",
+      "comparison": null,
+      "setting": "Exp1: OpenCode/Qwen 3.7 Plus vs Hermes Agent/Kimi K3 on the 328-case benchmark",
+      "quote": "Figure 3 shows that similar ASRs can mask distinct stopping profiles: OpenCode and Hermes (10.08% vs. 10.81%) stop more often at N1, N2 and N4, respectively.",
+      "locator": "§4.2 Exp1; Figure 3",
+      "denominator": {
+        "n_total": "328-case benchmark per configuration",
+        "n_valid": "OpenCode 258 and Hermes Agent 296 evaluation-eligible scored rows",
+        "how_counted": "Appendix F.1 Table 15: A/S per configuration - OpenCode 26/258, Hermes Agent 32/296"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Matched controls show the observed violations depend on the full attack lifecycle: relative to the full-attack ASR of 25.8%, removing any single lifecycle element drops ASR to 0.4% (clean-source), 2.5% (no-persist), 0.0% (no-trigger), or 1.8% (cleanup).",
+      "metric": "ASR (matched-control arms)",
+      "value": "25.8%",
+      "comparison": "25.8% -> 0.4% (clean-source), 2.5% (no-persist), 0.0% (no-trigger), 1.8% (cleanup)",
+      "setting": "Claude Code 2.1.133 with Claude Haiku 4.5, maximum-permission non-interactive profile, isolated-home execution, 279 strictly paired five-arm cases",
+      "quote": "Relative to the full-attack ASR of 25.8%, ASR is 0.4% in the clean-source arm, 2.5% in the no-persist arm, 0.0% in the no-trigger arm, and 1.8% in the cleanup arm.",
+      "locator": "§4.4 Exp3; Table 3; Appendix G.4 Table 20",
+      "denominator": {
+        "n_total": "328-case benchmark",
+        "n_valid": "279 strictly paired cases eligible in every arm (five-arm intersection)",
+        "how_counted": "Appendix G.4 Table 20: pooled N5a+N5b counts 72/279 (full), 1/279 (clean-source), 7/279 (no-persist), 0/279 (no-trigger), 5/279 (cleanup)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under the best-containing configuration (Codex CLI with GPT-5.6-Sol), oracle-verified attack success is 3.96% (13 of 328 eligible rows) at full coverage.",
+      "metric": "ASR (N5a+N5b over eligible scored rows)",
+      "value": "3.96%",
+      "comparison": null,
+      "setting": "Codex CLI 0.145.0 with GPT-5.6-Sol, danger-full-access non-interactive profile, 328-case benchmark",
+      "quote": "Codex CLI's native evaluation pipeline yields 328 eligible rows, 13 N5a+N5b outcomes (8 N5a and 5 N5b), and an ASR of 13/328=3.96%",
+      "locator": "Appendix F.1; Table 15",
+      "denominator": {
+        "n_total": "328",
+        "n_valid": "328 evaluation-eligible scored rows (full coverage)",
+        "how_counted": "13 N5a+N5b outcomes over 328 eligible rows (Appendix F.1, Table 15)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the fixed Claude Code harness, the Claude Haiku 4.5 configuration that the paper selects for Exp3 as the one with the widest dynamic range for a removal effect reaches a 24.70% (81/328) oracle-verified full-benchmark ASR, a different estimand from the matched-control full-attack arm's 72/279=25.8% on the 279-case shared support.",
+      "metric": "ASR (full-benchmark)",
+      "value": "24.70%",
+      "comparison": null,
+      "setting": "Claude Code 2.1.133 with Claude Haiku 4.5, skip-permissions profile, full 328-case benchmark (Exp2)",
+      "quote": "The full-benchmark Haiku attack result on 328 cases, 81/328=24.70%",
+      "locator": "Appendix G.4; Table 16; Table 17",
+      "denominator": {
+        "n_total": "328",
+        "n_valid": "328 evaluation-eligible scored rows for Claude Haiku 4.5",
+        "how_counted": "81 N5a+N5b outcomes over 328 eligible rows (Appendix F.3, Tables 16-17)"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Scores characterize performance on the final benchmark inventory, not the prevalence of these mechanisms in a real-world population.",
+      "quote": "The resulting scores therefore characterize performance on the final HarnessSafe benchmark rather than the prevalence of these mechanisms in a real-world population.",
+      "locator": "Appendix A.2"
+    },
+    {
+      "statement": "CSS measures how far an attack chain progresses, not real-world harm magnitude or severity.",
+      "quote": "CSS measures attack progression rather than harm magnitude; impact type and severity remain separate attributes.",
+      "locator": "§3.4"
+    },
+    {
+      "statement": "Reduced-support results (fewer than 328 cases due to missing native harness support) are not directly comparable to full-support results.",
+      "quote": "An asterisk (*) marks a result evaluated on fewer than 328 cases because the configuration lacks native support for some cases; such results are not directly comparable to full-support results.",
+      "locator": "Table 2 caption"
+    },
+    {
+      "statement": "The artifact does not allow independent reconstruction of the within-case five-arm pairing for the matched-control experiment.",
+      "quote": "the submission package does not support independent reconstruction of the complete within-case five-arm pairing.",
+      "locator": "Appendix H, Matched-control records"
+    },
+    {
+      "statement": "Native execution evidence is only representative, not exhaustive, for nine of the twelve evaluated configurations.",
+      "quote": "For the remaining nine local configurations, the package provides representative rather than exhaustive native execution evidence.",
+      "locator": "Appendix H, Execution evidence"
+    },
+    {
+      "statement": "Sampling parameters, decoding tuples, and stage timeouts were not retained for several configurations, so cross-harness measurements characterize whole evaluated configurations rather than an isolated model or harness.",
+      "quote": "\"Not retained\" means that the supplied paper artifacts do not consolidate one value for the corresponding configuration; no value is inferred retroactively.",
+      "locator": "Table 9 caption, Appendix C.1"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "Anonymized supplementary artifact with runs/manifest.json, per-case case_meta.json under runs/active/, and results.csv/results.jsonl inventories under results/canonical/ (Appendix H)",
+    "data": "328 case definitions included in the artifact; public release location not stated in the corpus",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "limitations_only_in_appendix",
+    "no_defense_proposed_benchmark_only"
+  ]
+}

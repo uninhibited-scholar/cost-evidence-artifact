@@ -1,0 +1,191 @@
+{
+  "arxiv_id": "2610.09008",
+  "title": "Whose Memory Is It? Scope-Aware Commit Rules for Long-Term LLM Memory",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Cask (Causally Anchored Scoping Keys): a 46-dimensional basis-invariant relational commit key — typed Gram blocks from a causally validated rank-16 ownership subspace and its complement, plus 4 diagnostic logit differences — attached to each candidate record at the commit boundary between reasoning and persistent memory; scoped (nonactual) records stay retrievable only under their original owner instead of being deleted",
+    "operations_covered": ["formation", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "Only propositions licensed by the shared actual world may become unconditional premises in persistent memory; provisional content (plans, beliefs, hypotheticals, simulated tool results, discarded branches) must remain within its original discourse scope. The property fails when a scoped record is committed or contaminates an actual-world retrieval result or answer; it is judged by attachment accuracy, contamination rate, and conflicting-answer adoption.",
+    "operationalized_as": "Attachment accuracy of the commit gate against the gold ownership edge; contamination rate (nonactual records entering actual-world results) and conflicting-answer adoption in reader outputs on the answer-conflict study; causal validation via interchange interventions on the rank-16 ownership subspace shifting/flipping the frozen write decision."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "No intentional adversary; the hazard is the agent's own deliberation producing provisional propositions that memory would wrongly commit as durable facts",
+      "Frozen backbone LLMs (Qwen2.5-3B-Instruct and Qwen2.5-1.5B-Instruct); the commit gate is an external lightweight classifier, not fine-tuning",
+      "Alternative answers injected in the answer-conflict study are an evaluation construct, not an attacker model",
+      "The provenance-first hybrid assumes runtime ledger labels may be retained for a fraction of records"
+    ],
+    "not_covered": [
+      "Adversarial poisoning or injection by external attackers",
+      "Nested ownership scopes",
+      "Learned retrievers (evaluation uses one BM25 lexical ranking)",
+      "Model families beyond Qwen2.5-1.5B/3B-Instruct",
+      "Cross-user or multi-agent shared memory"
+    ]
+  },
+  "intervention": {
+    "name": "Cask (Causally Anchored Scoping Keys)",
+    "mechanism_layer": "architecture",
+    "description": "A commit rule at the model–memory interface. Six fixed Yes/No diagnostic prompts elicit last-token hidden states from a frozen LLM; a rank-16 ownership subspace (causally validated by interchange interventions) and its complement are exported as typed Gram-matrix blocks plus 4 logit differences into a 46-dimensional gauge-invariant feature. A logistic gate at tau=0.5 (balanced) or at the development-calibrated Cask@R95 threshold decides whether a proposition may enter shared memory; otherwise the record remains available under its scoped owner. Theorems give invariance, completeness, and perturbation-stability guarantees for the stored key; at retrieval the attachment edge masks records outside the query's admissible owner set before the reader sees them."
+  },
+  "controls": [
+    {"name": "Flat memory (admits every record, no scope gate)", "purpose": "baseline"},
+    {"name": "TF-IDF lexical gate", "purpose": "baseline"},
+    {"name": "Full hidden state probe (2,048 basis-dependent coordinates)", "purpose": "fair-comparison"},
+    {"name": "Full Gram+logits (sums the typed blocks, erasing their type)", "purpose": "ablation"},
+    {"name": "Random typed split + logits (matched random rank-16 partition)", "purpose": "negative-control"},
+    {"name": "Runtime provenance ledger at full retention", "purpose": "positive-control"}
+  ],
+  "results": [
+    {
+      "claim": "On the frozen Qwen2.5-3B backbone, interchange interventions on the rank-16 ownership subspace causally route held-out cases to a target mental space far above matched random subspaces, establishing an internal control variable for memory admission.",
+      "metric": "causal_routing_success_rate",
+      "value": "91.78%",
+      "comparison": "91.78% vs 3.22% for matched random subspaces",
+      "setting": "frozen Qwen2.5-3B-Instruct, held-out causal-routing constructions (146 cases)",
+      "quote": "On Qwen2.5-3B, rank-16 interventions route 134 of 146 held-out cases to the target mental space (91.78%), while matched random subspaces reach 3.22%.",
+      "locator": "§6.1",
+      "denominator": {
+        "n_total": "146",
+        "n_valid": "134",
+        "how_counted": "\"The causal-routing test contains 146 held-out target cases grouped into 74 target scenarios\" (Appendix C); 134 routed to the target mental space"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Swapping the ownership-subspace state with an opposite-scope donor shifts the frozen commit probability strongly toward the donor scope and flips most write decisions, tying the linguistic ownership variable causally to the memory write decision.",
+      "metric": "commit_probability_shift (delta p toward donor scope)",
+      "value": ".715",
+      "comparison": "direction success and decision flips vs matched controls that rarely flip",
+      "setting": "frozen Qwen2.5-3B-Instruct gate, six diagnostic passes, conversation-clustered 95% CI",
+      "quote": "Replacing the ownership-subspace state with an opposite-scope donor moves commit probability by .715 toward the donor [95% conversation-clustered CI: .656, .775], succeeds in the intended direction for 97.5% of records, and flips 75.8% of decisions.",
+      "locator": "§6.1 Table 1",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under source-isolated conversation folds, the Cask relational key attains the best attachment accuracy among all evaluated representation families on both frozen backbones.",
+      "metric": "attachment_accuracy",
+      "value": "83.33%",
+      "comparison": "83.33% (3B) / 79.82% (1.5B); runner-ups 2.16 and 2.35 points behind",
+      "setting": "source-isolated folds over LoCoMo-derived controlled conflicts; frozen Qwen2.5-3B-Instruct and Qwen2.5-1.5B-Instruct",
+      "quote": "Cask at τ=0.5\\tau=0.5 leads every evaluated representation on both backbones: 83.33% attachment on 3B and 79.82% on 1.5B. Complement Gram plus logits is second on 3B, 2.16 points behind; the unrestricted full-hidden probe is second on 1.5B, 2.35 points behind.",
+      "locator": "§6.2 Table 2",
+      "denominator": {
+        "n_total": "972",
+        "n_valid": "810",
+        "how_counted": "Attachment is scored per record (§5: 'Attachment is scored per record, retrieval per question') on the controlled-conflict candidate records: 'The answer-conflict task contains 972 records paired across 486 exact-span questions' (Appendix) and 'The answer-conflict study contains 972 candidate records for 486 questions' (§5). 810/972 = 83.33% on 3B. Caveat: the printed 1.5B cell 79.82% is not an integer count of 972 (776/972 = 79.84%), so that cell may be fold-averaged or carry a rounding artifact."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "When the evidence payload is byte-identical and only reporting scope changes, Cask's attachment advantage persists, showing the gain is specific to preserving who or which possible world licenses the content rather than payload differences.",
+      "metric": "attachment_accuracy (scope-only factorial variant)",
+      "value": "78.70%",
+      "comparison": "above every invariant control and all 20 random decompositions; holding scope fixed removes the advantage",
+      "setting": "scope-only factorial variant (byte-identical payloads), frozen Qwen2.5-3B-Instruct",
+      "quote": "When the evidence payload is held byte-identical and only its reporting scope changes, Cask reaches 78.70%, above every invariant control and all 20 random decompositions. Holding scope fixed removes the advantage.",
+      "locator": "§6.2 Figure 2a",
+      "denominator": {
+        "n_total": "4,860",
+        "n_valid": "3,825",
+        "how_counted": "The scope-only factorial variant 'contains 4,860 records (2,430 pairs)' (§5 Factorial isolation; Appendix: 'The source-isolated variants contain 4,860 records and 2,430 matched pairs each'); attachment is scored per record, and 3,825/4,860 = 78.70% (counting per pair at 2,430 cannot yield 78.70% from an integer count)."
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "On the answer-conflict study, Cask slightly reduces contamination and improves attachment, retrieval, and reader metrics relative to the strongest invariant baseline (Full Gram+logits).",
+      "metric": "contamination_rate",
+      "value": "7.61% -> 7.41%",
+      "comparison": "attachment +2.05 points; EM +2.06 and F1 +1.88; injected-answer adoption ties at 1.03%",
+      "setting": "answer-conflict study (972 candidate records, 486 LoCoMo exact-span questions), frozen Qwen2.5-3B-Instruct",
+      "quote": "Cask improves attachment by 2.05 points, increases recall@5 and MRR, and reduces contamination from 7.61% to 7.41%. Reader EM and F1 rise by 2.06 and 1.88 points, while injected-answer adoption ties at 1.03%.",
+      "locator": "§6.3 Table 3",
+      "denominator": {
+        "n_total": "486",
+        "n_valid": "37 -> 36",
+        "how_counted": "Contamination = a nonactual record entering an actual-world result (§3); retrieval is scored per question (§5: 'Attachment is scored per record, retrieval per question') over the 486 exact-span questions of the answer-conflict study: 37/486 = 7.61% (Full Gram+logits) -> 36/486 = 7.41% (Cask). Cross-checks at n=486 are all integer counts: 1.5B contamination 18.11% = 88/486, recall@5 44.86% = 218/486, EM 26.75% = 130/486."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "An unfiltered flat-memory reader attains higher EM and F1 but adopts the injected conflicting answer far more often, showing aggregate QA utility and premise licensing are distinct objectives.",
+      "metric": "conflicting_answer_adoption",
+      "value": "4.53%",
+      "comparison": "flat memory 29.63 EM / 40.19 F1 vs gated reader's lower EM/F1",
+      "setting": "answer-conflict study reader, flat-memory baseline (no scope gate)",
+      "quote": "Flat memory attains 29.63 EM and 40.19 F1 while adopting the conflict 4.53% of the time.",
+      "locator": "§6.3 Table 3",
+      "denominator": {
+        "n_total": "486",
+        "n_valid": "22",
+        "how_counted": "'conflicting-answer adoption is the fraction of outputs that repeat the injected alternative answer' (§5 Controlled conflicts) — one reader output per question over the 486 exact-span questions: 22/486 = 4.53% (flat memory); the gated systems' tied 1.03% = 5/486."
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The development-calibrated Cask@R95 operating point preserves flat-memory recall and reciprocal rank while substantially cutting contamination and conflict adoption, and leads evaluated internal-feature gates on EM and F1.",
+      "metric": "contamination_reduction (points)",
+      "value": "11.19 points",
+      "comparison": "conflict adoption reduced by 1.17 points; EM 29.42 / F1 40.30",
+      "setting": "Cask@R95 threshold selected on development conversations (at least 95% actual admission), answer-conflict study, clustered intervals excluding zero",
+      "quote": "it preserves flat-memory recall and reciprocal rank while reducing contamination by 11.19 points and conflict adoption by 1.17 points, with clustered intervals excluding zero. Its 29.42 EM and 40.30 F1 lead the evaluated internal-feature gates.",
+      "locator": "§6.5",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "On generated tool-agent traces with runtime labels hidden, a trace-adapted Cask fallback leads learned gates in balanced accuracy and actual admission; layering runtime provenance on half the records approaches the full-ledger upper bound.",
+      "metric": "balanced_accuracy",
+      "value": "91.10%",
+      "comparison": "vs 90.40% for TF-IDF; actual admission 89.13% vs 81.52%",
+      "setting": "75 generated tool-using episodes (511 records, ten conversations), runtime labels hidden from candidate text, source-isolated folds",
+      "quote": "A trace-adapted Cask fallback leads learned gates in balanced accuracy—the mean of actual-admission and scoped-rejection rates—at 91.10% versus TF–IDF’s 90.40%, and admits more actual observations (89.13% versus 81.52%).",
+      "locator": "§6.6 Table 5",
+      "denominator": {
+        "n_total": "511",
+        "n_valid": null,
+        "how_counted": "\"This produces 511 records: 92 actual and 419 scoped\" across 75 generated tool-using episodes and ten conversations (Appendix B, agent-trace protocol)"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Cask is evaluated on two Qwen2.5 model scales with a binary ownership edge and a BM25 lexical retriever; nested scopes, learned retrievers, and broader model families are left to future work.",
+      "quote": "Extending ownership to nested scopes, learned retrievers, and broader model families is the next step toward memory systems that preserve not only more thought, but which world licenses each thought.",
+      "locator": "§7 Implications and conclusion"
+    },
+    {
+      "statement": "Authors state that dataset and model coverage, the binary ownership edge, compound distribution shift, trace calibration, retrieval choice, and deployment limits are discussed as limitations.",
+      "quote": "Section 7 discusses dataset and model coverage, the binary ownership edge, compound distribution shift, trace calibration, retrieval choice, and deployment limits.",
+      "locator": "NeurIPS Paper Checklist, item 2 (Limitations)"
+    },
+    {
+      "statement": "The controlled-data gate transfers poorly to natural tool-agent traces, so each fold requires a trace-adapted head; the direct-transfer score quantifies this domain shift.",
+      "quote": "Each fold fits a trace-adapted head; the controlled-data head’s direct-transfer score (31.66% balanced accuracy) quantifies the domain shift.",
+      "locator": "Appendix B, Agent-trace protocol"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": null,
+    "data": "LoCoMo (CC BY-NC 4.0) from official repository; Qwen2.5-1.5B-Instruct (Apache 2.0) and Qwen2.5-3B-Instruct (Qwen Research License) from official Qwen organization; code/data not released (checklist open-access answer [No])",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear"
+  ]
+}

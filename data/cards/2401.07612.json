@@ -1,0 +1,122 @@
+{
+ "arxiv_id": "2401.07612",
+ "title": "Signed-Prompt: A New Approach to Prevent Prompt Injection Attacks Against LLM-Integrated Applications",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "none (no persistent-state object studied; Signed-Prompt signing applies only to per-request instruction text, e.g., 'delete' being replaced by 'toeowx' within the current command segment)",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "The LLM must be able to discern the trustworthiness of instruction sources: only sensitive instructions originating from the authorized user and carrying that user's unique signature (e.g., 'toeowx' for 'delete') may be translated by the LLM into the executable formatted command ($Sys.command.002 for true deletion); unsigned instructions — however phrased, including injected text inside content the application processes — must never be output as executable commands. The paper frames the problem as LLMs being 'unable to verify the trustworthiness of instruction sources'. The guarantee is conditional on the signature not being leaked, and is judged experimentally by the attacker success rate of eliciting the deletion command (0% in all four groups for both LLM variants) alongside correctness on signed user commands.",
+  "operationalized_as": "Table 3: per-group attacker Succ. Rate*1 ('successfully output the deletion command') for LLM-PE and LLM-FT on unsigned attacker commands, plus Corr. Rate on signed user commands; Table 1: encoder signing correctness per group on the self-built 'Delete Command Dataset'."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Can submit natural-language instructions to the LLM-integrated application to override and subvert its original purpose or to leak its internal information, including attack text hidden inside content the application processes (in the paper's example, an injected command inside an email being summarized that attempts to make the assistant delete all emails)",
+   "Can phrase the malicious command in varied linguistic forms — direct orders, other languages (e.g., Chinese/Japanese/Korean), synonymous expressions, or implication/metaphor — corresponding to the four test groups (Direct, Multilingual, Varied Exp., Implication)",
+   "Can issue arbitrary unsigned raw commands to the LLM, but is assumed not to possess the user's unique signed instruction tokens"
+  ],
+  "assumptions": [
+   "The user's unique signed instruction tokens (e.g., 'toeowx' for 'delete') remain secret; the paper conditions the defense's effectiveness on this non-leakage ('If the user's unique deletion instruction signature 'toeowx' is not leaked, then external parties cannot carry out 'deletion' prompt injection attacks on the AI assistant using signed instructions')",
+   "The Encoder signs only instructions issued by the authorized user; attacker instructions, regardless of their form and source, are never signed",
+   "Within the Signed-Prompt framework the original prompt and the signed prompt are perceived by the LLM as completely distinct and unrelated entities, and only the external program can discern which instruction set represents the genuinely authorized signed command (i.e., the external program executes only signed formatted commands such as $Sys.command.002)"
+  ],
+  "not_covered": [
+   "Leakage, guessing, or reuse of the user's signed instruction tokens — the paper's own security condition fails if the signature is compromised, and no mitigation or analysis is given",
+   "Tricking the authorized user or the Encoder into signing attacker-chosen instructions (e.g., via social engineering); attacks on the Encoder itself are not analyzed",
+   "Obfuscated or encoded injection payloads: the paper argues unsigned instructions are ignored regardless of form, but the experiments evaluate only plain natural-language phrasings of a single 'delete' command",
+   "No quantitative undefended baseline or comparison against other defenses (input/output filtering, delimiters, Dual LLM) is measured; the susceptibility of undefended LLMs is asserted qualitatively via cited work and Figure 1"
+  ]
+ },
+ "intervention": {
+  "name": "Signed-Prompt",
+  "mechanism_layer": "provenance",
+  "description": "An Encoder (implemented via prompt engineering on ChatGPT-4; alternatives discussed and rejected: traditional character replacement for inflexibility, fine-tuned LLMs for cost) signs the authorized user's sensitive instructions by replacing them with combinations of characters that rarely appear in natural language (e.g., 'delete' becomes 'toeowx'); each user can have their own unique set of signed instructions. The adjusted LLM — built either by prompt engineering on ChatGPT-4 (LLM-PE) or by fine-tuning ChatGLM-6B (LLM-FT) — only outputs the actual formatted instruction (e.g., $Sys.command.002 for true deletion; unsigned raw 'delete' maps to invalid $Sys.command.001) when it receives the signed form, and does not associate unsigned original instructions with the signed command, so unsigned attacker commands are not translated into executable commands."
+ },
+ "results": [
+  {
+   "claim": "In the encoder experiment, a ChatGPT-4 prompt-engineering encoder that replaces 'delete' with the signed token 'toeowx' achieved 100% correctness on the Direct group of the self-built 'Delete Command Dataset' (Table 1 likewise reports 100% for the Multilingual and Varied Exp. groups).",
+   "metric": "encoder correctness rate (Corr. Rate)",
+   "value": "100%",
+   "comparison": null,
+   "setting": "Encoder = ChatGPT-4 (OpenAI) via prompt engineering; self-built 'Delete Command Dataset' with four groups (Direct, Multilingual, Varied Exp., Implication) of sentences expressing 'delete'; single command type ('delete'); paper displays only the first 3 entries per group and does not state the number of test cases per group",
+   "quote": "TABLE 1. Test Cases (first 3 entries each group) Corr. Group Input Output Rate I want delete this file. I want toeowx this file. Please delete this file. Please toeowx this file. Direct 100%",
+   "locator": "Table 1",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "On the Implication group (deletion expressed by implication rather than the literal word, e.g., 'I want this file disappear'), the same encoder's correctness dropped to 96.67% — the only group below 100%.",
+   "metric": "encoder correctness rate (Corr. Rate)",
+   "value": "96.67%",
+   "comparison": null,
+   "setting": "Same encoder experiment (ChatGPT-4 prompt engineering, 'delete' to 'toeowx'); Implication group of the self-built 'Delete Command Dataset'; group size not stated",
+   "quote": "I want this file disappear. I want to toeowx this file. I don't want to see this file I want to toeowx this file. anymore. Implication 96.67%",
+   "locator": "Table 1",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Both Signed-Prompt-supported LLMs (LLM-PE and LLM-FT) transmitted the deletion command for none of the unsigned attacker commands in any of the four groups: attack success rate 0%, which the paper presents as the main evidence of defense effectiveness.",
+   "metric": "attack success rate (Succ. Rate*1: successfully output the deletion command)",
+   "value": "0%",
+   "comparison": null,
+   "setting": "LLM-PE = ChatGPT-4 adjusted via prompt engineering; LLM-FT = ChatGLM-6B adjusted via fine-tuning; both map signed 'toeowx' to $Sys.command.002; four groups of unsigned attacker commands (Direct, Multilingual, Varied Exp., Implication); attacker lacks the user's signed token; single command type ('delete'); group sizes not stated",
+   "quote": "An analysis of the data reveals that LLMs constructed using either of the two methods demonstrate remarkable stability against the attack samples from the four aforementioned groups (with attack success rates of 0%)",
+   "locator": "§Adjusted LLM",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "LLM-PE responded correctly to 100% of signed user commands in every one of the four groups (Direct row shown; Table 3 reports 100% for Multilingual, Varied Exp., and Implication as well) — no measured utility loss from the signing scheme in the prompt-engineering implementation.",
+   "metric": "correctness rate on signed user commands (Corr. Rate)",
+   "value": "100%",
+   "comparison": null,
+   "setting": "LLM-PE = ChatGPT-4 with prompt-engineering-based Signed-Prompt support; signed user commands ('toeowx') from the four groups; single command type ('delete'); group sizes not stated",
+   "quote": "TABLE 3. LLM with Signed-Prompt Defense Performance LLM-PE LLM-FT Group Source Corr. Rate Succ. Rate*1 Corr. Rate*2 Succ. Rate*1 User (Signed) 100% N/A 86.67% N/A",
+   "locator": "Table 3",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "LLM-FT's correctness on signed user commands was not consistently ideal across the four groups (86.67% Direct, 73.34% Multilingual, 100% Varied Exp. and Implication); the authors attribute this to the difficulty of fine-tuning and possibly insufficient fine-tuning of ChatGLM-6B, not to the Signed-Prompt architecture.",
+   "metric": "correctness rate on signed user commands (Corr. Rate)",
+   "value": "86.67% (Direct); 73.34% (Multilingual); 100% (Varied Exp., Implication)",
+   "comparison": "LLM-FT 86.67%/73.34%/100%/100% vs LLM-PE 100% in all four groups",
+   "setting": "LLM-FT = pre-trained ChatGLM-6B fine-tuned on a dataset similar to the Table 1 test data to support the same Signed-Prompt functionality; signed user commands from the four groups; group sizes not stated; Table 3 footnote *2 notes 'This highly depends on the quality of fine-tuning process'",
+   "quote": "User (Signed) 100% N/A 86.67% N/A Direct Attacker N/A 0% N/A 0% User (Signed) 100% N/A 73.34% N/A",
+   "locator": "Table 3",
+   "denominator": null,
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "The authors acknowledge in the results discussion that the experiment's scope is limited and the ChatGLM-6B fine-tuning may be insufficient, and that these factors may have influenced the (LLM-FT correctness) results; there is no dedicated limitations section.",
+   "quote": "Given the limited scope of this experiment and the possible insufficient fine-tuning of ChatGLM-6B, these factors may have influenced the results.",
+   "locator": "§Adjusted LLM"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "figures"],
+  "complete": false
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "denominator_unclear",
+  "experiment_covers_single_command_delete_only",
+  "no_appendix_in_corpus_reading_incomplete",
+  "no_unprotected_baseline_measured",
+  "no_code_or_data_release_stated"
+ ]
+}

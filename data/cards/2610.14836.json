@@ -1,0 +1,202 @@
+{
+  "arxiv_id": "2610.14836",
+  "title": "MetaCascade: End-to-End Attacks on Agent Skills via Metadata-Only Poisoning",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "skill",
+    "scope": "cross-task",
+    "carrier": "SKILL.md metadata of a third-party skill published on an open agent-skill registry; metadata is part of the readable skill files consumed by both the retrieval/reranking stage and the agent's final skill-selection decision",
+    "operations_covered": ["formation", "retrieval"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "Skill metadata on an open registry should faithfully describe the skill's capability so that the agent's end-to-end retrieval-and-selection process returns the genuinely most suitable skill. The property fails when attacker-crafted metadata alone (code and other content unchanged) makes the attacker's malicious skill both enter the retrieved candidate set and be ultimately selected by the agent for tasks within the original capability scope; existing defenses (reranking and security detection) prove insufficient to eliminate this influence.",
+    "operationalized_as": "End-to-end attack success rate (ASR): how often the same attacker-controlled malicious skill enters the candidate set and is finally selected by the agent on held-out test tasks; Hit@1/3/5 measure the retrieval stage; results are additionally reported under four defense settings (SkillRouter, SkillResolve, SkillSieve, SkillScan)."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "download any skill from the public registry",
+      "locally replace the skill's metadata with malicious metadata and upload it as a third-party skill on an open registry with limited vetting",
+      "run a local optimization loop with black-box listwise competition feedback from an LLM selection decision maker (observing only final selections, not internal representations, reasoning, or scores)",
+      "use a set of construction tasks T_con to iteratively optimize the malicious metadata before publishing"
+    ],
+    "assumptions": [
+      "open agent-skill registry where third parties can freely upload and publish skills",
+      "the agent first retrieves and ranks candidate skills from readable skill files and then makes the final selection based on metadata",
+      "the same optimized malicious metadata is reused across agents, LLMs, and embedding models without per-setting re-optimization",
+      "the attacker cannot control the agent backend, retriever, selector, defenses, inputs, or other registered skills"
+    ],
+    "not_covered": [
+      "any harm caused after the malicious skill is invoked (post-execution/execution-stage attacks are out of scope)",
+      "control over agent backend, retriever, selector, defenses, agent inputs, or other registered skills",
+      "deployment to live registries, real users, or execution of post-invocation payloads (per ethical considerations)"
+    ]
+  },
+  "intervention": {
+    "name": "MetaCascade (Capability-Grounded Multi-View Candidate Generation, CMCG + Competition-Aware Iterative Malicious Metadata Optimization, CIMO)",
+    "mechanism_layer": "content",
+    "description": "An end-to-end metadata-only poisoning attack. CMCG derives semantic views from the original skill package and generates N=8 capability-equivalent candidate skills for multi-view semantic coverage. CIMO partitions the candidates into a source set and a competition set, compresses the source set into a capability profile, generates J=2 initial malicious metadata candidates, and iteratively refines the archive-best candidate using task-level failure feedback from black-box listwise competitions (L=3 evaluations per task, at most K=3 rounds, early stop at utility tau=0.8, metadata length capped at 1,290 characters). The winning malicious metadata is written back into the original skill and published, so the poisoned skill is retrieved and selected on subsequent tasks. The paper motivates but does not implement defenses (metadata integrity, skill provenance)."
+  },
+  "controls": [
+    {"name": "DDIPE", "purpose": "baseline"},
+    {"name": "Skill-Inject", "purpose": "baseline"},
+    {"name": "Semantic+ (combined stage-specific attacks from prior work into an end-to-end baseline)", "purpose": "fair-comparison"},
+    {"name": "SkillJect", "purpose": "baseline"},
+    {"name": "OpenPI (adapted to the skill attack setting)", "purpose": "fair-comparison"},
+    {"name": "SkillRouter / SkillResolve (reranking defenses)", "purpose": "negative-control"},
+    {"name": "SkillScan / SkillSieve (security-detection defenses)", "purpose": "negative-control"},
+    {"name": "w/o CIMO and w/o CMCG ablations", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "Without any defense, MetaCascade reaches a 74.24% average end-to-end ASR across four datasets and two agents, 35.53 percentage points above the strongest baseline Skill-Inject.",
+      "metric": "ASR",
+      "value": "74.24%",
+      "comparison": "74.24% vs Skill-Inject (+35.53 pp)",
+      "setting": "4 skill repositories (ClawHub, SkillRet, SkillCenter, SRA-Bench), agents Hermes and OpenClaw with GPT-5.4, TE3-Small retrieval, no defense",
+      "quote": "Table 1 shows that, without defenses, MetaCascade achieves an average ASR of 74.24%, outperforming the strongest baseline, Skill-Inject, by 35.53 percentage points.",
+      "locator": "§5.2 (Table 1)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "ASR = fraction of a repository's held-out test tasks (Table 2: 1,775 + 2,250 + 1,750 + 1,915 = 7,690) on which the malicious skill is finally selected; averaged over four datasets and both agents"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Under four defense settings, MetaCascade still averages 63.33% ASR while the best baselines drop to 28.68% (Skill-Inject) and 22.60% (Semantic+), with all remaining baselines below 7%.",
+      "metric": "ASR under defense",
+      "value": "63.33%",
+      "comparison": "63.33% vs Skill-Inject 28.68% and Semantic+ 22.60% (others < 7%)",
+      "setting": "Same 4 datasets x 2 agents, defenses SkillRouter / SkillResolve / SkillSieve / SkillScan run independently",
+      "quote": "After defenses are introduced, the attack effectiveness of most baselines decreases substantially, whereas MetaCascade maintains an average ASR of 63.33%, far exceeding Skill-Inject at 28.68% and Semantic+ at 22.60%, with all remaining baselines falling below 7%.",
+      "locator": "§5.2 (Table 1)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "ASR over each repository's held-out test tasks (Table 2), averaged over four defense settings, four datasets, and both agents"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Even against SkillScan, the defense that limits MetaCascade most, ASR remains 54.65%, still 22.91 percentage points above the strongest baseline in that setting.",
+      "metric": "ASR under strongest defense",
+      "value": "54.65%",
+      "comparison": "+22.91 pp over strongest baseline under SkillScan",
+      "setting": "4 datasets x 2 agents with the SkillScan detection pipeline enabled",
+      "quote": "Even under SkillScan, which has the strongest limiting effect on MetaCascade, its ASR remains 54.65%, exceeding the strongest baseline by 22.91 percentage points and retaining the best result across all defense settings.",
+      "locator": "§5.2 (Table 1)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "ASR over each repository's held-out test tasks (Table 2), averaged over four datasets and both agents under the SkillScan defense"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "MetaCascade's advantage at retrieval is pushing the target skill to the top: average Hit@1 of 49.75%, 15.05 percentage points above Skill-Inject, and first on every retrieval metric across all four datasets.",
+      "metric": "Hit@1",
+      "value": "49.75%",
+      "comparison": "49.75% vs Skill-Inject (+15.05 pp)",
+      "setting": "TE3-Small retrieval over the 4 skill repositories, held-out test tasks",
+      "quote": "MetaCascade achieves an average Hit@1 of 49.75%, outperforming Skill-Inject, the strongest baseline on this metric, by 15.05 percentage points.",
+      "locator": "§5.2 (Table 3)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "Hit@k = share of held-out test tasks (Table 2) where the target skill appears in the top-k retrieval results, averaged over four datasets"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "The attack generalizes across agent-LLM configurations: ASR ranges from 60.00% to 86.06% with an overall average of 77.31%, and GLM-5.2 configurations are most susceptible.",
+      "metric": "ASR",
+      "value": "60.00%–86.06% (avg 77.31%)",
+      "comparison": null,
+      "setting": "Agents Hermes and OpenClaw x backbone LLMs GLM-5.2, DeepSeek-V4-Pro, Kimi K2.6, Qwen3.5-397B-A17B; same malicious metadata reused without re-optimization",
+      "quote": "Table 4 shows that MetaCascade achieves ASRs ranging from 60.00% to 86.06% across different agent–LLM configurations, with an overall average of 77.31%, indicating broad generalizability.",
+      "locator": "§5.3 (Table 4)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "ASR over each repository's held-out test tasks (Table 2), reported per agent-LLM pair and averaged"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Across three embedding models, end-to-end ASR stays between 69.72% and 76.34% (average Hit@1 at least 41.06%), so the embedder strongly affects retrieval rank but only mildly affects final attack success.",
+      "metric": "ASR",
+      "value": "69.72%–76.34% (avg Hit@1 ≥ 41.06%)",
+      "comparison": null,
+      "setting": "TE3-Large, Qwen3-Embedding-8B, and BGE-M3 embeddings with both agents; same malicious metadata reused",
+      "quote": "Table 5 shows that MetaCascade achieves an average Hit@1 of at least 41.06% under each of the three embedding models, while its average ASR ranges from 69.72% to 76.34%.",
+      "locator": "§5.3 (Table 5)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "ASR and Hit@k over each repository's held-out test tasks (Table 2), averaged over four datasets for each embedding model"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Component ablation shows the two stages are complementary: removing CMCG drops average Hit@1 to 36.18% while ASR remains 59.76%, i.e., CIMO keeps the malicious skill competitive inside the candidate set even with weaker retrieval rank.",
+      "metric": "ASR / Hit@1 (ablation)",
+      "value": "w/o CMCG: Hit@1 36.18%, ASR 59.76%",
+      "comparison": null,
+      "setting": "Ablation of CMCG vs CIMO on the 4 datasets with both agents, all other settings unchanged",
+      "quote": "By contrast, removing CMCG reduces Hit@1 to 36.18%, while ASR remains 59.76%, showing that CIMO strengthens the target skill’s competitiveness within the candidate set.",
+      "locator": "§5.4 (Table 6)",
+      "denominator": {
+        "n_total": "7,690",
+        "n_valid": null,
+        "how_counted": "Per-dataset ASR/Hit@1 over held-out test tasks (Table 2), averaged over four datasets and both agents"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Attack construction cost is moderate: 32.57 LLM calls and 121,080 tokens per skill, requiring 20.56% fewer calls and 77.86% fewer tokens than SkillJect.",
+      "metric": "LLM calls / tokens per skill",
+      "value": "32.57 calls and 121,080 tokens per skill",
+      "comparison": "20.56% fewer calls and 77.86% fewer tokens than SkillJect",
+      "setting": "Attack LLM GPT-5.4-nano, MetaCascade default hyperparameters (N=8, J=2, L=3, K<=3)",
+      "quote": "As shown in Table 7, MetaCascade uses 32.57 LLM calls and 121,080 tokens per skill, requiring 20.56% fewer calls and 77.86% fewer tokens than SkillJect.",
+      "locator": "§6 (Table 7)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Relative reductions against SkillJect's per-skill cost of 41.00 calls / 547,000 tokens reported in Table 7"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The study explicitly excludes any harm caused after the malicious skill is invoked; only the retrieval-plus-selection attack chain is covered.",
+      "quote": "Our study covers the complete end-to-end attack chain defined above; any harm caused after the malicious skill is invoked is outside our scope.",
+      "locator": "§3 Threat Model"
+    },
+    {
+      "statement": "Optimization gains saturate: most improvement occurs within the first four to five iterations, after which further optimization trades attack effectiveness against cost.",
+      "quote": "This also suggests that most gains are achieved within the first four to five iterations, after which further optimization requires a trade-off between attack effectiveness and optimization cost.",
+      "locator": "§5.4"
+    },
+    {
+      "statement": "Black-box competition and iterative metadata optimization make MetaCascade more costly than several baselines (only cheaper than SkillJect).",
+      "quote": "Although black-box competition and iterative malicious metadata optimization make it more costly than several baselines, its 35.53-percentage-point ASR improvement over the strongest baseline demonstrates a practical trade-off between attack effectiveness and construction cost.",
+      "locator": "§6 Cost Analysis"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "stated as provided in the supplementary material (offline reproduction artifacts only)",
+    "data": "four skill repositories: ClawHub, SkillRet, SkillCenter, SRA-Bench (sampled 63 skills / 7,690 held-out test tasks per Table 2)",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": []
+}

@@ -1,0 +1,189 @@
+{
+ "arxiv_id": "2609.34438",
+ "title": "Remember by Asking: Retrieval-Induced Memory Evolution for LLM Agents",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "演化记忆库 M_t：LLM 抽取的语义记忆条目（每条带时间信息与对话出处 provenance），由 Add/Update/Delete/NoOp 四类操作在会话间增量维护。压缩记忆是回答的主证据源；不足时按查询回溯源对话（TF-IDF top-20 轮 + 同会话前后 15 轮局部上下文窗口），不做全历史处理",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "本文不主张任何安全性质：无对抗者、无攻击实验、无安全评测。它优化的是长期对话记忆的答案质量与查询效率。对综述的作用是给出 write-time formation（问题引导的证据召回先于压缩）与 selective source recovery（压缩记忆不足时回溯源对话）的机制设计基线，即 formation/update/retention/retrieval 在无对抗假设下的正向设计参照，而非防御机制本身",
+  "operationalized_as": "LLM-Judge / F1 / BLEU-1（LoCoMo 1,540 非对抗问题）+ 查询时 LLM token 开销；不涉及任何安全指标"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无对抗者：记忆条目全部来自用户-代理真实对话，论文不考虑被注入或污染的记忆内容",
+   "评估使用 LoCoMo 非对抗类别（明确排除 adversarial category），问题均为良性查询",
+   "同一 backbone 同时承担记忆构建、答案生成与 LLM 评判"
+  ],
+  "not_covered": [
+   "记忆投毒/间接注入对记忆库的污染与传播",
+   "跨用户或跨任务的记忆泄露",
+   "任何安全或对抗性评估"
+  ]
+ },
+ "intervention": {
+  "name": "RIME (Retrieval-Induced Memory Evolution)",
+  "mechanism_layer": "content",
+  "description": "两个内容层机制：(1) 问题引导的记忆形成——6 个固定通用形成问题（人物/事件/活动/计划/状态/细节）作为检索线索，从当前会话召回聚焦对话证据，两轮局部上下文扩展后与检索到的历史记忆在单次 LLM 调用中联合做事实抽取、去重、指代消解与历史对账，再执行 Add/Update/Delete/NoOp；(2) 选择性记忆使用——压缩记忆给出首答，答案为 NONE 时才用 TF-IDF 回源对话，局部上下文恢复形成期遗漏的信息"
+ },
+ "controls": [
+  {
+   "name": "RAG / Mem0 / A-MEM / Nemori / D-Mem",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Direct Compression / Question-Prompted Compression",
+   "purpose": "ablation"
+  },
+  {
+   "name": "RIME w/o selective retrieval",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "在 LoCoMo 1,540 非对抗问题上、Qwen3-235B-A22B backbone 下，RIME 在三个质量指标（LLM-Judge 81.82、F1 51.46、BLEU-1 44.22）上同时优于全部对照记忆系统，且查询时 token 开销（5.11K）远低于 deliberative 基线（A-MEM 63.19K、Nemori 20.92K）",
+   "metric": "LLM-Judge / F1 / BLEU-1 / query-time tokens",
+   "value": "81.82 / 51.46 / 44.22 / 5.11K",
+   "comparison": "vs D-Mem† 78.60 / 51.00 / 42.60 / 15.57K（最强基线）；A-MEM 68.77 / 44.12 / 37.86 / 63.19K",
+   "setting": "LoCoMo（排除 adversarial 类别）；backbone=Qwen3-235B-A22B（记忆构建、作答与评判同一模型）；D-Mem† 行直接引自原论文（Qwen3-235B-Instruct，实现未公开）",
+   "quote": "| A-MEM | 68.77 | 44.12 | 37.86 | 63.19K |\n| Nemori | 77.34 | 46.01 | 39.88 | 20.92K |\n| D-Mem† | 78.60 | 51.00 | 42.60 | 15.57K |\n| RIME | 81.82 | 51.46 | 44.22 | 5.11K |",
+   "locator": "Table 1",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "论文 §4.1：we use 1,540 questions from four categories ... excluding the adversarial category；Table 1 caption: Main results on the 1,540 non-adversarial LoCoMo questions"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "GPT-5.6 Sol backbone 下结论一致：RIME Judge 84.29 / F1 56.41 / BLEU-1 48.85，查询 token 5.21K，仍同时优于全部对照（最强基线 A-MEM 80.78 / 53.77 / 46.54 / 52.14K）",
+   "metric": "LLM-Judge / F1 / BLEU-1 / query-time tokens",
+   "value": "84.29 / 56.41 / 48.85 / 5.21K",
+   "comparison": "vs A-MEM 80.78 / 53.77 / 46.54 / 52.14K；Nemori 83.05 / 52.64 / 45.88 / 17.74K",
+   "setting": "LoCoMo（排除 adversarial 类别）；backbone=GPT-5.6 Sol",
+   "quote": "| A-MEM | 80.78 | 53.77 | 46.54 | 52.14K |\n| Nemori | 83.05 | 52.64 | 45.88 | 17.74K |\n| RIME | 84.29 | 56.41 | 48.85 | 5.21K |",
+   "locator": "Table 1",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "同 Table 1 caption：1,540 non-adversarial LoCoMo questions"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "仅在压缩 prompt 里加入六个形成维度（Question-Prompted Compression）相对直接压缩无一致增益（Judge 71.62→72.66，F1 反而 49.26→48.87），而把问题用作检索线索的 RIME 将三项指标同时提升到 81.82/51.46/44.22——收益来自检索时机而非 prompt 措辞",
+   "metric": "LLM-Judge / F1 / BLEU-1",
+   "value": "81.82 / 51.46 / 44.22",
+   "comparison": "Direct Compression 71.62 / 49.26 / 42.32 -> Question-Prompted 72.66 / 48.87 / 42.11 -> RIME 81.82 / 51.46 / 44.22",
+   "setting": "LoCoMo Qwen3-235B-A22B；三个形成策略共用同一选择性记忆使用阶段（Table 2 caption: All variants use the same selective memory-use procedure）",
+   "quote": "| Direct Compression | 71.62 | 49.26 | 42.32 |\n| Question-Prompted Compression | 72.66 | 48.87 | 42.11 |\n| RIME | 81.82 | 51.46 | 44.22 |",
+   "locator": "Table 2",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "Table 2 caption: (n=1,540)"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  },
+  {
+   "claim": "关闭选择性回源检索在两个 backbone 上都造成明显退化：Qwen3-235B-A22B 上 Judge 掉 10.59 分（81.82→71.23），GPT-5.6 Sol 上掉 3.32 分（84.29→80.97），说明形成期压缩确实遗漏了只有回源才能恢复的信息",
+   "metric": "LLM-Judge score drop",
+   "value": "10.59 / 3.32",
+   "comparison": "-10.59 points (Qwen3-235B-A22B) / -3.32 points (GPT-5.6 Sol)",
+   "setting": "LoCoMo；完整 RIME vs RIME w/o selective retrieval，两 backbone 各一组（Table 3 端点：Qwen 81.82→71.23，GPT-5.6 84.29→80.97）",
+   "quote": "Disabling selective source retrieval causes a substantial performance drop on both backbones, with the Judge score decreasing by 10.59 points on Qwen3-235B-A22B and 3.32 points on GPT-5.6 Sol.",
+   "locator": "§4.3",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "同一 1,540 题非对抗评测集（§4.1 设定，Table 3 与 Table 1 同集）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "消融端点（Qwen3-235B-A22B）：RIME w/o selective retrieval 的 Judge/F1/BLEU-1 为 71.23/44.73/38.41，完整 RIME 为 81.82/51.46/44.22",
+   "metric": "LLM-Judge / F1 / BLEU-1",
+   "value": "71.23",
+   "comparison": "81.82 -> 71.23",
+   "setting": "LoCoMo Qwen3-235B-A22B；RIME w/o selective retrieval vs 完整 RIME",
+   "quote": "| RIME w/o selective retrieval | 71.23 | 44.73 | 38.41 |\n| RIME | 81.82 | 51.46 | 44.22 |",
+   "locator": "Table 3",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "同一 1,540 题非对抗评测集（§4.1 设定）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "消融端点（GPT-5.6 Sol）：RIME w/o selective retrieval 的 Judge/F1/BLEU-1 为 80.97/54.27/46.96，完整 RIME 为 84.29/56.41/48.85",
+   "metric": "LLM-Judge / F1 / BLEU-1",
+   "value": "80.97",
+   "comparison": "84.29 -> 80.97",
+   "setting": "LoCoMo GPT-5.6 Sol；RIME w/o selective retrieval vs 完整 RIME",
+   "quote": "| RIME w/o selective retrieval | 80.97 | 54.27 | 46.96 |\n| RIME | 84.29 | 56.41 | 48.85 |",
+   "locator": "Table 3",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "同一 1,540 题非对抗评测集（§4.1 设定）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "回源触发频率随 backbone 不同差异很大：Qwen 16.8% vs GPT-5.6 6.0%，与两者关闭回源后的退化幅度排序一致",
+   "metric": "source retrieval trigger rate",
+   "value": "16.8%",
+   "comparison": "16.8% vs 6.0%",
+   "setting": "LoCoMo，两 backbone 各自全部查询；论文未给触发查询的绝对数量",
+   "quote": "Source retrieval is triggered more frequently with Qwen than with GPT-5.6 (16.8% vs. 6.0%), consistent with the larger degradation observed when this mechanism is removed.",
+   "locator": "§4.3",
+   "denominator": {
+    "n_total": "1540",
+    "n_valid": "1540",
+    "how_counted": "Source retrieval 触发条件=压缩记忆首答为 NONE（§3.2），触发率按 backbone 分别统计，分母为同一 §4 评测集的 1,540 非对抗 LoCoMo 问题（§4.1：'we use 1,540 questions from four categories ... excluding the adversarial category'；Table 2 caption：n=1,540）。论文未给触发查询的绝对数量；旁证一致：16.8% 与 6.0% 均可与整数计数相容（259/1540≈16.8%、92/1540≈6.0%），1,540 不与任何百分比矛盾"
+   },
+   "is_primary_result": false,
+   "_match": "exact"
+  }
+ ],
+ "limitations": [],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://anonymous.4open.science/r/RIME_official-4BC7",
+  "data": "LoCoMo（非对抗 1,540 题）",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "limitations_not_stated",
+  "no_security_experiments"
+ ]
+}

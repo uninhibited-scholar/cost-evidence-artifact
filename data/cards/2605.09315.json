@@ -1,0 +1,161 @@
+{
+  "arxiv_id": "2605.09315",
+  "title": "Do Self-Evolving Agents Forget? Capability Degradation and Preservation in Lifelong LLM Agent Adaptation",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "cross-task",
+    "carrier": "A mutable capability repository R_t updated sequentially over task distributions, instantiated four ways: an executable workflow (operator orchestration + prompt specifications, EvoAgentX on tau2-Bench), a bounded-capacity skill bank of reusable procedural reasoning templates (MemSkill-style on MATH, least-frequently-used eviction), trainable LoRA adapter parameters (STaR self-training on MedMCQA), and a persistent external memory bank of reusable strategy notes (Dynamic-Cheatsheet-style, insertion/revision/eviction)",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "reliability",
+    "statement": "Capability preservation under self-evolution: adapting the agent to a new task distribution must not degrade previously mastered capabilities. Capability erosion occurs when adaptation toward the current distribution increases retained risk on previously encountered distributions (L_<t(R_t) > L_<t(R_{t-1})); it manifests as retrospective capability decay, behavioral policy drift (workflows growing longer and more complex with unnecessary steps), and generalization erosion. Failure condition: unconstrained self-updates overwrite the repository structures that supported earlier behavior.",
+    "operationalized_as": "Retained old-task performance measured after evolution on new tasks, per channel: workflow - simple/complex task accuracy on tau2-Bench (Airline/Retail/Telecom) after complex-task self-evolution from a shared simple-task seed workflow, GPT-5.1 and GPT-5 nano optimizers; skill - per-domain MATH accuracy after Algebra -> Geometry -> Number Theory evolution plus retained skill usage; model - MedMCQA domain accuracy after Anatomy -> Biochemistry -> Dental sequential self-training (Qwen3-0.6B, Llama3.2-3B); memory - held-out old-task probe accuracy before vs after new-task memory updates across six domain-backbone settings (GPT-5 nano, GPT-4o mini), vanilla vs evidence-gated preservation (CPE)."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [
+      "No adversary: capability erosion emerges from unconstrained self-evolution itself - each update optimized solely for the new task distribution introduces destructive interference with structures supporting earlier tasks (curvature mechanism: naive adaptation increases retained loss whenever the update direction has nonzero projection onto a positive-curvature direction of the retained-loss Hessian)"
+    ],
+    "assumptions": [
+      "Self-evolution is modeled as sequential adaptation over task distributions D_1, ..., D_T with a general capability state R_t that may be a workflow, skill repository, parameter state, or memory store",
+      "The local analysis assumes R_{t-1} is a local minimizer of the retained loss with Hessian H_<t positive semidefinite and sufficiently small step size eta",
+      "Vanilla and CPE variants share identical evolution pipelines, budgets, and evaluation order; only the preservation mechanism differs"
+    ],
+    "not_covered": [
+      "Only straightforward constraint-based instantiations of preservation are explored; adaptive regularization schedules and jointly optimized multi-component preservation frameworks are future work (Appendix I)",
+      "Experiments use controlled sequential task-distribution shifts and representative frameworks; dynamic environments, multi-agent interaction, and continuously expanding capability spaces are not covered (Appendix I)",
+      "No adaptive adversary or attack process is modeled; the measured risk is self-inflicted drift, not an external attack"
+    ]
+  },
+  "intervention": {
+    "name": "Capability-Preserving Evolution (CPE): dimension-specific regularizers against destructive capability drift",
+    "mechanism_layer": "mixed",
+    "description": "A general stabilization principle constraining self-updates to acquire new capabilities while preserving capability support for prior tasks. Instantiations: (1) workflow - anchor behavioral signatures extracted from the seed workflow (core task objectives, output constraints, failure-avoidance behaviors) injected to discourage disruptive rewrites under the same optimizer and mutation budget; (2) skill/tool - capability-preserving consolidation before admission: candidates checked against preserved capability signatures, semantically related skills merged to release capacity, historically reusable high-utility skills protected from deletion; (3) model - Elastic Weight Consolidation style Fisher-based parameter-importance regularization discouraging destructive updates on parameters important to prior domains; (4) memory - evidence-gated preservation: entries accumulating repeated self-verified support are protected from destructive rewrite or eviction while low-evidence entries stay adaptable."
+  },
+  "controls": [
+      {"name": "Vanilla (unconstrained) self-evolution per channel", "purpose": "baseline"},
+      {"name": "Shared seed workflow / initial repository / evolution budget across variants", "purpose": "fair-comparison"},
+      {"name": "Pre-evolution memory state (old-domain probe accuracy before new-task updates)", "purpose": "baseline"}
+  ],
+  "results": [
+      {
+        "claim": "Workflow evolution: CPE improves retained simple-task performance from 41.8% to 52.8% under GPT-5.1 optimization while simultaneously achieving stronger complex-task adaptation (23.9% -> 33.4%) - mitigation does not trade against adaptation.",
+        "metric": "tau2-Bench accuracy (%) on simple vs complex tasks after complex-task self-evolution",
+        "value": "simple 41.8% -> 52.8%; complex 23.9% -> 33.4% (GPT-5.1)",
+        "comparison": "vanilla EvoAgentX vs CPE, same seed workflow and mutation budget (Table 1)",
+        "setting": "EvoAgentX on tau2-Bench (Airline/Retail/Telecom), GPT-5.1 and GPT-5 nano optimizer backbones, parallel vanilla/CPE branches from a shared simple-task seed workflow",
+        "quote": "For example, in workflow evolution, CPE improves retained simple-task performance from 41.8% to 52.8% under GPT-5.1 optimization while simultaneously achieving stronger complex-task adaptation.",
+        "locator": "Abstract (Table 1)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Accuracy averaged over the three tau2-Bench domains (Airline, Retail, Telecom) on the simple and complex task subsets after self-evolution; per-domain counts in Table 1"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Memory evolution erodes old-task retention even with frozen model parameters: across all six domain-backbone settings, average old-domain performance drops from 83.9% before new-task evolution to 81.6% after unconstrained memory updates; evidence-gated preservation (CPE) recovers retention to 83.3%.",
+        "metric": "held-out old-domain probe accuracy (%) before vs after new-task memory evolution",
+        "value": "83.9% -> 81.6% (vanilla); 83.3% (CPE)",
+        "comparison": "pre-evolution memory state vs vanilla vs CPE post-evolution states (Figure 6); retention gap 2.3% -> 0.7%",
+        "setting": "Dynamic-Cheatsheet-style external strategy repository, GPT-5 nano and GPT-4o mini solver backbones, base model fixed, six domain-backbone settings (Appendix B)",
+        "quote": "Vanilla new-task memory evolution increases old-task interference. Across all six domain–backbone settings, average old-domain performance drops from 83.9% before new-task evolution to 81.6% after unconstrained memory updates.",
+        "locator": "Appendix B (Figure 6)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Held-out old-task probe accuracy per domain-backbone setting, averaged over the six settings; probe counts per domain not stated in the main text"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Skill evolution erodes via repository overwrite: as the distribution shifts from Geometry to Number Theory, newly synthesized skills dominate bounded repository capacity and evict previously useful Geometry skills; CPE's merge-based consolidation preserves prior-skill utilization and stabilizes retained Algebra performance.",
+        "metric": "per-domain MATH accuracy (%) after sequential evolution + normalized retained skill usage",
+        "value": "final-domain accuracy e.g. Number Theory 85.4 -> 87.8 (GPT-5 nano); Algebra retention stabilized under CPE",
+        "comparison": "vanilla direct-admit + LRU eviction vs CPE merge-based consolidation (Table 2, Figure 3, Figure 4)",
+        "setting": "MemSkill-style framework on MATH, GPT-4o mini and GPT-5 nano designer/executor backbones, sequential Algebra -> Geometry -> Number Theory evolution under identical budgets",
+        "quote": "As the task distribution shifts from Geometry to Number Theory, newly synthesized skills gradually dominate retrieval frequency and bounded repository capacity, causing previously useful Geometry skills to become under-utilized and eventually evicted.",
+        "locator": "§4.2 (Table 2, Figure 4)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Per-domain MATH evaluation accuracy after the full evolution sequence; bounded skill-bank capacity and evaluation-set sizes are in Appendix D"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Model evolution erodes via parametric overwrite (catastrophic forgetting): CPE's Fisher-based regularization preserves more retained accuracy on all evaluated domains (Qwen3-0.6B Anatomy 29.4% -> 30.5%, Biochemistry 37.2% -> 38.4%, Dental 32.2% -> 33.0%).",
+        "metric": "MedMCQA per-domain accuracy (%) after sequential self-training",
+        "value": "Anatomy 29.4% -> 30.5%; Biochemistry 37.2% -> 38.4%; Dental 32.2% -> 33.0%",
+        "comparison": "vanilla STaR self-training vs CPE (EWC-style regularizer), identical evolution order and LoRA configurations (Table 3)",
+        "setting": "STaR self-training on MedMCQA, Qwen3-0.6B and Llama3.2-3B, sequential Anatomy -> Biochemistry -> Dental stages",
+        "quote": "On Qwen3-0.6B, retained accuracy improves from 29.4% to 30.5% on Anatomy, from 37.2% to 38.4% on Biochemistry, and from 32.2% to 33.0% on Dental, with similar trends on Llama3.2-3B.",
+        "locator": "§4.3 (Table 3)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Per-domain MedMCQA evaluation accuracy after the full three-stage evolution; evaluation-set sizes in Appendix E"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Cost reading (behavioral policy drift): unconstrained workflow evolution accumulates structural bloat - extra validation operators and detours that make the workflow over-defensive, rejecting slightly nonstandard but valid actions - and much longer workflow code; CPE substantially slows this structural growth.",
+        "metric": "workflow complexity (code length) and post-evolution retention-adaptation trade-off",
+        "value": "vanilla accumulates much longer workflow code; CPE slows expansion (Figure 2b)",
+        "comparison": "vanilla vs CPE from the same seed workflow (Figure 2a-c)",
+        "setting": "EvoAgentX complex-task self-evolution, per-domain workflow code length tracked during evolution (Figure 2)",
+        "quote": "This structural drift is reflected in Figure 2(b), where vanilla EvoAgentX accumulates much longer workflow code, while CPE substantially slows this expansion.",
+        "locator": "§4.1 (Figure 2)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Workflow code length measured during self-evolution on the complex Airline task subset; post-evolution workflows evaluated on simple and complex subsets"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Memory-channel summary: CPE's evidence-gated preservation reduces the average old-task retention gap caused by new-task memory updates from 2.3% to 0.7%.",
+        "metric": "average retention gap (percentage points) across six domain-backbone settings",
+        "value": "2.3% -> 0.7%",
+        "comparison": "vanilla vs CPE memory evolution (Figure 6)",
+        "setting": "Same memory-evolution setup as Appendix B, summarized in §4.4",
+        "quote": "CPE mitigates this interference through evidence-gated preservation, protecting historically reliable memories while keeping low-evidence entries adaptable, reducing the average retention gap from 2.3% to 0.7%.",
+        "locator": "§4.4 (Appendix B, Figure 6)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Gap between pre-evolution and post-evolution old-domain probe accuracy, averaged over the six domain-backbone settings"
+        },
+        "is_primary_result": false
+      }
+    ],
+  "limitations": [
+    {
+      "statement": "Only lightweight, domain-specific preservation instantiations are explored; adaptive schedules and jointly optimized multi-component frameworks are left open.",
+      "quote": "Accordingly, the preservation mechanisms used in this paper are intentionally lightweight and domain-specific, including anchor-based workflow regularization, repository consolidation, Fisher-style parameter constraints, and memory preservation heuristics. More sophisticated preservation strategies, adaptive regularization schedules, or jointly optimized multi-component preservation frameworks may further improve the stability–plasticity tradeoff in long-horizon self-evolving agents.",
+      "locator": "Appendix I"
+    },
+    {
+      "statement": "Experiments cover controlled sequential distribution shifts on representative frameworks; real-world open-ended evolution trajectories (dynamic environments, multi-agent interaction, expanding capability spaces) are future work.",
+      "quote": "In addition, our experiments focus on controlled sequential task-distribution shifts and representative self-evolution frameworks. Real-world autonomous agents may encounter substantially more complex and open-ended evolution trajectories, including dynamic environments, multi-agent interaction, and continuously expanding capability spaces. Extending CPE to such settings remains an important direction for future work.",
+      "locator": "Appendix I"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": "tau2-Bench (Airline/Retail/Telecom simple+complex subsets), MATH (Algebra/Geometry/Number Theory), MedMCQA (Anatomy/Biochemistry/Dental), Dynamic-Cheatsheet-style memory repository; backbones GPT-5.1, GPT-5 nano, GPT-4o mini, Qwen3-0.6B, Llama3.2-3B; frameworks EvoAgentX, MemSkill-style, STaR",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "formulation", "erosion_mechanism", "CPE_principle", "workflow_evolution", "skill_evolution", "model_evolution", "memory_evolution", "related_work", "conclusion", "appendix_B_memory", "appendix_I_limitations"],
+    "complete": false
+  },
+  "quality_flags": [
+    "no_adversary_capability_erosion_only",
+    "lightweight_domain_specific_cpe_instantiations",
+    "appendices_unread"
+  ]
+}

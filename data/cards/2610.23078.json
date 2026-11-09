@@ -1,0 +1,145 @@
+{
+ "arxiv_id": "2610.23078",
+ "title": "Cryptographically Secure Agent-to-Agent Communication in Multi-Agent Systems",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "shared_state",
+  "scope": "mixed",
+  "carrier": "Permissioned blockchain ledger holding DID documents, issuer identifiers, credential schemas, revocation registries and trust scores; verifiable credentials held off-chain by their agents; long-term ML-KEM public keys pre-distributed into and cached in DID documents. Lifecycle is explicitly discussed: issuance (VCs signed by a trusted issuer under JIT, task-scoped), update (key rotation triggered by monitoring, DID-document update transactions, periodic on-chain snapshots), retention (immutable, logged DID history), retrieval (agents discover each other's DIDs/permissions via the ledger; verifiers check credential status), revocation (smart-contract deactivation of DIDs and global credential revocation; VCs below the trust floor auto-revoked). DIDs/ledger are long-lived; JIT VCs are scoped to a single task runtime, hence scope=mixed.",
+  "operations_covered": ["formation", "update", "retention", "retrieval", "revocation"]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Targets confidentiality + integrity of inter-agent messages together with least-privilege authority over agent identities. Mutually authenticated, crypto-agile mTLS with hybrid post-quantum key establishment (AEAD payloads, e.g., AES-256-GCM) protects messages in transit against eavesdropping and MiTM; DID + task-scoped JIT verifiable credentials with on-chain revocation bound to least privilege restrict what an agent (possibly compromised) may do; signed CBOR/COSE envelopes preserve payload integrity across multi-hop exchanges; optional ZKPs verify that a delegated payload conforms to the committed task policy without disclosure. Stated failure conditions: a ZKP still validates hallucinated/malicious results that conform to policy (no semantic-correctness attestation); a revoked agent may connect during the block-time finality window; PQC implementations are immature. No property is empirically evaluated - the paper is a theoretical architecture.",
+  "operationalized_as": "None - no experiments, simulations or benchmarks. The property is argued via threat analysis (§3) and architectural specification (§4); the authors themselves call for empirical tests (COSE overhead, hybrid mTLS latency, KEMTLS-PDK gains, scalability) in §7-§8."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Impersonate agents and manipulate the orchestrator via typo-squatting and synonymously named agents/resources (shadowing attacks), engaging malicious agents or tools",
+   "Intercept, inject and modify inter-agent messages (MiTM); passively eavesdrop, including harvest-now-decrypt-later until a cryptographically relevant quantum computer breaks RSA/ECC",
+   "Direct and indirect prompt injection into documents/prompts the agent parses, leading to RAG and memory poisoning, data leaks, flooding attacks and resource waste",
+   "Rug pull: first supply a benign, approved agent/tool, then exhibit anomalous malicious behavior after updates, abusing acquired trust and permission levels",
+   "Compromise an agent and abuse its permissions; as a malicious intermediary, tamper with the Protobuf payload before forwarding to the next hop",
+   "Attack orchestration/reasoning to drive denial-of-wallet, cascading failures and privilege escalation (a user-facing agent delegating an unsafe action to a more privileged agent)",
+   "Quantum adversary substituting an agent's KEM key if ledger transactions registering DID documents are not themselves PQC-signed",
+   "Malicious developers / compromised MCP servers distributed through marketplaces"
+  ],
+  "assumptions": [
+   "Agents communicate over local or public networks, with sensitive information exchanged across differing trust levels; which measures apply is deployment-context dependent",
+   "A permissioned ledger is available as the root of trust for KEM keys; transactions registering and updating DID documents must themselves be secured by PQC signatures",
+   "Symmetric AEAD with 256-bit keys remains secure against HNDL; post-quantum schemes (ML-KEM, ML-DSA/FN-DSA, hybrid X25519MLKEM768 in TLS 1.3) hold",
+   "Trusted issuers attest agent attributes; SPIFFE/SVID-style infrastructure binds agent key pairs to identities (SVIDs ephemeral)",
+   "Runtime monitoring supplies telemetry so a trust-evaluation service can score agents and smart contracts can rotate keys or revoke VCs"
+  ],
+  "not_covered": [
+   "Semantic correctness of model outputs: hallucinated or malicious results still yield a valid ZKP as long as they conform to policy",
+   "Threats originating from the MCP servers themselves ('It will not address all of the challenges faced by MCP as some of them originate from the MCP servers themselves.')",
+   "Malicious-developer attacks despite marketplace cryptographic validation ('this solution is not enough')",
+   "The brief vulnerability window before ledger finality, during which a revoked agent may still establish connections",
+   "Implementation-level side channels and cryptanalytic breaks in young PQC (side-channel vulnerabilities in early ML-KEM implementations; SIKE and Rainbow breaks)",
+   "No empirical evaluation of any proposed mechanism"
+  ]
+ },
+ "intervention": {
+  "name": "Zero-trust cryptographic agent-to-agent communication architecture: DID/VC identity on a permissioned ledger + KEMTLS-PDK hybrid post-quantum mTLS + signed CBOR/COSE envelopes + ZKP intent verification + trust-threshold monitoring",
+  "mechanism_layer": "architecture",
+  "description": "A synthesized architecture (survey/position paper, not a built system): agent identities as DIDs with task-scoped JIT verifiable credentials anchored on a permissioned ledger with on-chain revocation; mutually authenticated crypto-agile mTLS with hybrid PQ/T key exchange, upgraded to KEMTLS-PDK by pre-distributing long-term ML-KEM public keys in DID documents to cut handshake overhead; immutable CBOR/COSE message envelopes for multi-hop payload integrity; optional zk-SNARK/zk-STARK proofs that delegated payloads satisfy the task-policy commitment; a trust-threshold layer scores observed behavior and gates task assignment, with smart-contract revocation below the global minimum."
+ },
+ "results": [
+  {
+   "claim": "Post-quantum signatures are far larger than classical ones - ML-DSA signatures span 2420-4627 bytes depending on security level vs 64 bytes for ECDSA - which can bloat certificate chains, exceed the initial TCP congestion window and add round trips/fragmentation, motivating hybrid key exchange, more compact signatures, certificate compression and KEMTLS-PDK.",
+   "metric": "signature_size",
+   "value": "ML-DSA 2420-4627 bytes vs ECDSA 64 bytes",
+   "comparison": "ML-DSA 2420-4627 bytes vs ECDSA 64 bytes",
+   "setting": "Cryptographic size comparison stated in §4.2 (sizes from the PQC literature, no experiment by the authors); concerns TLS handshake/certificate-chain transmission in agent-to-agent communication, particularly on constrained links such as drones and IoT devices.",
+   "quote": "Comparing ML-DSA signature, which is 2420 to 4627 bytes long depending on the security level, to 64 bytes long signatures for ECDSA, we can observe a huge difference in weight.",
+   "locator": "§4.2 Quantum-Proof Transport Security",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "KEMTLS-PDK authenticates the responder within the first round trip and eliminates certificate transmission; the paper proposes that MAS use it by pre-distributing long-term ML-KEM public keys into agents' DID documents during discovery, so the initiator encapsulates the shared secret to the responder's cached public key, offsetting post-quantum cost.",
+   "metric": "handshake_round_trips",
+   "value": "single flight: responder authenticated in first round trip; certificate transmission eliminated",
+   "comparison": "vs KEMTLS with online handshake using heavy PQC signatures, where post-quantum signatures remain in the certificate chain",
+   "setting": "Proposed transport design (§4.2, Figure 2): zero-trust MAS where agents discover each other's DIDs/permissions through a ledger-based registry; design adopted from the KEMTLS-PDK literature, no simulation run - the paper explicitly asks for empirical measurement of the latency reduction.",
+   "quote": "A secret to this key can be encapsulated in its first sent message, which authenticates the responder within the first round trip and eliminates the transmission of the certificate.",
+   "locator": "§4.2 Quantum-Proof Transport Security",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "For succinct proof systems (e.g., zk-SNARKs), proof verification is claimed to take milliseconds regardless of the size of the underlying computation, while proof generation remains computationally expensive - the asymmetry the ZKP intent-verification mechanism relies on.",
+   "metric": "zkp_verification_latency",
+   "value": "milliseconds (order of magnitude not specified)",
+   "comparison": null,
+   "setting": "General claim about succinct proof systems within the proposed architecture: the receiving agent verifies the delegated payload against the policy commitment embedded in the JIT VC; no benchmark performed by the authors.",
+   "quote": "for succinct proof systems, verification takes milliseconds regardless of the size of the underlying computation, whereas proof generation remains computationally expensive.",
+   "locator": "§4.3 Zero-Knowledge Proof Intention Verification",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "Design premise of the transport layer: symmetric AEAD ciphers with 256-bit keys (e.g., AES-256-GCM) remain secure against harvest-now-decrypt-later attacks, while asymmetric RSA/ECC does not survive a cryptographically relevant quantum computer - hence post-quantum / hybrid mTLS is treated as obligatory for agent-to-agent traffic.",
+   "metric": "HNDL_resistance",
+   "value": "symmetric AEAD with 256-bit keys secure; asymmetric (RSA/ECC) not",
+   "comparison": null,
+   "setting": "Stated cryptographic premise underpinning the post-quantum transport proposal for inter-agent messages that can carry valuable business information; not experimentally established in the paper.",
+   "quote": "While symmetric AEAD ciphers with 256-bit keys remain secure against harvest now decrypt later attacks (HNDL), asymmetric cryptography does not.",
+   "locator": "§4.2 Quantum-Proof Transport Security",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Primary bottleneck is the computational intensity of ZKP generation: compiling an agent's execution trace into an arithmetic circuit and generating the zk-SNARK could induce unacceptable delays when coupled with high LLM-inference latency.",
+   "quote": "The primary bottleneck lies in the computational intensity of generating ZKPs.",
+   "locator": "§7 Discussion"
+  },
+  {
+   "statement": "Envelope accumulation: as each agent appends its own proof, the COSE payload grows linearly with execution-chain depth and can strain edge-node memory; recursive ZKPs are proposed as future work to keep envelope size constant.",
+   "quote": "As each agent appends its own proof leading to a linear growth in payload size it can eventually strain the memory limits of edge nodes.",
+   "locator": "§7 Discussion"
+  },
+  {
+   "statement": "Blockchain-registry revocation leaves a brief vulnerability window tied to block-time finality, during which a revoked but previously authenticated agent might still establish a new connection.",
+   "quote": "Furthermore, the reliance on a blockchain registry to enforce dynamic least privilege introduces a brief vulnerability window tied to block-time finality, during which a revoked but previously authenticated agent might attempt to establish a new connection before the network consensus fully registers its revocation.",
+   "locator": "§7 Discussion"
+  },
+  {
+   "statement": "The study is primarily theoretical: no empirical tests or benchmarks exist (overhead of CBOR/COSE message-level protection, hybrid mTLS latency, whether KEMTLS-PDK resolves it, ZKP validity, scalability, dynamic environments).",
+   "quote": "Because this study is primarily theoretical, these topics require additional empirical tests and benchmarks, e.g., measuring the overhead of message-level protection with CBOR and COSE.",
+   "locator": "§8 Conclusion"
+  },
+  {
+   "statement": "ZKPs limit rather than prevent malicious or hallucinated outcomes: any result conforming to the committed policy yields a valid proof, and the proof does not attest the semantic correctness of the model's output.",
+   "quote": "Hallucinated or malicious results caused by threat actors will still yield a valid proof as long as it conforms to the policy.",
+   "locator": "§4.3 Zero-Knowledge Proof Intention Verification"
+  },
+  {
+   "statement": "PQC algorithms/implementations are young and under-cryptanalyzed (SIKE and Rainbow breaks, side channels in early ML-KEM), so exclusive reliance is premature - hybrid PQ/T first; additionally, current zk-SNARKs rely on non-quantum-resistant elliptic-curve pairings (zk-STARKs suggested instead).",
+   "quote": "For now, they are too immature to just start exclusively relying on them.",
+   "locator": "§4.2 Quantum-Proof Transport Security"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "figures"],
+  "complete": false
+ },
+ "quality_flags": [
+  "background_paper",
+  "figures_present_as_captions_only_in_corpus",
+  "no_appendix_in_corpus",
+  "no_code_or_data_release_stated",
+  "no_safety_experiments",
+  "persistent_state_is_identity_ledger_infrastructure_not_agent_memory"
+ ]
+}

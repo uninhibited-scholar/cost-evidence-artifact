@@ -1,0 +1,318 @@
+{
+ "arxiv_id": "2609.05339",
+ "title": "Does Your Agent’s Memory Survive a Model Upgrade? A Controlled Study of Memory Portability",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-session",
+  "carrier": "四种记忆格式：LC-RAW（完整原始历史，writer-free）；RAG（事件分块≈512 字符 + bge-large-en v1.0/v1.5 1024 维向量索引，cosine top-8）；NOTES（模型压缩的自然语言笔记，≤128 KiB 字节预算）；KG-fixed（固定 schema 的 subject–predicate–object 知识图，schema 由工作负载事件字段预先导出）",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "availability",
+  "statement": "无对抗者；论文度量的是记忆在模型/嵌入升级后的可用性与信息保真：“Upgrading an agent should not make it forget”——新模型应能继续使用既有记忆库且性能损失可控、可修复；失效模式是无报错的静默性能下降（嵌入空间不兼容、检索退化、笔记压缩丢信息、修复无源可依）。对综述的作用：为“记忆保留/修复/来源保留”机制与“升级导致记忆静默失效”风险提供受控背景证据（必要背景论文，非对抗安全实验）。",
+  "operationalized_as": "48 条合成历史×160 题的 exact-match accuracy；RPAS_s(A→B)=(Perf(s,W=A,R=B)−chance)/(N_s(B)−chance)（仅当 own-store ≥ chance+0.20 时使用）；CTR(X)，X∈{0.90,0.95,0.99} 的最便宜修复方法（tokens/GPU-hours/$）"
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "升级后新模型继承旧记忆库：A→B 迁移中 A 仍是既有记忆的写者、B 是新读者（Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M，确定性读、低温写+固定种子）",
+   "嵌入迁移限于 bge-large-en v1.0→v1.5（同为 1024 维，新旧向量可共存于同一索引）",
+   "48 条合成历史使用随机化答案码：预训练无法作答，chance≈0；精确匹配评分、无 LLM 裁判",
+   "每条历史 160 题且完整放入两个上下文窗口（至少 4,096 token 余量）",
+   "资源受控：两写者同 token 配额、NOTES ≤128 KiB、raw-retained 与 store-only 修复预算对齐"
+  ],
+  "not_covered": [
+   "任何对抗性行为者：无投毒、提示注入、记忆篡改/删除攻击，也未评测防御机制",
+   "仅一个跨家族迁移对（两个 7–8B 开源模型）与一对嵌入模型；不构成对模型升级总体的抽样",
+   "脚本化客观工作负载；真实对话、主观任务、更长历史未测",
+   "单阶段稠密检索（无重排/查询改写/混合检索）之外的检索系统",
+   "修复结果依赖修复模型能力与资源限制（Qwen 可用原始历史、Llama 不行），非能力干净对比"
+  ]
+ },
+ "intervention": {
+  "name": null,
+  "mechanism_layer": "architecture",
+  "description": "不提出已实现的防御机制，而是受控测量研究 + 迁移设计手册：(1) 升级嵌入模型时全量重嵌入、新旧向量空间分库隔离并按已知索引版本路由（§4.3，架构层）；(2) 按迁移方向分别测试（§4.2）；(3) 政策允许时保留加密、限权的原始源历史并预先测试真实修复模型（§4.4）；(4) 记录记忆构建的模型/提示/schema/嵌入/分块配置以便归因（§5，出处层）。诊断干预（提供正确存储条目/原始事件）只用于定位损失阶段（§4.5/Appendix D），非防御。"
+ },
+ "controls": [
+  {
+   "name": "LC-RAW 与 RAG 无写者对照（writer-free controls）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "own-store vs inherited-store 同读者对比（分离迁移损失与读者能力）",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "ideal routing 上界（理想路由器，不可部署）",
+   "purpose": "positive-control"
+  },
+  {
+   "name": "修复对照：与新模型同条件新建的 fresh memory 比较",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "在 Llama-3.1-8B-Instruct ↔ Qwen2.5-7B-Instruct-1M 双向写者更换下，NOTES 的准确率影响强且方向不对称：Llama 写的笔记使 Qwen 读者准确率下降 13.28 pp，Qwen 写的笔记使 Llama 读者上升 9.91 pp；对称化平均会掩盖方向性失效。",
+   "metric": "writer-swap accuracy Δ (pp)",
+   "value": "-13.28 pp",
+   "comparison": "+9.91 (Qwen-written notes read by Llama) vs -13.28 (Llama-written notes read by Qwen)",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；NOTES 存储 ≤128 KiB；写者→读者跨家族迁移",
+   "quote": "Conversely, compressed NOTES exhibit high model coupling, with accuracy shifting asymmetrically by\n+\n9.91\n+9.91\nor\n−\n13.28\n-13.28\npercentage points depending on the specific migration direction.",
+   "locator": "Abstract",
+   "denominator": {
+    "n_total": "48 histories × 160 questions",
+    "n_valid": "48 histories × 160 questions",
+    "how_counted": "§3.1：每条历史 160 题 exact scoring；Table 3 准确率为跨 48 条历史的均值（± 为 95% CI 半宽）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "Table 3 方向性数值：Qwen 读者读 Llama 写的 NOTES，inherited 0.3391 vs own 0.4719（Δ −13.28 pp）；Llama 读者读 Qwen 写的 NOTES，inherited 0.4753 vs own 0.3762（Δ +9.91 pp）；KG-fixed 对照行仅 −0.11/+0.02 pp。",
+   "metric": "accuracy (own-store vs inherited-store)",
+   "value": "0.3391 vs 0.4719",
+   "comparison": "Qwen reader: inherited 0.3391 vs own 0.4719; Llama reader: inherited 0.4753 vs own 0.3762",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；NOTES 存储 ≤128 KiB；± 为跨历史 95% CI 半宽",
+   "quote": "NOTES\nLlama\n0.3762\n±\n0.0164\n\\,{\\scriptstyle\\pm\\,0.0164}\n0.4753\n±\n0.0214\n\\,{\\scriptstyle\\pm\\,0.0214}\n+\n9.91\n+9.91\nNOTES\nQwen\n0.4719\n±\n0.0187\n\\,{\\scriptstyle\\pm\\,0.0187}\n0.3391\n±\n0.0164\n\\,{\\scriptstyle\\pm\\,0.0164}\n−\n13.28\n-13.28",
+   "locator": "§4.2 Table 3",
+   "denominator": {
+    "n_total": "48 histories × 160 questions",
+    "n_valid": "48 histories × 160 questions",
+    "how_counted": "§3.1：每条历史 160 题 exact scoring；Table 3 准确率为跨 48 条历史的均值（± 为 95% CI 半宽）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "固定 schema 的 KG-fixed 写者更换后几乎无损（+0.0004±0.0020），own-store 准确率 0.845–0.988；作者限定该结论只适用于按工作负载事件字段预先导出、未按准确率调优的 schema 与该合成任务。",
+   "metric": "writer-swap accuracy Δ",
+   "value": "+0.0004±0.0020",
+   "comparison": "own-store accuracy 0.845–0.988 across both readers",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；KG-fixed schema 由工作负载事件字段预先导出，未按准确率调优",
+   "quote": "KG-fixed changes by only\n+\n0.0004\n±\n0.0020\n+0.0004\\pm 0.0020\nwhen the writer changes, while own-store accuracy remains high (0.845–0.988).",
+   "locator": "§4.2",
+   "denominator": {
+    "n_total": "48 histories × 160 questions",
+    "n_valid": "48 histories × 160 questions",
+    "how_counted": "§3.1：每条历史 160 题 exact scoring；Table 3 准确率为跨 48 条历史的均值（± 为 95% CI 半宽）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "bge-large-en v1.0→v1.5 升级时：全量重嵌入 +11.90 pp，50/50 混合索引仅 +4.96 pp（损失近 60% 潜在增益，理想路由上界 +17.03 pp）；两代向量同为 1024 维，混合索引无维度报错、静默劣化。",
+   "metric": "accuracy gain vs old index (pp)",
+   "value": "+4.96 pp",
+   "comparison": "+4.96 (50/50 mixed index) vs +11.90 (full re-embedding)",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；RAG：事件分块≈512 字符、bge-large-en v1.0→v1.5（均 1024 维）、cosine top-8、无重排/混合检索",
+   "quote": "When we fully re-embed every chunk with the newer v1.5 model, accuracy jumps by 11.90 points compared to the old v1.0 index. However, a 50/50 mixed index captures an improvement of only 4.96 points, hemorrhaging nearly 60% of the potential upgrade gain.",
+   "locator": "§4.3",
+   "denominator": {
+    "n_total": "48 histories × 2 readers",
+    "n_valid": "48 histories × 2 readers",
+    "how_counted": "Table 4 表题：across 48 histories and two readers；gain 为相对旧索引的准确率差（pp）"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "即使在模型升级之前，受测单阶段稠密检索也只在大约 60% 的查询中取回必要证据（LC-RAW 0.712–0.911 vs RAG 0.535–0.565）；诊断分解将 RAG 总缺口的 81% 归因于该检索未命中。",
+   "metric": "retrieval hit rate",
+   "value": "60%",
+   "comparison": "RAG 0.535–0.565 vs LC-RAW 0.712–0.911",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；单阶段稠密检索（无重排/查询改写/词法检索）",
+   "quote": "While our raw history baseline (LC-RAW) achieves accuracies between 0.712 and 0.911, the RAG setup reaches only 0.535 to 0.565. The search mechanism successfully surfaces the necessary evidence only about 60% of the time, regardless of the reader model.",
+   "locator": "§4.3",
+   "denominator": {
+    "n_total": "48 条历史 × 160 题的查询集（每个读者模型；§3.1：\"Each of the 48 evaluation histories has 160 questions\"）",
+    "n_valid": "48 条历史 × 160 题每个读者",
+    "how_counted": "§4.3：单阶段稠密检索（事件分块、cosine top-8、无重排/词法检索）\"surfaces the necessary evidence only about 60% of the time, regardless of the reader model\"——按查询计的证据取回率，其补集即 \"40% miss rate\"（§4.3/§4.6）。Table 4 的 recall@k 列（cosine top-8，across 48 histories and two readers）为最接近的表格指标：old index 0.4846、full re-embed 0.5998。原文以约数表述（\"about 60%\"），逐查询命中数未印出。"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "诊断分解（E4）：NOTES 缺口约 80% 来自记忆构建（写）阶段（0.467±0.014 / 0.584±0.013），notes 内检索仅 6%；风格改写干预无恢复——问题是内容缺失而非风格不熟。",
+   "metric": "loss share: store construction",
+   "value": "80%",
+   "comparison": "construction 0.467±0.014 (80%) vs retrieval 0.036±0.009 (6%); total deficit 0.584±0.013",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；Migration Test 4（E4）诊断干预：stored-evidence 与 raw-evidence 条件；ceiling=1",
+   "quote": "Under our diagnostic decomposition, the writing stage contributes\n0.467\n±\n0.014\n0.467\\pm 0.014\nof the\n0.584\n±\n0.013\n0.584\\pm 0.013\npooled mean deficit, or roughly 80% of the total. Retrieval within the notes contributes only\n0.036\n±\n0.009\n0.036\\pm 0.009\n, a descriptive share of 6%.",
+   "locator": "§4.5",
+   "denominator": {
+    "n_total": "48",
+    "n_valid": "48",
+    "how_counted": "Appendix D/Table 6：在 matched cell 内做差→先平均为 48 个历史级分量，百分比=合并均值之比 L̄/T̄；± 为跨 48 历史的 95% t 区间半宽"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "诊断分解（E4）：RAG 缺口 81% 来自检索阶段（0.364±0.012 / 0.450±0.012），构建损失仅 0.005±0.005；直接供给正确分块后准确率升至 0.88–0.95，说明存储分块本身完好。",
+   "metric": "loss share: retrieval",
+   "value": "81%",
+   "comparison": "retrieval 0.364±0.012 (81%) vs construction 0.005±0.005; total deficit 0.450±0.012",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；Migration Test 4（E4）诊断干预：stored-evidence 条件；ceiling=1",
+   "quote": "Supplying the correct stored chunks raises accuracy from 0.53–0.56 to 0.88–0.95. Under the decomposition, retrieval contributes\n0.364\n±\n0.012\n0.364\\pm 0.012\nof the\n0.450\n±\n0.012\n0.450\\pm 0.012\npooled mean deficit; the descriptive share is 81%. Construction loss is only\n0.005\n±\n0.005\n0.005\\pm 0.005",
+   "locator": "Appendix D",
+   "denominator": {
+    "n_total": "48",
+    "n_valid": "48",
+    "how_counted": "Appendix D/Table 6：在 matched cell 内做差→先平均为 48 个历史级分量，百分比=合并均值之比 L̄/T̄；± 为跨 48 历史的 95% t 区间半宽"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "raw-retained 修复只在修复模型能利用原始历史时有效：Qwen 修复者在 90% 目标下恢复 34/48 条历史（95%: 28/48，99%: 22/48；中位成本 $0.76/$0.75/$0.75），Llama 修复者因输出 token 上限 0/48。",
+   "metric": "repair success (histories reaching target)",
+   "value": "34/48",
+   "comparison": "90% target: 34/48; 95%: 28/48; 99%: 22/48",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；Migration Test 3（E6）：旧写者 Llama、新读者/修复者 Qwen；3 个等资源预算档",
+   "quote": "With Qwen as the repair model, raw-history reconstruction reaches 90% of own-store performance for 34 of 48 histories, 95% for 28, and 99% for 22.",
+   "locator": "Appendix E",
+   "denominator": {
+    "n_total": "48",
+    "n_valid": "48",
+    "how_counted": "Table 7/Appendix E：n/48 = 在任一测试预算档位达到该目标的 histories 数；中位成本仅计成功子集"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "store-only 重写 NOTES 在两个迁移方向、三个目标（90/95/99%）与所有预算档位上均为 0/48——笔记已省略的证据无法靠再次重写恢复（Table 7）。",
+   "metric": "repair success (histories reaching target)",
+   "value": "0/48",
+   "comparison": null,
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；Migration Test 3（E6）：NOTES store-only 重写，无原始历史；两方向 × 3 目标 × 3 预算档",
+   "quote": "NOTES store-only\n0/48\n—\n0/48\n—\n0/48",
+   "locator": "Table 7",
+   "denominator": {
+    "n_total": "48",
+    "n_valid": "48",
+    "how_counted": "Table 7/Appendix E：n/48 = 在任一测试预算档位达到该目标的 histories 数；中位成本仅计成功子集"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "预注册对比 H2 成立：50/50 混合嵌入索引比全量重嵌入差 6.95 pp（超过 5 pp 行动阈值，Holm 校正 p=1.3×10⁻⁶）；H1 与 H4a 的对称化对比为负值、均不成立（Table 2）。",
+   "metric": "planned contrast C_H2 (pp)",
+   "value": "+6.95 pp",
+   "comparison": "estimate +6.95 pp vs 5 pp threshold (margin +1.95 pp); Holm p = 1.3×10−6",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；预注册四对比（signed tag hypothesis-lock-v1）；单样本单侧 t 检验，Holm 校正 α=0.05",
+   "quote": "Test\nOne-sided alternative\nEstimate\nMargin vs. 5 pp\nHolm\np\np\nDecision\nH1\nC\nH1\n>\n5\nC_{\\mathrm{H1}}>5\n−\n1.47\n-1.47\npp\n−\n6.47\n-6.47\npp\n1.0\n1.0\nNot supported\nH2\nC\nH2\n>\n5\nC_{\\mathrm{H2}}>5\n+\n6.95\n+6.95\npp\n+\n1.95\n+1.95\npp\n1.3\n×\n10\n−\n6\n1.3\\times 10^{-6}\nSupported",
+   "locator": "§4.1 Table 2",
+   "denominator": {
+    "n_total": "48",
+    "n_valid": "48",
+    "how_counted": "每条历史一个独立数据点（§3.5；方向/读者/预算档在历史内先平均）；Table 2 表题 across 48 histories"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "预注册对比 H7a 成立：同预算下 raw-history 修复比 store-only 修复高 8.90 pp（超过 5 pp 阈值，Holm p=3.9×10⁻⁷，但不超过 10 pp）；bootstrap（10,000 次重采样）下界 7.9 pp，两法结论一致。",
+   "metric": "planned contrast C_H7a (pp)",
+   "value": "+8.90 pp",
+   "comparison": "estimate +8.90 pp vs 5 pp threshold (margin +3.90 pp); Holm p = 3.9×10−7",
+   "setting": "48 条合成历史×160 题（随机化答案码，chance≈0）；本地固定版本 Llama-3.1-8B-Instruct 与 Qwen2.5-7B-Instruct-1M；exact-match 评分、无 LLM 裁判；预注册四对比（signed tag hypothesis-lock-v1）；单样本单侧 t 检验，Holm 校正 α=0.05",
+   "quote": "Not supported\nH7a\nC\nH7a\n>\n5\nC_{\\mathrm{H7a}}>5\n+\n8.90\n+8.90\npp\n+\n3.90\n+3.90\npp\n3.9\n×\n10\n−\n7\n3.9\\times 10^{-7}\nSupported",
+   "locator": "§4.1 Table 2",
+   "denominator": {
+    "n_total": "48",
+    "n_valid": "48",
+    "how_counted": "每条历史一个独立数据点（§3.5；方向/读者/预算档在历史内先平均）；Table 2 表题 across 48 histories"
+   },
+   "is_primary_result": true,
+   "_match": "exact"
+  },
+  {
+   "claim": "跨模型迁移中，修复/迁移操作本身有可计量的金钱成本：原始历史修复的中位成本约 $0.76/条历史，RAG 重嵌入恢复约 $0.013/例。",
+   "metric": "median repair cost (USD)",
+   "value": "$0.76 per history; $0.013 per case",
+   "comparison": "raw-history repair vs RAG re-embedding vs KG rebuilding (near-zero marginal cost)",
+   "setting": "Migration Test 3 / E6：48 条合成历史，90% 自库性能阈值；Qwen/Llama 双修复模型；RAG 96 例重嵌入；KG-fixed 重建 91–96/96",
+   "quote": "raw history helps only when the repair model can use it: Qwen reconstructs 34 of 48 histories at the 90% threshold for a median cost of roughly $0.76, whereas Llama reconstructs none because every attempt reaches the output-token limit before finishing. A larger output allowance might change this result, and the repair model and migration direction also change together, so this is not a clean comparison of model capability. Finally, repairs to structured data are cheaper and more reliable: RAG re-embedding recovers all 96 cases for about $0.013 each, while rebuilding KG-fixed records into the shared schema recovers 91–96 of 96 at near-zero additional cost.",
+   "locator": "Section 4.4 (Migration Test 3, run E6)"
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "KG-fixed 的高可移植性只在该合成工作负载的 schema 下成立，不表明知识图普遍优于自然语言笔记。",
+   "quote": "For memory formats, the KG-fixed results demonstrate high portability in this workload but do not show that knowledge graphs universally outperform natural-language notes. Deployment performance will depend on how well the schema represents the target task and how the store is read.",
+   "locator": "§4.6"
+  },
+  {
+   "statement": "检索与修复数值反映特定管线选择：40% 检索未命中与 50/50 混合索引劣化只适用于单阶段稠密检索在两个同维嵌入空间间的迁移。",
+   "quote": "The 40% retrieval miss rate and the degradation from a 50/50 mixed index apply to a single-stage dense retriever migrating between two same-dimensional embedding spaces; other retrieval systems and migration plans may produce different retention levels.",
+   "locator": "§4.6"
+  },
+  {
+   "statement": "保留原始历史只在单一迁移方向下实现恢复；重建依赖修复模型的能力与资源限制。",
+   "quote": "Retained raw history enabled recovery in only one migration direction, showing that reconstruction also depends on the capabilities and resource limits of the repair model.",
+   "locator": "§4.6"
+  },
+  {
+   "statement": "诊断干预不构成完整因果分解：风格改写干预不完整，KG-fixed 因孤立条目注入不符合其正常读取模式被排除。",
+   "quote": "The diagnostic interventions identify where supplying better evidence improves performance, but they do not establish a complete causal account. The style-rewriting intervention was incomplete, and KG-fixed was excluded because isolated-item injection did not reproduce its normal access pattern.",
+   "locator": "§4.6"
+  },
+  {
+   "statement": "仅测两个规模相近的模型与脚本化客观工作负载（历史均完整放入两个上下文窗口）；更大模型、主观对话与更长历史可能带来不同挑战。",
+   "quote": "We also tested only two similarly sized models on a scripted, objective workload whose histories fit comfortably within both context windows. Larger models, subjective natural conversations, and much longer histories may introduce different portability challenges.",
+   "locator": "§4.6"
+  },
+  {
+   "statement": "签名研究计划只是内部分析锁而非完整预注册；计划的 bootstrap 在看到 t 检验结果后才运行（两法结论相同）。",
+   "quote": "Finally, the signed study plan served as an internal analysis lock rather than a full preregistration. We ran the planned bootstrap after the initial\nt\nt\ntests, although both analyses produced the same decisions.",
+   "locator": "§4.6"
+  },
+  {
+   "statement": "协议偏差：无 NOTES 策略达到 90% 证据覆盖率门槛，最低门槛降为 60% 并记录变更。",
+   "quote": "No tested NOTES policy reached 90% evidence coverage, so we lowered the minimum gate to 60% and recorded the change.",
+   "locator": "Appendix B"
+  },
+  {
+   "statement": "20-probe 快速迁移检查的 MAE≈0.10，远大于 KG-fixed 的 0.0004 量级效应，只能排序候选迁移、不能用于最终批准。",
+   "quote": "Most importantly, MAE is about 0.10, which is much larger than small effects such as the 0.0004 KG-fixed gap.",
+   "locator": "Appendix C"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "评估代码、历史、存储、签名研究计划与运行记录 “available upon request”（§6 Conclusion）",
+  "data": "48 条合成历史与存储随代码按需提供（§6）",
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "version_assumed_v1",
+  "no_adversary_threat_model_results_are_memory_portability_reliability_measurements",
+  "corpus_numbers_duplicated_by_latex_rendering_quotes_copied_verbatim",
+  "figures_present_as_captions_only_in_corpus",
+  "必要背景论文：results 为记忆可用性/可移植性受控测量，非对抗安全实验；按原文抽取非空"
+ ]
+}

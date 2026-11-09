@@ -1,0 +1,607 @@
+work_id,E1,E2,E3,reason_code,evidence,confidence
+arxiv:1909.07528,0,0,0,no_object,standard reinforcement learning algorithms at scale,high
+arxiv:2006.11438,0,0,0,no_object,Multi-agent reinforcement learning (MARL) requires coordination,high
+arxiv:2010.13110,0,0,0,no_object,directional sensor networks (DSNs),high
+arxiv:2302.01560,1,0,0,no_defense,task planning for multi-task embodied agents in open-world environments,high
+arxiv:2303.11366,1,1,0,no_defense,maintain their own reflective text in an episodic memory buffer,high
+arxiv:2303.17760,1,0,0,no_defense,we propose a novel communicative agent framework named role-playing,high
+arxiv:2305.16291,1,1,0,no_defense,an ever-growing skill library of executable code for storing and retrieving complex behaviors,high
+arxiv:2306.01337,1,0,0,no_defense,LLM agent and a user proxy agent which is responsible for tool execution,high
+arxiv:2306.03314,1,0,0,no_defense,"addresses limitations and challenges such as looping issues, security risks",high
+arxiv:2306.16092,1,0,0,no_defense,multi-agent legal assistant,high
+arxiv:2307.02485,1,0,0,no_defense,multi-agent cooperation problems with decentralized control,high
+arxiv:2308.03688,1,0,0,no_defense,a multi-dimensional benchmark that consists of 8 distinct environments to assess LLM-as-Agent,high
+arxiv:2308.04026,1,0,0,no_defense,"memory, planning and tool-use systems",high
+arxiv:2308.05960,1,0,0,no_defense,we propose a new strategy to orchestrate multiple LAAs,high
+arxiv:2308.10144,1,1,0,no_defense,the agent recalls its extracted insights and past experiences to make informed decisions,high
+arxiv:2308.10848,1,0,0,no_defense,multi-agent framework \framework that can collaboratively and dynamically adjust its composition,high
+arxiv:2308.11432,1,0,0,no_defense,we present a comprehensive survey of these studies,high
+arxiv:2309.07864,1,0,0,no_defense,a comprehensive survey on LLM-based agents,high
+arxiv:2309.10895,1,0,0,no_defense,LLM agents should be assessed for their performance on real-world clinical tasks,high
+arxiv:2310.02124,1,0,0,no_defense,optimize efficiency (using fewer API tokens),high
+arxiv:2310.03903,1,0,0,no_defense,,low
+arxiv:2310.05746,1,0,0,no_defense,"simulates auctions, a setting chosen for being highly unpredictable",high
+arxiv:2311.14455,1,1,0,no_defense,"an attacker poisons the RLHF training data to embed a ""jailbreak backdoor""",high
+arxiv:2401.02851,1,0,0,no_defense,function as autonomous agents in a simulated tertiary care medical center,medium
+arxiv:2401.03428,1,1,0,no_defense,This paper surveys current research to provide an in-depth overview,high
+arxiv:2401.05459,1,1,0,no_defense,"discuss several key challenges to achieve intelligent, efficient and secure Personal LLM Agents",high
+arxiv:2401.08315,1,0,0,no_defense,enhancing efficiency and time management in recruitment processes,high
+arxiv:2401.10019,1,0,1,no_persistent_state,benchmarking the behavioral safety of LLM agents,medium
+arxiv:2402.01030,1,0,0,no_defense,execute code actions and dynamically revise prior actions,high
+arxiv:2402.01680,1,0,0,no_defense,we present this survey to offer an in-depth discussion,high
+arxiv:2402.02716,1,0,0,no_defense,LLMs as planning modules of autonomous agents,high
+arxiv:2402.03610,1,1,0,no_defense,dynamically leverage past experiences corresponding to the current situation,high
+arxiv:2402.14744,1,0,0,no_defense,a novel LLM agent framework that accounts for individual activity patterns,high
+arxiv:2402.15538,1,0,0,no_defense,"a lightweight, user-friendly platform for innovating LLM agent reasoning",high
+arxiv:2402.17753,1,1,0,no_defense,a comprehensive evaluation benchmark to measure long-term memory,high
+arxiv:2403.02691,1,0,0,no_defense,a benchmark designed to assess the vulnerability of tool-integrated LLM agents to IPI attacks,medium
+arxiv:2403.03218,1,1,1,eligible,as a benchmark for unlearning methods to remove such hazardous knowledge,medium
+arxiv:2403.17134,1,0,0,no_defense,tools that are useful for program repair,high
+arxiv:2404.04442,1,0,0,no_defense,,low
+arxiv:2404.04834,1,0,0,no_defense,we conduct a systematic review of recent primary studies to map the current landscape,high
+arxiv:2404.08144,1,0,0,no_defense,LLM agents can autonomously exploit one-day vulnerabilities,high
+arxiv:2404.16698,1,0,0,no_defense,study strategic interactions and cooperative decision-making in LLMs,medium
+arxiv:2405.02957,1,1,0,no_defense,evolved doctor agents outperform state-of-the-art medical agent methods,high
+arxiv:2405.06682,1,0,0,no_defense,attempted to re-answer the same questions,high
+arxiv:2405.14751,1,1,0,no_defense,"leveraging LLMs, memory, tools, and interactions with experts",high
+arxiv:2406.01637,1,0,0,no_defense,"teams of LLM agents can exploit real-world, zero-day vulnerabilities",high
+arxiv:2406.02630,1,0,0,no_defense,safeguarding AI agents,high
+arxiv:2406.04692,1,0,0,no_defense,construct a layered MoA architecture wherein each layer comprises multiple LLM agents,high
+arxiv:2406.06613,1,0,0,no_defense,a cross-domain benchmark for evaluating strategic reasoning abilities of LLM agents,high
+arxiv:2406.09187,1,1,1,eligible,memory module storing experiences from previous tasks,high
+arxiv:2406.13352,1,0,1,no_persistent_state,agents that execute tools over untrusted data,medium
+arxiv:2407.01231,1,0,0,no_defense,a novel benchmark designed to systematically evaluate LLM agents as temporal forecasters,high
+arxiv:2407.01603,1,0,0,no_defense,"This review covers the recent history, current capabilities, and design",high
+arxiv:2407.04363,1,1,0,no_defense,constructs and updates a memory graph that integrates semantic and episodic memories,high
+arxiv:2407.08516,1,0,0,no_defense,aimed at further enhancing LAA capabilities,high
+arxiv:2407.12784,1,1,0,no_defense,a novel red teaming approach AgentPoison,high
+arxiv:2407.20859,1,0,1,no_persistent_state,misleading the agent into executing repetitive or irrelevant actions,medium
+arxiv:2410.02644,1,1,1,eligible,11 corresponding defenses across 13 LLM backbones,high
+arxiv:2410.05295,1,1,0,no_defense,automatically discover as many jailbreak strategies as possible from scratch,high
+arxiv:2410.09024,1,0,1,no_persistent_state,110 explicitly malicious agent tasks,medium
+arxiv:2410.09114,1,0,0,no_defense,rigorously assess the real-world offensive capabilities of LLM agents,high
+arxiv:2410.10398,1,0,1,no_persistent_state,fail to capture the longitudinal dynamics of decision-making,medium
+arxiv:2410.14931,1,1,1,eligible,"identifying, visualizing, and managing private information within memories",high
+arxiv:2410.18792,1,0,0,no_defense,a new benchmark specifically designed to evaluate the LLM-based approach in geospatial tasks,high
+arxiv:2411.07781,1,0,0,no_defense,safety evaluations for diverse code agents,high
+arxiv:2411.10109,1,1,0,no_defense,build attitudinal and behavioral simulations,medium
+arxiv:2411.13768,1,0,0,no_defense,"embed evaluation as a continuous, governing function rather than a terminal checkpoint",medium
+arxiv:2412.01778,1,0,0,no_defense,capable of autonomous penetration testing,medium
+arxiv:2412.14470,1,0,1,no_persistent_state,designed to evaluate the safety of LLM agents,high
+arxiv:2412.17259,1,0,0,no_defense,a comprehensive benchmark specifically designed to evaluate LLM Agents,high
+arxiv:2412.18123,0,0,1,no_object,"a defense framework that is adaptable, efficient, interpretable",high
+arxiv:2501.04227,1,0,0,no_defense,autonomous LLM-based framework capable of completing the entire research process,high
+arxiv:2502.01714,1,1,1,eligible,active dynamic moderation is essential,medium
+arxiv:2502.05439,1,0,0,no_defense,agentic crews with human-in-the-loop module that can effectively collaborate,medium
+arxiv:2502.06975,1,1,0,no_defense,an episodic memory framework for LLM agents,high
+arxiv:2502.10420,1,0,0,no_defense,scaffolding such as external memory and tools,medium
+arxiv:2502.12110,1,1,0,no_defense,,low
+arxiv:2502.13172,1,1,0,no_defense,investigate the vulnerability of LLM agents to our proposed Memory EXTRaction Attack (MEXTRA),high
+arxiv:2503.09648,1,1,0,no_defense,"summarizing newly emerged attacks, defenses, and evaluation methods",high
+arxiv:2503.21460,1,0,0,no_defense,This survey systematically deconstructs LLM agent systems through a methodology-centered taxonomy,high
+arxiv:2504.01990,1,1,1,eligible,we address the critical imperative of building safe and beneficial AI systems,medium
+arxiv:2504.06135,1,1,0,no_defense,models knowledge as a dynamically structured hierarchy of concepts,high
+arxiv:2504.11703,1,1,1,eligible,AI agents interact with external environments through tool calls,high
+arxiv:2504.19793,1,1,1,eligible,injects a malicious tool document into the tool library,high
+arxiv:2504.21034,1,1,1,eligible,providing formal security guarantees,high
+arxiv:2504.21668,1,1,1,eligible,identify poisoned texts within the knowledge database,high
+arxiv:2505.03574,1,0,1,no_persistent_state,a real-time guardrail monitor to serve as a final layer of defense,medium
+arxiv:2505.11942,1,1,0,no_defense,unable to accumulate or transfer knowledge over time,high
+arxiv:2505.14727,1,0,0,no_defense,"governance, and regulatory compliance",medium
+arxiv:2505.21936,1,0,0,no_defense,"investigate realistic, hybrid web-OS attack scenarios and fundamental security vulnerabilities",high
+arxiv:2506.00641,1,1,1,eligible,constructs an experiential memory,medium
+arxiv:2506.01804,1,0,0,no_defense,connect with external tools and resources,medium
+arxiv:2506.04651,1,1,0,no_defense,"preserves executable artifacts, allowing the LLM to focus on high-level strategy",high
+arxiv:2506.06254,1,1,0,no_defense,a personalized memory module that includes episodic and semantic memory mechanisms,high
+arxiv:2506.13131,1,0,0,no_defense,"AlphaEvolve, an evolutionary coding agent that substantially enhances capabilities",high
+arxiv:2506.20743,1,0,0,no_defense,"This survey provides a comprehensive overview of foundation models, agentic systems",high
+arxiv:2507.02004,1,1,0,no_defense,"static, manually curated toolsets, limiting their ability to adapt",high
+arxiv:2507.05257,1,1,0,no_defense,"memory, encompassing how agents memorize, update, and retrieve long-term information",high
+arxiv:2507.17257,1,1,0,no_defense,"maintain stable, reliable, identity over time",medium
+arxiv:2507.21046,1,1,0,no_defense,This survey provides the first systematic and comprehensive review of self-evolving agents,high
+arxiv:2508.04482,1,0,0,no_defense,"including safety and privacy, personalization and self-evolution",high
+arxiv:2508.09889,1,1,0,no_defense,verifying and correcting the reasoning process to improve robustness,medium
+arxiv:2508.15310,1,0,1,no_persistent_state,models the agents' task execution process as a traversal over a planned Tool Dependency Graph (TDG),medium
+arxiv:2509.21212,1,1,0,no_defense,"capturing associations across turn-, round-, and session-level contexts",high
+arxiv:2509.23694,1,0,1,no_persistent_state,sandboxed safety evaluation of search agents,medium
+arxiv:2509.25624,1,1,1,eligible,we propose a new reasoning-driven defense prompt,high
+arxiv:2509.26100,1,1,1,eligible,perpetually evolve a comprehensive safety benchmark,medium
+arxiv:2509.26354,1,1,0,no_defense,the degradation of safety alignment after memory accumulation,high
+arxiv:2510.01003,1,1,0,no_defense,augmenting such a memory can significantly improve LocAgent,high
+arxiv:2510.02373,1,1,1,eligible,the first proactive defense framework for LLM agent memory,high
+arxiv:2510.04860,1,1,1,eligible,current reinforcement learning-based alignment methods provide limited defenses,high
+arxiv:2510.15772,1,1,0,no_defense,a practical path to targeted expertise amplification,medium
+arxiv:2510.15966,1,1,0,no_defense,Memory systems are fundamental to AI agents,high
+arxiv:2510.19169,1,0,1,no_persistent_state,per-request customization,medium
+arxiv:2510.25758,1,1,0,no_defense,The cornerstone of TheraMind is a novel dual-loop architecture,medium
+arxiv:2511.03506,1,1,0,no_defense,the first operation level hallucination evaluation benchmark tailored to memory systems,medium
+arxiv:2511.06036,1,1,0,no_defense,forming the basis for digital twin of the PD patient that can adapt over time,medium
+arxiv:2511.08301,1,1,0,no_defense,achieve collective continual learning,high
+arxiv:2511.12997,1,1,0,no_defense,equips web browsing agents with persistent cross-session memory,high
+arxiv:2511.13410,1,1,0,no_defense,long-term user-agent interactions,high
+arxiv:2511.13646,1,1,0,no_defense,autonomously evolves its own scaffold implementation while solving real-world software problems,medium
+arxiv:2511.14043,1,1,0,no_defense,governed execution substrate,high
+arxiv:2511.17673,1,1,1,eligible,maintains complete decision traceability,medium
+arxiv:2511.21460,1,1,1,eligible,"integrates safety, memory, planning",high
+arxiv:2511.23436,1,1,0,no_defense,long-term memory that consolidates acquired knowledge through lightweight on-the-fly fine-tuning,high
+arxiv:2512.01353,1,0,0,no_defense,,low
+arxiv:2512.03180,1,0,1,no_persistent_state,offering a governance framework for risk identification and assurance,medium
+arxiv:2512.03356,1,1,1,eligible,"distilling and encoding safety patterns into a persistent, evolvable memory bank",high
+arxiv:2512.04416,1,0,0,no_defense,significantly boosts the Average Task Score,medium
+arxiv:2512.07287,1,1,0,no_defense,hybrid episodic-procedural memory strategy (H-EPM),high
+arxiv:2512.07665,1,0,0,no_defense,balancing agency and capabilities in agent design,medium
+arxiv:2512.16301,1,1,0,no_defense,,low
+arxiv:2512.16962,1,1,0,no_defense,"compromises agent behavior not through immediate jailbreaks, but by implanting malicious successful experiences",high
+arxiv:2512.21567,1,1,0,no_defense,memory management should be viewed as a sequential decision-making problem,high
+arxiv:2601.02553,1,1,0,no_defense,an efficient memory framework based on semantic lossless compression,high
+arxiv:2601.03192,1,1,0,no_defense,continuous runtime improvement without weight updates,high
+arxiv:2601.05504,1,1,1,eligible,Memory Sanitization with trust-aware retrieval,high
+arxiv:2601.06490,1,1,0,no_defense,Constructing memory from users' long-term conversations,high
+arxiv:2601.06789,1,1,0,no_defense,transform raw GitHub data into actionable experiential memory for agents,high
+arxiv:2601.10589,1,1,1,eligible,uses an experience pool accumulated throughout the process,high
+arxiv:2601.11816,1,1,1,eligible,compiled policy guardrails that block or route side effects before they occur,medium
+arxiv:2601.13518,1,1,0,no_defense,leverages LLMs' in-context learning to iteratively design and refine red-teaming systems,high
+arxiv:2601.18510,1,1,0,no_defense,"JitRL maintains a dynamic, non-parametric memory of experiences",high
+arxiv:2601.19199,1,1,0,no_defense,memory-driven adaptive agent framework with dual-level memory,high
+arxiv:2601.19249,1,1,1,eligible,verifying and updating memory without access to ground-truth supervision,medium
+arxiv:2601.21714,1,1,0,no_defense,multiple assistant agents maintain uncompressed memory contexts,high
+arxiv:2601.22436,1,1,0,no_defense,accumulating and reusing past experience,high
+arxiv:2601.22528,1,1,0,no_defense,inhibiting high-risk plans,high
+arxiv:2602.00428,1,1,1,eligible,,low
+arxiv:2602.00707,1,1,1,eligible,extracts the resulting directional shift in the hidden state space and amplifies it,medium
+arxiv:2602.01146,1,1,1,eligible,two long-term memory-specific risks: cross-domain leakage,high
+arxiv:2602.02007,1,1,0,no_defense,consistent gains in answer quality and inference token efficiency,high
+arxiv:2602.02369,1,1,0,no_defense,stored experience and reusable guidance,high
+arxiv:2602.02474,1,1,0,no_defense,learnable and evolvable memory skills,high
+arxiv:2602.05832,1,1,0,no_defense,repetitive errors across tasks due to the lack of experience transfer,high
+arxiv:2602.07517,1,1,1,eligible,injecting optimized honeypots into the memory,high
+arxiv:2602.09712,1,1,0,no_defense,Evaluation on the LoCoMo benchmark shows that TraceMem achieves state-of-the-art performance,high
+arxiv:2602.09877,1,1,1,eligible,formalize safety as the divergence degree from anthropic value distributions,high
+arxiv:2602.13379,1,1,1,eligible,distills safety experiences for deployment,medium
+arxiv:2602.13933,1,1,0,no_defense,,low
+arxiv:2602.14281,1,1,1,eligible,updates security cognition by reasoning over historical traces after invocation,high
+arxiv:2602.15156,1,1,0,no_defense,using 2-30x fewer answer-context tokens,high
+arxiv:2602.15654,1,1,0,no_defense,a persistent attack we call a Zombie Agent,high
+arxiv:2602.16901,1,1,1,eligible,"memory poisoning, spanning 28 realistic agentic environments",medium
+arxiv:2602.17692,1,1,1,eligible,removes specified information from both model parameters and persistent memory in agents,high
+arxiv:2602.21394,1,1,1,eligible,leverages episodic memories of past reasoning trajectories to guide decisions,medium
+arxiv:2602.22769,1,1,0,no_defense,a memory system based on causality-graph construction and tool-augmented retrieval,high
+arxiv:2603.02240,1,1,1,eligible,"persistent memory, cloud-based memory systems create centralized attack surfaces",high
+arxiv:2603.04815,1,1,1,eligible,using a Knowledge Graph (KG) as the agent's core episodic and semantic memory,medium
+arxiv:2603.05872,1,1,0,no_defense,"under utility-driven competition, unconstrained self-evolution reliably drifts toward deceptive behaviors",high
+arxiv:2603.07379,1,1,0,no_defense,"dynamic memory management, and iterative retrieval strategies",medium
+arxiv:2603.07670,1,1,0,no_defense,"persist, organize, and selectively recall information across interactions",high
+arxiv:2603.08755,1,1,1,eligible,persistent memory,medium
+arxiv:2603.09002,1,1,1,eligible,systematically characterizes the threat landscape of MAS and quantitatively evaluates 16 security frameworks,high
+arxiv:2603.09716,1,1,0,no_defense,elastic memory orchestration,high
+arxiv:2603.10600,1,1,0,no_defense,utilizing them to improve future performance through contextual memory retrieval,high
+arxiv:2603.11619,1,1,1,eligible,cross-temporal and multi-stage systemic risks,high
+arxiv:2603.11721,1,1,1,eligible,a restricted execution environment inspired by multi-user operating systems,medium
+arxiv:2603.11768,1,1,1,eligible,"enforcing consistency verification, temporal decay modeling, and dynamic access control",high
+arxiv:2603.14597,1,1,0,no_defense,,low
+arxiv:2603.15800,1,1,1,eligible,maintains a self-reflective memory bank to accumulate and retrieve safety insights from prior interactions,medium
+arxiv:2603.16734,1,0,1,no_persistent_state,controlled prompt conditions that vary user-context personalization,medium
+arxiv:2603.17787,1,1,1,eligible,a shared memory and governance layer addressing this gap,high
+arxiv:2603.19469,1,1,1,eligible,we propose four security properties that capture contextual security for LLM agents,high
+arxiv:2603.20357,1,1,1,eligible,memory poisoning attacks in these different types of memory systems,medium
+arxiv:2603.22350,1,1,1,eligible,maintains a compact semantic centroid representing the evolving behavioral profile of an agent session,high
+arxiv:2603.23231,1,1,0,no_defense,advanced memory systems extract precise preferences and reduce token consumption,high
+arxiv:2603.25097,1,1,1,eligible,a six layer cheap first guard pipeline for safety enforcement,medium
+arxiv:2603.25111,1,1,1,eligible,,low
+arxiv:2603.28052,1,1,0,no_defense,an outer-loop system that searches over harness code for LLM applications,high
+arxiv:2604.04202,1,1,0,no_defense,a benchmark for evaluating AI agents in evolving information environments,high
+arxiv:2604.04527,1,0,1,no_persistent_state,automatic rollback on failure,medium
+arxiv:2604.07645,1,1,0,no_defense,achieves competitive performance with gradient-based methods,high
+arxiv:2604.08988,1,1,0,no_defense,failing to accumulate experience across task boundaries,medium
+arxiv:2604.10846,1,1,0,no_defense,interactive grid analysis,high
+arxiv:2604.11548,1,1,1,eligible,an agentic wiki skill for automated personal knowledge base construction,medium
+arxiv:2604.11811,1,1,0,no_defense,memory system as a memory program written in Python,high
+arxiv:2604.12290,1,0,0,no_defense,,low
+arxiv:2604.15034,1,1,0,no_defense,retaining accepted versions,high
+arxiv:2604.15719,1,1,0,no_defense,an editable external state that stores reusable procedural guidance across revisits,high
+arxiv:2604.15774,1,1,1,eligible,persistent memory enhances interaction continuity and personalization,high
+arxiv:2604.16548,1,1,1,eligible,"writable, cross-session persistent memory in LLM agents",medium
+arxiv:2604.17562,1,1,1,eligible,runtime security architecture that treats agent safety as a stateful decision problem,high
+arxiv:2604.25067,1,0,0,no_defense,frontier coding agents autonomously implement an AlphaZero-style machine learning pipeline,high
+arxiv:2604.25562,1,0,1,no_persistent_state,detect prompt injection attacks from screenshots in a lightweight manner,high
+arxiv:2605.01133,1,1,1,eligible,We propose using confidence scores to prune or down-weight messages during MAS communication,medium
+arxiv:2605.03228,1,1,1,eligible,distills and retains safety-critical context across the agent's full execution trajectory,high
+arxiv:2605.05630,1,1,1,eligible,the first point at which delivering a candidate response would make the accumulated interaction sufficient,high
+arxiv:2605.09315,1,1,1,eligible,constrains destructive capability drift during continual adaptation,high
+arxiv:2605.09998,1,1,0,no_defense,"refining its own prompt, sub-agents, skills, and memory",high
+arxiv:2605.11032,1,1,1,eligible,transferring persistent memory state across heterogeneous AI agents,medium
+arxiv:2605.11882,1,1,1,eligible,FATE improves safety across different models and scales while preserving useful behavior,high
+arxiv:2605.13411,1,1,1,eligible,a lightweight auxiliary defense model augmented with memory retrieval,high
+arxiv:2605.13941,1,1,0,no_defense,memory systems treat retrieval infrastructure as fixed,high
+arxiv:2605.14421,1,1,1,eligible,a defense for LLM agent memory that attaches both cryptographic provenance,high
+arxiv:2605.14634,1,1,0,no_defense,documentation-guided coordination is a useful direction for scalable codebase migration,high
+arxiv:2605.15128,1,1,0,no_defense,"long-term multimodal memory depends on evidence routing, temporal tracking",high
+arxiv:2605.15338,1,1,0,no_defense,,low
+arxiv:2605.15461,1,1,0,no_defense,maintains a cross-task memory of verified skills,high
+arxiv:2605.15701,1,1,0,no_defense,model the evolution of agent memory over a long period of time,high
+arxiv:2605.16233,1,1,0,no_defense,evolves prompt-injected natural-language memory for hierarchical ReAct agents,medium
+arxiv:2605.17830,1,1,1,eligible,memory-induced violation rates show a robust upward trend with exposure length,high
+arxiv:2605.17986,1,0,1,no_persistent_state,two-layer defense consisting of prompt-level filtering and pre-execution tool-call authorization,medium
+arxiv:2605.18421,1,1,0,no_defense,memory scope (in-episode vs. cross-episode),high
+arxiv:2605.18930,1,1,0,no_defense,over-trust self-generated reflections,high
+arxiv:2605.19219,1,0,0,no_defense,episodic memory and guardrails to conduct coherent shopping sessions,medium
+arxiv:2605.19576,1,1,1,eligible,unbounded skill accumulation without outcome-driven lifecycle management,high
+arxiv:2605.20926,1,1,0,no_defense,a diagnostic framework that treats memory validity,high
+arxiv:2605.21824,1,1,1,eligible,"Security Boundary Respect (P3), and Entry Point Adequacy (P4)",medium
+arxiv:2605.22321,1,0,0,no_defense,a novel automated security testing framework for autonomous agents,high
+arxiv:2605.22842,1,1,1,eligible,persists indefinitely,high
+arxiv:2605.23989,1,1,0,no_defense,summarize stage-targeted mitigation strategies,high
+arxiv:2605.24941,1,1,1,eligible,memory-induced tool-drift and stress-test it with MEMDRIFT,high
+arxiv:2605.25815,1,1,1,eligible,sharing reusable problem-solving instructions,medium
+arxiv:2605.26154,1,1,0,no_defense,poisoning the agent's long-term memory,high
+arxiv:2605.27825,1,1,0,no_defense,we focus on chat agent memory MIAs,high
+arxiv:2605.27914,1,0,0,no_defense,a trust-by-construction paradigm that earns belief through three certificates,medium
+arxiv:2605.29225,1,1,0,no_defense,tests whether past failure experience translates into avoidance behavior,high
+arxiv:2605.30621,1,1,0,no_defense,produce useful persistent harness updates,high
+arxiv:2606.01166,1,0,1,no_persistent_state,multi-step execution traces whose individual actions appear locally benign,medium
+arxiv:2606.03544,1,1,0,no_defense,co-evolve with access to all peers' histories,high
+arxiv:2606.04455,1,1,1,eligible,iteratively program an agent artifact that maximizes performance,medium
+arxiv:2606.05743,1,1,1,eligible,,low
+arxiv:2606.06055,1,1,1,eligible,sensitive history shapes a response when the current turn supplies a reason to use it,medium
+arxiv:2606.06114,1,1,1,eligible,aggregates reviewed signals into context for subsequent steps,high
+arxiv:2606.06473,1,1,0,no_defense,"Retrospective Memory, which combines a cold-start domain knowledge base with a dynamic global memory",high
+arxiv:2606.08106,1,1,1,eligible,"changes to their own prompts, skills, or workflows",high
+arxiv:2606.09498,1,1,0,no_defense,an LLM-based agent improves its own operating harness,high
+arxiv:2606.15609,1,1,0,no_defense,the first attack that enables unprivileged users to bypass agent access control,high
+arxiv:2606.17546,1,1,0,no_defense,"an evaluation environment for measuring agent harness updates across training, validation, test",high
+arxiv:2606.19980,1,1,0,no_defense,a repeatable feedback loop for real-world policy improvement,medium
+arxiv:2606.21732,1,0,1,no_persistent_state,"summarizing distributed, locally benign fragments into a complete malicious instruction",medium
+arxiv:2606.22955,1,1,0,no_defense,self-evolving agentic framework that transforms evidence acquisition into a dynamic decision-making task,high
+arxiv:2606.23075,1,1,1,eligible,converts every known attack category from session-bounded to lineage-persistent,medium
+arxiv:2606.24081,1,1,0,no_defense,T2I jailbreak evaluation is not a single prompt-level test,medium
+arxiv:2606.28374,1,1,1,eligible,compact three-layer natural-language state,medium
+arxiv:2607.00871,1,1,1,eligible,admits each modification only through an anytime-valid gate that emits an auditable certificate against a fixed error budget,medium
+arxiv:2607.05189,1,1,0,no_defense,"remains effective against input-level, model-level, and system-level defenses",high
+arxiv:2607.06595,1,1,1,eligible,"we propose Agentic Memory Sentry (AM-Sentry), which leverages two mitigation techniques",high
+arxiv:2607.12893,1,1,0,no_defense,relying on stale values after a correction,high
+arxiv:2607.16247,1,1,1,eligible,persistent safety-relevant state tracking,high
+arxiv:2607.19829,0,0,1,no_object,against aligned LLMs,high
+arxiv:2607.27080,1,1,1,eligible,a task-grounded benchmark for the lifecycle security of agent memory systems,high
+arxiv:2608.04003,1,1,0,no_defense,"they retain preferences, task histories, tool routines, and learned skills across sessions",high
+arxiv:2608.04289,1,1,1,eligible,persistent memory and tools to take actions with external side effects,high
+arxiv:2608.08264,1,1,1,eligible,applies Cross-Surface Coherent Erasure to reduce residual carriers,high
+arxiv:2608.12977,1,1,1,eligible,"propose HARD (Harness-based Autonomous Runtime Defense Evolution), a self-evolving runtime defense framework",medium
+arxiv:2609.02786,1,1,1,eligible,"converts trajectory-level safety evidence into bounded, component-level updates across safety prompt and hierarchical skills",high
+arxiv:2609.08472,1,1,1,eligible,durable effects bound to execution and material identities,medium
+arxiv:2609.25563,1,1,1,eligible,"authorization continuity, under which source restrictions remain effective throughout source-to-memory and memory-to-memory derivation",high
+arxiv:2609.33013,1,1,1,eligible,"the decision wrapped in poison-resistance, reversibility, and auditability",high
+arxiv:2610.00238,1,1,0,no_defense,allows an operator to change it only if the oper- ator matches the current substrate,medium
+arxiv:2610.00327,1,1,1,eligible,"persisted-object replay, execution-rerun consistency, and version/access binding",medium
+arxiv:2610.05176,1,1,1,eligible,"memory pollution arises when outdated, weakly supported, or spuriously successful procedures become recurring components of future reasoning",high
+arxiv:2610.05826,1,1,1,eligible,hides items whose verification has not committed in time,high
+arxiv:2610.07311,1,1,1,eligible,indexes memory evidence at write time and controls its reuse at read time,high
+arxiv:2610.14216,1,1,0,no_defense,"skills the agent may choose to open, and rules that load automatically",high
+arxiv:2610.15991,1,1,1,eligible,"Revocation may be reported at issuer commit, transport acknowledgment",high
+arxiv:2610.16333,1,1,0,no_defense,"we introduce ReplayBench, a benchmark that uses controlled tool-result replay",medium
+arxiv:2610.17659,1,1,1,eligible,"persistent memory, and tool-call acquisition",high
+arxiv:2610.18813,1,1,1,eligible,accepted revisions persist across runs,medium
+arxiv:2610.19264,1,1,0,no_defense,complement to maliciousness detection,medium
+arxiv:2610.27465,1,1,1,eligible,whether undoing it needs a new verifier approval,high
+arxiv:2610.27735,1,1,1,eligible,a covert side task to install a misaligned property in the successor,high
+arxiv:2505.00753,1,0,0,no_defense,,low
+doi:10.1109/tcsi.2021.3111870,0,0,0,no_object,robust coordination control of multi-agent systems (MASs) with uncertainties,high
+record:0153ea84ed88,1,1,0,no_defense,framework that selects both what agents share and when recipients use it,high
+arxiv:2504.03255,1,0,1,no_persistent_state,"governance policies, monitoring, and control protocols",medium
+doi:10.1109/jiot.2024.3471904,1,1,0,no_defense,persistent device state monitoring,medium
+doi:10.36227/techrxiv.176799772.28164151/v1,1,1,1,eligible,policy-aligned decision controls directly within the LLM agent inference loop,medium
+arxiv:2505.13076,1,1,1,eligible,we propose a defense in depth strategy incorporating input sanitization,medium
+arxiv:2412.06681,1,0,0,no_defense,LLM-agent-based modeling framework for transportation systems,high
+arxiv:2503.11733,1,0,0,no_defense,"In this survey, we present a systematic review",high
+arxiv:2508.07407,1,1,0,no_defense,"a dedicated discussion on the evaluation, safety, and ethical considerations",high
+doi:10.30574/wjarr.2024.24.2.3329,1,0,1,no_persistent_state,LLM agents can support automated threat handling in the context of threat identification,medium
+doi:10.1016/j.hcc.2025.100300,1,0,0,no_defense,we conduct an in-depth survey about privacy threats,high
+doi:10.65109/lchb2977,1,0,1,no_persistent_state,"scenario-based evaluations, including an autonomy-sensitive advising benchmark",medium
+doi:10.1002/asjc.2330,0,0,0,no_object,coordination learning control of second‐order non‐linear multi‐agent systems,high
+doi:10.1007/s12555-018-0700-y,0,0,0,no_object,connectivity preservation problem of multi-agent systems with event-triggered controllers,high
+arxiv:2602.21158,1,0,0,no_defense,reinforcement learning framework that incorporates uncertainty directly into the reward design,high
+arxiv:2410.17520,1,0,1,no_persistent_state,a prompting method that encourages agents to prioritize safety considerations,medium
+arxiv:2304.03442,1,1,0,no_defense,store a complete record of the agent's experiences using natural language,high
+arxiv:2402.09283,0,0,1,no_object,"attacks, defenses, and evaluations",medium
+arxiv:2505.18279,1,1,1,eligible,,low
+doi:10.1101/cshperspect.a021766,0,0,0,no_object,hippocampus guides the reorganization of the information,high
+record:0b7edae6125f,1,1,0,no_defense,we could be the first to study them on LLM agents,high
+record:0caada44d56c,1,1,1,eligible,"we propose SentinelMem, an active risk-aware memory framework",high
+arxiv:2602.14670,1,1,0,no_defense,structured Experience Memory that distills historical mining trials into actionable insights,high
+doi:10.1109/tdsc.2024.3372777,1,1,1,eligible,a shuffling-based solution to broaden the framework's applicability,high
+record:0f83df1d0e1e,1,1,0,no_defense,"utility-based refinement, which automatically adds validated memories and prunes outdated ones to maintain a compact, high-quality experience pool",high
+arxiv:2402.06596,1,0,0,no_defense,evaluate LLM agents on a modern operating system,high
+doi:10.3390/info16050365,1,0,1,no_persistent_state,traditional no-code SOAR solutions face significant limitations,medium
+arxiv:2609.34484,0,0,0,no_object,Progress reward modeling is the problem of estimating how a robot's behavior changes task progress,medium
+arxiv:2502.11448,1,1,1,eligible,a lifelong agent guardrail to enhance LLM agent safety,high
+arxiv:2501.11733,1,1,0,no_defense,maintains a persistent long-term memory comprising Tips and Shortcuts,high
+arxiv:2408.03515,1,0,1,no_persistent_state,explores secure prompt strategies to mitigate these risks,medium
+arxiv:2606.26294,1,1,0,no_defense,agents and evaluators recursively bootstrap,medium
+doi:10.1109/tvt.2021.3096928,0,0,0,no_object,distributed multi-agent deep reinforcement learning (DRL) scheme,high
+arxiv:2310.05292,1,0,0,no_defense,LLM-powered teachable agents debug code,medium
+record:1569a797b573,1,1,0,no_defense,designed to automatically discover and exploit indirect prompt injection vulnerabilities,medium
+arxiv:2508.16678,1,0,0,no_defense,,low
+arxiv:2505.23422,1,1,0,no_defense,inefficiently discard their long-term memory after a single task instance,high
+arxiv:2212.08364,0,0,0,no_object,AI companies could implement the model,high
+arxiv:2309.09919,1,1,1,eligible,queryable safety constraint module based on linear temporal logic (LTL),high
+arxiv:2402.01586,1,1,1,eligible,pre-planning strategy which injects safety knowledge to the model before plan generation,medium
+doi:10.1016/j.eswa.2020.113457,0,0,0,no_object,agents or NPCs are—as their name implies—characters that are not controlled by the player,high
+doi:10.1145/3795154.3795296,1,1,1,eligible,enforcing security policies,high
+arxiv:2407.14239,1,1,0,no_defense,aim of enhancing driving safety and efficiency,high
+doi:10.1080/00207543.2022.2089929,0,0,0,no_object,multi-agent autonomous process control,high
+arxiv:2404.13501,1,1,0,no_defense,systematically review previous studies on how to design and evaluate the memory module,high
+doi:10.3390/fi17020057,1,0,0,no_defense,we bridge these gaps by illustrating the interplay between AI agents and blockchain,high
+doi:10.1109/jas.2022.105506,0,0,0,no_object,This survey focuses on multi-agent cooperative optimization and cooperative/non-cooperative games,high
+doi:10.1609/aaaiss.v2i1.27688,1,1,0,no_defense,We examine the memory management approaches used in these agents,high
+arxiv:1705.08926,0,0,0,no_object,we propose a new multi-agent actor-critic method,high
+arxiv:2510.11108,1,0,1,no_persistent_state,"dynamic, context-aware process of information flow governance",medium
+arxiv:2310.14985,1,0,0,no_defense,employ system prompts to guide LLM agents in gameplay,high
+arxiv:2305.10250,1,1,0,no_defense,a novel memory mechanism tailored for LLMs,high
+arxiv:2410.10813,1,1,0,no_defense,propose several memory design optimizations including session decomposition,high
+doi:10.1109/tsg.2021.3104139,1,0,0,no_defense,"Each region, which is a sub-network with a control center, is modeled as an agent",high
+doi:10.61173/wtry7121,1,1,0,no_defense,This review comprehensively analyzes these issues to establish a framework,medium
+record:267a01bcbaff,1,0,1,no_persistent_state,intercepts agent actions synchronously and evaluates them,medium
+doi:10.1002/adma.202405163,1,1,0,no_defense,gathers them into a standardized database containing more than 10 000 device parameters,high
+arxiv:2606.03841,1,1,0,no_defense,accumulate reusable experience across tasks,high
+arxiv:2305.19118,1,0,0,no_defense,our MAD framework encourages divergent thinking in LLMs,high
+arxiv:2401.05799,1,0,0,no_defense,a design framework with heterogeneous LLM agents is proposed,high
+arxiv:2507.21504,1,0,0,no_defense,,low
+arxiv:2401.07764,1,0,0,no_defense,we propose a split learning system for LLM agents in 6G networks,medium
+arxiv:2509.11431,1,1,1,eligible,providing a robust security guardrail,medium
+doi:10.36227/techrxiv.173092393.30216600/v1,1,0,0,no_defense,"reflection, planning, multi-agent collaboration, and tool utilization",high
+arxiv:2408.03876,1,0,0,no_defense,LLM-based multi-agent system designed to automate,high
+arxiv:2309.02427,1,1,0,no_defense,"modular memory components, a structured action space",high
+arxiv:2310.10436,1,1,0,no_defense,we model the impact of macroeconomic trends using a memory module,high
+arxiv:2601.17887,1,1,1,eligible,propose a lightweight detection-reflection method that effectively reduces safety degradation,medium
+doi:10.60087/jaigs.v6i1.237,1,0,0,no_defense,a synergistic framework that enhances autonomous agent capabilities,high
+doi:10.1109/fllm63129.2024.10852426,1,0,0,no_defense,eight types of self-reflecting LLM agents to reflect on their mistakes,high
+record:2ec6a4ed73e5,1,1,1,eligible,limited methods available for detecting such poisoning attacks,medium
+arxiv:2402.08567,1,1,1,eligible,derive a simple principle for determining whether a defense mechanism can provably restrain the spread of infectious jailbreak,high
+arxiv:2510.17276,1,1,1,eligible,"propose, implement, and evaluate ControlValve, a new defense",medium
+record:3137547b3632,1,1,0,no_defense,reflection-based contextual memory mechanism enables HRC agent to have long term memory,medium
+arxiv:2610.00787,1,1,1,eligible,a persistent failure of its observability or drift-detection layer,high
+arxiv:2308.10204,1,0,0,no_defense,"ChatEDA, an autonomous agent for EDA empowered by an LLM",high
+doi:10.18653/v1/2025.findings-emnlp.1164,1,1,0,no_defense,,low
+arxiv:2504.00727,1,0,0,no_defense,underscoring the feasibility of designing highly plausible Deceptive Agents,medium
+arxiv:2308.15030,0,0,0,no_object,serving MoE models on memory-constrained devices,high
+arxiv:2504.15965,1,1,0,no_defense,a comprehensive survey on the memory of LLM-driven AI systems,high
+arxiv:2403.04960,1,1,1,eligible,,low
+arxiv:2403.11381,1,1,0,no_defense,includes short and long-term memories and different cognitive modules,high
+doi:10.21203/rs.3.rs-7773686/v1,1,0,0,no_defense,brittleness under noisy or adversarial conditions hinder deployment,medium
+record:3a4c85dfa64c,0,0,0,no_object,false memories implanted by social influence,high
+doi:10.20944/preprints202512.2748.v1,1,1,0,no_defense,multi-dimensional trust evaluation mechanism that continuously assesses agent reliability based on performance history,medium
+doi:10.1016/j.automatica.2019.108670,0,0,0,no_object,multi-agent systems via state measurements over local indexes,high
+doi:10.36227/techrxiv.171822345.56781952/v1,1,1,1,eligible,continuously altering the model's parameters and configurations,medium
+arxiv:2309.10062,1,0,0,no_defense,convert high-level task instructions provided as input into a multi-robot task plan,high
+doi:10.1016/j.mfglet.2024.03.010,1,0,0,no_defense,An autonomous agent for process planning of fiber composite structures is implemented,high
+arxiv:2401.13178,1,0,0,no_defense,multi-round interactions,high
+doi:10.36001/phmconf.2025.v17i1.4350,1,1,0,no_defense,diagnose faults directly from raw sensor data,high
+record:3f4c7770599c,1,1,1,eligible,"hierarchical working, episodic, and semantic memory preserves operational knowledge",medium
+arxiv:2402.05746,1,0,0,no_defense,ChatSim leverages a large language model (LLM) agent collaboration framework,high
+arxiv:2604.12231,1,1,0,no_defense,equips LLM-based agents with a self-evolving long-term memory,high
+arxiv:2404.09134,1,0,0,no_defense,transmission interference between satellites and users seriously affects communication performance,medium
+arxiv:2504.19413,1,1,0,no_defense,persistent memory mechanisms for long-term conversational coherence,high
+doi:10.1109/lcsys.2018.2856105,0,0,0,no_object,heterogeneous multi-agent systems composed of first-order agents,high
+arxiv:2601.03624,1,1,1,eligible,,low
+doi:10.18653/v1/2025.acl-long.1354,1,0,0,no_defense,,low
+arxiv:2402.07867,1,1,1,eligible,We also evaluate several defenses and our results show they are insufficient,medium
+arxiv:2301.07543,0,0,0,no_object,their behavior can be explored in scenarios via simulation,high
+doi:10.3390/app152111515,1,0,0,no_defense,"higher autonomy needs stronger governance, benchmarks, and safety evidence",high
+arxiv:2602.16958,1,0,0,no_defense,"we propose Phantom, an automated agent hijacking framework",high
+doi:10.32388/wvkiwe,1,0,0,no_defense,evaluating the agent capabilities of large language models (LLMs) within medical contexts,high
+doi:10.3390/fi17080353,1,0,0,no_defense,This paper seeks to fill that gap by providing a comprehensive review,high
+arxiv:2512.10394,1,1,0,no_defense,"localizing backend, runtime, and acceleration-preset changes within a stable inference boundary",high
+record:46e79e4ae162,1,1,0,no_defense,,low
+arxiv:2311.08182,0,0,0,no_object,Enhancing the instruction-following ability of Large Language Models,medium
+arxiv:2401.07324,1,0,0,no_defense,"decomposes the aforementioned capabilities into a planner, caller, and summarizer",high
+arxiv:2605.02900,1,0,0,no_defense,examining attacks and defenses across the full embodied pipeline,high
+arxiv:2110.07246,0,0,0,no_object,multi-agent hierarchical reinforcement learning,high
+doi:10.1145/3773080,1,1,0,no_defense,we review existing defensive strategies,high
+doi:10.1007/s11432-024-4355-1,0,0,0,no_object,"multi-agent systems (MASs), with sampling capturing raw data from the environment",high
+doi:10.3390/s25061666,1,0,0,no_defense,This review paper comprehensively analyzes AI-driven approaches,medium
+doi:10.3390/ai6090216,0,0,0,no_object,This survey provides a comprehensive overview of LLM applications,high
+arxiv:2306.02552,1,0,0,no_defense,we propose an LLM-based agent framework and design a sandbox environment,high
+arxiv:2402.07456,1,1,0,no_defense,accumulated skills from previous tasks,high
+doi:10.1016/s2666-5247(24)00104-6,1,0,0,no_defense,,low
+arxiv:2502.05206,1,1,0,no_defense,We review defense strategies proposed for each type of attacks,high
+arxiv:2503.07885,1,0,1,no_persistent_state,,low
+arxiv:1901.03887,0,0,0,no_object,multi-agent training using deep deterministic policy gradients,high
+doi:10.1007/s44366-024-0008-9,1,1,0,no_defense,proof of concept testing of the NEOLAF agent to develop math problem-solving capabilities,medium
+arxiv:2510.11290,1,1,0,no_defense,grounded in a dual memory base comprising experience and knowledge bases,high
+arxiv:2410.13691,1,0,0,no_defense,RoboPAIR elicits harmful physical actions from LLM-controlled robots,high
+doi:10.1016/j.isatra.2019.01.021,0,0,0,no_object,nonlinear multi-agent systems (NMASs),high
+doi:10.1049/iet-cta.2018.6268,0,0,0,no_object,,low
+doi:10.18653/v1/2025.emnlp-industry.62,1,0,0,no_defense,,low
+doi:10.18653/v1/2025.emnlp-main.454,1,1,0,no_defense,,low
+arxiv:2503.00061,1,0,1,no_persistent_state,we evaluate eight different defenses and bypass all of them,medium
+doi:10.3390/smartcities8010019,1,0,0,no_defense,,low
+arxiv:2408.15978,1,0,0,no_defense,achieving a 93% relative increase in success rate,high
+arxiv:2411.05651,1,0,0,no_defense,LLM agent-based task planning and execution strategy,high
+doi:10.1016/j.apenergy.2023.120902,0,0,0,no_object,the EH or EVAGG entity is modeled as an adaptive agent,high
+doi:10.2139/ssrn.6426760,1,1,1,eligible,"enforces authorization, validates inputs against formal schemas, constrains execution to pre-defined capability boundaries, and maintains an immutable audit trail",high
+arxiv:2502.05224,0,0,0,no_object,,low
+doi:10.1016/j.automatica.2018.10.010,0,0,0,no_object,networks of asynchronous nonlinear multi-agent systems (MAS),high
+arxiv:2606.09151,0,1,0,no_object,malicious payload persists with virus-like propagation,high
+doi:10.1080/00207721.2018.1533047,0,0,0,no_object,coordination control problem for multiple distributed generation (DG) units,high
+arxiv:2607.06608,1,1,0,no_defense,security and privacy of agentic AI,high
+arxiv:2503.01935,1,0,0,no_defense,a comprehensive benchmark designed to evaluate LLM-based multi-agent systems,high
+doi:10.1101/lm.94705,0,0,0,no_object,impairment in memory for the past that arises after exposure to misleading information,high
+record:60548a7624b8,1,1,0,no_defense,committed to a queryable knowledge base,medium
+arxiv:1909.03510,0,0,0,no_object,multi-agent reinforcement learning (MARL) methods,high
+doi:10.3390/electronics14101907,0,0,0,no_object,attackers embed malicious instructions within prompts to bypass security filters and manipulate LLM outputs,medium
+doi:10.1109/iccv51701.2025.00525,1,1,0,no_defense,"By integrating a novel Contextual Evolution Memory, NavMorph leverages scene-contextual information",high
+doi:10.1146/annurev.psych.49.1.289,0,1,0,no_object,the constructive nature of human memory,high
+arxiv:2306.06770,1,0,0,no_defense,enabling an agent to acquire new task knowledge,high
+arxiv:2409.09013,1,0,0,no_defense,a framework to study how LLM-based agents navigate these scenarios in an multi-turn interactive setting,high
+record:6675ad540fc3,1,0,0,no_defense,an autonomous AI agent driven by a combination of OpenAI models ran an end-to-end intrusion,high
+doi:10.24963/ijcai.2022/85,0,0,0,no_object,multi-agent reinforcement learning,high
+arxiv:2410.07283,1,1,1,eligible,"we propose LLM Tagging, a defense mechanism",high
+doi:10.1016/j.automatica.2021.109797,0,0,0,no_object,"multi-agent systems. To this end, a distributed event-triggered algorithm",high
+arxiv:2502.01390,1,0,0,no_defense,"in a plan-then-execute manner, wherein the agents conducted step-wise planning",high
+doi:10.1038/s41598-025-97498-y,1,0,0,no_defense,"enabling natural language-based command interpretation, the proposed method reduces",high
+arxiv:2412.13501,1,0,0,no_defense,we provide a comprehensive survey,high
+arxiv:2304.09542,1,0,0,no_defense,investigate generative LLMs such as ChatGPT and GPT-4 for relevance ranking,high
+arxiv:2305.14483,1,1,0,no_defense,SIRLC effectively improves LLM performance without external supervision,high
+doi:10.5281/zenodo.19029778,1,1,0,no_defense,governed memory substrate designed to optimize agentic memory,high
+doi:10.20944/preprints202608.2066.v1,1,0,0,no_defense,defenses cover input and context filtering,medium
+doi:10.1109/access.2026.3651218,1,0,0,no_defense,"Safety & Ethics, Framework Typology and Core Tasks",high
+arxiv:2410.21359,1,0,0,no_defense,how different personas and experimental framings affect these AI agents' altruistic behavior,high
+arxiv:2305.05909,0,0,0,no_object,Cooperative multi-agent reinforcement learning (CMARL),high
+arxiv:2510.16079,1,1,0,no_defense,"a structured repository of abstract, reusable strategic principles",high
+arxiv:2406.12708,1,0,0,no_defense,first large language model (LLM) based peer review simulation framework,high
+arxiv:2310.16340,1,0,0,no_defense,a tool-augmented LLM autonomous agent framework,medium
+doi:10.1145/3731446,1,1,0,no_defense,utilizes LLMs as the brain and recommender models as instrumental tools,high
+arxiv:2509.10540,1,0,1,no_persistent_state,via a single crafted email,medium
+doi:10.18653/v1/2026.acl-long.1819,1,0,1,no_persistent_state,,low
+doi:10.1145/3807666,1,0,0,no_defense,This survey systematizes the threat landscape for LLM-based agents,high
+arxiv:2509.13978,1,0,0,no_defense,leverages interactive Large Language Model (LLM) agents,high
+arxiv:2506.02539,1,1,1,eligible,persistent memory as an explicit alignment surface,high
+doi:10.1145/3837083,1,0,0,no_defense,"a taxonomy of risks spanning data, models, systems",high
+arxiv:2311.13743,1,1,0,no_defense,"Memory, with layered message processing, to aid the agent in assimilating hierarchical financial data",high
+arxiv:2412.05311,1,0,0,no_defense,automated DRC code generation,high
+arxiv:1903.04527,0,0,0,no_object,deep RL agent: advantage actor critic (A2C),high
+arxiv:2402.12914,1,0,0,no_defense,LLM-based human-agent collaboration for complex task-solving,high
+arxiv:2608.22248,1,0,1,no_persistent_state,identify malicious instructions and leverages a Unified Multi-Layer Consensus,medium
+arxiv:2403.10517,1,0,0,no_defense,iteratively identify and compile crucial information to answer a question,high
+arxiv:2510.02833,1,0,0,no_defense,provide a new perspective on understanding how LLMs' security is compromised,high
+arxiv:2412.16682,1,0,1,no_persistent_state,requiring every agent action to serve user objectives,medium
+doi:10.62411/jcta.15254,1,0,1,no_persistent_state,,low
+arxiv:2505.07176,1,0,0,no_defense,"In this survey, we introduce the Internet of Agents",high
+doi:10.1007/978-3-032-05114-1_35,1,1,0,no_defense,designed to evaluate and enhance LLM performance in dynamic diagnostic settings,high
+arxiv:2604.23141,1,1,1,eligible,F-RMU-based LLM unlearning for sensitive profile suppression,high
+doi:10.1016/j.apenergy.2022.120215,0,0,0,no_object,a novel model-free multi-agent deep reinforcement learning (MADRL)-based multi-building control algorithm,high
+doi:10.1109/access.2018.2831228,0,0,0,no_object,This survey provides a comprehensive discussion of all aspects of MAS,high
+doi:10.3390/app16010085,1,0,1,no_persistent_state,"to analyze the output, where a successful attack becomes more obvious",medium
+doi:10.1109/cascon66301.2025.00094,1,1,0,no_defense,"longterm memory, user interaction, and oversight",medium
+doi:10.1002/9781119699057,0,0,0,no_object,multi-robot coordination algorithms,high
+doi:10.18653/v1/2026.acl-long.1168,1,1,1,eligible,,low
+arxiv:2312.11970,1,0,0,no_defense,,low
+doi:10.1016/j.engappai.2024.109771,1,1,1,eligible,"represent and store its mind state, including its belief base",high
+doi:10.3390/s25175272,1,0,0,no_defense,autonomous agents for decision support,medium
+arxiv:2605.26720,1,0,0,no_defense,self-evolving agents for CUDA kernel generation,high
+arxiv:2308.14296,1,0,0,no_defense,LLM-powered autonomous recommender agent,high
+arxiv:2510.21614,1,1,0,no_defense,self-improving coding agent development methods,high
+record:92d938003e60,1,0,0,no_defense,automating BEM using LLM agentic workflow,high
+doi:10.1109/tnse.2019.2958118,0,0,0,no_object,coordination control of second-order multi-agent systems,high
+arxiv:2308.09904,1,0,0,no_defense,mitigating biases and enhancing user control,medium
+arxiv:2406.01893,1,0,0,no_defense,a novel framework where large language models enhance the capabilities of agents,high
+arxiv:2506.12266,1,0,0,no_defense,a comprehensive evaluation framework to quantify the behavior gap,high
+arxiv:2310.12815,1,0,1,no_persistent_state,formalize prompt injection attacks,medium
+doi:10.1016/j.jfranklin.2018.05.005,0,0,0,no_object,coordination problem of general linear multi-agent systems,high
+doi:10.1016/j.automatica.2018.10.019,0,0,0,no_object,event-triggered distributed predictive control (DPC) problem for multi-agent systems,high
+record:9921633610fa,1,1,0,no_defense,"a comprehensive survey of attacks against, and defenses of, the LLM-based agents",medium
+doi:10.1609/aaai.v35i13.17357,0,0,0,no_object,The existing multi-agent reinforcement learning methods (MARL),high
+arxiv:2402.15116,1,0,0,no_defense,we conduct a systematic review of LLM-driven multimodal agents,high
+arxiv:2410.16950,1,1,1,eligible,we propose implementing a simple reflection mechanism,medium
+arxiv:2408.02559,1,0,0,no_defense,We propose a Theory of Mind (ToM) planning technique that allows LLM agents to adapt their strategy,high
+doi:10.18653/v1/2026.acl-long.749,1,1,0,no_defense,,low
+arxiv:2405.14125,1,1,1,eligible,incorporates a memory module to guide test scenario generation,medium
+arxiv:2312.07850,1,0,0,no_defense,can greatly enhance the potential of LLMs for 6G communications,high
+doi:10.1109/tdsc.2025.3620832,1,1,1,eligible,"modifying the external knowledge base of RAG, we simulate the effects of forgetting",medium
+doi:10.3390/info16060469,1,1,0,no_defense,we conducted a systematic literature review,high
+arxiv:2604.10923,1,1,0,no_defense,integrates two core components: \textbf{Experience Memory} and \textbf{Asset Memory},high
+arxiv:2505.19173,1,1,0,no_defense,self-optimizing teacher agent,high
+arxiv:2002.11874,0,0,0,no_object,multiagent coordination framework based on Deep Reinforcement Learning,high
+arxiv:2510.25445,0,0,0,no_object,Agentic AI represents a transformative shift,high
+arxiv:2401.09002,0,0,0,no_object,evaluate the effectiveness of jailbreak attacks on LLMs,high
+doi:10.1016/j.automatica.2019.03.009,0,0,0,no_object,event-triggered coordination for multi-agent average consensus,high
+arxiv:2512.21220,1,1,1,eligible,two complementary reasoning processes on a Hybrid Long-Short Safety Memory,high
+doi:10.1109/jas.2022.105917,0,0,0,no_object,in a whole multi-agent system (MAS) that consists of two subgroups,high
+arxiv:2609.20822,1,0,1,no_persistent_state,"we present SafeHarness, which equips the model with two obstacle-aware harnesses",medium
+arxiv:2604.02623,1,1,0,no_defense,"the first attack to achieve cross-session, cross-site compromise",high
+arxiv:2312.00326,1,0,0,no_defense,can significantly improve the performance on complex and few-shot OM tasks,high
+arxiv:2212.04088,1,0,0,no_defense,do few-shot planning for embodied agents,medium
+arxiv:2603.05517,1,1,1,eligible,previously rejected unsafe contexts cannot be re-admitted,high
+arxiv:2401.06121,0,0,1,no_object,Large language models trained on massive corpora of data,high
+arxiv:2503.23037,1,0,0,no_defense,"safety, liability and security are open problems",high
+arxiv:2604.11672,0,0,0,no_object,"validating autonomous cyber-physical systems (e.g., Uncrewed Aerial Vehicles)",medium
+doi:10.22541/au.175795684.47167615/v1,1,1,0,no_defense,"we systematically analyze key challenges, including hallucinations",high
+record:b076c8fa1cb3,0,0,0,no_object,agents interact with each other in multi-agent systems,high
+arxiv:2307.06082,1,0,0,no_defense,an embodied LLM agent that uses a verbalization of the trajectory,high
+arxiv:2505.18543,1,1,1,eligible,"current defense techniques fail to provide robust protection, underscoring the pressing need for more resilient",high
+doi:10.1109/mipro60963.2024.10569919,1,1,0,no_defense,enhancing interactions with cognitive digital twins of countries through an Large Language Model (LLM) agent,high
+arxiv:2602.11182,1,1,0,no_defense,self-evolving meta-memory,high
+arxiv:2109.11672,0,0,0,no_object,a framework for coordinating CAVs such that stop-and-go driving is eliminated,high
+arxiv:2304.14721,1,0,0,no_defense,enabling autonomous planning and control of flexible production,high
+arxiv:2407.01489,1,0,0,no_defense,raises the following question: Do we really have to employ complex autonomous software agents?,high
+arxiv:2510.16392,1,1,0,no_defense,consistently outperforms SOTA memory systems,high
+arxiv:2510.04618,1,1,0,no_defense,"treats contexts as evolving playbooks that accumulate, refine, and organize strategies",high
+arxiv:2504.14348,1,0,0,no_defense,a critical yet previously overlooked security vulnerability in multimodal agents: cross-modal prompt injection attacks,high
+doi:10.1038/s41746-025-01550-0,1,0,0,no_defense,Multi-Agent Conversation (MAC) framework for disease diagnosis,high
+doi:10.12688/f1000research.169927.1,1,1,0,no_defense,,low
+doi:10.53941/tai.2025.100003,0,0,1,no_object,,low
+arxiv:2505.10468,1,1,0,no_defense,"persistent memory, and coordinated autonomy",high
+arxiv:2407.06813,1,1,0,no_defense,augmenting memory through self-play games for self-evolution,medium
+doi:10.32996/jcsts.2025.7.8.135,1,1,1,eligible,a policy-governed multi-agent control plane that executes progressive delivery,medium
+arxiv:2604.16941,1,1,0,no_defense,Self-Evolving Memory that accumulates reusable resolution patterns,high
+doi:10.52202/085713-1554,1,1,0,no_defense,we propose a novel Memory INJection Attack,high
+arxiv:2308.11339,1,0,0,no_defense,updates its beliefs in alignment with the teammates' subsequent actual behaviors,high
+doi:10.1109/jas.2022.105449,0,0,0,no_object,networked nonlinear multi-agents (NNM) with communication delays,high
+doi:10.48550/arxiv.2603.28013,1,1,1,eligible,the canary token never appeared in a memory write,medium
+record:c3d4599a6b22,1,1,0,no_defense,outline a research agenda for monitoring and maintaining,medium
+arxiv:2508.17281,1,0,0,no_defense,,low
+arxiv:2309.14534,1,1,0,no_defense,simulate misconceptions and unawareness prescribed in its knowledge state,medium
+doi:10.1038/s41467-018-05122-7,0,0,0,no_object,"benzoxazinoids, a class of defensive secondary metabolites",high
+arxiv:2403.09142,1,0,0,no_defense,"simulate users' querying, clicking, and stopping behaviors",high
+doi:10.18653/v1/2025.acl-long.369,1,0,0,no_defense,,low
+arxiv:2311.09721,1,0,0,no_defense,a new long-form database question answering dataset designed to evaluate,high
+arxiv:2605.16883,1,1,0,no_defense,"dynamically retrieving episodic, semantic, and experiential memories",high
+doi:10.1016/j.apenergy.2018.07.092,0,0,0,no_object,an integrated volt-var optimization engine is proposed for distributed electric vehicle charging coordination,high
+record:cd703d5882f3,0,0,0,no_object,multi-agent multi-armed bandits (MAMABs),high
+doi:10.3390/computation13020030,1,0,0,no_defense,"drafting security policies, and even incident response",medium
+doi:10.1109/iceccc65144.2025.11064209,0,0,1,no_object,"Prompt Inject framework, which helps identify vulnerabilities and possible attacks on LLMs",medium
+arxiv:2408.01703,1,0,0,no_defense,a novel approach to transform LLM-generated code into an interactive visual representation,high
+doi:10.1038/s41467-025-64105-7,1,0,0,no_defense,raising safety alignment concerns for SDL applications,medium
+arxiv:2606.17220,1,1,0,no_defense,eliminate ineffective rules based on historical feedbacks,high
+arxiv:2604.16968,1,1,1,eligible,experience accumulation and utilization in self-evolving agents,high
+arxiv:2608.03924,1,1,0,no_defense,turn successful and failed interactions into reusable experience,high
+record:d3cb9d6e54f3,1,1,1,eligible,"producing replayable artifacts (rules, receipts, drift boundaries) suitable for audit and regression under model updates",high
+arxiv:2404.03648,1,0,0,no_defense,automated web navigation agent,high
+arxiv:2603.15125,1,1,0,no_defense,overlooking the persistent influence of memory,medium
+arxiv:2306.05152,1,0,0,no_defense,we present a taxonomy of LLM-based testing agents,high
+doi:10.18653/v1/2025.findings-acl.989,1,1,0,no_defense,,low
+arxiv:2605.06716,1,1,0,no_defense,a novel evolutionary framework for LLM agent memory mechanisms,high
+doi:10.1016/j.imed.2025.03.002,1,0,0,no_defense,real-world multitask scenarios involving LLM agents,high
+arxiv:2602.11510,1,1,0,no_defense,invisible to standard output-level defenses,medium
+arxiv:2504.15585,1,0,1,no_persistent_state,LLM-based agent systems,medium
+arxiv:2310.10701,1,1,0,no_defense,We explore the use of explicit belief state representations to mitigate these issues,high
+doi:10.18653/v1/2025.acl-long.859,1,1,0,no_defense,,low
+doi:10.1109/ase56229.2023.00174,1,0,0,no_defense,,low
+doi:10.70777/si.v2i3.15063,1,1,0,no_defense,"All experiments were done with safety precautions (e.g., sandboxing, human oversight)",high
+doi:10.1016/j.ijpe.2023.108973,0,0,0,no_object,multi-agent RSC with one remanufacturer and two competition collectors,high
+doi:10.1038/s41598-021-04463-6,0,0,0,no_object,,low
+doi:10.2139/ssrn.4607026,1,0,0,no_defense,employ fine-tuning and prompt engineering techniques to ensure that the agent's behavior,high
+arxiv:2503.09780,1,0,1,no_persistent_state,We also propose a prompting-based defense that reduces information leakage,medium
+doi:10.18653/v1/2023.findings-emnlp.461,1,0,0,no_defense,,low
+doi:10.48550/arxiv.2509.25140,1,1,0,no_defense,a novel memory framework that distills generalizable reasoning strategies from an agent's self-judged successful and failed experiences,high
+arxiv:2503.12188,1,0,0,no_defense,we demonstrate that adversarial content can hijack control and communication,high
+doi:10.1109/tccn.2025.3528892,1,0,0,no_defense,"task coordination and scheduling in complex, dynamic environments",high
+arxiv:2608.23471,1,1,0,no_defense,a novel memory injection attack paradigm,high
+doi:10.1109/bigdata62323.2024.10825765,1,0,0,no_defense,"propose an agentic AI-based, multi-agent framework for recommender systems",high
+record:e8265edaa1f5,0,0,0,no_object,multi-agent systems with general linear dynamics,high
+arxiv:2604.07775,1,0,0,no_defense,"propagate malicious instructions, causing cascading failures across the system",medium
+doi:10.1609/aaai.v39i25.34843,1,1,0,no_defense,thoroughly examine the choice-supportive bias,high
+arxiv:2506.12104,1,1,1,eligible,detects and masks any instructions that may conflict with the user query from the memory stream to mitigate long-term risks,high
+record:e9322dfd9db9,1,0,0,no_defense,,low
+doi:10.53941/ijndi.2025.100013,1,0,1,no_persistent_state,a predefined list of banned terms is combined to embed techniques for similarity search,medium
+arxiv:2504.20073,1,0,0,no_defense,a modular system for training and evaluating LLM agents,high
+arxiv:2603.22928,1,1,1,eligible,,low
+doi:10.1016/j.future.2025.107994,1,1,1,eligible,exploiting persistent memory vulnerabilities in LLM applications,high
+arxiv:2311.08166,1,0,0,no_defense,A set of AI agents can solve mechanics tasks,high
+doi:10.54392/irjmt2523,1,0,1,no_persistent_state,defending LLM based systems against adversarial threats in form of prompt injections,medium
+doi:10.1073/pnas.2415898122,1,0,0,no_defense,raise awareness for both the benefits and dangers of anthropomorphic agents,high
+arxiv:2402.18679,1,0,0,no_defense,"Data Interpreter, an LLM-based agent designed to automatically solve various data science problems",high
+record:eff4515c983b,0,0,1,no_object,coordination of multiple agents for high-level tasks,medium
+doi:10.1609/aaai.v40i48.42170,1,1,1,eligible,manages utility-based memory consolidation,medium
+arxiv:1912.03817,0,0,1,no_object,applicable to any learning algorithm,high
+doi:10.1109/vr59515.2025.00025,1,0,0,no_defense,enables LLM agents to perceive virtual environments and generate environment-aware interactions,high
+arxiv:2408.02632,1,1,1,eligible,significantly enhances the security capabilities of LLMs,medium
+record:f279c96eb6b8,1,1,0,no_defense,,low
+doi:10.1145/3774904.3792547,1,1,0,no_defense,a novel poisoning attack method specifically designed for GraphRAG,high
+record:f4e4a752c27c,1,1,0,no_defense,"Consistency violation, not factual error, is the primary collapse trigger",high
+arxiv:2507.07974,1,1,1,eligible,"DefensiveTokens are newly inserted as special tokens, whose embeddings are optimized for security",high
+record:f596b5568166,1,1,0,no_defense,"spontaneously develop civilisational complexity — governance, innovation",medium
+arxiv:2602.21320,1,0,0,no_defense,training general purpose tool-calling agents from scratch,high
+arxiv:2507.17131,1,1,0,no_defense,"updates an internal, timestamped knowledge repository",high
+arxiv:2603.11088,1,0,0,no_defense,defense mechanisms for secure AI agent systems,high
+doi:10.1142/s2301385021500199,0,0,0,no_object,cooperative control of MASs,high
+arxiv:2310.10467,0,0,0,no_object,stance detection demands multi-aspect knowledge,high

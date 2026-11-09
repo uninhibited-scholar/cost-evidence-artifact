@@ -1,0 +1,167 @@
+{
+  "arxiv_id": "2610.07645",
+  "title": "SkillPoison: Progressive Skill Poisoning via Successful Experiences",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "skill",
+    "scope": "cross-task",
+    "carrier": "persistent reusable skill distilled from successful execution experiences by experience-to-skill frameworks (AutoSkill, Trace2Skill); the poisoning carrier is attacker-selected, task-correct verified successful formation records with auxiliary attribution annotations submitted through the formation interface",
+    "operations_covered": ["formation", "update", "retention"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "The integrity of the experience-to-skill formation pipeline: a persistent skill distilled from verified successful experiences should faithfully preserve the applicability conditions of the behaviors it consolidates. SkillPoison shows this can be violated without any malicious trajectory - all injected experiences remain task-correct and pass verification and lexical inspection, yet the formed skill retains a locally valid target behavior and applies it outside its valid contexts, causing attributable downstream failures. The property is judged violated when strict ASR is high while injected experiences remain individually benign.",
+    "operationalized_as": "Strict attack success rate (ASR, Eq.16 in Appendix B.3): the share of examples correct under the w/o Attack condition that become incorrect under attack while exhibiting dataset-specific evidence linking the failure to the target behavior; complemented by victim task accuracy (Acc.) and target-rule Adoption."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "select a budgeted subset of up to B verified successful experiences for skill formation (|T_A| <= B; default formation budget of 15 experiences per condition)",
+      "attach auxiliary attribution annotations to the selected experiences through the skill formation interface",
+      "choose which task categories and successful experiences are organized and submitted"
+    ],
+    "assumptions": [
+      "the victim framework forms persistent skills from verified successful trajectories through its own trajectory analyzer A_f and skill extractor E_f, which the attacker cannot modify",
+      "the target behavior p* naturally occurs and is locally valid in some successful experiences across diverse task categories",
+      "no individual submitted trajectory is malicious: executions, outputs, and verification results cannot be altered, so every injected experience passes verification"
+    ],
+    "not_covered": [
+      "direct artifact-based attacks that modify the formed skill, skill library, extraction code, or routing mechanism",
+      "altering task executions, outputs, verification results, framework internals, or verification criteria",
+      "defenses or detection mechanisms (the paper evaluates attacks only; no defense experiments)",
+      "parameter/weight-level poisoning and cross-user or multi-user skill sharing settings"
+    ]
+  },
+  "intervention": {
+    "name": "SkillPoison (Hierarchical Task Selection + Local Evidence-Grounded Success Attribution + Global Cross-Experience Inductive Reinforcement)",
+    "mechanism_layer": "content",
+    "description": "An attack on the experience-to-skill formation process. Instead of injecting malicious content, SkillPoison (1) selects successful experiences in which a locally valid target behavior naturally occurs and substantially affects the output, (2) attaches auxiliary attribution evidence (task evidence, success attribution, outcome-consistency rationale, counterfactual consequence) explicitly linking the behavior to verified task success without altering the original execution, and (3) organizes these records across diverse task categories so the native skill extractor retains the behavior and overgeneralizes it beyond its valid contexts - no malicious instructions and no direct skill modification."
+  },
+  "controls": [
+    {"name": "w/o Attack (benign formation)", "purpose": "baseline"},
+    {"name": "MemoryGraft / ExpeL / OEP / Agent Workflow Memory adapted to the experience-to-skill setting", "purpose": "fair-comparison"},
+    {"name": "PoisonedEvolution and SkillJack (existing formation-based skill attacks)", "purpose": "fair-comparison"},
+    {"name": "w/o LEGSA and w/o GCTIR ablation variants", "purpose": "ablation"},
+    {"name": "Qwen V3.8 Flash and GPT-5.5 backbones; budgets of 5/10/15 experiences", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "Across three benchmarks and two experience-to-skill frameworks, SkillPoison reaches 95.71% attack success rate while every injected experience remains task-correct and passes verification and lexical inspection.",
+      "metric": "ASR (strict attack success rate)",
+      "value": "95.71%",
+      "comparison": null,
+      "setting": "HANS/PAWS/DS1000 on AutoSkill and Trace2Skill; deepseek-v4-flash, temperature 0, formation budget of 15 verified successful experiences; formation-only attacker with annotation access only",
+      "quote": "Extensive experiments on three benchmarks show that SkillPoison achieves 95.71% attack success rates, while all injected experiences remain task-correct and pass verification and lexical inspection.",
+      "locator": "Abstract",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Among formation-based skill attacks, SkillPoison attains the highest Adoption and ASR in all six framework-task settings, improving ASR over the strongest existing skill attack by 2.16-22.35 percentage points.",
+      "metric": "ASR improvement over strongest existing skill attack",
+      "value": "2.16-22.35 percentage points",
+      "comparison": null,
+      "setting": "Two frameworks (AutoSkill, Trace2Skill) x three datasets (HANS, PAWS, DS1000); deepseek-v4-flash, budget 15, identical evaluation protocol",
+      "quote": "SkillPoison achieves the highest Adoption and ASR among Formation-based Attacks in all six settings, improving ASR over the strongest existing skill attack by 2.16–22.35 percentage points.",
+      "locator": "§4.2 Obs. 3 (Table 1)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Existing formation-based attacks are unreliable across tasks and pipelines: on PAWS, PoisonedEvolution's ASR swings from 13.44% (AutoSkill) to 93.55% (Trace2Skill) and SkillJack's from 12.37% to 84.41%, while no method exceeds 36.64% ASR on DS1000.",
+      "metric": "ASR",
+      "value": "13.44% -> 93.55%",
+      "comparison": "SkillJack 12.37% -> 84.41% on PAWS; no method exceeds 36.64% ASR on DS1000",
+      "setting": "Baseline skill attacks under identical protocol; deepseek-v4-flash, budget 15, both frameworks, three datasets",
+      "quote": "On PAWS, the ASR of PoisonedEvolution increases from 13.44% on AutoSkill to 93.55% on Trace2Skill, while that of SkillJack increases from 12.37% to 84.41%. In contrast, no method exceeds 36.64% ASR on DS1000.",
+      "locator": "§4.2 Obs. 1 (Table 1)",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Preliminary study: existing formation-based attacks rarely promote a complete target behavior into a persistent skill - of 36 attack-pipeline instances (9 per attack-pipeline combination), 24 were rejected, 9 retained only part of the behavior, and 3 achieved complete formation.",
+      "metric": "complete target-behavior formation count",
+      "value": "3 of 36 complete formations",
+      "comparison": "24 rejected; 9 partial retention",
+      "setting": "SkillJack and PoisonedEvolution on Trace2Skill and AutoSkill, nine instances per attack-pipeline combination",
+      "quote": "The pie chart in the right panel summarizes all 36 instances: 24 are rejected, 9 retain only part of the target behavior, and 3 achieve complete formation.",
+      "locator": "§2.1 Figure 2(a)",
+      "denominator": {
+        "n_total": "36 attack-pipeline instances",
+        "n_valid": "3 instances achieving complete formation",
+        "how_counted": "outcomes of SkillJack and PoisonedEvolution on Trace2Skill and AutoSkill, nine instances per attack-pipeline combination, classified as safety rejection, incomplete retention, or successful formation"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "At a budget of 15 experiences under Trace2Skill, SkillPoison attains the lowest accuracy and highest Adoption and ASR on every task; on DS1000 its ASR reaches 36.64% versus 14.29% for SkillJack and 10.71% for PoisonedEvolution.",
+      "metric": "ASR",
+      "value": "36.64%",
+      "comparison": "36.64% (SkillPoison) vs 14.29% (SkillJack) and 10.71% (PoisonedEvolution)",
+      "setting": "DS1000, Trace2Skill, formation budget 15 verified successful experiences",
+      "quote": "Its advantage is especially clear on DS1000, where its ASR reaches 36.64%, compared with 14.29% for SkillJack and 10.71% for PoisonedEvolution.",
+      "locator": "§4.3 Obs. 6 (Table 2)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "More formation budget strengthens all skill attacks: on PAWS under Trace2Skill, ASRs rise from 0.00-29.40% with five experiences to 84.41-95.71% with fifteen.",
+      "metric": "ASR",
+      "value": "0.00-29.40% -> 84.41-95.71%",
+      "comparison": null,
+      "setting": "PAWS, Trace2Skill, skill attacks compared at budgets of 5, 10, and 15 verified successful experiences",
+      "quote": "On PAWS, the ASRs increase from 0.00–29.40% with five experiences to 84.41–95.71% with fifteen.",
+      "locator": "§4.3 Obs. 4 (Table 2)",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Both key components are necessary: on HANS under AutoSkill, removing either LEGSA or GCTIR lets accuracy recover from 24.00% to 96.00%, and on PAWS accuracy rises from 57.62% to 90.48% without LEGSA and 88.57% without GCTIR.",
+      "metric": "Acc. (victim accuracy under attack)",
+      "value": "24.00% -> 96.00% (HANS)",
+      "comparison": "PAWS: 57.62% -> 90.48% without LEGSA; 57.62% -> 88.57% without GCTIR",
+      "setting": "Ablation under AutoSkill; same victim model, formation budget, skill extraction pipeline, and evaluation protocol; Hierarchical Task Selection unchanged",
+      "quote": "On HANS, Acc. rises from 24.00% to 96.00% when either component is removed; on PAWS, it rises from 57.62% to 90.48% without LEGSA and 88.57% without GCTIR.",
+      "locator": "§4.4 Obs. 7 (Figure 4)",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "The attack transfers across backbones: under Qwen V3.8 Flash with AutoSkill, SkillPoison's ASRs reach 84.00% on HANS, 64.12% on PAWS, and 51.20% on DS1000, outperforming both existing skill attacks on all three tasks.",
+      "metric": "ASR",
+      "value": "84.00% / 64.12% / 51.20%",
+      "comparison": null,
+      "setting": "Qwen V3.8 Flash backbone, AutoSkill framework, HANS/PAWS/DS1000, same formation budget and protocol",
+      "quote": "Under Qwen V3.8 Flash with AutoSkill, its ASRs reach 84.00%, 64.12%, and 51.20% on HANS, PAWS, and DS1000, respectively, outperforming both existing skill attacks on all three tasks.",
+      "locator": "§C.1 Obs. 8 (Table 3)",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "SkillPoison does not achieve the highest ASR everywhere: on DS1000 with Trace2Skill under Qwen V3.8 Flash and GPT-5.5 its ASRs trail the strongest baselines, and the authors note some induced code-generation failures do not satisfy the strict target-specific attribution criteria, making DS1000 the most challenging setting.",
+      "quote": "The only settings in which SkillPoison does not achieve the highest ASR are DS1000 with Trace2Skill under Qwen V3.8 Flash and GPT-5.5. Its ASRs are 11.90% and 23.81%, compared with the strongest baseline results of 15.79% and 24.14%, respectively.",
+      "locator": "§C.1 Obs. 9"
+    },
+    {
+      "statement": "Component contributions are acknowledged to be task- and framework-dependent rather than uniform.",
+      "quote": "These results confirm that both components strengthen the attack, although their contributions vary across tasks and formation frameworks.",
+      "locator": "§C.3 Obs. 12"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "https://github.com/DEEP-JLU/SkillPoison",
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear"
+  ]
+}

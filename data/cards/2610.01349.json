@@ -1,0 +1,189 @@
+{
+  "arxiv_id": "2610.01349",
+  "title": "PACE: Provenance-Aware Capability Enforcement for Tool-Using LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "mixed",
+    "carrier": "attacker-authored artifacts that persist into the agent's planning context: reusable skills, tool/MCP descriptions and schemas (the artifact K), retrieved pages, and poisoned memory entries; on the defense side, an append-only per-episode provenance/audit record",
+    "operations_covered": ["retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "An attacker-authored artifact (skill, tool description, MCP schema, poisoned memory) must not, through a mediated tool call, cause an unrequested irreversible effect (authority/integrity) or a disclosure of the secret (confidentiality). Probabilistic noninterference is the yardstick the paper measures against but explicitly does not claim; PACE certifies only represented-path separation and authorized schema-defined effects at the last tool boundary, and the property fails when an effect travels through a path the provenance graph does not represent or an encoding the transform family omits. Judged by worst-group attack success rate per benchmark with native utility/refusal as companion cost.",
+    "operationalized_as": "worst eligible per-group ASR across eight executable benchmarks and three target-model families against the undefended agent and the strongest published defenses, with native utility companions; a reduced-scale adaptive search (mutator sees tool calls, guard decisions and verdicts, 50 episodes per pair); and a paired 2x2x2 factorial ablation on 1167 frozen cases"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "authors the artifact K (skill, tool description, or MCP schema) and any untrusted span of the context, including injected text in retrieved pages and memory",
+      "adapts to each defense outcome: in the adaptive search the mutator sees six sampled candidates, the agent's tool calls, guard decisions and first failed obligations, and the security verdict, and proposes four new payloads per round for up to 50 episodes per pair",
+      "succeeds on an unrequested irreversible effect or on a disclosure of the secret s"
+    ],
+    "assumptions": [
+      "the agent policy M is frozen; the defender cannot retrain M, instrument a tool's interior, or enumerate contexts",
+      "the defender acts only at the tool boundary, reading proposals and returns and weakening or blocking a call",
+      "the request channel is authenticated; capabilities compile deterministically from the trusted request, excluding attack labels and judge outputs",
+      "semantic premises A1-A9 and implementation conditions H1-H5 (schema/effect-label/validator/severance-contract soundness) are assumed, not runtime-established"
+    ],
+    "not_covered": [
+      "a compromised mediation layer: a party holding the log key can fabricate the observation prefix every later decision reads",
+      "undeclared reads, tool-internal secondary calls, model-recreated strings, and out-of-band resource changes bypassing versioned adapters carry no structural link to the graph",
+      "paraphrase, translation, arithmetic encodings, and short fragments escape the declared transform family; short low-entropy values also grow the path set spuriously",
+      "no noninterference bound is proved at any delta; observable refusal remains a channel",
+      "semantic restatement, fragmented flows, hidden secondary effects, and durable distributed execution are future work"
+    ]
+  },
+  "intervention": {
+    "name": "PACE (Provenance-Aware Capability Enforcement); all experiments evaluate the PACE-p configuration against the certified contract PACE-c",
+    "mechanism_layer": "provenance",
+    "description": "PACE mediates every tool call immediately before it executes in four phases. Path confinement (P) proposes an executable cut of represented influence paths in the append-only episode provenance graph (src-snk max-flow/min-cut over the flow subgraph); capability and effect verification (C) checks schema-defined effect atoms against authority compiled from the authenticated request under nine obligations; execution-boundary adaptation (B) lets the combiner restore C-certified calls blocked by P and apply declared repairs (block, refuse, dry-run, read-only view, argument rewrite, sanitization, budget cap). PACE-c requires the final action to preserve the certified cut; verifiers recompute both certificates from the audit record."
+  },
+  "controls": [
+    {"name": "undefended agent / wrapper-matched no-defense arm A0", "purpose": "baseline"},
+    {"name": "published defenses from five families (CaMeL, FIDES, DRIFT, Progent, MCIP Guardian, ToolShield, MELON, DataSentinel, PIGuard, PromptGuard-2, spotlighting and other prompt-level defenses)", "purpose": "fair-comparison"},
+    {"name": "ablation arms A1-A6, complete 2x2x2 factorial over P, C, B on shared paired case identifiers", "purpose": "ablation"},
+    {"name": "DTA fully instrumented dynamic taint tracking (diagnostic reference, excluded from main-table comparator selection)", "purpose": "positive-control"}
+  ],
+  "results": [
+    {
+      "claim": "Across the eight benchmarks and three target-model families, the evaluated PACE-p configuration attains the strictly lowest per-group ASR in 62 of 79 eligible per-group attack columns and ties lowest in 14, i.e. it is beaten in only three per-group columns (Qwen WASP plain text, Qwen MSB-Call, DeepSeek AgentDyn GitHub).",
+      "metric": "ASR column win count (per-group elementary ASR columns)",
+      "value": "62 strictly lowest of 79 eligible columns; 14 tied lowest",
+      "comparison": null,
+      "setting": "eight executable benchmarks (AgentDojo, AgentDyn, WASP, InjecAgent, ASB, PASB, MCPTox, MSB); three frozen target families gpt-5.6-luna, DeepSeek-V4-Flash, local Qwen-3.8-27B at temperature 0; comparators are the strongest published defenses incl. CaMeL, FIDES, DRIFT, Progent, MELON, DataSentinel; attacker authors artifacts and injected context",
+      "quote": "Among 79 eligible per-group ASR columns, PACE-p is strictly lowest in 62, tied lowest in 14, and higher in three, excluding the derived InjecAgent data-stealing aggregate, its three conditional DS-S2 columns, and two columns with zero undefended ASR.",
+      "locator": "§5.2 (count detailed in §F.1)",
+      "denominator": {
+        "n_total": "79",
+        "n_valid": "79",
+        "how_counted": "F.1: across the eight tables there are 84 elementary ASR columns; removing the three DS-S2 columns and two with zero undefended ASR leaves 79"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Relative to undefended agents, PACE's full-benchmark native utility drops at most 2.92 points (while gaining utility on WASP and MSB), so security gains come at bounded utility cost in the evaluated configuration.",
+      "metric": "native utility point change vs undefended agent",
+      "value": "at most 2.92 points drop",
+      "comparison": "WASP utility gains 14.29, 11.91, 8.34 points; MCPTox refusal differs by at most 1.81 points",
+      "setting": "eight full benchmarks, three target-model families, native benchmark utility scores; PACE-p vs undefended agent",
+      "quote": "Relative to undefended agents, full-benchmark utility drops at most 2.92 points, gains 14.29, 11.91, and 8.34 points on WASP, and improves in MSB PUA and NRP; MCPTox refusal differs by at most 1.81 points.",
+      "locator": "§5.2",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "A reduced-scale adaptive search with a mutator that sees tool calls, guard decisions and security verdicts succeeds on 21/30 undefended pairs but on 0/30 pairs against PACE-p (95% Wilson interval [0, 11.4%]), with all boundary target calls blocked.",
+      "metric": "ASR under adaptive attack",
+      "value": "0/30 (two-sided 95% Wilson interval [0, 11.4%])",
+      "comparison": "undefended 21/30 (70.0%) vs PACE-p 0/30",
+      "setting": "30 out-of-authority AgentDojo pairs (10 each from Slack, Travel, Workspace; Banking excluded, seed 20260922); target Qwen-3.8-27B-FP8 at temperature 0; mutator uses the target checkpoint at temperature 1.0, sees guard decisions and verdicts, proposes 4 payloads per round, max 50 episodes per pair",
+      "quote": "Reduced-scale adaptive search on 30 out-of-authority AgentDojo pairs yields 21/30 (70.0%) undefended success, including nine first successes from search-generated payloads, versus 0/30 for PACE-p (two-sided 95% Wilson interval [0, 11.4%]).",
+      "locator": "§5.2 (protocol and per-suite detail in §E.2 and §F.2)",
+      "denominator": {
+        "n_total": "30",
+        "n_valid": "30",
+        "how_counted": "ten out-of-authority pairs selected from each of Slack, Travel, and Workspace; each pair stops at first success or 50 episodes (F.2: undefended successes 10/10 Slack, 7/10 Travel, 4/10 Workspace)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the complete paired ablation, several reduced arms tie complete PACE's floor and none beats it in any security row; the full combination shows no demonstrated unique security benefit.",
+      "metric": "ASR across ablation arms (8 arms, security rows)",
+      "value": "no reduced arm beats A7 (complete PACE) in any security row",
+      "comparison": null,
+      "setting": "complete 2x2x2 factorial over path confinement (P), capability and effect verification (C), execution-boundary adaptation (B) on 1167 frozen paired cases, 9336 scored outcomes, arms A0-A7 sharing case identifiers, local Qwen-3.8-27B endpoint, seed 20260828, single deterministic paired run",
+      "quote": "Several reduced arms tie A7’s floor and none beats it in any security row; the full combination has no demonstrated unique security benefit.",
+      "locator": "§5.3 (design in §E.3)",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "Boundary adaptation (B) is what closes MSB-Call in the ablation: every B-containing arm closes it, while arms without B leave 53.8% to 61.5% residual ASR.",
+      "metric": "ASR (MSB-Call, ablation subset)",
+      "value": "closed by every B-containing arm; without B residual 53.8% to 61.5%",
+      "comparison": "with B: closed vs without B: 53.8% to 61.5%",
+      "setting": "ablation arms A0-A7 on the paired frozen case subset, local Qwen-3.8-27B endpoint; MSB-Call stage metric",
+      "quote": "every B-containing arm closes MSB-Call, against 53.8% to 61.5% without B.",
+      "locator": "§5.3",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "The full-benchmark three-point utility bound does not hold on the ablation subset: paired AgentDyn utility falls from 66.7% (A0) to 33.3% (A7).",
+      "metric": "utility (AgentDyn, ablation subset)",
+      "value": "66.7% -> 33.3% (A0 to A7)",
+      "comparison": "A0 66.7% vs A7 33.3%",
+      "setting": "ablation paired subset (AgentDyn 60 paired cases per Table 5), arms A0 vs A7, local Qwen-3.8-27B endpoint, single deterministic run; utility recovers through C restoring P's terminal blocks, with no executed nonterminal rewrite",
+      "quote": "Paired A0-to-A7 AgentDyn utility falls from 66.7% to 33.3%; the full-benchmark three-point bound does not hold on this subset.",
+      "locator": "§5.3",
+      "denominator": {
+        "n_total": "60",
+        "n_valid": "60",
+        "how_counted": "Appendix E.2 Table 5: AgentDyn paired cases in the ablation subset"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "On the adaptive-search pairs, every out-of-authority target call reaching PACE's boundary was blocked before dispatch, with none released under rule R2.",
+      "metric": "out-of-authority target calls blocked at boundary",
+      "value": "157 target calls blocked before dispatch",
+      "comparison": null,
+      "setting": "PACE-p on the 30 adaptive-search AgentDojo pairs (126 episodes across 14 pairs); F.2 trace: 149 fail AUTH and BUDGET, eight additionally fail BIND and CTRL, none uses R2",
+      "quote": "All 157 target calls at its boundary were blocked before dispatch without R2 release.",
+      "locator": "§5.2 (trace detail in §F.2)",
+      "denominator": {
+        "n_total": "157",
+        "n_valid": "157",
+        "how_counted": "F.2: boundary trace records 157 exact out-of-authority target calls in 126 episodes across 14 pairs, all blocked before execution"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Four dependence cases carry no structural link between a real dependence and the provenance graph, so PACE cannot see them.",
+      "quote": "Four cases carry no structural link between a real dependence and the graph: undeclared reads, secondary external calls made inside a tool, strings recreated by the model, and external changes to resources that bypass versioned adapters.",
+      "locator": "Appendix C.6"
+    },
+    {
+      "statement": "The declared transform family covers only deterministic re-encodings; paraphrase, translation, arithmetic encodings, and short fragments still escape.",
+      "quote": "which narrows the third case to deterministic re-encodings; paraphrase, translation, arithmetic encodings, and short fragments still escape.",
+      "locator": "Appendix C.6"
+    },
+    {
+      "statement": "Nothing defends against a compromised mediation layer: the log-key holder can fabricate the observation prefix every later decision reads.",
+      "quote": "nothing here defends against a compromised mediation layer: a party holding the log key kk can fabricate the observation prefix that every later decision reads.",
+      "locator": "Appendix C.6"
+    },
+    {
+      "statement": "Extending coverage to semantic restatement, fragmented flows, hidden secondary effects, and durable distributed execution is left as future work.",
+      "quote": "Extending coverage to semantic restatement, fragmented flows, hidden secondary effects, and durable distributed execution is future work.",
+      "locator": "§6 Conclusion"
+    },
+    {
+      "statement": "The ablation is a single deterministic paired run under one seed, with no multi-seed stability claim and no claim of statistically significant component effects.",
+      "quote": "The ablation is one deterministic paired run under a single seed, so we report differences on that population and make no multi-seed stability claim.",
+      "locator": "Appendix E.4"
+    },
+    {
+      "statement": "The adaptive evaluation is reduced-scale: only out-of-authority goals in three AgentDojo suites, the target checkpoint as mutator, 50 episodes per case; stronger mutators and attacks on parsing or unrepresented transformations remain untested.",
+      "quote": "The sample covers only out-of-authority goals in three suites, uses the target checkpoint as mutator, and permits 50 episodes per case; stronger mutators and attacks on parsing or unrepresented transformations remain untested.",
+      "locator": "Appendix F.2"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "source code in the supplemental material; public artifact per release checklist (Appendix E.7) with replay manifest; no live credentials or working exfiltration targets",
+    "data": "per-episode native evaluator inputs and outputs to be released subject to benchmark licenses (Appendix E.7); benchmark and method revisions pinned in the manifest (Appendix E.6)",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear"
+  ]
+}

@@ -1,0 +1,208 @@
+{
+ "arxiv_id": "2403.14720",
+ "title": "Defending Against Indirect Prompt Injection Attacks With Spotlighting",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "none (no persistent-state object studied)",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "在同一次会话中与用户指令一并处理的外部不可信数据（网页、邮件等）内嵌入的指令，不得取得指令权威——不得覆盖或改变系统/用户指令（不得把数据当代码执行）。若注入使模型完全放弃原任务（如只返回攻击者关键字），即判定该属性被破坏；若模型注意到攻击文本但仍完成原任务，严格 ASR 定义下不算破坏。防御只在使用了相应 spotlighting 变换且模型有足够解码能力时成立：delimiting 在攻击者知晓系统提示词时可被绕过；encoding 会损害低能力模型的任务表现。",
+  "operationalized_as": "Attack Success Rate (ASR)：在 1000 篇含关键字载荷注入攻击的合成文档语料上，'fraction of the total corpus that yields successful prompt injections'（成功=攻击完全接管 LLM 指令的严格定义，区别于更宽松的 AffSR）。"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "控制被 LLM 系统处理的外部数据源（网页、邮件、短信等）的内容，在其中植入指令文本",
+   "对抗性讨论中假设攻击者可能获知完整系统提示词与防御变换细节（分隔符、ROT13 等可被反向利用）"
+  ],
+  "assumptions": [
+   "用户是无辜旁观者甚至受害者，攻击者不直接持有用户会话或凭证，攻击经外部数据间接进入用户会话（'the attacker has hijacked the user's session'）",
+   "防御方必须假设整个系统提示词已泄露给对手（'we must assume that our entire system prompt has been leaked to an adversary'）",
+   "实验为黑盒 GPT 家族模型：text-davinci-003、GPT-3.5-Turbo（2023年6月版）、GPT-4（2023年6月版），temperature=1.0；攻击语料为合成关键字载荷攻击（非自适应攻击者）"
+  ],
+  "not_covered": [
+   "用户直接提示注入/越狱（UPIA）——语言分布不同，需要不同的防御方法",
+   "自适应攻击仅在定性讨论中考虑（攻击者插入自己的分隔符、构造 ROT13 反向编码、无空格攻击串规避 datamarking），未做系统性自适应攻击实验",
+   "多通道/带外信令式架构级分离在现有 LLM 架构下不可行，留作未来工作",
+   "不涉及跨会话/跨用户的持久化载体（记忆、技能、经验）攻击"
+  ]
+ },
+ "intervention": {
+  "name": "Spotlighting（delimiting / datamarking / encoding）",
+  "mechanism_layer": "content",
+  "description": "对不可信输入文本做变换以提供关于其来源（provenance）的连续信号，并配合更新系统提示词说明如何对待该输入，帮助模型区分可信指令块与不可信数据块。三种实例化：delimiting（特殊符号标注输入首尾，作者不推荐实践使用）；datamarking（在全文空白处交错插入特殊标记 token，可动态/随机化标记 token 与标记位置以对抗泄露）；encoding（用 base64 等编码算法变换输入，单向变换不可被攻击者控制，建议仅用于 GPT-4 级高能力模型并在具体用例中验证任务影响）。"
+ },
+ "controls": [
+  {
+   "name": "仅系统提示词防御指令（不加 spotlighting 变换）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "delimiting / datamarking / encoding 三种 spotlighting 变体互比",
+   "purpose": "ablation"
+  },
+  {
+   "name": "few-shot in-context 示例防御（附录 VIII-B，FS1/FS2）",
+   "purpose": "fair-comparison"
+  }
+ ],
+ "results": [
+  {
+   "claim": "在 GPT 家族模型的实验中，spotlighting 将间接提示注入攻击成功率从大于 50% 降至低于 2%，且对任务效能影响极小（论文总体结论）。",
+   "metric": "ASR",
+   "value": "below 2%",
+   "comparison": "greater than 50% -> below 2%",
+   "setting": "GPT 家族黑盒模型（text-davinci-003、GPT-3.5-Turbo 2023-06、GPT-4 2023-06），1000 篇合成关键字载荷攻击文档，摘要/问答等任务，temperature=1.0",
+   "quote": "Using GPT-family models, we find that spotlighting reduces the attack success rate from greater than 50% to below 2% in our experiments with minimal impact on task efficacy.",
+   "locator": "Abstract",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "\"We report Attack Success Rate as the fraction of the total corpus that yields successful prompt injections\" — 基于 1000 篇合成攻击文档语料（IV-B）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "在文档摘要任务中，datamarking 将 GPT-3.5-Turbo 的 ASR 从约 50% 降至 3% 以下，将 Text-003 的 ASR 从 40% 降至 0.00%。",
+   "metric": "ASR",
+   "value": "below 3% (GPT-3.5-Turbo), 0.00% (Text-003)",
+   "comparison": "GPT-3.5-Turbo: approximately 50% -> below 3%; Text-003: 40% -> 0.00%",
+   "setting": "文档摘要任务，GPT-3.5-Turbo 与 text-davinci-003 (Text-003)，1000 篇合成攻击文档，temperature=1.0",
+   "quote": "With GPT-3.5Turbo, ASR is reduced from approximately 50% to below 3%. With Text-003, ASR is reduced from 40% to 0.00%.",
+   "locator": "§V-A Can Spotlighting Reduce ASR?, Fig. 4",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "\"We report Attack Success Rate as the fraction of the total corpus that yields successful prompt injections\" — 基于 1000 篇合成攻击文档语料（IV-B）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "在文档问答任务中，datamarking 使 GPT-3.5-Turbo 的 ASR 降至 8.0%、GPT-4 降至 1.0%、GPT-3-Text-003 降至 0.00%。",
+   "metric": "ASR",
+   "value": "8.0% (GPT-3.5-Turbo), 1.0% (GPT-4), 0.00% (GPT-3-Text-003)",
+   "comparison": null,
+   "setting": "文档问答（Q&A）任务，三种 GPT 家族模型，1000 篇合成攻击文档，temperature=1.0",
+   "quote": "With GPT3.5-Turbo, ASR is reduced to 8.0% (left), with GPT-4 ASR is reduced to 1.0% (middle), with GPT-3-Text-003 ASR is reduced to 0.00% (right).",
+   "locator": "§V-A Can Spotlighting Reduce ASR?, Fig. 5",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "\"We report Attack Success Rate as the fraction of the total corpus that yields successful prompt injections\" — 基于 1000 篇合成攻击文档语料（IV-B）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "encoding 变换是效果最好的 spotlighting 形式：GPT-3.5-Turbo 上文档摘要 ASR 降至 0.0%、问答 ASR 降至 1.8%（作者对高能力模型的最终推荐）。",
+   "metric": "ASR",
+   "value": "0.0% (summarization), 1.8% (Q&A)",
+   "comparison": null,
+   "setting": "GPT-3.5-Turbo，文档摘要与问答任务，1000 篇合成攻击文档，temperature=1.0；作者建议 encoding 仅配合 GPT-4 级高能力模型使用",
+   "quote": "Using GPT-3.5-Turbo, the encoding technique leads to the lowest ASRs across different tasks. In document summarization, ASR is reduced to 0.0% and in Q&A ASR is reduced to 1.8%.",
+   "locator": "§V-A Can Spotlighting Reduce ASR?, Fig. 6",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "\"We report Attack Success Rate as the fraction of the total corpus that yields successful prompt injections\" — 基于 1000 篇合成攻击文档语料（IV-B）"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "无 spotlighting 时 GPT-3.5-Turbo 基线 ASR 约 60%；仅在系统提示词加防注入指令效果甚微；加入专用分隔符（delimiting）可使 ASR 约减半，但该基线防御可被知晓系统提示词的攻击者轻易绕过。",
+   "metric": "ASR",
+   "value": "baseline ASR around 60% (GPT-3.5-Turbo)",
+   "comparison": "around 60% baseline -> reduced by about half with specialized delimiters",
+   "setting": "GPT-3.5-Turbo，1000 篇合成攻击文档测试集，文档处理任务，temperature=1.0",
+   "quote": "Using GPT3.5-Turbo, the baseline ASR is around 60% with the test dataset (left). Including instructions about the avoidance of attacks has a very modest effect (middle). Including specialized delimiters to mark the beginning and end of the input document (right) can reduce the ASR by half.",
+   "locator": "§V-A Can Spotlighting Reduce ASR?, Fig. 3",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "\"We report Attack Success Rate as the fraction of the total corpus that yields successful prompt injections\" — 基于 1000 篇合成攻击文档语料（IV-B）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在系统提示词中加入 few-shot 反注入示例可使 GPT-3.5-Turbo 的 ASR 降至 5% 以下，但作者因标签泄漏/过拟合担忧对该低 ASR 结果持保留态度。",
+   "metric": "ASR",
+   "value": "below 5%",
+   "comparison": null,
+   "setting": "GPT-3.5-Turbo，few-shot 示例防御（FS1/FS2 两种处理），1000 篇合成攻击文档，temperature=1.0（附录实验）",
+   "quote": "An shown in Figure 9, this strategy has a large impact on reducing ASR. In experiments with GPT3.5-Turbo, the ASR is reduced to below 5%.",
+   "locator": "§VIII-B Few Shot Learning, Fig. 9",
+   "denominator": {
+    "n_total": "1000",
+    "n_valid": null,
+    "how_counted": "\"We report Attack Success Rate as the fraction of the total corpus that yields successful prompt injections\" — 基于 1000 篇合成攻击文档语料（IV-B）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在 GPT-3.5-Turbo 上跨 SQuAD Q&A、SuperGLUE Word-In-Context、SuperGLUE BoolQ、IMDB Sentiment 四个基准，datamarking 变换对底层 NLP 任务表现无不利影响（定性结果，数值仅在图 7 中）。",
+   "metric": "utility",
+   "value": "no detrimental impact on task performance",
+   "comparison": null,
+   "setting": "GPT-3.5-Turbo，SQuAD Q&A / SuperGLUE WiC / SuperGLUE BoolQ / IMDB Sentiment，有无 datamarking 变换对照",
+   "quote": "As shown in Figure 7, across all of these benchmarks, the presence of the datamarking transformation does not have any detrimental impact on task performance.",
+   "locator": "§V-B Does Spotlighting Impair Language Tasks?, Fig. 7",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "delimiting 防御可被获知系统提示词的攻击者轻易绕过（构造含己方分隔符的字符串），故作者不推荐实践使用。",
+   "quote": "If an adversary gains knowledge of our system prompt, and therefore an understanding of the delimiting strategy, then it would be simple to craft a string that contains our delimiters and overrides our instructions.",
+   "locator": "§V-D Additional Considerations"
+  },
+  {
+   "statement": "encoding 变换会损害低能力模型的任务表现（解码伴随错误或幻觉），仅应与 GPT-4 级高能力模型配合使用并按用例验证。",
+   "quote": "For example, GPT-3.5-Turbo suffers in task performance when faced with encoded text.",
+   "locator": "§V-B Does Spotlighting Impair Language Tasks?, Fig. 8"
+  },
+  {
+   "statement": "作者承认缺乏对 spotlighting 为何有效的清晰机理理解。",
+   "quote": "While the data presented here seem to indicate that this intuition is correct, we lack a clear understanding of why spotlighting actually helps.",
+   "locator": "§VI Discussion"
+  },
+  {
+   "statement": "spotlighting 只是创造分离、并非对干扰完全安全（类比电信多频带信令可防意外干扰但防不了故意干扰）。",
+   "quote": "Similar to the multi-frequency transmission strategy, spotlighting helps to create separation but is not perfectly secure against interference.",
+   "locator": "§VI Discussion"
+  },
+  {
+   "statement": "few-shot 防御的低 ASR 结果受限于当前攻击战术知识且难以避免标签泄漏，作者对其难以完全置信，转而依赖针对结构性问题的 spotlighting。",
+   "quote": "For these reasons, it is challenging to have full confidence in these low ASR results.",
+   "locator": "§VIII-B Few Shot Learning"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "asr_values_partially_sourced_from_figure_captions",
+  "attack_corpus_is_synthetic_single_keyword_payload",
+  "no_persistent_state"
+ ]
+}

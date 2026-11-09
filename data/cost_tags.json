@@ -1,0 +1,5292 @@
+{
+ "generated_at": "2026-11-07T23:40:00",
+ "rules": "cost-tags-rules.md (v2 裁决版)",
+ "adjudication": "cost-tags-adjudication.json（人工逐卡裁决表）",
+ "cards_total": 129,
+ "cards": {
+  "2302.12173": {
+   "arxiv_id": "2302.12173",
+   "layer": "none",
+   "title": "Not what you've signed up for: Compromising Real-World LLM-Integrated Applicatio",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧概念验证，无干预成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧概念验证，无干预成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧概念验证，无干预成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧概念验证，无干预成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2306.05499": {
+   "arxiv_id": "2306.05499",
+   "layer": "content",
+   "title": "Prompt Injection attack against LLM-integrated Applications",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧测评，防御绕过为定性"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧测评，防御绕过为定性"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧测评，防御绕过为定性"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧测评，防御绕过为定性"
+    }
+   },
+   "any_has": false
+  },
+  "2308.01990": {
+   "arxiv_id": "2308.01990",
+   "layer": "execution",
+   "title": "From Prompt Injections to SQL Injection Attacks: How Protected is Your LLM-Integ",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 12,
+       "metric": "LLM guard latency overhead",
+       "value": "8%–20%（平均 0.4s/查询）",
+       "quote": "The overhead added by the LLM guard is acceptable in comparison, as it varies between 0.35s (Q8) and 0.51s (Q1), representing 8% overhead in Q8 and up to 20% in Q3. Notably, the LLM guard tends to execute in a relatively fixed time spending on average 0.4 seconds to check an SQL query.",
+       "locator": "§5.2.3 Performance (Figure 8)",
+       "denominator": "10"
+      },
+      {
+       "result_index": 13,
+       "metric": "defense latency overhead",
+       "value": "0.7ms（预加载）/ 1.87ms（查询重写）",
+       "quote": "the latter adds an average overhead of 0.7ms (assuming the database is co-located with the application server). SQL query rewriting is slightly more expensive, with an execution time of 1.87ms on average, although there is room for optimizing our SQL parser written in Python.",
+       "locator": "§5.2.3 Performance",
+       "denominator": null
+      }
+     ],
+     "reason": "防御管线延迟开销两读数：LLM guard 8–20%（0.4s/查询，den=10）与权限硬化 0.7ms/查询重写 1.87ms"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2312.11513": {
+   "arxiv_id": "2312.11513",
+   "layer": "content",
+   "title": "Maatphor: Automated Variant Analysis for Prompt Injection Attacks",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击工具管线；25% reference 误分类为攻击管线读数，非防御误伤"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击工具管线；25% reference 误分类为攻击管线读数，非防御误伤"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击工具管线；25% reference 误分类为攻击管线读数，非防御误伤"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击工具管线；25% reference 误分类为攻击管线读数，非防御误伤"
+    }
+   },
+   "any_has": false
+  },
+  "2401.07612": {
+   "arxiv_id": "2401.07612",
+   "layer": "provenance",
+   "title": "Signed-Prompt: A New Approach to Prevent Prompt Injection Attacks Against LLM-In",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "correctness rate on signed user commands (Corr. Rate)",
+       "value": "86.67% (Direct); 73.34% (Multilingual); 100% (Varied Exp., Implication)",
+       "quote": "User (Signed) 100% N/A 86.67% N/A Direct Attacker N/A 0% N/A 0% User (Signed) 100% N/A 73.34% N/A",
+       "locator": "Table 3",
+       "denominator": null
+      }
+     ],
+     "reason": "签名命令良性正确率随防御条件 100%→73.34–86.67%，条件间对照在卡内"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2403.14720": {
+   "arxiv_id": "2403.14720",
+   "layer": "content",
+   "title": "Defending Against Indirect Prompt Injection Attacks With Spotlighting",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "utility",
+       "value": "no detrimental impact on task performance",
+       "quote": "As shown in Figure 7, across all of these benchmarks, the presence of the datamarking transformation does not have any detrimental impact on task performance.",
+       "locator": "§V-B Does Spotlighting Impair Language Tasks?, Fig. 7",
+       "denominator": null
+      }
+     ],
+     "reason": "「no detrimental impact on task performance」无数值，仅定性"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2410.15236": {
+   "arxiv_id": "2410.15236",
+   "layer": "content",
+   "title": "Jailbreaking and Mitigation of Vulnerabilities in Large Language Models",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；query_cost<20 为攻击者成本"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；query_cost<20 为攻击者成本"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；query_cost<20 为攻击者成本"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；query_cost<20 为攻击者成本"
+    }
+   },
+   "any_has": false
+  },
+  "2410.23308": {
+   "arxiv_id": "2410.23308",
+   "layer": "none",
+   "title": "Systematically Analysing Prompt Injection Vulnerabilities in Diverse LLM Archite",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击面测量研究，无干预成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击面测量研究，无干预成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击面测量研究，无干预成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击面测量研究，无干预成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2503.12188": {
+   "arxiv_id": "2503.12188",
+   "layer": "none",
+   "title": "Multi-Agent Systems Execute Arbitrary Malicious Code",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；utility 99% 为无防御系统能力"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；utility 99% 为无防御系统能力"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；utility 99% 为无防御系统能力"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；utility 99% 为无防御系统能力"
+    }
+   },
+   "any_has": false
+  },
+  "2503.18813": {
+   "arxiv_id": "2503.18813",
+   "layer": "architecture",
+   "title": "Defeating Prompt Injections by Design",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "utility_rate",
+       "value": "77% vs 84% undefended (-7 points, under attack)",
+       "quote": "We demonstrate effectiveness of CaMeL by solving 77% of tasks with provable security (compared to 84% with an undefended system) in AgentDojo.",
+       "locator": "Abstract (arXiv v2, 24 Jun 2025)",
+       "denominator": null
+      }
+     ],
+     "reason": "utility-under-attack 读数：77% 与 84% 两个臂均在注入攻击下测得，按 C1 排除条款（攻击条件下的效用读数，无同研究良性对照）不计为数值；对比本身有效，但没有良性端。"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "token_overhead_median",
+       "value": "2.82× input / 2.73× output",
+       "quote": "Overall, we find that CaMeL requires 2.82×2.82\\times input tokens and 2.73×2.73\\times more output tokens for the median task in AgentDojo.",
+       "locator": "§5.5 Overheads",
+       "denominator": null
+      },
+      {
+       "result_index": 8,
+       "metric": "token_overhead_median",
+       "value": "1.06× input / 0.98× output",
+       "quote": "CaMeL requires the highest token usage among the defenses we analyze, the best being Spotlighting, which uses 1.06×1.06\\times more input and 0.98×0.98\\times the output tokens.",
+       "locator": "§5.5 Overheads",
+       "denominator": null
+      }
+     ],
+     "reason": "token 开销 2.82×输入/2.73×输出；NORMAL vs STRICT 1.06×/0.98×"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2506.08837": {
+   "arxiv_id": "2506.08837",
+   "layer": "architecture",
+   "title": "Design Patterns for Securing LLM Agents against Prompt Injections",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    }
+   },
+   "any_has": false
+  },
+  "2506.12104": {
+   "arxiv_id": "2506.12104",
+   "layer": "architecture",
+   "title": "DRIFT: Dynamic Rule-Based Defense with Injection Isolation for Securing LLM Agen",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "utility",
+       "value": "ASR 30.7% -> 1.4%; utility vs CaMeL +18.9% (no attack), +15.5% (under attack)",
+       "quote": "By applying DRIFT to GPT-4o-mini [25], the Attack Success Rate (ASR) is successfully reduced from 30.7% to 1.4%, while utility outperforms CaMeL by 18.9% under no attack and by 15.5% under attack.",
+       "locator": "Introduction (arXiv v3, 26 Mar 2026)",
+       "denominator": "97 / 629"
+      }
+     ],
+     "reason": "无攻击条件下效用 +20.1%（den=97），干预的良性效用变化为改善"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2510.17276": {
+   "arxiv_id": "2510.17276",
+   "layer": "execution",
+   "title": "Breaking and Fixing Defenses Against Control-Flow Hijacking in Multi-Agent Syste",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "recon-9: 表 2 标题为 Attack success rate，97% 是攻击侧读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2602.20021": {
+   "arxiv_id": "2602.20021",
+   "layer": "none",
+   "title": "Agents of Chaos",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "滥用案例研究；60,000 token 为攻击造成的资源消耗"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "滥用案例研究；60,000 token 为攻击造成的资源消耗"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "滥用案例研究；60,000 token 为攻击造成的资源消耗"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "滥用案例研究；60,000 token 为攻击造成的资源消耗"
+    }
+   },
+   "any_has": false
+  },
+  "2604.16968": {
+   "arxiv_id": "2604.16968",
+   "layer": "none",
+   "title": "On Safety Risks in Experience-Driven Self-Evolving Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "ASR & benign task success rate",
+       "value": "ASR rise substantially suppressed; benign task success notably declined (over-refusal)",
+       "quote": "As shown in Figure 5(a), incorporating refusal behaviors into the memory, either in isolation or interleaved with execution traces, substantially suppresses the rise in ASR.",
+       "locator": "§5 Figure 5(a)(b)",
+       "denominator": null
+      }
+     ],
+     "reason": "混入拒绝型经验抑制 ASR 上升伴随良性任务成功率下降（over-refusal 代价）；无防御干预，layer=none"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2607.10526": {
+   "arxiv_id": "2607.10526",
+   "layer": "architecture",
+   "title": "Agents Don't Just Agree, They Remember: Benchmarking Persistent Sycophancy in St",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧基准（持久谄媚），无干预成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧基准（持久谄媚），无干预成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧基准（持久谄媚），无干预成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧基准（持久谄媚），无干预成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2607.19351": {
+   "arxiv_id": "2607.19351",
+   "layer": "architecture",
+   "title": "OpenEvoShield: Dual Non-Stationary Continual Defense for Open-World Multi-Agent ",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 3,
+       "metric": "FPR",
+       "value": "4.2%→8.5%",
+       "quote": "M1’s removal nearly doubles FPR (4.2%→8.5%4.2%\\!\\to\\!8.5\\%), as uncontrolled update rates cause the system to over-adapt and misclassify normal agents.",
+       "locator": "§5 Results",
+       "denominator": null
+      }
+     ],
+     "reason": "OpenEvoShield 演化过程中 FPR 4.2%→8.5%"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2607.23586": {
+   "arxiv_id": "2607.23586",
+   "layer": "architecture",
+   "title": "Are You Still the Agent I Authorized? Earned Authority under a Fixed Ceiling for",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "形式化授权保证，非成本测量"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "形式化授权保证，非成本测量"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "形式化授权保证，非成本测量"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "形式化授权保证，非成本测量"
+    }
+   },
+   "any_has": false
+  },
+  "2608.00426": {
+   "arxiv_id": "2608.00426",
+   "layer": "provenance",
+   "title": "MAPLE-Guard: Memory-Aware Link Enforcement Against Memory-Link Poisoning in Mult",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "MDSR@3 (attack-free benign utility)",
+       "value": "MMLU 87.0 vs 88.5 (Qwen), 55.0 vs 56.5 (gemma); LongMemEval 32.8 vs 34.2 (gemma)",
+       "quote": "Thus the guard is not uniformly cost-free: both backbones lose 1.5 points on MMLU, and gemma also loses 1.4 points on LongMemEval.",
+       "locator": "Section 5.7 Benign Utility and Token Usage (Table 6)",
+       "denominator": null
+      }
+     ],
+     "reason": "attack-free benign utility：MMLU 87.0 vs 88.5、AppWorld 100 vs 99.0（防御 vs 无防御配对）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2608.01558": {
+   "arxiv_id": "2608.01558",
+   "layer": "formal",
+   "title": "Securing Agentic AI: From Per-Action Checks to Trajectory Assurance",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    }
+   },
+   "any_has": false
+  },
+  "2608.01679": {
+   "arxiv_id": "2608.01679",
+   "layer": "provenance",
+   "title": "When Memory Becomes Authority: Benchmarking Authority Collapse at the Memory Con",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 8,
+       "metric": "TSR (benign task success) and ASR",
+       "value": "TSR 39.7% -> 40.0%; ASR 16.9% -> 0.0%",
+       "quote": "Over all 350 pairs, observed ASR similarly falls from 16.9% to 0.0%, while TSR changes from 39.7% to 40.0%.",
+       "locator": "Section 4.4, Table 5",
+       "denominator": "350 pairs"
+      }
+     ],
+     "reason": "攻击侧权威崩塌测量；40.5% 为攻击 ASR 非撤销残留"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧权威崩塌测量；40.5% 为攻击 ASR 非撤销残留"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧权威崩塌测量；40.5% 为攻击 ASR 非撤销残留"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧权威崩塌测量；40.5% 为攻击 ASR 非撤销残留"
+    }
+   },
+   "any_has": true
+  },
+  "2608.01759": {
+   "arxiv_id": "2608.01759",
+   "layer": "none",
+   "title": "Benign Alone, Harmful Together: Exploiting Experience Composition in Self-Evolvi",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；benignness 为攻击载荷性质"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；benignness 为攻击载荷性质"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；benignness 为攻击载荷性质"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击卡；benignness 为攻击载荷性质"
+    }
+   },
+   "any_has": false
+  },
+  "2608.03509": {
+   "arxiv_id": "2608.03509",
+   "layer": "provenance",
+   "title": "SkillJack: Persistent Skill Backdoors in Self-Evolving Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "persistence rate after source deletion",
+       "value": "80.0%",
+       "quote": "The added risk of the skill pathway is instead persistence: the persistence rate is 80.0% after source-record deletion.",
+       "locator": "§4.5 (Figure 3)",
+       "denominator": "25 matched attack-oriented tasks"
+      }
+     ],
+     "reason": "删除源投毒轨迹后 80.0%（32/40）派生技能触发仍复现——撤销残留"
+    }
+   },
+   "any_has": true
+  },
+  "2608.05563": {
+   "arxiv_id": "2608.05563",
+   "layer": "provenance",
+   "title": "When Experience Becomes Instruction: Trajectory Poisoning in Self-Evolving Agent",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧轨迹投毒，无成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧轨迹投毒，无成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧轨迹投毒，无成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧轨迹投毒，无成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2608.06984": {
+   "arxiv_id": "2608.06984",
+   "layer": "none",
+   "title": "HarnessSafe: Evaluating Safety Across Persistent Carriers in Agent Harnesses",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "无防御基准；CSS/ASR 为攻击侧读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "无防御基准；CSS/ASR 为攻击侧读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "无防御基准；CSS/ASR 为攻击侧读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "无防御基准；CSS/ASR 为攻击侧读数"
+    }
+   },
+   "any_has": false
+  },
+  "2608.09732": {
+   "arxiv_id": "2608.09732",
+   "layer": "content",
+   "title": "ColluSkill: Adversarial Cross-Skill Composition for Evading Agent Skill Scanners",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 2,
+       "metric": "benign_workflow_pass_rate",
+       "value": "99.5%",
+       "quote": "At the same time, installed-skill context has little effect on benign workflows. The pass rate decreases only from 99.7% to 99.5%.",
+       "locator": "ChainGuard Defense Evaluation, Table 4",
+       "denominator": null
+      }
+     ],
+     "reason": "良性工作流通过率 99.5% 为水平读数，卡内无未防御差值"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2608.12851": {
+   "arxiv_id": "2608.12851",
+   "layer": "content",
+   "title": "Practice Makes Unsafe: Skill Misevolution in Self-Improving LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "C-Util delta",
+       "value": "-12.7 points (C-ASR -17.3)",
+       "quote": "SafeEvolve cuts C-ASR by 17.3 points but also costs 12.7 points of C-Util",
+       "locator": "S4",
+       "denominator": null
+      }
+     ],
+     "reason": "recon-9: 防御带来的任务效用代价，对照臂明确，归 C1"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "URR (ablation of safety-aware retirement)",
+       "value": "URR 8.67% -> 17.33%; re-retrieval 100/106 and 44/44 without retirement",
+       "quote": "None of the 121 AutoSkill or 48 EvoSkill skills crossing this threshold under Full are retrieved afterward. Without safety retirement, 100 of 106 and 44 of 44 threshold-crossing skills are retrieved again.",
+       "locator": "Section 6.4(b), Table 6 (arXiv v2)",
+       "denominator": "75 PP tasks per condition (URR, equal-weight mean over the two methods); 106 AutoSkill and 44 EvoSkill threshold-crossing skills in the ablated runs"
+      }
+     ],
+     "reason": "安全退休消融：无退休时 URR 8.67%→17.33%（撤销缺失的残留读数）"
+    }
+   },
+   "any_has": true
+  },
+  "2608.15012": {
+   "arxiv_id": "2608.15012",
+   "layer": "architecture",
+   "title": "SysEvolve: An AI-native, safe, autonomous adversarial attack-defense co-evolutio",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 5,
+       "metric": "event collection loss/overhead; ranges orchestrated; boundary violations",
+       "value": "0% loss @ 2.1% overhead；257 CVEs -> 1,148 ranges；0 escapes",
+       "quote": "SysField achieves zero-dropout log collection at 2.1% system overhead (versus 60–98% dropout and 23–33% overhead for existing tools), orchestrates over 257 CVEs into 1,148 distinct ranges, and zero commercial LLMs escaped the range or bypassed its verification mechanism.",
+       "locator": "§7.1 RQ1-RQ2 (Abstract)",
+       "denominator": "压力测试配置数与 range 实例数在 §7.1 RQ1/RQ2 表；TODO: 核对整数分母"
+      }
+     ],
+     "reason": "SysField 日志收集 2.1% 系统开销（对照工具 23–33%）且零丢失——防御侧监控开销（引文已核）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2608.21159": {
+   "arxiv_id": "2608.21159",
+   "layer": "architecture",
+   "title": "AID-Guard: Stateful Authorization for Delegated Agent Effects",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "benign utility change (percentage points)",
+       "value": "benign utility reduced by 35.4–43.8 percentage points under the strict exact-manifest profile",
+       "quote": "The strict exact-manifest profile reduced benign utility by 35.4–43.8 percentage points; in a separate no-seed frontier, Typed-3x observed 9–10 more benign completions than Exact-1x, with no observed unsafe effects across 864 frontier episodes.",
+       "locator": "Abstract; §VI-F (RQ5), Table V",
+       "denominator": "48 benign episodes per model and condition (Table V caption)"
+      }
+     ],
+     "reason": "良性效用 −35.4~−43.8pp（每模型每条件 48 episodes）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "unsafe effects under full proposer compromise",
+       "value": "blocked all 44 direct attacks and admitted all 44 matched legitimate proposals",
+       "quote": "Forced pressure produced 98 oracle-confirmed unsafe effects without protection and none with AID-Guard. Under full proposer compromise, all 44 direct attacks caused unsafe effects without protection; AID-Guard blocked all 44 while admitting and executing all 44 matched legitimate proposals.",
+       "locator": "§VI-F (RQ5), Fig. 6; Appendix D, Table XI",
+       "denominator": "44 direct attacks plus 44 matched legitimate direct proposals"
+      }
+     ],
+     "reason": "44 个合法提案全部放行——零误拦读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2608.25776": {
+   "arxiv_id": "2608.25776",
+   "layer": "content",
+   "title": "EVOMAL: Self-Poisoning in Self-Evolving Coding Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "ASPR (removed-condition cascade, round 5)",
+       "value": "68%",
+       "quote": "After the seed is withdrawn at round 00 (Figure 4b), Qwen3 rises to 68%68\\%, showing strong self-sustaining propagation.",
+       "locator": "§6.5 (RQ3), Figure 4b",
+       "denominator": "153 tasks per cascade round (locked dataset row of Table 12: SWE-bench Verified tool-relevant pool, N=153)"
+      }
+     ],
+     "reason": "移除条件后第 5 轮级联 ASPR 仍 68%（den=153/轮）——删除不终止"
+    }
+   },
+   "any_has": true
+  },
+  "2608.27299": {
+   "arxiv_id": "2608.27299",
+   "layer": "provenance",
+   "title": "When Context Gets Root: Privilege Escalation in LLM Harnesses",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧提权测量，无良性效用读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧提权测量，无良性效用读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧提权测量，无良性效用读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧提权测量，无良性效用读数"
+    }
+   },
+   "any_has": false
+  },
+  "2609.01222": {
+   "arxiv_id": "2609.01222",
+   "layer": "provenance",
+   "title": "What's in Your Agent's Context? Context Privilege Escalation Attacks against AI ",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "precision_and_recall",
+       "value": "100% precision and 93% recall (Codex); 97% precision and 91% recall (Gemini CLI)",
+       "quote": "For Codex, CoRA identifies 28 of the 30 manually identified sources and reports 0 false positives, corresponding to 100% precision and 93% recall. For Gemini CLI, CoRA identifies 38 of the 42 manually identified sources and reports 1 false positives, corresponding to 97% precision and 91% recall.",
+       "locator": "VII-D",
+       "denominator": "30 manually identified sources (Codex) and 42 (Gemini CLI)"
+      }
+     ],
+     "reason": "来源识别 precision 100%/97%（den=30 人工标注源）——0–3% 误标良性源（存疑：识别工具误报语义）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.01836": {
+   "arxiv_id": "2609.01836",
+   "layer": "provenance",
+   "title": "Agent Memory Is a Surface for Endogenous Authorization Laundering",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 5,
+       "metric": "authorized_use_rate",
+       "value": "93.1% -> 53.2% (source filtering); 93.0% -> 68.6% (event-based memory)",
+       "quote": "the legitimate action rate falls from 93.1% to 53.2%",
+       "locator": "§4.4",
+       "denominator": "3960"
+      }
+     ],
+     "reason": "来源门控使授权使用率 93.3%→53.8%/64.7%（den=3,960 池化）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": null,
+       "metric": "retained revoked records among surviving errors",
+       "value": "7 of 9 unique residual states",
+       "quote": "The most common surviving errors retain revoked records (7 states) or inactive records (5), with a small number of scope or boundary errors.",
+       "locator": "§4.4, discussion of Table 23 (executor behavior after source-authority gating)",
+       "denominator": "9"
+      }
+     ],
+     "reason": "撤销残留：来源过滤后残余错误态中最常见的是 retained revoked records（7/9 个唯一残余态）；event-based 记忆的遗漏型失败为 missed revocations leave outdated authority active。2026-11-01 复核补入：与已成立的 2609.08258（revoked fact returned 81/81）同族。"
+    }
+   },
+   "any_has": true
+  },
+  "2609.01852": {
+   "arxiv_id": "2609.01852",
+   "layer": "provenance",
+   "title": "The Memory Trust Gap: Capability-Dependent Failures in Persistent-Memory Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "accuracy gain over raw frame (metadata gain / oracle gain)",
+       "value": "metadata gain +.30/+.28/+.53/+.54; oracle gain +.46/+.57/+.63/+.59",
+       "quote": "The accuracy gain over raw is larger on the capable models ( + .30 / + .28 / + .53 / + .54 +.30/+.28/+.53/+.54 ). Only the oracle restores accuracy for the small ones, and it does so at every scale ( + .46 / + .57 / + .63 / + .59 +.46/+.57/+.63/+.59 ).",
+       "locator": "§6 (Table 7, Figure 4)",
+       "denominator": null
+      }
+     ],
+     "reason": "元数据表征的准确率增益 +.30~.54 对 oracle +.46~.63——干预恢复不完全（存疑：缓解读数）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.02265": {
+   "arxiv_id": "2609.02265",
+   "layer": "architecture",
+   "title": "CAPTURE: Disentangling Preference Drift from Memory Poisoning in Personalized LL",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 8,
+       "metric": "genuine-update adherence (benign)",
+       "value": "5.4 points (timescale separation), 3.6 points (probing)",
+       "quote": "Timescale separation is worth 5.4 points of adherence and probing 3.6.",
+       "locator": "Section 5, Q3; Table 6",
+       "denominator": null
+      }
+     ],
+     "reason": "攻击侧投毒率与胜率，false-admission 为漏报"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧投毒率与胜率，false-admission 为漏报"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧投毒率与胜率，false-admission 为漏报"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧投毒率与胜率，false-admission 为漏报"
+    }
+   },
+   "any_has": true
+  },
+  "2609.05339": {
+   "arxiv_id": "2609.05339",
+   "layer": "architecture",
+   "title": "Does Your Agent’s Memory Survive a Model Upgrade? A Controlled Study of Memory P",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 11,
+       "metric": "median repair cost per history (USD)",
+       "value": "$0.76 per history; $0.013 per case",
+       "quote": "raw history helps only when the repair model can use it: Qwen reconstructs 34 of 48 histories at the 90% threshold for a median cost of roughly $0.76, whereas Llama reconstructs none because every attempt reaches the output-token limit before finishing. A larger output allowance might change this result, and the repair model and migration direction also change together, so this is not a clean comparison of model capability. Finally, repairs to structured data are cheaper and more reliable: RAG re-embedding recovers all 96 cases for about $0.013 each, while rebuilding KG-fixed records into the shared schema recovers 91–96 of 96 at near-zero additional cost.",
+       "locator": "Section 4.4 (Migration Test 3, run E6)",
+       "denominator": null
+      }
+     ],
+     "reason": "2026-11-04 复核补漏：§4.4 明确给出修复的中位金钱成本 $0.76/条与 $0.013/例，属干预的操作成本；此前误记为零。E6 总计 98.2 GPU-hours / $221 视为实验账单，不计。"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "repair success (histories reaching target)",
+       "value": "34/48",
+       "quote": "With Qwen as the repair model, raw-history reconstruction reaches 90% of own-store performance for 34 of 48 histories, 95% for 28, and 99% for 22.",
+       "locator": "Appendix E",
+       "denominator": "48"
+      },
+      {
+       "result_index": 8,
+       "metric": "repair success (histories reaching target)",
+       "value": "0/48",
+       "quote": "NOTES store-only\n0/48\n—\n0/48\n—\n0/48",
+       "locator": "Table 7",
+       "denominator": "48"
+      }
+     ],
+     "reason": "修复成功率 34/48 对 0/48（两种修复策略）——修复成败读数；迁移保真 −13.28pp 排除"
+    }
+   },
+   "any_has": true
+  },
+  "2609.07529": {
+   "arxiv_id": "2609.07529",
+   "layer": "weight-space",
+   "title": "CoER: Defending against Adaptive Indirect Prompt Injection via Adversarial Co-Ev",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "clean utility",
+       "value": "80.47% vs 77.92% Base (+2.55, i.e. a negative cost)",
+       "quote": "Clean U is 80.47% versus 77.92% for Base",
+       "locator": "5.2 Q1 safety-utility",
+       "denominator": null
+      }
+     ],
+     "reason": "recon-9: 良性条件、对无防御 Base 的数值对照，且为改善（负损失），由定性转数值"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.08258": {
+   "arxiv_id": "2609.08258",
+   "layer": "architecture",
+   "title": "Revoked but Still Authoritative: An Empirical Study of Revocation Enforcement in",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "unsafe_action_rate",
+       "value": "44.2% and 42.1%",
+       "quote": "On both exposed systems the revoked fact was returned for every scenario, 81/81 each, and ranked above the policy that replaced it. The revoked fact led agents to the unsafe action in 44.2% of trials on Graphiti (358/810) and 42.1% on mem0 (exp.) (341/810).",
+       "locator": "§4.1 (Table 6)",
+       "denominator": "810 trials per system (9 scenarios x 9 models x 10 trials, direct insertion)"
+      },
+      {
+       "result_index": 1,
+       "metric": "unsafe_action_rate",
+       "value": "0/1,620 unsafe trials under the store-level filter",
+       "quote": "The store-level filter removes the effect entirely (0/1,620), as does the filter combined with prompt hardening. Prompt hardening alone reduces the rate from 43.1% to 37.2%",
+       "locator": "§4.2 (Table 6)",
+       "denominator": "1,620 trials pooled across the two exposed systems (no defense 699/1,620 = 43.1%)"
+      },
+      {
+       "result_index": 5,
+       "metric": "unsafe_action_rate",
+       "value": "71.6%, 79.5%, 83.1% at hops 1-3 under the filter after direct write-back",
+       "quote": "The filter removes r1, but the journal is not r1: the filtered rates are 71.6%, 79.5% and 83.1%, against the 0.0% the same filter achieved on the same system in Section 4.2 (Table 6).",
+       "locator": "§C.1 (Table 14)",
+       "denominator": "356 runs with a poisoned hop-0 decision under direct write-back"
+      }
+     ],
+     "reason": "撤销后 44.2%/42.1% 不安全动作（810/系统）；存储级过滤 0/1,620；写回路径 71.6–83.1%（356 运行）"
+    }
+   },
+   "any_has": true
+  },
+  "2609.08444": {
+   "arxiv_id": "2609.08444",
+   "layer": "architecture",
+   "title": "Safe Task Planning with Long-Term Graph Memory for Embodied Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 10,
+       "metric": "cost (avg tokens & latency per planning step)",
+       "value": "9425.40",
+       "quote": "| Base VLM Planner | 3979.77 | 10.33 |\n| SafeMem w/o GM | 6101.48 | 12.43 |\n| SafeMem | 9425.40 | 17.62 |",
+       "locator": "Table 11; §B.1 Simulated Experiment Details",
+       "denominator": null
+      }
+     ],
+     "reason": "SafeMem 每规划步 9,425 token/17.62s 对 Base VLM Planner 3,980/10.33（配对基线）——防御使规划成本翻倍以上（引文已核）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.08747": {
+   "arxiv_id": "2609.08747",
+   "layer": "formal",
+   "title": "MemSentry: A Framework for Detecting Persistent Memory Poisoning in Agentic AI",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2609.12413": {
+   "arxiv_id": "2609.12413",
+   "layer": "architecture",
+   "title": "SoK: Rethinking Jailbreaking in the Era of Agentic AI: Attacks, Defenses, and Pr",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 11,
+       "metric": "end_to_end_latency / token_cost",
+       "value": "824.84 s",
+       "quote": "SmoothLLM increases Qwen response time to 824.84 s, while RPO increases Llama response time to 149.66 s and token usage to 3006.63.",
+       "locator": "§5.2 Practical Trade-off Analysis",
+       "denominator": null
+      }
+     ],
+     "reason": "SmoothLLM 使 Qwen 响应时间增至 824.84s；RPO 使 Llama 响应时间增至 149.66s 且 token 增至 3,006.63（引文已核）"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 10,
+       "metric": "ASR / over_refusal_rate",
+       "value": "0%",
+       "quote": "Prompt Guard and Robust Aligned achieve 0% ASR for both models, but reject all benign XSTest prompts, yielding 100% over-refusal and 0% utility.",
+       "locator": "§5.2 Practical Trade-off Analysis",
+       "denominator": "ORR：250 条良性 XSTest 提示（100.00%=250/250，与 1/250 步长一致）；ASR：有害子集分母论文未说明"
+      }
+     ],
+     "reason": "过拒率 0%（den=250 良性 XSTest）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.13734": {
+   "arxiv_id": "2609.13734",
+   "layer": "architecture",
+   "title": "PolicyMem: Geometric Policy Memory for LLM Governance",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 8,
+       "metric": "avg Unsafe-F1 / per-case latency",
+       "value": "0.88 @ 28 ms (3B) / 0.87 @ 19 ms (0.5B)",
+       "quote": "The 3B governor achieves the highest average Unsafe-F1 of 0.88 at 28 ms per case, while the 0.5B variant reaches 0.87 at only 19 ms. Despite their smaller backbones, both variants outperform the evaluated 7B-8B safety guards and the prompted 72B LLM.",
+       "locator": "§C.4 Efficiency Analysis",
+       "denominator": null
+      },
+      {
+       "result_index": 9,
+       "metric": "policy memory storage footprint",
+       "value": "0.6 MB",
+       "quote": "| RAR Buonocore and Parimbelli (2025) | 418 MB | | Class-RAG Chen et al. (2024) | 463 MB | | Mem0 Chhikara et al. (2025) | 442 MB | | A-Mem Xu et al. (2026) | 493 MB | | PolicyMem | 0.6 MB |",
+       "locator": "Table 5",
+       "denominator": null
+      }
+     ],
+     "reason": "per-case latency 28ms(3B)/19ms(0.5B)；策略库存储 0.6MB"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.13889": {
+   "arxiv_id": "2609.13889",
+   "layer": "content",
+   "title": "When Malicious Instructions Persist: Persistent Memory Poisoning Attack on Harne",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2609.17320": {
+   "arxiv_id": "2609.17320",
+   "layer": "content",
+   "title": "Emergence World: Adversarial Stress-Testing of Long-Horizon Multi-Agent Systems",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧压力测试；46h 延迟为攻击驻留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧压力测试；46h 延迟为攻击驻留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧压力测试；46h 延迟为攻击驻留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧压力测试；46h 延迟为攻击驻留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2609.22818": {
+   "arxiv_id": "2609.22818",
+   "layer": "content",
+   "title": "The Price of Safety: Benign-Case Utility and Token Overhead of Memory-Poisoning ",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "benign utility delta (paired core accuracy, pp)",
+       "value": "-4.4 pp",
+       "quote": "It reduces core accuracy by 4.4 points, with a 95% bootstrap interval of [-9.0, -0.05]. Since this interval is very close to zero, we do not consider this result definitive on its own — the upper bound is just below zero, and the McNemar test on the pooled data yields p = 0.064.",
+       "locator": "§7.1 (Table 3, Figure 1)",
+       "denominator": null
+      },
+      {
+       "result_index": 2,
+       "metric": "benign utility delta (95% CI)",
+       "value": "no detectable cost (CI roughly ±4.5 pp, includes zero)",
+       "quote": "tested on entirely benign traffic, the write-time defenses show no utility cost we can resolve, with 95% confidence intervals spanning roughly ±\\pm4.5 points and including zero.",
+       "locator": "Abstract (also §7.1 Table 3)",
+       "denominator": null
+      },
+      {
+       "result_index": 3,
+       "metric": "benign utility delta (paired core accuracy, pp)",
+       "value": "-3.1 pp (CI includes zero)",
+       "quote": "Its accuracy loss (3.1 points, 95% CI [−7.4,+1.0]) is smaller than the reranker's alone, and its own interval includes zero.",
+       "locator": "§7.1 (Table 3)",
+       "denominator": null
+      }
+     ],
+     "reason": "读时重排 −4.4pp（95% CI [−9.0,−0.05]）；写时三防御无可分辨成本（CI ±4.5pp）；另一配置 −3.1pp"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "token overhead ratio (tau) and max false quarantines per conversation",
+       "value": "2.7% token overhead",
+       "quote": "The read-time reranker, with 2.7% token overhead, fired on 9.9% of its memory decisions and withheld memory from 45% of questions.",
+       "locator": "4.2 Cost, Table 2 (rerank row), and the cost paragraph",
+       "denominator": "2,550 retrieved memories per replicate"
+      }
+     ],
+     "reason": "防御归因 token 开销 2.7%"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "false quarantine rate (FQR) on benign traffic",
+       "value": "9.9% FQR (756/7,650 decisions)",
+       "quote": "The reranker quarantined 756 of 7,650 memory decisions (FQR 9.9%)",
+       "locator": "§7.3 (Figure 2, Table 3)",
+       "denominator": "{\"n_total\": null, \"n_valid\": null, \"how_counted\": \"FQR = n_quar / n_seen over items the defense adjudicated, averaged across 5 conversations and 3 replicates (Section 5.5, Eq. 5); aggregate absolute n_seen not reported, only per-cell quarantine counts in Appendix C\"}"
+      }
+     ],
+     "reason": "良性流量误隔离率 33.6%（按裁决项计）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.28575": {
+   "arxiv_id": "2609.28575",
+   "layer": "content",
+   "title": "TWIST: A Proposed Benchmark for Intervention Quality in Conversational Memory, w",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "contradiction_recall_and_false_flag_rate",
+       "value": "flat-RAG CR 0.76–0.97 with 16–43% false flags; deployed CR 42% with 0.98–1.00 specificity",
+       "quote": "flat-RAG baselines detect 0.76–0.97 of true contradictions but falsely flag 16–43% of surface-matched safe drafts depending on backend, while a deployed coherence-oriented system almost never over-flags (0.98–1.00 specificity on both control classes) yet catches 42% of true contradictions",
+       "locator": "Abstract",
+       "denominator": "v1.0 key: 38 contradicting items for recall; 62 hard-negative drafts for false-flag rate"
+      },
+      {
+       "result_index": 1,
+       "metric": "contradiction_recall / hard-negative specificity",
+       "value": "deployed MindTwin CR 0.42 / AS 1.00 / HNS 0.98; flat RAG GPT-4o CR 0.97 / HNS 0.57",
+       "quote": "| Deployed (MindTwin)† | GPT-4o | 0.42 [.28,.58] | 1.00 | 0.98 [.91,1.0] | 0.18 | 0.44 | | Flat RAG† | GPT-4o | 0.97 [.87,1.0] | 0.77 | 0.57 [.44,.68] | 0.55 | 0.57 | | Flat RAG† | Claude | 0.92 [.79,.97] | 0.90 | 0.74 [.62,.83] | 0.50 | 0.54 |",
+       "locator": "§7.3 Table 3 (rows: Deployed MindTwin, Flat RAG GPT-4o/Claude)",
+       "denominator": "CR over 38 contradicting, AS over 61 aligned, HNS over 62 hard-negative items"
+      }
+     ],
+     "reason": "16–43% 误报（den=38 矛盾项/62 硬负样本）；部署系统 CR 0.42 而特异性 0.98"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.31186": {
+   "arxiv_id": "2609.31186",
+   "layer": "architecture",
+   "title": "Evolutionary Safety of Recursive Self-Improving AI: Taxonomy, Risk Discovery, an",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "纯分类学 0 条结果"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "纯分类学 0 条结果"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "纯分类学 0 条结果"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "纯分类学 0 条结果"
+    }
+   },
+   "any_has": false
+  },
+  "2609.32091": {
+   "arxiv_id": "2609.32091",
+   "layer": "architecture",
+   "title": "Memory as Middleware for Self-Improving AI Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆中间件能力机制），成本读数不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆中间件能力机制），成本读数不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆中间件能力机制），成本读数不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆中间件能力机制），成本读数不计"
+    }
+   },
+   "any_has": false
+  },
+  "2609.33910": {
+   "arxiv_id": "2609.33910",
+   "layer": "architecture",
+   "title": "When Consent Outlives Context: Residual Authority Replay in Long-Lived Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 3,
+       "metric": "ASR",
+       "value": "0.114-0.351 (tool-level) -> 0.016-0.116 (scope-level) -> 0.012-0.039 (exact-resource)",
+       "quote": "Among the four model families with clear amplification, tool-level retention yields ASR between 0.114 and 0.351. Restricting reuse to scope-level matching reduces this range to 0.016–0.116, while exact-resource matching leaves only 0.012–0.039.",
+       "locator": "§5.3 Table 3",
+       "denominator": "508"
+      }
+     ],
+     "reason": "授权收紧到作用域/资源级后残留 ASR 0.016–0.116/0.012–0.039 非零（508 案例）；+35.1pp 攻击侧读数排除"
+    }
+   },
+   "any_has": true
+  },
+  "2609.34132": {
+   "arxiv_id": "2609.34132",
+   "layer": "content",
+   "title": "From Attack Success to Attack Severity: Counterfactual Memory Attacks on LLM Age",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "mean CMR under defense (lower is better for the defender); benign utility drop",
+       "value": "0.479 -> 0.210",
+       "quote": "the input-injection filter reduces mean CMR from 0.479 to 0.442, whereas MemAudit reduces it to 0.261 and the combined defense reduces it to 0.210. The combined defense attains the lowest mean CMR for every attack method, with a mean benign drop of 0.059±0.033.",
+       "locator": "Appendix G.4 Figure 9",
+       "denominator": null
+      }
+     ],
+     "reason": "组合防御 CMR 0.479→0.210 伴随良性损失 0.059±0.033（分母未声明）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.34151": {
+   "arxiv_id": "2609.34151",
+   "layer": "architecture",
+   "title": "Self-Evolving Agents via Likelihood-Guided Tool-Space Optimization",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（工具选择能力机制），token 缩减不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（工具选择能力机制），token 缩减不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（工具选择能力机制），token 缩减不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（工具选择能力机制），token 缩减不计"
+    }
+   },
+   "any_has": false
+  },
+  "2609.34385": {
+   "arxiv_id": "2609.34385",
+   "layer": "architecture",
+   "title": "Just-In-Time Agent Memory with Runtime Agentic Research",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆效率机制），query latency 不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆效率机制），query latency 不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆效率机制），query latency 不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆效率机制），query latency 不计"
+    }
+   },
+   "any_has": false
+  },
+  "2609.34438": {
+   "arxiv_id": "2609.34438",
+   "layer": "content",
+   "title": "Remember by Asking: Retrieval-Induced Memory Evolution for LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆演进机制），query-time tokens 不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆演进机制），query-time tokens 不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆演进机制），query-time tokens 不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆演进机制），query-time tokens 不计"
+    }
+   },
+   "any_has": false
+  },
+  "2609.34463": {
+   "arxiv_id": "2609.34463",
+   "layer": "weight-space",
+   "title": "CoDeL: Co-Evolutionary Defense against Indirect Prompt Injection in LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "recon-9: BU 0.779 为无未防御臂的水平读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2609.35596": {
+   "arxiv_id": "2609.35596",
+   "layer": "execution",
+   "title": "SEABench: Benchmarking Endogenous Misalignment In Self-Evolving Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "harm_reduction",
+       "value": "70.9% harm reduction (prevents 56 of 79 harmful outputs)",
+       "quote": "this mitigation strategy prevents 56 out of 79 harmful outputs, for 70.9% harm reduction (given by the failure recall) while yielding an FPR of 9.7% (incorrectly flagging 11 of 113 safe traces) as shown in Fig. 7, and an overall accuracy of 82.3%.",
+       "locator": "§6.3, Fig. 7",
+       "denominator": "79 harmful outputs and 113 safe traces in test split"
+      }
+     ],
+     "reason": "CoT 监控拦截 56/79 于 9.7% FPR（79 有害 + 113 安全轨迹）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.36580": {
+   "arxiv_id": "2609.36580",
+   "layer": "architecture",
+   "title": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2609.36603": {
+   "arxiv_id": "2609.36603",
+   "layer": "architecture",
+   "title": "Self-Evolving Defense: Continual Security Policy Learning for LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "benign utility under policy transfer",
+       "value": "96.0 / 64.68 with attack-derived policies",
+       "quote": "| WildJailbreak benign | 97.6 | 96.0 | | AgentHarm benign | 66.90 | 64.68 |",
+       "locator": "§5.3 Table 5",
+       "denominator": null
+      }
+     ],
+     "reason": "攻击衍生策略迁移良性 split：WildJailbreak 97.6→96.0、AgentHarm 66.90→64.68、过拒 0%→5.1%"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2609.38372": {
+   "arxiv_id": "2609.38372",
+   "layer": "architecture",
+   "title": "Self-Evolving Harness on Multiple Tasks with the Agent as Its Own Optimizer",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.00093": {
+   "arxiv_id": "2610.00093",
+   "layer": "provenance",
+   "title": "Safety in Self-Evolving Agents: A Survey",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "对照综述，语料级统计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "对照综述，语料级统计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "对照综述，语料级统计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "对照综述，语料级统计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.00347": {
+   "arxiv_id": "2610.00347",
+   "layer": "formal",
+   "title": "Authorization for Self-Modifying AI Agent Populations: Conserving Authority acro",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 10,
+       "metric": "crash_cut_recovery",
+       "value": "16/16 crash cuts recover to complete pre/post state",
+       "quote": "The crash experiment terminates a worker at 16 named file-persistence cuts\naround one succession commit. Every cut recovered to one of the two complete\nstates; none exposed a committed dual-active or zero-active replacement.",
+       "locator": "§8.1 Table 6",
+       "denominator": "16"
+      }
+     ],
+     "reason": "崩溃切断恢复 16/16 至前置/后置条件——回滚恢复率"
+    }
+   },
+   "any_has": true
+  },
+  "2610.00366": {
+   "arxiv_id": "2610.00366",
+   "layer": "none",
+   "title": "What Should an Agent Remember? Disentangling Retention from Retrieval in Bounded",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆选择机制研究），recall 读数不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆选择机制研究），recall 读数不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆选择机制研究），recall 读数不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（记忆选择机制研究），recall 读数不计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.01349": {
+   "arxiv_id": "2610.01349",
+   "layer": "provenance",
+   "title": "PACE: Provenance-Aware Capability Enforcement for Tool-Using LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "native utility point change vs undefended agent",
+       "value": "at most 2.92 points drop",
+       "quote": "Relative to undefended agents, full-benchmark utility drops at most 2.92 points, gains 14.29, 11.91, and 8.34 points on WASP, and improves in MSB PUA and NRP; MCPTox refusal differs by at most 1.81 points.",
+       "locator": "§5.2",
+       "denominator": null
+      },
+      {
+       "result_index": 5,
+       "metric": "utility (AgentDyn, ablation subset)",
+       "value": "66.7% -> 33.3% (A0 to A7)",
+       "quote": "Paired A0-to-A7 AgentDyn utility falls from 66.7% to 33.3%; the full-benchmark three-point bound does not hold on this subset.",
+       "locator": "§5.3",
+       "denominator": "60"
+      }
+     ],
+     "reason": "native utility 至多降 2.92 点；AgentDyn 消融臂效用 66.7%→33.3%（den=60）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.02861": {
+   "arxiv_id": "2610.02861",
+   "layer": "architecture",
+   "title": "Containing the Autonomous Operator: A Defense-in-Depth Framework and Reference A",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "FQDN_filtering_throughput_limit (provider-documented)",
+       "value": "degradation possible above roughly 1,000 requests per second per pod",
+       "quote": "On AKS, FQDN filtering is part of Advanced Container Networking Services (ACNS) and requires Azure CNI powered by Cilium; it is a paid add-on, and Microsoft notes possible degradation above roughly 1,000 requests per second per pod [28].",
+       "locator": "§6.2",
+       "denominator": null
+      },
+      {
+       "result_index": 3,
+       "metric": "sandbox_provisioning_latency (provider-documented)",
+       "value": "sub-second with pre-warmed pools",
+       "quote": "GKE Agent Sandbox is a managed add-on built on the open-source Agent Sandbox controller, uses gVisor for kernel-level isolation, and adds pre-warmed pools for sub-second provisioning, a claim-based request model, and default-deny networking for sandboxes [25].",
+       "locator": "§6.2",
+       "denominator": null
+      }
+     ],
+     "reason": "FQDN 吞吐上限 ~1,000 rps 与沙箱秒级预热的提供商文档值——非实验测量"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.02920": {
+   "arxiv_id": "2610.02920",
+   "layer": "architecture",
+   "title": "HASTE: Evolving Agent Harnesses Against Emerging Attacks Using Sparse Evidence",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧 ASR/SHR，无成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧 ASR/SHR，无成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧 ASR/SHR，无成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧 ASR/SHR，无成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.02996": {
+   "arxiv_id": "2610.02996",
+   "layer": "architecture",
+   "title": "Evolutionary Computation for Trustworthy AI: From Attacks and Defenses to Self-E",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "综述卡，组织框架"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "综述卡，组织框架"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "综述卡，组织框架"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "综述卡，组织框架"
+    }
+   },
+   "any_has": false
+  },
+  "2610.03020": {
+   "arxiv_id": "2610.03020",
+   "layer": "formal",
+   "title": "DyadMem: A Long-Term Memory Benchmark of How Agents Work with Users",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "metric": "Gold-to-Pipeline gap (percentage points)",
+       "value": "42.9 / 33.9 points",
+       "quote": "The resulting Gold-to-Pipeline gaps are 42.9 and 33.9 points for the two groups.",
+       "locator": "4.2",
+       "denominator": "61210"
+      }
+     ],
+     "reason": "记忆管线 QA 对 gold 缺口 33.9/42.9 点（den=61,210）——干预为记忆管线（存疑桶）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 9,
+       "metric": "unsafe-deletion rate (group averages)",
+       "value": "84.1% open-weight / 78.1% proprietary",
+       "quote": "Scale does not resolve the problem: larger models are not consistently better, and the unsafe-deletion rate, the fraction of predicted deletions that are incorrect, averages 84.1% and 78.1% for the two groups (Table 8 and Figure 5).",
+       "locator": "4.2",
+       "denominator": "{\"n_total\": null, \"n_valid\": null, \"how_counted\": \"I.3: rate = FP_delete/(TP_delete+FP_delete); 'The denominator is the number of predicted deletions' (model-specific, no fixed n stated)\"}"
+      }
+     ],
+     "reason": "unsafe-deletion 率 84.1%/78.1%（组均值；最差模型 98.51%）——良性误删（存疑：分母未声明）"
+    }
+   },
+   "any_has": true
+  },
+  "2610.03902": {
+   "arxiv_id": "2610.03902",
+   "layer": "provenance",
+   "title": "When Evidence Changes: Evaluating Memory Repair and Re-reading in Language-Model",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "metric": "revision-phase token ratio (local repair vs rebuild)",
+       "value": "5–10× fewer revise-phase tokens than rebuild",
+       "quote": "Local repair does what it is designed to do: in all 32 E1 screening trajectories it invalidated exactly the three transitive successors of the revoked document and rebuilt one node, where rebuild recomputed 7–14.5 nodes, so its revise phase costs 5–10 × \\times less than rebuild",
+       "locator": "Section 6.2 (Fig. 3, Table 5, App. D)",
+       "denominator": null
+      },
+      {
+       "result_index": 3,
+       "metric": "full-pipeline token ratio vs re-reading",
+       "value": "3.5–4.3× re-reading’s tokens (local repair, held-out)",
+       "quote": "The held-out run shows the same order: local-repair full-trajectory tokens were 3.5–4.3 × \\times re-reading’s over the four held-out conditions (Table 4 , App. C ; use-stage prompts alone 2.1–2.2 × \\times ), and re-reading was cheapest in every held-out cell.",
+       "locator": "Section 6.2 (Table 4, App. C)",
+       "denominator": null
+      },
+      {
+       "result_index": 4,
+       "metric": "break-even uses (cumulative cost vs full re-reading, XL level)",
+       "value": "crossed within 20 uses: Qwen at 3, 7, 14; Mistral at 2, 3, 5",
+       "quote": "At XL cache, rebuild and local repair all cost less per use than re-reading, with 95 % intervals excluding zero (P3), and cumulative cost crossed within 20 uses: at k = 3 k=3 , 7 and 14 for Qwen’s cache, local repair and rebuild and at 2, 3 and 5 for Mistral’s",
+       "locator": "Section 6.3 (Fig. 2, App. O)",
+       "denominator": "20 later uses per trajectory; 6 patients at XL (8, 3, 5, 6 at S, M, L, XL)"
+      },
+      {
+       "result_index": 5,
+       "metric": "per-use / 20-use token ratio vs re-reading (RRTF)",
+       "value": "RRTF 0.70–0.72× at S and 0.05× at XL; TF per-use 1.38–1.50× RRTF",
+       "quote": "Source-filtered re-reading was the cheapest pipeline at every level in both models (P5), at 0.70–0.72 × \\times re-reading’s 20-use tokens at S and 0.05 × \\times at XL, because it never pays for the added documents; TF’s per-use tokens remained 1.38–1.50 × \\times RRTF’s at every level.",
+       "locator": "Section 6.3 (Fig. 2, App. O)",
+       "denominator": null
+      }
+     ],
+     "reason": "修复 vs 重建 token 5–10×；全管线 vs 重读 3.5–4.3×；20 次内回本；RRTF 0.70–0.72×"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "stale_commit (revoked key listed)",
+       "value": "no stale listing in 288 uses",
+       "quote": "In the 288 post-revocation medication uses of the E1 screening and held-out runs (128 development: 8 patients × \\times 2 sizes × \\times 4 pipelines × \\times 2 models; 160 held-out: 20 × \\times 4 × \\times 2) no pipeline listed the unique-support-revoked key",
+       "locator": "Section 6.1",
+       "denominator": "288 post-revocation medication uses (128 development + 160 held-out)"
+      }
+     ],
+     "reason": "288 次撤销后用药中无过期条目被采用"
+    }
+   },
+   "any_has": true
+  },
+  "2610.04083": {
+   "arxiv_id": "2610.04083",
+   "layer": "content",
+   "title": "Self-Propagating Misalignment in LLM Agents, and Why Auditing or Disabling Memor",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自传播测量，11% 为移除记忆的收益"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自传播测量，11% 为移除记忆的收益"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自传播测量，11% 为移除记忆的收益"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自传播测量，11% 为移除记忆的收益"
+    }
+   },
+   "any_has": false
+  },
+  "2610.04195": {
+   "arxiv_id": "2610.04195",
+   "layer": "architecture",
+   "title": "MemLeak: Cross-User Semantic Leakage in Multi-Tenant AI Agent Memory",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "mean retrieval latency overhead",
+       "value": "~1.4 ms mean latency per query",
+       "quote": "Applying deterministic post-retrieval ownership gating (M3) adds roughly 1.4 ms of mean latency per query while eliminating measured response contamination, indicating the mitigation is deployable at negligible cost in a realistic serving path.",
+       "locator": "§4.10 / Appendix J Table 14",
+       "denominator": null
+      }
+     ],
+     "reason": "分区检索平均延迟开销 ~1.4ms/查询"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.05943": {
+   "arxiv_id": "2610.05943",
+   "layer": "content",
+   "title": "Runaway Reaction: When Benign Skills Compose into Malicious Behavior",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧致害率；vetting 98.2% 为漏报"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧致害率；vetting 98.2% 为漏报"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧致害率；vetting 98.2% 为漏报"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧致害率；vetting 98.2% 为漏报"
+    }
+   },
+   "any_has": false
+  },
+  "2610.07258": {
+   "arxiv_id": "2610.07258",
+   "layer": "provenance",
+   "title": "Lineage-Aware Memory Governance: A Derivation-Gated Framework for Privacy-Preser",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "memory_reuse_rate",
+       "value": "Naive 95.8% -> LA 82.6% (synthetic) / 81.5% (TPC-H)",
+       "quote": "| Reuse rate (%) | 95.8±0.095.8\\pm 0.0 | 82.6±2.382.6\\pm 2.3 | 95.8±0.095.8\\pm 0.0 | 81.5±4.881.5\\pm 4.8 |",
+       "locator": "§VI-A Table VI",
+       "denominator": "100 requests"
+      }
+     ],
+     "reason": "派生门控使记忆复用率 95.8%→82.6%/81.5%（den=100 请求）"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 5,
+       "metric": "gate_latency",
+       "value": "0.66 μs -> 13.82 μs worst-case retrieve",
+       "quote": "worst-case scales linearly from 0.66​μ0.66\\,\\mus (n=1n{=}1) to 13.82​μ13.82\\,\\mus",
+       "locator": "§VI-D (values in §IV-A Table III)",
+       "denominator": null
+      }
+     ],
+     "reason": "门控延迟 0.66μs→13.82μs（最坏检索）"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "conflict_detection_precision",
+       "value": "precision 0.651（34.9% 的冲突标记为良性变更误报）",
+       "quote": "| Detector | Prec. | Recall | F1 | LO correct |\n| D1 — Exact hash | 0.651 | 1.000 | 0.789 | 8/8 |\n| D2 — Jaccard (τ=0.70\\tau{=}0.70) | 0.676 | 0.821 | 0.742 | 3/8 |\n| D3 — Column-graph | 1.000 | 0.714 | 0.833 | 0/8 |",
+       "locator": "§VI-C Table VII"
+      }
+     ],
+     "reason": "补入（2026-11-03 复核）：D1 精确哈希检测器 precision 0.651，即 34.9% 的冲突标记落在良性定义变更上；与复用率那条是不同 entry。"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.07309": {
+   "arxiv_id": "2610.07309",
+   "layer": "provenance",
+   "title": "The Right Memory in the Wrong Context: Verifying Retrieval Admissibility in Long",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "judged answer accuracy gain (namespace minus global)",
+       "value": "0.053-0.068",
+       "quote": "Across 1,523 paired benchmark-native cases, namespace routing is associated with judged-accuracy gains of 0.053–0.068 across three readers; recall also changes, so this comparison is observational.",
+       "locator": "Abstract / §5 Table 2b",
+       "denominator": null
+      },
+      {
+       "result_index": 6,
+       "metric": "recall-constrained loss change",
+       "value": ".032",
+       "quote": "On 72 held-out development cases, the label-aligned reference lowers loss .032 with unchanged recall/feasibility.",
+       "locator": "§5 Eligibility verification",
+       "denominator": null
+      }
+     ],
+     "reason": "命名空间约束使判定准确率 +0.053–0.068（改善）；召回约束损失 .032"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "metric": "similarity evaluations (query-candidate score computations)",
+       "value": "1,551",
+       "quote": "| Global dense | text | .432 | .237 | [.187,.195] | .798 | 90,122 |\n| Global recency+dense | text + released order | .452 | .256 | [.198,.206] | .784 | 90,122 |\n| Namespace dense | text + trusted namespace | .533 | .311 | [.118,.126] | .713 | 1,551 |",
+       "locator": "§5 Table 2a",
+       "denominator": null
+      }
+     ],
+     "reason": "命名空间约束使相似度计算从 90,122 降到 1,551——负成本（引文已核）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.07639": {
+   "arxiv_id": "2610.07639",
+   "layer": "execution",
+   "title": "HarnessSecurity-Bench: Do Security Mechanisms Really Protect Coding Agent Harnes",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "ASR / Utility",
+       "value": "ASR 0.8% (ON)",
+       "quote": "| Overall | 90.9% | (600/660) | 66.4% | (438/660) | 57.1% | (137/240) | 0.8% | (2/240) | ↓ 24.5%\\downarrow\\,24.5\\% | ↓ 56.3%\\downarrow\\,56.3\\% |",
+       "locator": "Table 6",
+       "denominator": "240 attack-effect oracle checks and 660 utility oracle checks per setting"
+      },
+      {
+       "result_index": 3,
+       "metric": "ASR / Utility",
+       "value": "ASR 1.3% (ON)",
+       "quote": "| Overall | 94.6% | (530/560) | 99.8% | (559/560) | 41.7% | (100/240) | 1.3% | (3/240) | ↑ 5.2%\\uparrow\\,5.2\\% | ↓ 40.4%\\downarrow\\,40.4\\% |",
+       "locator": "Table 6",
+       "denominator": "240 attack-effect oracle checks and 560 utility oracle checks per setting (paired harnesses only)"
+      }
+     ],
+     "reason": "机制 ON 时 ASR 0.8%（网络隔离）/1.3%（命令黑名单）分别伴随效用 −24.5pp/+5.2pp（同条目 ASR/Utility 配对）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 8,
+       "metric": "startup_refusal_on_benign_workspace",
+       "value": "40/40 次正常启动被拒",
+       "quote": "This utility loss came entirely from Gemini CLI refusing startup in all 40 ON trials after the workspace was marked untrusted.\nExcluding that startup-refusal configuration, the other four harnesses retained 100% utility while ASR fell from 75.8% to 50.4%.",
+       "locator": "§6.2"
+      }
+     ],
+     "reason": "补入（2026-11-03 复核）：工作区标为不可信后 40 次正常启动全部被拒，属良性对象被误拦；与 C1 那条 −24.5 pp 不是同一 entry。"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.07645": {
+   "arxiv_id": "2610.07645",
+   "layer": "content",
+   "title": "SkillPoison: Progressive Skill Poisoning via Successful Experiences",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧技能投毒，无成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧技能投毒，无成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧技能投毒，无成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧技能投毒，无成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.07935": {
+   "arxiv_id": "2610.07935",
+   "layer": "content",
+   "title": "SIGMA: Self-Improving Alignment Generalization from a Model Spec",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "AgentHarm Harm↓ / Benign↑ / HM↑",
+       "value": "Harm 22.6 → 14.8 (SFT) / 14.9 (RL)；Benign 76.6 → 76.7 / 76.9；HM 77.0 → 80.7 / 80.8",
+       "quote": "On AgentHarm, SIGMA-SFT and SIGMA-RL reduce the harm score from 22.6 to 14.8 and 14.9 while keeping benign performance at the base model’s level (76.7 and 76.9 vs. 76.6), raising HM from 77.0 to 80.7 and 80.8.",
+       "locator": "§3.2 SIGMA improves safety in agentic settings from single-turn training",
+       "denominator": "176 harmful 任务（Harm）+ 176 benign 对应任务（Benign）"
+      }
+     ],
+     "reason": "对齐自改进良性 76.6→76.7/76.9 保持（den=176+176）——零损失读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "XSTest OR↓ / IFEval PS,IS↑ / GPQA Acc.↑ / MMLU Acc.↑",
+       "value": "OR 1.2 → 0.8 (SFT) / 1.6 (RL)；IFEval PS 91.5 → 92.1 / 88.4；GPQA 85.2 → 82.0 / 84.2；MMLU 86.8 → 84.7 / 87.0",
+       "quote": "| Base model | 1.2 | 91.5 | 94.1 | 85.2 | 86.8 | | SIGMA-SFT | 0.8 | 92.1 | 94.6 | 82.0 | 84.7 | | SIGMA-RL | 1.6 | 88.4 | 92.2 | 84.2 | 87.0 |",
+       "locator": "§3.2 Table 1（表题：SIGMA improves alignment while preserving general capability and low over-refusal.）",
+       "denominator": "XSTest 250；IFEval 541；GPQA-Diamond 198×4；MMLU-Pro 1,000"
+      }
+     ],
+     "reason": "XSTest 过拒率 1.2%→0.8%/1.6%（den=250）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.09008": {
+   "arxiv_id": "2610.09008",
+   "layer": "architecture",
+   "title": "Whose Memory Is It? Scope-Aware Commit Rules for Long-Term LLM Memory",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.09832": {
+   "arxiv_id": "2610.09832",
+   "layer": "content",
+   "title": "SkillForge: Co-Evolving Skills and Agents via Dynamic Skill Lifecycles",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能库能力机制），退休读数不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能库能力机制），退休读数不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能库能力机制），退休读数不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能库能力机制），退休读数不计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.11008": {
+   "arxiv_id": "2610.11008",
+   "layer": "none",
+   "title": "Why LLM Agents Favor Their Group: Stakes, Observed Norms, and Reputation",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "行为实验，无干预成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "行为实验，无干预成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "行为实验，无干预成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "行为实验，无干预成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.11188": {
+   "arxiv_id": "2610.11188",
+   "layer": "content",
+   "title": "What to Admit and How to Present: Governing Persistent Memory in LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "pm failure rate (preference not applied)",
+       "value": "14.7% -> 22.3% (FC); 14.7% -> 20.0% (PS)",
+       "quote": "Both admission pipelines increase pm failures—appropriate preferences left unapplied—FC 14.7%→22.3%14.7\\%\\to 22.3\\% (p=.0022p=.0022) and PS 14.7%→20.0%14.7\\%\\to 20.0\\% (p=.0365p=.0365), with pm accuracy dropping 66.3%→57.0%66.3\\%\\to 57.0\\% (FC) and →60.3%\\to 60.3\\% (PS).",
+       "locator": "§5.5 (Table 2 pm row)",
+       "denominator": "300"
+      }
+     ],
+     "reason": "pm 失败率（偏好未被应用）14.7%→22.3%(FC)/20.0%(PS)（den=300）——干预的良性代价"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.11270": {
+   "arxiv_id": "2610.11270",
+   "layer": "architecture",
+   "title": "Gated Memory: Admission-Controlled Memory Formation for Conversational AI",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "LLM-judge accuracy (Overall)",
+       "value": "51.9% vs 50.6% (baseline), +2.6% relative",
+       "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+       "locator": "§5 Table 2",
+       "denominator": "1540"
+      },
+      {
+       "result_index": 3,
+       "metric": "LLM-judge accuracy (Multi-Hop)",
+       "value": "47.9% vs 50.0% (baseline), −4.2% relative",
+       "quote": "| System | S-Hop | M-Hop | O-Dom | Temp | Overall | | memory baseline | 49.6 | 50.0 | 48.3 | 57.6 | 50.6 | | Gated Memory | 51.8 | 47.9 | 49.9 | 58.6 | 51.9 | | Rel Error. Δ\\Delta | +4.4% | −-4.2% | +3.3% | +1.7% | +2.6% |",
+       "locator": "§5 Table 2",
+       "denominator": null
+      }
+     ],
+     "reason": "总体 +2.6% 相对改善、Multi-Hop −4.2% 相对损失（den=1,540）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "admission rate (share of utterances admitted)",
+       "value": "94.0% admitted (5,527/5,882); 6.0% rejected (355/5,882)",
+       "quote": "The gate processed 5,882 utterances across ten conversations, admitting 5,527 (94.0%) and rejecting 355 (6.0%). Rejections consisted primarily of vague emotional expressions, procedural turns, and transient situational references.",
+       "locator": "§4.4",
+       "denominator": "5882"
+      }
+     ],
+     "reason": "准入拒绝率 6.0%（355/5,882，卡片自注保守下界）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.11781": {
+   "arxiv_id": "2610.11781",
+   "layer": "architecture",
+   "title": "Skill-V: Verifiable Self-Evolving Skill Library for Interactive Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能验证能力机制），29.6% inapplicable 不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能验证能力机制），29.6% inapplicable 不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能验证能力机制），29.6% inapplicable 不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（技能验证能力机制），29.6% inapplicable 不计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.13227": {
+   "arxiv_id": "2610.13227",
+   "layer": "provenance",
+   "title": "Understanding and Mitigating Cross-Session Attacks via Persistent Artifacts in A",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.13267": {
+   "arxiv_id": "2610.13267",
+   "layer": "architecture",
+   "title": "Forgetting is Not Always Bad: A Neuro-Inspired Memory Repair Mechanism for Poiso",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "benign accuracy (ACC)",
+       "value": "75.00%",
+       "quote": "For instance, the accuracy of the Claude-based EHRAgent (eICU) increases from 45.83% to 75.00%, and from 37.50% to 57.14% on MIMIC-III.",
+       "locator": "§5.2 Table 1",
+       "denominator": null
+      }
+     ],
+     "reason": "良性 ACC 75.00% 为水平读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 3,
+       "metric": "runtime speedup / token consumption reduction",
+       "value": "2.13x speedup; 37.7% token reduction",
+       "quote": "In terms of runtime and token consumption, DREAM achieves up to a 2.13×\\times speedup and a 37.7% reduction in token consumption compared with A-MemGuard.",
+       "locator": "Abstract; §5.2 Fig. 3",
+       "denominator": "74,666 tokens（A-MemGuard 在一批 10 queries 上的 token 消耗，即正文所述基线 token 范围 56,926–74,666 的上端）"
+      }
+     ],
+     "reason": "修复机制 runtime 2.13× 加速、token −37.7%（den=74,666）——负成本"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "ASR (stage-wise) relative reduction",
+       "value": "97.86%",
+       "quote": "As reported on Table 1, (i) DREAM consistently and substantially suppresses ASR-r, ASR-t, and ASR-a. Specifically, when using GPT-5.4-mini, DREAM reduces the ASR by 97.86% on EHRAgent with eICU.",
+       "locator": "§5.2 Table 1",
+       "denominator": "100.00（Table 1 中 No Defense 行的 ASR-r 基线水平，GPT-5.4-mini/eICU/DPR 列）"
+      }
+     ],
+     "reason": "投毒清除后相对削减 97.86%（分母=无防御基线 100.00）"
+    }
+   },
+   "any_has": true
+  },
+  "2610.14431": {
+   "arxiv_id": "2610.14431",
+   "layer": "content",
+   "title": "MemForm: Benchmarking Memory Formation Poisoning in LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "error rate on clean memory",
+       "value": "No Defence 0.0%; Task Shield 1.2%; A-MemGuard 2.4%",
+       "quote": "Eligibility requires the undefended response under clean memory to match the reference behavior, so No Defense has 0.0% Err. by construction",
+       "locator": "Section 5.3, Table 2",
+       "denominator": null
+      }
+     ],
+     "reason": "攻击侧形成投毒；preservation 为攻击效应"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧形成投毒；preservation 为攻击效应"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧形成投毒；preservation 为攻击效应"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧形成投毒；preservation 为攻击效应"
+    }
+   },
+   "any_has": true
+  },
+  "2610.14488": {
+   "arxiv_id": "2610.14488",
+   "layer": "execution",
+   "title": "Names Are Not Objects: Object-Bound Confinement for Compromised AI Coding Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 4,
+       "metric": "operations_completed",
+       "value": "43 of 46 completed; 3 failed; 8 prompts",
+       "quote": "Full ZTAC completes 43 of 46 operations (Table 5), with 8 prompts, and fails 3. The failed operations are run-subprocess, run-venv, run-read-env",
+       "locator": "§6.5 RQ3: Utility",
+       "denominator": "46"
+      }
+     ],
+     "reason": "约束下 43/46 操作完成（水平读数）"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "median_added_latency",
+       "value": "no-op median 4.0 ms; spawned +8.5 to +18.4 ms",
+       "quote": "A no-op brokered request has a median latency of 4.0 ms, and the spawned programs we measured take 8.5 ms to 18.4 ms longer than without ZTAC.",
+       "locator": "Abstract",
+       "denominator": null
+      }
+     ],
+     "reason": "无操作中位 4.0ms；spawned +8.5~+18.4ms"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.14515": {
+   "arxiv_id": "2610.14515",
+   "layer": "architecture",
+   "title": "SEPM: Self-Evolving Procedural Memory Grounded in Task Graphs for Multi-Agent Co",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（程序记忆能力机制），+18.2% tokens 不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（程序记忆能力机制），+18.2% tokens 不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（程序记忆能力机制），+18.2% tokens 不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（程序记忆能力机制），+18.2% tokens 不计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.14836": {
+   "arxiv_id": "2610.14836",
+   "layer": "content",
+   "title": "MetaCascade: End-to-End Attacks on Agent Skills via Metadata-Only Poisoning",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击管线成本（32.57 调用/121,080 token 每技能）——攻击者成本非防御成本"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击管线成本（32.57 调用/121,080 token 每技能）——攻击者成本非防御成本"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击管线成本（32.57 调用/121,080 token 每技能）——攻击者成本非防御成本"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击管线成本（32.57 调用/121,080 token 每技能）——攻击者成本非防御成本"
+    }
+   },
+   "any_has": false
+  },
+  "2610.17544": {
+   "arxiv_id": "2610.17544",
+   "layer": "execution",
+   "title": "Many Steps into One: Reasoning Contraction and the Limits of Safe Memory Reuse f",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 10,
+       "metric": "accuracy_and_call_cost",
+       "value": "0.379 -> 0.648 (21% fewer LLM calls); compiled plans 0.668",
+       "quote": "On Qwen3-8B, ours raises accuracy from 0.379 (live) to 0.648 with 21% fewer LLM calls, and certified compiled plans to 0.668 (Table 3),",
+       "locator": "6 Certified contraction pays. Table 3",
+       "denominator": "30 streams x 200k queries per cell (Table 6); accuracy is a descriptive mean over served answers"
+      }
+     ],
+     "reason": "证书化收缩准确率 0.379→0.648 且 LLM 调用 −21%——负成本"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "metric": "unretired_share_and_restricted_mean_detection_delay",
+       "value": "50% and 47% vs 2% unretired; 4,069/3,949 vs 67 uses",
+       "quote": "Counters leave 50% and 47% in service at stream end against 2% for the LR-CUSUM, with restricted mean delays of 4,069 and 3,949 uses against 67 (Figure 2); each episode costs counters about 1,350 stale answers, against 38.5.",
+       "locator": "6 Counters leave stale memories in service. Figure 2; D.3.2 Detection on a matched population (Table 12)",
+       "denominator": "156 matched stale episodes (49 templates, 25 edited relations, 34 edit events, 3 sequences; 30 streams per model)"
+      },
+      {
+       "result_index": 6,
+       "metric": "false_certification_rate_per_at_risk_epoch",
+       "value": "0 of 5,779 at-risk epochs (0 false certifications) at delta=0.05",
+       "quote": "Scoring answers alone, as the certificate’s paired test does (Section D.4.1), ours makes no false certification (Section 5) at δ≤0.1 (0 of 5,779 at-risk epochs at δ=0.05)",
+       "locator": "6 Restarted certificates are safe in every epoch. D.5.2 The recommended deployment",
+       "denominator": "5,779 at-risk epochs at delta=0.05 (0/5,814 at 0.01, 0/5,779 at 0.05, 0/5,758 at 0.1; D.5.2)"
+      }
+     ],
+     "reason": "计数退休留下 50%/47% 在役 vs 证书化 2%（156 匹配陈旧 episode）；0/5,779 误证（den=5,779）"
+    }
+   },
+   "any_has": true
+  },
+  "2610.17719": {
+   "arxiv_id": "2610.17719",
+   "layer": "provenance",
+   "title": "Keep Your Receipts: Trustworthy Cleanup of Agent-Built Knowledge Graphs",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "withdrawal processing latency",
+       "value": "1-21 ms",
+       "quote": "Cleanup then needs no model calls, because the information that removal requires was stored before it was needed; processing a withdrawal is set arithmetic over the receipts, 1 to 21 ms on our whole 24,381-artifact graph.",
+       "locator": "Section on receipt-based cleanup (cleanup cost paragraph)",
+       "denominator": null
+      }
+     ],
+     "reason": "2026-11-04 复核补漏：撤销处理 1–21 ms（24,381 artifact 图），是撤销操作本身的延迟；此前误记为无资源开销读数。"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "contaminated queries (tainted@10, deployed deletion)",
+       "value": "28.0% under retract-source; 36.8% under revoke-relation",
+       "quote": "On our corpus that reduces contaminated queries from 32.2% to 28.0% under a real retraction and leaves predicate revocation unchanged at 36.8%.",
+       "locator": "Abstract; see also Section 1 and Table 4",
+       "denominator": "300 MeSH-descriptor queries"
+      }
+     ],
+     "reason": "撤源后 tainted@10 28.0%/36.8%（den=300 查询）；分层信任降至 0.4%/0.8%（同 300）"
+    }
+   },
+   "any_has": true
+  },
+  "2610.18052": {
+   "arxiv_id": "2610.18052",
+   "layer": "none",
+   "title": "Can Agents Forget When Asked? A Benchmark for Memory Unlearning in LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "RPR (request pass rate)",
+       "value": "<=1.5%",
+       "quote": "The request pass rate never exceeds 1.5 (LangMem on DeepSeek-V4.1-Flash), and most systems remain at zero.",
+       "locator": "§4.2 Table 1",
+       "denominator": "135 forget requests"
+      }
+     ],
+     "reason": "端到端遗忘请求通过率 ≤1.5%（den=135 请求；6 系统 × 3 backbone）"
+    }
+   },
+   "any_has": true
+  },
+  "2610.18792": {
+   "arxiv_id": "2610.18792",
+   "layer": "content",
+   "title": "SEAR: Self-Evolving Agentic Robotics",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（机器人技能库），verifier 91% 误差不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（机器人技能库），verifier 91% 误差不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（机器人技能库），verifier 91% 误差不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（机器人技能库），verifier 91% 误差不计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.19005": {
+   "arxiv_id": "2610.19005",
+   "layer": "none",
+   "title": "CyberArena: Benchmarking AI Agents in Live Symmetric Attack-and-Defense Combat",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻防对局基准，防御响应率为行为读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻防对局基准，防御响应率为行为读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "over-blocking rate",
+       "value": "8%",
+       "quote": "A related pattern is the over-blocking patch (8%): a repair that closes unauthorized access but also rejects legitimate requests.",
+       "locator": "S5 arena integrity",
+       "denominator": null
+      }
+     ],
+     "reason": "recon-9: 修复过度拦截合法请求，归 C3"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "post-patch attacker code persistence",
+       "value": "4% of games",
+       "quote": "in 4% of the games attacker-installed code remains executable after the defender deploys a patch",
+       "locator": "S5 arena integrity",
+       "denominator": "games in the campaign"
+      }
+     ],
+     "reason": "recon-9: 补丁部署后攻击者代码仍可执行，归 C4"
+    }
+   },
+   "any_has": true
+  },
+  "2610.19422": {
+   "arxiv_id": "2610.19422",
+   "layer": "weight-space",
+   "title": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 5,
+       "metric": "ASR / accuracy",
+       "value": "ASR −8.10 / −5.75 pp；ALFWorld 30.89%→36.70%",
+       "quote": "ASR decreases by 8.10 and 5.75 percentage points on Agent-SafetyBench and MSB, respectively, while accuracy on ALFWorld increases from 30.89% to 36.70%.",
+       "locator": "§4.3 Main Results",
+       "denominator": null
+      }
+     ],
+     "reason": "安全协同演化下 ALFWorld 30.89→36.70%（改善——无效用损失读数）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.20049": {
+   "arxiv_id": "2610.20049",
+   "layer": "content",
+   "title": "CoRedSkill: Stealthy Skill Composition Attacks via AST-Guided Injection",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧组合攻击，检测率为漏报"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧组合攻击，检测率为漏报"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧组合攻击，检测率为漏报"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧组合攻击，检测率为漏报"
+    }
+   },
+   "any_has": false
+  },
+  "2610.20845": {
+   "arxiv_id": "2610.20845",
+   "layer": "none",
+   "title": "Evolving Together, Failing Apart: The Skill-Policy Co-evolution Trap in Self-Imp",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全终点（技能漂移可靠性），无成本读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全终点（技能漂移可靠性），无成本读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全终点（技能漂移可靠性），无成本读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全终点（技能漂移可靠性），无成本读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.21405": {
+   "arxiv_id": "2610.21405",
+   "layer": "content",
+   "title": "MemCut: Every Secret Leaves a Trail in the Long-Term Memory of LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "residual recovery (%)",
+       "value": "39–76%",
+       "quote": "S2 asks an LLM to choose among the same twenty candidates, allowing it to select evidence ranked below the top ten. It lowers residual recovery by another 7–17 points, to 39–76%.",
+       "locator": "§5.2 (Tables 3-4)",
+       "denominator": "456"
+      }
+     ],
+     "reason": "秘密删除后经派生链可重建 39–76%（den=456）"
+    }
+   },
+   "any_has": true
+  },
+  "2610.22959": {
+   "arxiv_id": "2610.22959",
+   "layer": "provenance",
+   "title": "SAFE-Mem: Secure Agentic Memory with Fine-Grained Authority and Governance-Aware",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "MPBench ASR / Recall / Restraint and LoCoMo accuracy",
+       "value": "ASR 2.6/6.2/1.5/1.9; Recall 86.3/85.9/84.3/83.1; Restraint 48.4/50.6/51.4/49.2; LoCoMo Acc 61.3/54.6/53.5/47.0 (percent, per backbone)",
+       "quote": "SAFE-Mem       2.6   6.2   1.5   1.9 86.3 85.9 84.3 83.1 48.4 50.6 51.4 49.2 61.3 54.6 53.5 47.0",
+       "locator": "Table 1 (SAFE-Mem row), §5.2",
+       "denominator": "ASR: 2,999 scored attack cases; Recall: 249 remember-request cases; Restraint: 2,607 suggestive cases; LoCoMo: 1,540 questions"
+      },
+      {
+       "result_index": 1,
+       "metric": "MPBench Recall",
+       "value": "Recall falls to 9.6% under TMA-NM's withholding of everything derived from external content",
+       "quote": "GPT-4o-mini, but recall falls to 9.6%, since most",
+       "locator": "§5.2, Table 1",
+       "denominator": "249"
+      }
+     ],
+     "reason": "SAFE-Mem 行同时报 ASR（2,999）与良性 Recall 84.3–86.3%；TMA-NM 变体 Recall 崩至 9.6%（den=249）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 3,
+       "metric": "ASR / executed-code ASR / benign memories lost",
+       "value": "ASR 72.4%, executed-code ASR 0.0%, benign memories lost 2.0%",
+       "quote": "SAFE-Mem                 72.4           0.0         2.0",
+       "locator": "Table 2 (SAFE-Mem row), §5.3",
+       "denominator": "{\"n_total\": null, \"n_valid\": null, \"how_counted\": \"ASR: share of victim questions whose generated or executed code targets the wrong patient; Lost: share of memories retrieved for benign questions that a defense removes (counts not stated)\"}"
+      }
+     ],
+     "reason": "benign memories lost 2.0%（SAFE-Mem 行；引文已核）——良性误删读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.23078": {
+   "arxiv_id": "2610.23078",
+   "layer": "architecture",
+   "title": "Cryptographically Secure Agent-to-Agent Communication in Multi-Agent Systems",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "signature_size",
+       "value": "ML-DSA 2420-4627 bytes vs ECDSA 64 bytes",
+       "quote": "Comparing ML-DSA signature, which is 2420 to 4627 bytes long depending on the security level, to 64 bytes long signatures for ECDSA, we can observe a huge difference in weight.",
+       "locator": "§4.2 Quantum-Proof Transport Security"
+      },
+      {
+       "result_index": 2,
+       "metric": "zkp_verification_latency",
+       "value": "milliseconds (order of magnitude not specified)",
+       "quote": "for succinct proof systems, verification takes milliseconds regardless of the size of the underlying computation, whereas proof generation remains computationally expensive.",
+       "locator": "§4.3 Zero-Knowledge Proof Intention Verification"
+      }
+     ],
+     "reason": "补入（2026-10-28）：提供商文档值，签名体积与 ZKP 验证延迟，无数值分母，按仅定性计。"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.23559": {
+   "arxiv_id": "2610.23559",
+   "layer": "architecture",
+   "title": "An Interactive GraphRAG Workspace for Reifying, Auditing, and Steering Conversat",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "token_overhead",
+       "value": "405 (−92.2%)",
+       "quote": "| Token Overhead (10 Pairs) | 5,210 | 2,140 | 405 (−-92.2%) |",
+       "locator": "Table I",
+       "denominator": "5,210 raw tokens（代表性 10 轮调试对话；Table I 行标注以 10 Pairs 计）"
+      }
+     ],
+     "reason": "token 405（−92.2%，den=5,210）——负成本（存疑：审计工具而非对抗防御）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.24359": {
+   "arxiv_id": "2610.24359",
+   "layer": "content",
+   "title": "Can Agents Keep Secrets They Were Never Told? Benchmarking Latent Privacy Risks ",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "TCR on benign ordinary tasks",
+       "value": "20.1% -> 13.2% (M4); M2 7.7%-5.2%",
+       "quote": "M4 cuts the TCR of A-Mem from 20.1% to 13.2%.",
+       "locator": "Appendix F.1",
+       "denominator": null
+      }
+     ],
+     "reason": "攻击侧披露率，缓解读数为收益"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧披露率，缓解读数为收益"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧披露率，缓解读数为收益"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧披露率，缓解读数为收益"
+    }
+   },
+   "any_has": true
+  },
+  "2610.24453": {
+   "arxiv_id": "2610.24453",
+   "layer": "content",
+   "title": "Hippo: Training-Free Agent Self-Evolution via Hippocampal Replay",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 12,
+       "metric": "actor calls per task / API cost proxy per task (USD)",
+       "value": "$1.93 (No Memory) -> $2.17 (Hippo) per task (+12.4%); calls 69.27 -> 74.75 (+7.9%)",
+       "quote": "The resource records show that mean calls to the actor model rise from 69.27 to 74.75 (+7.9%), while cost increases from $1.93 to $2.17 per task (+12.4%).",
+       "locator": "Section 4.7 Efficiency Analysis (corpus L589-591); corroborated by Appendix B API-cost-proxy paragraph and Table 9 (corpus L872-874)",
+       "base": "per WebArena task, GPT-5.6 Sol actor; comparison arm: No Memory ($1.93 per task)",
+       "denominator": null
+      }
+     ],
+     "reason": "2026-11-05 补漏（任务B1）：§4.7 与附录 B/Table 9 给出每任务金钱成本读数 $1.93(No Memory)->$2.17(Hippo)，属干预资源开销（C2），此前四类全空。money 家族读数由 1 变 2 的第二条。"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.24603": {
+   "arxiv_id": "2610.24603",
+   "layer": "architecture",
+   "title": "Refuse the Harm, Complete the Task via Graph-of-Rules Planning for LLM-Enabled R",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "改判（2026-11-03 复核）：40/40 是无对照的水平读数，§5.2 规定 C1 需对照差值，水平读数不计入 C1。"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "false_refusal_rate_on_40_safe_instructions",
+       "value": "0/40 误拒",
+       "quote": "To exclude that RuleGraph’s 0% ASR simply comes from refusing every instruction, we additionally ran the full pipeline on 40 safe instructions, each consisting of one or more safe sub-tasks. Every one of the 40 was completed correctly and committed in full, with no false refusals.",
+       "locator": "§4.5 Utility on Purely Safe Instructions"
+      }
+     ],
+     "reason": "补入（2026-11-03 复核）：同一 entry 的有分母零读数；§5.5 已把 0/44（2608.21159）与 100% safe-proceed recall（2610.31446）计为 C3。"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.24896": {
+   "arxiv_id": "2610.24896",
+   "layer": "weight-space",
+   "title": "Peer Pressure: Execution-Verified Co-Evolution of Attacker and Defender Populati",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧红蓝对局，advisory recall 为漏报"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧红蓝对局，advisory recall 为漏报"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧红蓝对局，advisory recall 为漏报"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧红蓝对局，advisory recall 为漏报"
+    }
+   },
+   "any_has": false
+  },
+  "2610.25123": {
+   "arxiv_id": "2610.25123",
+   "layer": "provenance",
+   "title": "Memories That Outlive Their Reasons: Dependency-Tethered Memory for Tool-Using L",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 3,
+       "metric": "verification_cost_and_unsafe_rate_all",
+       "value": "2.54 checks per request; 37% fewer than always-verify's 4.05; 0.5% of candidates published failing",
+       "quote": "Overall the agent with Tether spends 2.54 checks per request, 37% fewer than the 4.05 of always-verify, and publishes 0.5% failing candidates.",
+       "locator": "Sec 6.2; Table 1",
+       "denominator": "2,903 candidates (0.5% unsafe share); 4.05 always-verify checks per request (baseline of the 37%)"
+      }
+     ],
+     "reason": "校验 2.54 次/请求（比全量校验少 37%，den=2,903）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "unsafe_publication_rate_d>=1",
+       "value": "62%",
+       "quote": "an agent reading a memory of atomic facts publishes 62% of the objects whose failure lies upstream, each backed by a record that was true when written",
+       "locator": "Abstract; Table 1 (Flat d>=1 = .619)",
+       "denominator": "1,364"
+      },
+      {
+       "result_index": 1,
+       "metric": "unsafe_publication_rate_d>=1",
+       "value": "0.3%",
+       "quote": "Tether publishes 0.3% of upstream-failing objects across three domains when relations are stated with their verdicts, with 37% fewer verification calls than checking everything",
+       "locator": "Abstract; Table 1 (Tether d>=1 = .003)",
+       "denominator": "1,364"
+      },
+      {
+       "result_index": 7,
+       "metric": "unsafe_decisions_without_ancestor_record",
+       "value": "645 of 657",
+       "quote": "When no record about the failed ancestor is in the window, it publishes 645 of 657 of them: this is exactly the indistinguishable case of Observation 1.",
+       "locator": "Sec 6.1",
+       "denominator": "657"
+      }
+     ],
+     "reason": "上游失效后派生发布 62%→0.3%（den=1,364）；无祖先记录的 unsafe 决策 645/657"
+    }
+   },
+   "any_has": true
+  },
+  "2610.25707": {
+   "arxiv_id": "2610.25707",
+   "layer": "content",
+   "title": "Whose Credential Is It? How Owner Attribution in Agent Memory Shapes Cross-User ",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 8,
+       "metric": "clean-memory task success (tasks solved)",
+       "value": "3-5 tasks per model (e.g. 30 -> 25, 19 -> 15, 20 -> 17)",
+       "quote": "owner-bound narrative notes lowered success on clean memory by 3-5 tasks per model",
+       "locator": "Section 4.7, Table 11",
+       "denominator": null
+      }
+     ],
+     "reason": "攻击侧归属暴露，0/60 为收益"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧归属暴露，0/60 为收益"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧归属暴露，0/60 为收益"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧归属暴露，0/60 为收益"
+    }
+   },
+   "any_has": true
+  },
+  "2610.27495": {
+   "arxiv_id": "2610.27495",
+   "layer": "content",
+   "title": "Self-Evolving Agents through Privileged Retrospective Distillation",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（经验蒸馏能力机制）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（经验蒸馏能力机制）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（经验蒸馏能力机制）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（经验蒸馏能力机制）"
+    }
+   },
+   "any_has": false
+  },
+  "2610.28093": {
+   "arxiv_id": "2610.28093",
+   "layer": "architecture",
+   "title": "ClawMMU: Protection-Coherent Virtual Memory for Stateful LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "设计/立场卡 0 条结果"
+    }
+   },
+   "any_has": false
+  },
+  "2610.28315": {
+   "arxiv_id": "2610.28315",
+   "layer": "content",
+   "title": "Disclosure Begets Disclosure: A Self-Reinforcing Privacy Loop in LLM Agents with",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧泄漏回路，refusal 为模型行为"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧泄漏回路，refusal 为模型行为"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧泄漏回路，refusal 为模型行为"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧泄漏回路，refusal 为模型行为"
+    }
+   },
+   "any_has": false
+  },
+  "2610.28364": {
+   "arxiv_id": "2610.28364",
+   "layer": "content",
+   "title": "Context-Aware Prompt Injection Detection via Small Language Models in RAG Pipeli",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 7,
+       "metric": "single-request latency / batched throughput",
+       "value": "293-404 ms single-request",
+       "quote": "Deployment-relevant single-request latency is 293293–404404 ms depending on serving runtime—above this paper's own sub-100100 ms target—with 3737 ms amortized throughput under batching.",
+       "locator": "Abstract",
+       "denominator": null
+      }
+     ],
+     "reason": "单请求延迟 293–404ms"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "detection recall / ASR-proxy / FPR / 3-class accuracy",
+       "value": "0.994 recall, 0.006 ASR-proxy, 0.026 FPR, 0.974 3-class accuracy",
+       "quote": "The tuned SLM (B3) dominates every security metric: 0.9940.994 recall, 0.0060.006 ASR-proxy, 0.0260.026 FPR, 0.9740.974 three-class accuracy.",
+       "locator": "§6.1 Table 3",
+       "denominator": "659"
+      },
+      {
+       "result_index": 4,
+       "metric": "FPR (input ablation)",
+       "value": "0.085",
+       "quote": "The mismatched condition preserves high recall (0.9900.990, since the donor's own attack content is still present) but nearly triples FPR relative to the full model (0.0850.085 vs. 0.0260.026, vs. 0.0380.038 for CC-only): pairing a context with an unrelated query measurably increases over-flagging.",
+       "locator": "§6.3 Table 5",
+       "denominator": "659"
+      }
+     ],
+     "reason": "FPR 0.026（den=659）；消融 FPR 0.085（同 den）；OOD recall 崩至 0.7% 为漏报不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.28425": {
+   "arxiv_id": "2610.28425",
+   "layer": "content",
+   "title": "After the Attacker Leaves: Benchmarking Carryover Attacks on LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 5,
+       "metric": "voluntary persistent-state amendments/deletions (count)",
+       "value": "zero voluntary amendments or deletions across five trigger opportunities",
+       "quote": "Across the five trigger opportunities, however, agents issue\nzero voluntary amendments or deletions (Table 4), so the eraser stays in the drawer despite remaining within reach.",
+       "locator": "§5.2 Table 4",
+       "denominator": null
+      }
+     ],
+     "reason": "全程零自愿修订/删除（行为观察，den=—）——撤销行为缺位的定性证据"
+    }
+   },
+   "any_has": true
+  },
+  "2610.28810": {
+   "arxiv_id": "2610.28810",
+   "layer": "architecture",
+   "title": "Combining Long-Term Memory and LLMs Comes at a High Cost: From Prompt Injection ",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "定性卡（qualitative_success_only），mitigation coverage 为定性"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "定性卡（qualitative_success_only），mitigation coverage 为定性"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "定性卡（qualitative_success_only），mitigation coverage 为定性"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "定性卡（qualitative_success_only），mitigation coverage 为定性"
+    }
+   },
+   "any_has": false
+  },
+  "2610.28987": {
+   "arxiv_id": "2610.28987",
+   "layer": "architecture",
+   "title": "PerMIT: Securing Persistent Memory for LLM Agents via Machine-Checked Integrity ",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "benign utility (AM/HM over seven capability axes)",
+       "value": "AM 97%, HM 96%",
+       "quote": "| OpenGate (accept all) | 97 | 96 | 0 | 93 | 91 | 10 | 91 | 90 | 10 | 89 | 86 | 0 |",
+       "locator": "§4.1 Table 1, PerMIT block",
+       "denominator": "7 benign capability suites"
+      }
+     ],
+     "reason": "PerMIT 良性能力效用 AM 97%/HM 96%，与 OpenGate accept-all 基线同行同值——零损失配对（引文已核）"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "2610.29784": {
+   "arxiv_id": "2610.29784",
+   "layer": "architecture",
+   "title": "Evolving with Open Worlds: Towards Recursive Self-Improvement for Future Forecas",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（递归自改进），tool calls/蒸馏成本不计"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（递归自改进），tool calls/蒸馏成本不计"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（递归自改进），tool calls/蒸馏成本不计"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全干预（递归自改进），tool calls/蒸馏成本不计"
+    }
+   },
+   "any_has": false
+  },
+  "2610.30485": {
+   "arxiv_id": "2610.30485",
+   "layer": "none",
+   "title": "Why Bother Me Again? Benchmarking Personal Agent Memory for Interaction Preferen",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全基准（个人记忆偏好），PSA 为能力读数"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全基准（个人记忆偏好），PSA 为能力读数"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全基准（个人记忆偏好），PSA 为能力读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "非安全基准（个人记忆偏好），PSA 为能力读数"
+    }
+   },
+   "any_has": false
+  },
+  "2610.31446": {
+   "arxiv_id": "2610.31446",
+   "layer": "execution",
+   "title": "When Is a Memory Safe Enough to Act On? Action-Conditioned Verification for Long",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "verification_cost_reduction",
+       "value": "-33.9% mean verification cost vs AMV-Static",
+       "quote": "Relative to AMV-Static, it reduces cost by 33.9% while both methods retain 100% safe-proceed recall, 0% Unsafe Pass, and 0% Gate harmful. This saving accompanies 5.33 points more Proceed coverage and 1.56 points more task success, with raw harm 0.21 points higher.",
+       "locator": "§5.2",
+       "denominator": "640 test instances per seed x 3 observation seeds"
+      },
+      {
+       "result_index": 7,
+       "metric": "verification_cost_reduction",
+       "value": "-33.9% / -42.3% / -58.9% mean verification cost across the three backbones",
+       "quote": "adaptive VOI reduces mean verification cost for all three backbones, by 33.9%, 42.3%, and 58.9% (Tables 5 and 11). Both Static and adaptive policies have zero measured Gate harm for all three backbones.",
+       "locator": "§5.2 Tables 5 and 11",
+       "denominator": "640 test episodes per seed x 3 seeds per backbone"
+      }
+     ],
+     "reason": "验证成本 −33.9%/−42.3%/−58.9%（den=640×3）——负成本正典"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "gate_harmful_rate_and_verify_cost_operating_point",
+       "value": "0.00% Gate harmful, 100.00% safe recall, 1.219 mean verify cost, 44.17% Proceed coverage",
+       "quote": "| AMV-Static | 100.00% | 0.00% | 1.843 | 72.34% | 6.82% | 38.83% | | AMV-Guard (ours) | 100.00% | 0.00% | 1.219 | 73.91% | 7.03% | 44.17% |",
+       "locator": "§5.2 Table 1",
+       "denominator": "640 test instances per seed x 3 observation seeds"
+      }
+     ],
+     "reason": "safe-proceed recall 100%（零误拦工作点，den=640×3）"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "6caf23c8ecb9": {
+   "arxiv_id": "6caf23c8ecb9",
+   "layer": "execution",
+   "title": "The Task Shield: Enforcing Task Alignment to Defend Against Indirect Prompt Inje",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": true,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "clean utility (CU)",
+       "value": "73.20%",
+       "quote": "Task Shield   80.00 72.86    1.43   62.50 62.50    0.42   81.25 82.64    6.25   80.95 64.76    0.95    73.20 69.79       2.07",
+       "locator": "Table 2a",
+       "denominator": null
+      }
+     ],
+     "reason": "clean utility 73.20% 为水平读数"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 16,
+       "metric": "latency (median seconds per conversation)",
+       "value": "62.56 s",
+       "quote": "The Input Shield, despite greatly improving security and utility (see main text, Section 5.3),\nincurs relatively moderate overhead: its median latency (18.78 s) is substantially lower than other robust\ndefenses like the full Task Shield (62.56 s).",
+       "locator": "Table 6",
+       "denominator": null
+      }
+     ],
+     "reason": "Input Shield 中位延迟 18.78s、full Task Shield 62.56s（引文已核）"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "逐条核验：无良性效用变化读数、无干预资源开销读数、无对良性输入的误判读数、无撤销/修复成败与残留读数"
+    }
+   },
+   "any_has": true
+  },
+  "d6f6b6c78cd3": {
+   "arxiv_id": "d6f6b6c78cd3",
+   "layer": "content",
+   "title": "Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自适应绕过，检测率为漏报"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自适应绕过，检测率为漏报"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自适应绕过，检测率为漏报"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "攻击侧自适应绕过，检测率为漏报"
+    }
+   },
+   "any_has": false
+  },
+  "2510.02373": {
+   "arxiv_id": "2510.02373",
+   "layer": "n/a",
+   "title": "A-MemGuard: A Proactive Defense Framework for LLM-based Agent Memory",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "quote": "GPT-4o-mini (DPR) 63.0 83.0 74.0↑\\uparrow11.0 70.2↓\\downarrow12.8 61.0↓\\downarrow2.0 19.1↓\\downarrow63.9 73.3↑\\uparrow10.3 66.0↓\\downarrow17.0 76.7↑\\uparrow13.7 71.3↓\\downarrow11.7",
+       "locator": "§5.4 (Table 3)",
+       "value": "71.3 (vs 83.0 No Defense, -11.7)"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 3,
+       "quote": "Our A-MemGuard framework strikes a superior balance, achieving the highest performance with a score of nearly 0.9, which effectively neutralizes the attack. Notably, it delivers this state-of-the-art security while being more computationall",
+       "locator": "Appendix E (Figure 7)",
+       "value": "7.8K (vs 3.6K No Defense; 8.0K Auditor)"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2509.26354": {
+   "arxiv_id": "2509.26354",
+   "layer": "n/a",
+   "title": "Your Agent May Misevolve: Emergent Risks in Self-evolving LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "SWE-Bench Resolution Rate (benign)",
+       "value": "60.0% -> 60.0% (zero change)",
+       "quote": "The Resolution Rate remained the same (60.0%) both before and after we incorporated the memory mitigation prompt.",
+       "locator": "Appendix E.2",
+       "denominator": null
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2602.17692": {
+   "arxiv_id": "2602.17692",
+   "layer": "n/a",
+   "title": "Agentic Unlearning: When LLM Agent Meets Machine Unlearning",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "quote": "As shown in Table 4, for MedQA with QF=100, the memory accuracy on the forget set drops from 78% to 14% after unlearning, while the memory accuracy on the retain set slightly increases from 54% to 56%.",
+       "locator": "§4.2 (Table 4)",
+       "value": "forget 78% -> 14%; retain 54% -> 56%"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "quote": "As shown in Figure 6(b), the Forget Set retrieval hit rate drops from 100% to 0% while the Retain Set remains accessible.",
+       "locator": "§4.3 (Figure 6)",
+       "value": "100% -> 0% (forget); stable (retain)"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2607.27080": {
+   "arxiv_id": "2607.27080",
+   "layer": "n/a",
+   "title": "MemSecBench: Tracking Agent Memory Poisoning from Persistence to Consequence and Repair",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "改判（2026-11-03 复核）：原引文（SRSR 56.1%、F1 86.3%/F2 62.5%）是修复选择性，同一 entry 已计入 C4；按\"一条读数只在其测量端点记一次\"移出 C3。"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "quote": "Across all 24 configurations, malicious memory persists in 84.2% of all cases, and the full Write–Execute chain succeeds in 50.3%. Among successfully poisoned cases, 59.6% complete the full Execute chain, while 56.1% achieve selective repai",
+       "locator": "Abstract (Table 2)",
+       "value": "84.2% / 50.3% / 59.6% / 56.1%"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2410.02644": {
+   "arxiv_id": "2410.02644",
+   "layer": "n/a",
+   "title": "Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "metric": "PNA under benign, no-attack conditions",
+       "value": "29.46% undefended -> 22.52-28.29% under defences",
+       "quote": "The average PNA without any defenses is 29.46%, and the corresponding performance under defenses experiences a minor drop.",
+       "locator": "Appendix D.2, Table 16",
+       "denominator": null
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2602.01146": {
+   "arxiv_id": "2602.01146",
+   "layer": "n/a",
+   "title": "PersistBench: When Should Long-Term Memories Be Forgotten by LLMs?",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "metric": "leakage-judge precision",
+       "value": "68.00% (recall 85.00%)",
+       "quote": "The judge demonstrated high recall (85.00%) for identifying problematic cases, though precision was lower (68.00%), suggesting a slight tendency to over-flag potential leakage issues.",
+       "locator": "Appendix E.4",
+       "denominator": "held-out graded items"
+      }
+     ],
+     "reason": "recon-9: 判决器误拦率，归 C3"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2604.15774": {
+   "arxiv_id": "2604.15774",
+   "layer": "n/a",
+   "title": "MemEvoBench: Benchmarking Memory MisEvolution in LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": false
+  },
+  "2606.05743": {
+   "arxiv_id": "2606.05743",
+   "layer": "n/a",
+   "title": "Membrane: A Self-Evolving Contrastive Safety Memory for LLM Agent Defense",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 5,
+       "quote": "The full Membrane successfully maintains the highest F1 scores while operating significantly faster than computationally heavy baselines such as SmoothLLM (156.93 seconds) and AGrail (25.22 seconds).",
+       "locator": "§5.5 (Table 5)",
+       "value": "12.89 s (Membrane, HarmBench); 2.33 s (Membrane lite)"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "quote": "While effectively blocking these attacks, Membrane consistently restricts the FRR to a range of 7% to 14% across all settings.",
+       "locator": "§4.3 (Table 2)",
+       "value": "7-14%"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2610.17659": {
+   "arxiv_id": "2610.17659",
+   "layer": "n/a",
+   "title": "Can Agents Truly Forget? Explore Machine Unlearning for LLM Agents",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 5,
+       "quote": "Adding Mem0 increases average F1 on both the forget and retain sets for both models, with average retain-set F1 across the six checkpoints rising from 34.9% to 56.8%.",
+       "locator": "§5.2 (Table 1)",
+       "value": "34.9% -> 56.8% (average across six checkpoints)"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "quote": "For Llama-3.1-8B, NPO produces the largest forget-set F1 reduction, from 49.8% to 27.0%, but also the largest utility loss, with retain-set F1 dropping from 50.2% to 34.4%.",
+       "locator": "§5.2 (Table 1)",
+       "value": "NPO 27.0% forget / 34.4% retain; GD 43.5% / 48.7%; KL 47.9% / 50.4%"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "2605.09315": {
+   "arxiv_id": "2605.09315",
+   "layer": "n/a",
+   "title": "Do Self-Evolving Agents Forget? Capability Degradation and Preservation in Lifelong LLM Agent Adaptation",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "recon-9: 83.9->81.6 为 vanilla（无防御）演化臂，防御 CPE 为 83.3，记的是威胁机制成本"
+    },
+    "latency_compute": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": false
+  },
+  "2603.22350": {
+   "arxiv_id": "2603.22350",
+   "layer": "n/a",
+   "title": "Session Risk Memory (SRM): Temporal Authorization for Deterministic Pre-Execution Safety Gates",
+   "classes": {
+    "utility_loss": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 1,
+       "metric": "per_turn_overhead",
+       "value": "<250 µs per turn",
+       "quote": "Critically, SRM eliminates all false positives with a per-turn overhead under 250 microseconds.",
+       "locator": "Abstract; measured in §5.7 Latency Overhead: median 239.9 µs per turn over 1,000 benchmark repetitions (corpus L475-477)"
+      }
+     ],
+     "reason": "2026-11-05 全文重核（任务B2）：摘要句逐字保留；§5.7 实测中位 239.9 µs/轮（1,000 次重复）与 <250 µs 一致，属新组件绝对水平读数，C2 账单成立。"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "quote": "Results show that ILION+SRM achieves F1 = 1.0000 with 0% false positive rate, compared to stateless ILION at F1 = 0.9756 with 5% FPR, while maintaining 100% detection rate for both systems.",
+       "locator": "Abstract; reproduced in results: 'ILION+SRM eliminates all false positives (FPR: 5% -> 0%), increasing F1 from 0.9756 to 1.0000' (corpus L401-402)",
+       "value": "F1 1.0000 (SRM) vs 0.9756 (stateless ILION); FPR 0% vs 5%; detection 100% both"
+      }
+     ],
+     "reason": "2026-11-05 全文重核（任务B2）：摘要与正文两处逐字一致，F1/FPR 读数成立。"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  },
+  "11e249ea5276": {
+   "arxiv_id": "11e249ea5276",
+   "layer": "n/a",
+   "title": "AGrail: A Lifelong Agent Guardrail with Effective and Adaptive Safety Detection",
+   "classes": {
+    "utility_loss": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 0,
+       "quote": "In systemic risk detection on Safe-OS and AdvWeb, AGrail based on Claude-3.5-Sonnet achieves 0% ASR against prompt injection attacks on OS and AdvWeb, while blocking only 4.4% of benign actions on OS. When against environment and system sab",
+       "locator": "§6.1 (Table 1)",
+       "value": "PI 0%; AdvWeb PI 0%; SS 3.8%; Env 5%; Norm 95.6%"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "latency_compute": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 6,
+       "quote": "As shown in Figure 19, our token consumption falls between that of GuardAgent and the GPT-4o baseline. This cost, however, represents a trade-off between efficiency and overall performance.",
+       "locator": "E.2 (Figure 19)",
+       "value": "between GuardAgent and GPT-4o baseline (Figure 19)"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "false_positive": {
+     "has": true,
+     "qualitative": false,
+     "evidence": [
+      {
+       "result_index": 2,
+       "quote": "In contrast, model-based defenses perform well in specific tasks but may block 49.2% of benign actions in Safe-OS, which show overly restrictive detection in these baselines.",
+       "locator": "§6.1 (Table 1)",
+       "value": "49.2%"
+      }
+     ],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    },
+    "revocability": {
+     "has": false,
+     "qualitative": false,
+     "evidence": [],
+     "reason": "adjudicated 2026-10-31 from migrated/latest-version card"
+    }
+   },
+   "migrated_20261031": true,
+   "any_has": true
+  }
+ },
+ "revision": "2026-11-07 recon-9 fold: 2608.12851 C1, 2609.07529 qualitative to numeric, 2602.01146 C3, 2610.19005 C3+C4; 2510.17276, 2605.09315 and 2609.34463 leave C1; C1-C4 = 34/26/19/21, union 75, 133 evidence readings",
+ "any_has_recomputed": "2026-11-01T01:50+08:00 — derived as any(classes[*].has); 14 cards corrected"
+}

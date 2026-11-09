@@ -1,0 +1,45 @@
+{
+ "cards_total": 129,
+ "cards_with_three_readers": 129,
+ "rows": 387,
+ "quote_failures": 0,
+ "readers": [
+  "r2",
+  "r3",
+  "r4"
+ ],
+ "fleiss_kappa_by_class": {
+  "c1": 0.55,
+  "c2": 0.642,
+  "c3": 0.495,
+  "c4": 0.419
+ },
+ "fleiss_kappa_readers_only": {
+  "c1": 0.708,
+  "c2": 0.748,
+  "c3": 0.676,
+  "c4": 0.454
+ },
+ "majority_priced": 63,
+ "ledger_priced_in_129": 62,
+ "ledger_matches_majority": 98,
+ "ledger_match_rate": 0.76,
+ "ledger_vs_majority": {
+  "tp": 47,
+  "fp": 15,
+  "fn": 16,
+  "precision": 0.758,
+  "recall": 0.746
+ },
+ "pairwise_card_level_agreement": {
+  "r2-r3": 0.907,
+  "r2-r4": 0.891,
+  "r3-r4": 0.907
+ },
+ "majority_by_class": {
+  "c1": 24,
+  "c2": 36,
+  "c3": 20,
+  "c4": 10
+ }
+}

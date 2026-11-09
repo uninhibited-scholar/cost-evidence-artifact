@@ -1,0 +1,208 @@
+{
+  "arxiv_id": "2609.01836",
+  "title": "Agent Memory Is a Surface for Endogenous Authorization Laundering",
+  "screening_status": "核心研究",
+  "versions_read": [
+    "v2"
+  ],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "LangMem profile-oriented persistent memory, one bounded profile per chain, either free-text (single Markdown-compatible string) or typed (schema-validated JSON with domain-native authorization records and source identifiers); profiles are frozen and hashed before evaluation and become the executor's only case-specific evidence",
+    "operations_covered": [
+      "formation",
+      "update",
+      "retention",
+      "revocation",
+      "repair"
+    ]
+  },
+  "safety_property": {
+    "type": "authority",
+    "statement": "Persistent memory must faithfully preserve the evolving authorization state (permissions, restrictions, revocations, replacements) established by the underlying history; if memory encodes authority the history never granted (or drops granted authority), a faithful executor converts that false authority into unauthorized tool actions with no external attack. Failure is judged by false-authority formation P(F) measured on typed memory against a hidden deterministic canonical ledger, by downstream unauthorized submission of paired authorized/unauthorized requests, and by whether exact-state repair (oracle memory replacement) eliminates the unauthorized actions.",
+    "operationalized_as": "EAL-Bench: deterministic hidden canonical ledger replays valid authorization events; each case contributes a matched request pair differing in one authorization-relevant field (one authorized, one unauthorized); executor tool calls are scored deterministically against the exact submitted action without an LLM judge; for typed memory, formation P(F) is computed directly from stored records vs the ledger before any executor behavior is observed."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "Histories and authoritative messages are authentic; the threat model contains no attacker (endogenous failure only)",
+      "Prompt injection and related adversarial attacks are out of scope",
+      "The writer sees the visible history but never the canonical ledger, future history, or evaluation requests",
+      "The executor receives only the stored memory (complete bounded memory) and never the original history",
+      "Executors qualify as calibrated only if faithful-memory controls achieve 100% authorized use and 0% unauthorized submissions"
+    ],
+    "not_covered": [
+      "Memory poisoning and prompt injection (adversarially injected content)",
+      "Real-world prevalence of the failure in deployed systems",
+      "Retrieval, ranking, cache staleness, source lookup, and memory access control (executor always receives complete bounded memory)",
+      "Multi-writer concurrency, memory ACLs, partial completion, human approval queues, compensating actions, operational recovery",
+      "Free-text memory has no deterministic formation label (no A_M predicate)"
+    ]
+  },
+  "intervention": {
+    "name": "Gold cited-source authority gate + bounded event-sourced authorization memory (mitigations); exact-state repair as localization intervention",
+    "mechanism_layer": "provenance",
+    "description": "Mitigation 1 (provenance): a gold cited-source authority gate keeps a typed authorization record only when every cited source is nonempty, valid, visible, and authored by a principal allowed to grant authorization, without an LLM judge. Mitigation 2 (architecture): bounded event sourcing asks the writer only to extract what changed in each new block; an external system appends updates to an immutable log and a deterministic reducer constructs the next compact memory state, moving authorization-state maintenance from the model to deterministic code. Both target formation rather than propagation and both reduce laundering at the cost of undergranting legitimate actions. Exact-state repair replaces a writer's erroneous memory with oracle-exact state holding everything else fixed, and eliminates unauthorized actions, localizing the failure to memory."
+  },
+  "results": [
+    {
+      "claim": "在增量记忆更新下，写手会对最高 45.4% 的未授权请求写入虚假授权（false-authority formation，逐域 25.9%/10.5%/45.4%），且一旦形成，执行器在 99.0% 的配对试验中照之行动",
+      "metric": "false_authority_formation_rate (false-authority rate) and conditional propagation to action",
+      "value": "formation up to 45.4% (finance; per-domain 25.9/10.5/45.4); propagation to action 99.0%",
+      "comparison": null,
+      "setting": "七个写手（Nemotron 3 Ultra、Kimi K2.6、GLM 5.2、Grok 4.3、Qwen-Plus、Inkling、DeepSeek V4.1 Flash）与两个执行器（GPT-OSS-120B、DeepSeek V4 Pro），typed incremental memory，三种子池化，procurement/cybersecurity/finance 三域（finance 为最高域），无攻击者",
+      "quote": "Under incremental typed-memory updates, writers create false authority for up to 45.4% of unauthorized requests, and once false authority is present, executors act on it in 99.0% of trials.",
+      "locator": "Abstract; §1 Contributions bullet; §4.2 Appendix Table 10",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "仅替换记忆即可消除未授权行为：对自然产生虚假授权的 typed 记忆，错误记忆下未授权动作发生在 99.0% 的试验中，换成 oracle 精确记忆后 390 次中仅 1 次，故失败定位于记忆而非执行器",
+      "metric": "conditional_propagation_rate (unauthorized action given false authority)",
+      "value": "99.0% before repair -> 1/390 after exact-state repair",
+      "comparison": null,
+      "setting": "memory-only 干预重放：同一请求分别在自然错误 typed 记忆与 oracle-exact 替换后重放，其余全部固定；跨三域（Table 11：Procurement 124/126、Cybersecurity 120/120、Finance 142/144），pool 390 次试验",
+      "quote": "For typed memories with false authority, we replay the same request behind the generated memory and behind an oracle-exact replacement. With the erroneous memories, an unauthorized action occurs in 99.0% of trials; after exact-state repair it occurs in 1 of 390 (Appendix Table 11).",
+      "locator": "§4.2; Appendix B.2 Table 11",
+      "denominator": {
+        "n_total": "390",
+        "n_valid": "389",
+        "how_counted": "Table 11 replay trials on typed memories with false authority: Procurement 124/126 (98.4%), Cybersecurity 120/120 (100.0%), Finance 142/144 (98.6%); pooled 386/390 (99.0%); oracle-exact memory 1/126, 0/120, 0/144"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "增量更新在所有域与两种表示下都抬高未授权动作率，typed incremental memory 是四种种记忆条件中全程最不安全的，在 finance 达到 45.9% 未授权动作率，而合法动作率保持高位",
+      "metric": "unauthorized_action_rate (UA)",
+      "value": "45.9% (finance, typed incremental)",
+      "comparison": null,
+      "setting": "finance 域，typed incremental memory，三种子、七写手、两执行器池化（Table 13 精确计数 U 617/1344；procurement 26.6%、cybersecurity 10.5%）",
+      "quote": "Incremental updating raises unauthorized action rate in every domain and both representations, and typed incremental memory is the least safe of the four memory conditions in every domain, reaching 45.9% unauthorized action rate in finance.",
+      "locator": "§4.1; Table 2 / Appendix B.2 Table 13",
+      "denominator": {
+        "n_total": "1344",
+        "n_valid": "617",
+        "how_counted": "Table 13 exact three-seed memory-design aggregates: Finance typed incremental U 617/1344 (45.9%)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "在共享的三种子 typed-incremental 总体上，source filtering 把未授权动作率从 23.5% 降到 7.3%，event-based memory 从 23.4% 降到 9.3%；过滤后仍残留 5.4% 的虚假授权（来源正确但语义/生命周期漂移）",
+      "metric": "unauthorized_action_rate (UA)",
+      "value": "7.3% (source filtering, pooled)",
+      "comparison": "23.5% -> 7.3% (source filtering); event-based memory 23.4% -> 9.3%",
+      "setting": "共享三种子 typed-incremental 总体（同一批 cases、写手、执行器、请求与完成试验），pool 七写手、三种子、两执行器；source filtering 与 event-based memory 均针对 formation 而非 propagation；过滤后残留 false-authority 149/2,772 (5.4%)",
+      "quote": "On typed-incremental cases, source filtering lowers the unauthorized action rate from 23.5% to 7.3%, while the legitimate action rate falls from 93.1% to 53.2%. It deletes valid grants that also cite a colleague, yet leaves a false-authority rate of 5.4% because records citing authorized grantors can still misrepresent scope, validity, or revocation state.",
+      "locator": "§4.6; Appendix C.1 Table 28",
+      "denominator": {
+        "n_total": "5544",
+        "n_valid": null,
+        "how_counted": "Table 31 pooled per-condition trials 5544 (1512+2688+1344)；C.1: 'we apply the same frozen filter to the exact three-seed typed-incremental trials used by the event-based memory comparison'；Table 28 给百分比（23.5→7.3），精确计数仅 Table 31（event 侧）与 C.1 的 149/2,772 残留探针"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "event-based memory 把池化未授权动作从 1300/5544（23.4%）降到 518/5544（9.3%），但合法动作从 5157/5544（93.0%）跌到 3802/5544（68.6%），与 source filtering 构成离散的安全-效用 Pareto 前沿",
+      "metric": "unauthorized_action_rate (UA) / legitimate_action_rate (LA)",
+      "value": "UA 1300/5544 (23.4%) -> 518/5544 (9.3%)；LA 5157/5544 (93.0%) -> 3802/5544 (68.6%)",
+      "comparison": "25.3% -> 9.0% (US); 93.3% -> 64.7% (AU)",
+      "setting": "Table 31 完整配对行为比较：typed incremental 基线 vs event-based memory，pool 七写手、三种子、两执行器（finance 域 LA 跌至 24.4%，undergrant 最严重；source filtering 侧 Table 28 仅给百分比：LA 93.1→53.2）",
+      "quote": "| Pooled | 1300/5544 (23.4%) | 518/5544 (9.3%) | 5157/5544 (93.0%) | 3802/5544 (68.6%) |",
+      "locator": "Appendix C (C.2) Table 31 (Pooled row)",
+      "denominator": {
+        "n_total": "5544",
+        "n_valid": "518",
+        "how_counted": "Table 31: pooled unauthorized actions 518/5544 under event-based memory vs 1300/5544 typed-incremental baseline; legitimate actions 3802/5544 vs 5157/5544"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "两个缓解都以牺牲合法使用为代价：合法动作率在 source filtering 下从 93.1% 跌到 53.2%，在 event-based memory 下从 93.0% 跌到 68.6%；finance 域最重（28%/24%），构成安全-效用权衡",
+      "metric": "legitimate_action_rate (LA)",
+      "value": "53.2% (source filtering, pooled)",
+      "comparison": "93.1% -> 53.2% (source filtering); 93.0% -> 68.6% (event-based); finance LA 28% / 24%",
+      "setting": "共享三种子 typed-incremental 总体，pool 七写手、两执行器；source filtering 与 event-based memory 对比同一基线",
+      "quote": "Neither defense improves cybersecurity, and legitimate action rates fall to 28% under source filtering and 24% under event-based memory in finance (Tables 28 and 31).",
+      "locator": "§4.6; Appendix C.1 Table 28 / C.2 Table 31",
+      "denominator": {
+        "n_total": "5544",
+        "n_valid": "3693",
+        "how_counted": "Table 31: pooled baseline legitimate actions 5157/5544 (93.0%)；source filtering 侧 Table 28 仅给百分比（93.1→53.2），未给精确计数"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "虚假授权的形成是写手普遍现象：每个写手在每个域都产生 false authority，Qwen-Plus 在 finance 基线 43.8% 未授权动作率是最突出的离群点（cybersecurity 对多数写手最安全，Inkling 在 finance 同样安全）",
+      "metric": "unauthorized_action_rate (UA)",
+      "value": "43.8%",
+      "comparison": null,
+      "setting": "Table 3：七个写手 x 三域，各自固定 pressure-study 种子，四记忆条件与两执行器平均（单一固定种子，非三种子评估）",
+      "quote": "Every writer creates false authority in every domain (Table 3). Cybersecurity is the safest domain for most writers, with Inkling equally safe in finance; finance is the least safe for most writers, with Qwen-Plus the clearest outlier at 43.8% baseline.",
+      "locator": "§4.3 Table 3 (per-executor: Appendix B.5 Table 21)",
+      "denominator": {
+        "n_total": "256",
+        "n_valid": "112",
+        "how_counted": "Table 3 finance 基线 UA 为 Qwen-Plus 跨两执行器（4 记忆条件已池化）。分母逐字依据：Table 21 题注 'Each writer–executor pair contains 144 matched request pairs in Procurement, 256 in Cybersecurity, and 128 in Finance'（每 writer–executor 对 finance 128 个 matched request pairs）；Table 16 题注 'Every writer–executor–condition cell contains n=32 … unauthorized requests'（4 条件 × 32 × 2 执行器 = 256）。n_valid 112 为反推唯一整数解：Table 21(c) Qwen-Plus 基线 GPT-OSS 41.4%（53/128）+ DeepSeek 46.1%（59/128），(53+59)/256 = 43.75% → 43.8%（53、59 非语料逐字数字；v2 Table 21(c) 与 v1 同值，反推在 v2 下成立）。旁证：Table 3 finance Average 基线 18.0 与七写手表一致。"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "失败随记忆工件而非执行器迁移：把每份冻结记忆在两个校准执行器后重放，各域未授权动作率相差不超过 0.9 个百分点，逐次重放一致率 98.0%-99.4%，换执行器几乎无保护",
+      "metric": "executor_transfer_gap (unauthorized action rate)",
+      "value": "within 0.9 percentage points",
+      "comparison": null,
+      "setting": "三种子评估中每份冻结记忆分别在 GPT-OSS-120B 与 DeepSeek V4 Pro 后重放，pool 七写手、四记忆条件（另有第三执行器 GLM 5.3 的 open-loop 扩展重放，164 次 executor-only 运行）",
+      "quote": "Replaying every frozen memory behind both calibrated executors yields unauthorized action rates within 0.9 percentage points in each domain, with per-replay agreement between 98.0% and 99.4% (Appendix B.2).",
+      "locator": "§4.3; Appendix B.2 Table 14",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "基准的 cases 与工具是合成的，向真实部署的迁移不确定；C.5 明确不声称复现真实部署",
+      "quote": "Despite efforts to reflect realistic workflows, our cases and tools are synthetic, leaving transfer to real deployment uncertain.",
+      "locator": "§Limitations; Appendix C.5"
+    },
+    {
+      "statement": "结果只在受控但现实的工作流下成立，不估计该失败在已部署系统中的普遍性",
+      "quote": "EAL-Bench therefore supports claims about controlled, deployment-relevant memory failures, not their real-world prevalence or end-to-end deployment safety.",
+      "locator": "§5 Conclusion (deployment scope); Appendix C.5"
+    },
+    {
+      "statement": "确定性 formation 只能对 typed memory 度量，自由文本记忆的同类分析需要经过验证的语义标注",
+      "quote": "Our formation analysis is also narrower in scope, covering only typed memory because its records permit deterministic checks.",
+      "locator": "§Limitations"
+    },
+    {
+      "statement": "压力研究（Table 3/21）基于每域单一固定 pressure-study 种子而非三种子评估，且压力主要压低合法动作率（DeepSeek 的 finance 未授权动作率例外上升）",
+      "quote": "Table 21 compares baseline and authority-invariant pressure on each domain’s fixed pressure-study seed. We report the one seed each domain shares across all seven writers rather than the three of Appendix B.2.",
+      "locator": "Appendix B.5; §4.3 Table 3 caption"
+    },
+    {
+      "statement": "缓解措施自身带假设：source filtering 只查来源权威性、刻意不查内容支持/有效性/范围/账本对应；event-based memory 改变整体记忆架构（外部不可变日志加确定性 reducer）",
+      "quote": "It deliberately ignores whether the cited message supports the permission, whether the permission remains valid, whether its scope is correct, or whether the message corresponds to a ledger event.",
+      "locator": "Appendix C.1"
+    },
+    {
+      "statement": "因执行器总是收到完整有界记忆，基准不测试检索、排序、缓存过期、来源查找与记忆访问控制",
+      "quote": "Because the executor always receives the complete bounded memory, we do not test retrieval, ranking, cache staleness, source lookup, or memory access control; source identifiers are traceable but cannot be dereferenced by the executor.",
+      "locator": "Appendix C.5"
+    }
+  ],
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "appendix",
+      "figures"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear"
+  ]
+}

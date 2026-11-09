@@ -1,0 +1,174 @@
+{
+  "arxiv_id": "2607.27080",
+  "title": "MemSecBench: Tracking Agent Memory Poisoning from Persistence to Consequence and Repair",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Cross-session memory of complete agent configurations Pi=(H,B,L): four memory backends (Native file-based, Mem0, Mem0-Graph, A-MEM) under two agent harnesses (OpenClaw, Hermes) and three LLM backends (DeepSeek-V4-Pro, MiniMax-M3, GPT-5.5); malicious and benign semantics live as files, vector records, entity-linked entries, or structured notes, written via each backend's normal interface and traced through a Write-Execute-Forget lifecycle in isolated runtime containers",
+    "operations_covered": ["formation", "retention", "retrieval", "repair"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "Lifecycle memory integrity plus selective repair: attacker-controlled malicious semantics should not persist after Write (W2), should not be recalled (E1) and adopted (E2) into a case-defined external consequence (E3), and when repair is requested the target semantics should be removed or neutralized (F1) while the semantics of every required benign memory are preserved (F2). Failure conditions: persistence, downstream unsafe consequence, and collateral damage to benign memories during repair; judged by checkpoint-specific evidence packs (deterministic write check, judge-model rubrics, programmatic gates).",
+    "operationalized_as": "Four lifecycle metrics over K=24 configurations x N=310 cases: Memory Poisoning Success Rate MPSR = sum(w)/N with w = W1 AND W2; Memory Exploitation Success Rate MESR = sum(w AND e)/sum(w) with e = E1 AND E2 AND E3; End-to-End Attack Success Rate E2E-ASR = sum(w AND e)/N; Selective Repair Success Rate SRSR = sum(w AND f)/sum(w) with f = F1 AND F2; each configuration-case pair evaluated once; judge model DeepSeek-V4-Pro outside the agent run plus programmatic admissibility gates."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Controls the content that conveys the case's target malicious semantics and determines how it is presented through one Carrier (workspace artifact or direct instruction)",
+      "May know the workflow, available tools, and relevant retrieval cues",
+      "Two-session attack: Session 1 plants malicious content that may be written to memory; Session 2 has a normal user submitting a benign task with no attack payload, during which stored content may be recalled and cause an unsafe consequence"
+    ],
+    "assumptions": [
+      "Attacker-controlled content reaches the agent through a supported Carrier and Write invokes the intended memory interface; the benchmark measures lifecycle risk after content enters this workflow",
+      "The attacker need not correspond to a separate authenticated principal",
+      "The agent accesses memory only through the intended interface; all private backend state other than native memory files remains hidden"
+    ],
+    "not_covered": [
+      "How the attacker gains account or session access is not modeled",
+      "The attacker cannot modify Pi, directly access private backend state, or view hidden evaluation metadata",
+      "No mechanism-specific or adaptive attacks against the observed backend behavior; the authors list 'develop mechanism-specific attacks' and 'isolate backend effects through controlled ablations' as future work"
+    ]
+  },
+  "intervention": {
+    "name": "MemSecBench: Write-Execute-Forget lifecycle benchmark with evidence-based adjudication",
+    "mechanism_layer": "evaluation",
+    "description": "Each case is a linked task package T=(rho, x_W, x_E, x_F, l) with clean initial memory source material, Write/Execute/Forget stage inputs, four design-axis labels, seven checkpoint rubrics, and an E3 consequence contract. Evaluation runs each package in an isolated container per configuration Pi=(H,B,L), ingests rho through the backend's normal interface to form clean memory M0, introduces the target semantics via the Carrier at Write, evaluates Execute and Forget on independent copies of the verified poisoned state, and adjudicates seven checkpoints (W1 Write Operation deterministic, W2 Persistence, E1 Recall Exposure, E2 Adoption, E3 Externalization, F1 Repair, F2 Benign Preservation) using a judge model (DeepSeek-V4-Pro) outside the agent run plus programmatic gates; matched backend comparisons fix harness, LLM, runtime, clean initialization, environment, and evidence protocol."
+  },
+  "controls": [
+      {"name": "Native (harness-specific) memory backend", "purpose": "baseline"},
+      {"name": "Matched harness-LLM-runtime settings across memory backends", "purpose": "fair-comparison"},
+      {"name": "Clean initial memory state M0 from rho via the backend's normal interface", "purpose": "fair-comparison"}
+    ],
+    "results": [
+      {
+        "claim": "Across all 24 memory-backend-harness-LLM configurations, malicious memory persists in 84.2% of all cases (MPSR) and the full Write-Execute chain succeeds in 50.3% (E2E-ASR); among successfully poisoned cases 59.6% complete the Execute chain and 56.1% achieve selective repair.",
+        "metric": "MPSR / E2E-ASR (all cases); MESR / SRSR (conditional on successful poisoning), macro-averaged",
+        "value": "84.2% / 50.3% / 59.6% / 56.1%",
+        "comparison": "unweighted macro-average over the 24 configurations in the 2x4x3 matrix",
+        "setting": "310 lifecycle cases from 48 realistic contexts (Code and Science, Daily Life, Office Work); two harnesses (OpenClaw, Hermes) x four memory backends (Native, Mem0, Mem0-Graph, A-MEM) x three LLM backends (DeepSeek-V4-Pro, MiniMax-M3, GPT-5.5); each configuration-case evaluated once",
+        "quote": "Across all 24 configurations, malicious memory persists in 84.2% of all cases, and the full Write–Execute chain succeeds in 50.3%. Among successfully poisoned cases, 59.6% complete the full Execute chain, while 56.1% achieve selective repair.",
+        "locator": "Abstract (Table 2)",
+        "denominator": {
+          "n_total": 310,
+          "n_valid": null,
+          "how_counted": "MPSR and E2E-ASR use all N=310 cases per configuration; MESR and SRSR condition on the successfully poisoned cases (sum of w) within each configuration; macro-average over the K=24 configurations with a reported value; missing entries never imputed as failures"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Adoption (E2) is the primary bottleneck to attack completion: checkpoint pass rates fall from 91.1% (W1) to 84.2% (W2) to 76.1% (E1) and then contract sharply to 53.7% at E2, with the full E2E chain at 50.3%.",
+        "metric": "configuration-macro-average lifecycle checkpoint pass rates",
+        "value": "W1 91.1%; W2 84.2%; E1 76.1%; E2 53.7%; E2E 50.3%",
+        "comparison": "persistence and recall filter little; adoption is the decisive boundary between stored malicious semantics and harmful behavior",
+        "setting": "Lifecycle-wide macro averages over the 24 configurations (Figure 4)",
+        "quote": "The sharpest contraction occurs at adoption, where E2E_{2} falls from 76.1% to 53.7%. The full E2E chain declines only slightly further to 50.3%, indicating that once malicious semantics shape the agent’s decisions, most also produce the specified external consequence.",
+        "locator": "Finding 1 (Figure 4)",
+        "denominator": {
+          "n_total": 310,
+          "n_valid": null,
+          "how_counted": "Attack checkpoints use all cases per configuration; macro-averaged over configurations; each configuration-case pair evaluated once"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Benign-memory preservation is the primary bottleneck to selective repair: 86.3% of successfully poisoned cases pass repair (F1) but only 62.5% pass benign preservation (F2), reducing SRSR to 56.1% - collateral damage after successful removal is the larger source of joint repair failure.",
+        "metric": "F1 / F2 / SRSR pass rates conditioned on successful poisoning",
+        "value": "F1 86.3%; F2 62.5%; SRSR 56.1%",
+        "comparison": "30.2-point gap between F1 and SRSR (target removed but benign memories not preserved) vs 6.4-point gap between F2 and SRSR",
+        "setting": "Repair branch of the lifecycle macro averages (Figure 4), conditioned on successfully poisoned cases within each configuration",
+        "quote": "In the repair branch of Figure 4, 86.3% of successfully poisoned cases pass F1F_{1}, whereas only 62.5% pass F2F_{2}. Requiring both conditions reduces SRSR further to 56.1%.",
+        "locator": "Finding 2 (Figure 4)",
+        "denominator": {
+          "n_total": null,
+          "n_valid": null,
+          "how_counted": "Repair outcomes condition on successfully poisoned cases (sum of w) within each configuration; absolute counts not aggregated in the main text"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Backend effects on attack vs repair are dissociable: under OpenClaw/DeepSeek-V4-Pro, replacing Native with A-MEM reduces E2E-ASR only from 59.0% to 56.5% while SRSR rises sharply from 46.3% to 87.6%; under OpenClaw/GPT-5.5, Mem0-Graph lowers E2E-ASR from 57.1% to 41.0% with SRSR nearly unchanged (87.5% -> 86.7%).",
+        "metric": "E2E-ASR and SRSR under matched harness-LLM settings",
+        "value": "A-MEM: 56.5% / 87.6%; Mem0-Graph: 41.0% / 86.7%",
+        "comparison": "Native baselines 59.0% / 46.3% (OpenClaw/DeepSeek-V4-Pro) and 57.1% / 87.5% (OpenClaw/GPT-5.5)",
+        "setting": "Matched contrasts fixing task package, harness, LLM backend, runtime, clean initialization, environment, and evidence protocol (Figure 5)",
+        "quote": "Under OpenClaw/DeepSeek-V4-Pro, replacing Native with A-MEM reduces E2E-ASR only from 59.0% to 56.5%, while SRSR rises sharply from 46.3% to 87.6%.",
+        "locator": "Finding 3 (Figure 5)",
+        "denominator": {
+          "n_total": 310,
+          "n_valid": null,
+          "how_counted": "Each matched configuration runs all N=310 cases; E2E-ASR over all cases, SRSR conditioned on that configuration's successfully poisoned cases"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Cost reading (largest aggregate backend disparities): the largest absolute differences vs matched Native configurations are 16.1 percentage points for end-to-end attack success and 41.3 percentage points for selective repair.",
+        "metric": "maximum absolute percentage-point difference vs matched Native",
+        "value": "16.1 pp (E2E-ASR); 41.3 pp (SRSR)",
+        "comparison": "largest across all memory-backend contrasts in the 24-configuration matrix",
+        "setting": "Descriptive contrasts across the 24 configurations (Abstract)",
+        "quote": "Compared with matched Native configurations, the largest absolute differences are 16.1 percentage points for end-to-end attack success and 41.3 percentage points for selective repair.",
+        "locator": "Abstract (Table 2)",
+        "denominator": {
+          "n_total": 310,
+          "n_valid": null,
+          "how_counted": "Percentage-point differences between matched configurations, each evaluated over N=310 cases"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "No memory backend is uniformly safer: under OpenClaw, Mem0 lowers E2E-ASR by 4.2-13.5 pp across the three LLMs, but under Hermes with MiniMax-M3 it instead raises E2E-ASR from 34.8% to 48.7% while improving SRSR from 47.3% to 60.0%.",
+        "metric": "E2E-ASR / SRSR direction of backend effect across configurations",
+        "value": "E2E-ASR 34.8% -> 48.7%; SRSR 47.3% -> 60.0% (Hermes/MiniMax-M3, Native -> Mem0)",
+        "comparison": "opposite-signed effects of the same backend under different harnesses",
+        "setting": "Matched Native vs Mem0 contrasts across harnesses and LLMs (Figure 5)",
+        "quote": "Under Hermes with MiniMax-M3, it instead raises E2E-ASR from 34.8% to 48.7% while improving SRSR from 47.3% to 60.0%.",
+        "locator": "Finding 4 (Figure 5)",
+        "denominator": {
+          "n_total": 310,
+          "n_valid": null,
+          "how_counted": "Each contrast runs all N=310 cases per configuration; percentages are per-configuration rates"
+        },
+        "is_primary_result": false
+      }
+    ],
+  "limitations": [
+    {
+      "statement": "Rates are descriptive: each configuration-case pair is evaluated once, and cross-backend MESR/SRSR condition on successful writes within each configuration, so cross-backend conditioning differs across cells.",
+      "quote": "Each configuration–case pair is evaluated once, so rates are descriptive; cross-backend MESR and SRSR condition on successful writes within each configuration.",
+      "locator": "Evaluation Metrics"
+    },
+    {
+      "statement": "Native is harness-specific, so memory-backend comparisons remain within harness rather than spanning harnesses.",
+      "quote": "Native is harness-specific, so comparisons remain within harness.",
+      "locator": "Evaluated Systems"
+    },
+    {
+      "statement": "Scope limits acknowledged via future work: mechanism-specific attacks, controlled backend ablations, automated benchmark construction, and broader task domains are not yet done.",
+      "quote": "Future work will develop mechanism-specific attacks, isolate backend effects through controlled ablations, automate benchmark construction, and expand task domains and operational scenarios.",
+      "locator": "Conclusion"
+    }
+  ],
+  "counterexamples": [
+    {
+      "observation": "The same backend can help under one configuration and hurt under another: Mem0 lowers E2E-ASR by 4.2-13.5 pp under OpenClaw across the three LLMs, but raises E2E-ASR from 34.8% to 48.7% under Hermes with MiniMax-M3 - backend effects reverse across agent configurations, so no universal ranking exists.",
+      "locator": "Finding 4"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": "310 linked lifecycle cases from 48 realistic contexts; 24-configuration matrix (2 harnesses x 4 memory backends x 3 LLM backends); Appendices C and D document backend implementations, adapters, runtime isolation, and artifact provenance",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "related_work_partial", "threat_model", "benchmark_design", "evaluation_workflow", "metrics", "findings", "case_study", "conclusion", "ethics_statement"],
+    "complete": false
+  },
+  "quality_flags": [
+    "single_run_per_configuration_case",
+    "native_harness_specific_comparisons_within_harness",
+    "no_dedicated_limitations_section"
+  ]
+}

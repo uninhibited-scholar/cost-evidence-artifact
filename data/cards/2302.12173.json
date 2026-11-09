@@ -1,0 +1,116 @@
+{
+ "arxiv_id": "2302.12173",
+ "title": "Not what you’ve signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v2"
+ ],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "投毒载体分两类：(1) 公共可检索的共享内容——网页（可藏于 Markdown 注释等对用户不可见的位置）、社交媒体帖子、公开代码仓库的文档/代码、入站邮件正文，经搜索检索或 API 调用进入 LLM 上下文窗口（间接注入通道）；(2) agent 自身的持久化状态——§3.3.4 中受攻击的 LLM 被诱导把攻击代码片段写入其 tagged 长期记忆（键值存储模拟），会话重置后经记忆检索重新中毒（跨会话持久化）；§3.3.5 再经邮件把注入传播给其他 LLM（跨用户传播）。合成应用载体：LangChain + OpenAI text-davinci-003（ReAct 提示，非微调）",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "保护对象：应用集成 LLM（带检索与外部 API 调用能力，如搜索助手、邮件助手、代码补全）的授权边界（不发起越权 API 调用/发邮件/远程控制）、输出完整性（不被注入指令劫持、不植入恶意代码补全）与用户数据机密性（不经检索副作用外泄）。失效条件：攻击者在会被目标 LLM 检索的外部内容中预置提示词（间接注入），LLM 指令遵循能力越强越易将其当作指令执行；注入还可被写入长期记忆实现跨会话持久化并传播给其他 LLM。判定方式：在合成应用中的端到端概念验证能否成功执行（无成功率统计）",
+  "operationalized_as": "六个攻击场景（多阶段利用、侧信道外泄+社会工程、远程控制、跨会话持久化、注入传播、代码补全投毒）在合成应用（LangChain + text-davinci-003，温度 0）中的概念验证可行执行；论文未量化任何攻击成功率/ASR，也未评测防御效果"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "在公共可检索来源（网站、社交媒体、代码仓库）放置任意文本，可置于对用户不可见的位置（如网页 Markdown 注释）",
+   "主动向受害者发送含注入载荷的邮件（主动注入），或经社会工程诱导用户把文本粘贴进模型",
+   "运行攻击者服务器承载二级载荷并充当指令与控制（C2）通道，实现远程控制与双向通信（经检索请求副作用回传数据）",
+   "黑盒即可：无需模型权重、训练数据或推理后端权限，也无需 ML 优化技能"
+  ],
+  "assumptions": [
+   "目标 LLM 被集成进应用并具备检索/外部工具调用能力，检索到的不可信数据与指令进入同一上下文窗口（数据与代码边界模糊）",
+   "LLM 指令遵循能力足够强（‘可表现得像程序’），且越强越易被利用",
+   "用户无法持续审视集成 LLM 的每一个子操作",
+   "演示在合成应用中进行：所有接口返回预置内容、不能访问真实系统或网站（除图 11 的 ChatGPT 交互演示外）"
+  ],
+  "not_covered": [
+   "未在真实产品/系统上验证或量化攻击影响（作者明示无法验证当前系统是否受间接 PI 影响）",
+   "未提出或评测任何防御/缓解措施；RLHF 等能否缓解为开放问题（摘要仅呼吁紧急评估现有缓解技术）",
+   "多模态（图像中隐藏注入）、社交媒体大规模传播仅提出设想未研究",
+   "代码补全攻击依赖专有上下文构建算法，真实世界可行性未定（作者实验中注入嵌入较大应用时效能显著下降）",
+   "无攻击成功率、攻击成本等量化指标"
+  ]
+ },
+ "intervention": {
+  "name": "无防御干预（攻击面刻画：间接注入+跨会话记忆持久化）",
+  "mechanism_layer": "none",
+  "description": "本文是威胁分析与攻击概念验证论文，未提出也未评测任何防御干预；仅呼吁对现有缓解技术进行紧急评估并研究新防御。就本综述的机制分类而言，它刻画的是‘经检索通道的内容层间接注入 + 写入长期记忆的跨会话持久化’攻击面，为后续 provenance 校验/内容隔离等防御研究提供动机"
+ },
+ "results": [
+  {
+   "claim": "概念验证证明跨会话持久化投毒可行：受攻击的 agent 被诱导把攻击代码片段写入其长期记忆（tagged memory/键值存储），会话重置后一旦按提示检索该记忆即自我重新中毒——v2 表述从 v1 的 'application-integrated LLMs may be persistently poisoned even between sessions' 改为 'LLM-integrated applications could be persistently poisoned even across sessions'，机制与结论不变（支撑本综述的 memory formation/retention/retrieval 攻击面）",
+   "metric": "persistence feasibility (proof-of-concept)",
+   "value": "demonstrated (cross-session re-infection)",
+   "comparison": null,
+   "setting": "合成聊天 agent 附加简单键值存储模拟长期记忆；先在会话中受 PI 攻击把攻击代码写入 tagged 记忆，重置会话后提示‘回忆上次对话’即触发重感染（演示载荷为海盗口音应答，可替换为多阶段载荷）",
+   "quote": "This demonstrates that LLM-integrated applications could be persistently poisoned even across sessions.",
+   "locator": "§4.2.4 Intrusion (Persistence, Figure 8)",
+   "denominator": null,
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "实验设置限于合成应用与本地 HTML（Bing Chat 侧栏），未测 Microsoft 365 Copilot、ChatGPT plugins 等真实应用（无访问权）",
+   "quote": "We also could not test the attacks on other applications (e.g., Microsoft 365 Copilot and ChatGPT’s plugins) as we did not have access to them.",
+   "locator": "§5.2 Limitations (Experimental Setup)"
+  },
+  {
+   "statement": "攻击成功率难以量化：动态演化、交互式聊天会话中需研究触发频率、跨追问的说服一致性等多因素，作者留作 future work（v1 的'概率性'表述在 v2 改写为可量化性挑战）",
+   "quote": "In contrast to static one-shot malicious text generation, quantifying our attacks’ success rate can be challenging in the setup of dynamically evolving and interactive chat sessions with users (Lee et al., 2022).",
+   "locator": "§5.2 Limitations (Evaluation)"
+  },
+  {
+   "statement": "模型遵循复杂指令与说服能力显著提升但不无缺陷，可能生成醒目的虚假回答或直白地诱导用户；v1 '社会工程技能不 impressively' 的表述在 v2 被改写为定性观察",
+   "quote": "We qualitatively observe the huge improvements of recent LLMs in following complex instructions and persuasion over previous models. This is not without flaws.",
+   "locator": "§5.2 Limitations (Deception and Believability)"
+  },
+  {
+   "statement": "代码补全注入对上下文高度敏感：嵌入较大应用时效能显著下降；上下文构建算法专有，真实环境可行性需更多研究（v2 措辞 'was possible but very sensitive to context'）",
+   "quote": "In our experiments, this form of injection was possible but very sensitive to context. When embedded within larger applications, the efficacy of our injections was significantly reduced.",
+   "locator": "§4.2.4 Intrusion (Code Completion)"
+  },
+  {
+   "statement": "RLHF 能否缓解攻击仍不清楚：v2 引入新论据——理论工作表明对齐/RLHF 不可能防御所有不良行为，且 RLHF 模型存在 inverse scaling 实证",
+   "quote": "The extent of how RLHF can mitigate attacks is still unclear. Some recent theoretical work (Yotam Wolf, 2023) shows the impossibility of defending against all undesired behaviors by alignment or RLHF.",
+   "locator": "§5.6 Mitigations"
+  }
+ ],
+ "reproduction": {
+  "code": "https://github.com/greshake/lm-safety",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "related_work",
+   "attack_surface",
+   "evaluation",
+   "demonstrations",
+   "hidden_injections",
+   "discussion",
+   "limitations",
+   "mitigations",
+   "conclusion"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "no_quantified_success_rates",
+  "synthetic_application_only",
+  "v2_retitle_published_version"
+ ]
+}

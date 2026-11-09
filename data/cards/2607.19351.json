@@ -1,0 +1,134 @@
+{
+ "arxiv_id": "2607.19351",
+ "title": "OpenEvoShield: Dual Non-Stationary Continual Defense for Open-World Multi-Agent System Attacks",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "shared_state",
+  "scope": "cross-task",
+  "carrier": "多智能体系统的行为边界与策略集成（M2 边界更新器、M3 EWC 正则化策略集成）随部署持续更新；攻击侧注入经智能体间通信传播",
+  "operations_covered": [
+   "update",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "多智能体系统在攻击策略持续精炼、正常智能体行为随系统扩张漂移的双重非平稳条件下，仍应阻断恶意指令传播并保持正常协作",
+  "operationalized_as": "三个任务域（CSQA/MMLU/GSM8K）的 ASR 与 MDSR、InjecAgent/ PoisonRAG 的 TA/MA、以及 Novel-DR 与 FPR"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "经智能体间通信注入并传播恶意指令",
+   "针对已部署防御精炼注入策略"
+  ],
+  "assumptions": [
+   "正常智能体行为同时随系统扩张漂移",
+   "攻击与正常两侧漂移可分离"
+  ],
+  "not_covered": [
+   "单智能体的持久语义记忆",
+   "跨会话用户级状态"
+  ]
+ },
+ "intervention": {
+  "name": "OpenEvoShield（M1 非对称速率控制 + M2 正常边界更新 + M3 EWC 策略集成 + M4 能量多粒度检测）",
+  "mechanism_layer": "architecture",
+  "description": "用双漂移信号把攻击侧快学习率与正常侧慢学习率解耦；M2 以慢速率维护动态行为边界；M3 以 EWC 正则化快速适配且不灾难遗忘；M4 融合节点/子图/系统多层能量检测"
+ },
+ "controls": [
+  {
+   "name": "INFA-GUARD（静态分类器）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Naive-Continual",
+   "purpose": "baseline"
+  },
+  {
+   "name": "M1–M4 逐项移除",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "面对分布漂移，静态防御大幅退化而 OpenEvoShield 仅小幅上升：Phase II 中 INFA-GUARD 的 CSQA ASR 从 23.3% 升至 45.8%（+22.5pp），OpenEvoShield 仅从 20.1% 升到 24.5%（+4.4pp）",
+   "metric": "ASR",
+   "value": "INFA-GUARD +22.5pp；OpenEvoShield +4.4pp",
+   "comparison": "23.3%→45.8% vs 20.1%→24.5%",
+   "setting": "Phase II 分布漂移下的 CSQA 攻击",
+   "quote": "In Phase II, INFA-GUARD’s CSQA ASR surges from 23.3%23.3\\% to 45.8%45.8\\% (+22.5 pp) as its static classifier overfits to Phase I prototypes, while OpenEvoShield rises only 20.1%→24.5%20.1%\\!\\to\\!24.5% (+4.4 ",
+   "locator": "§5 Results",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "M4 检测头在 Phase III 达到 61.8% Novel-DR，比 Naive-Continual 高 42.5pp，同时保持最低 ASR",
+   "metric": "Novel-DR",
+   "value": "61.8%（+42.5pp）",
+   "comparison": null,
+   "setting": "Phase III 未见攻击检测率",
+   "quote": "OpenEvoShield’s M4 achieves 61.8%\\mathbf{61.8\\%} Novel-DR—42.542.5 pp above Naive-Continual—while sustaining the lowest Phase III ASR.",
+   "locator": "§5 Results",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "M3 策略更新器最关键：移除后 Phase II ASR 上升 13.4pp，Phase III Novel-DR 崩到 35.8%（−26.0pp）",
+   "metric": "ASR / Novel-DR",
+   "value": "+13.4pp ASR；Novel-DR 35.8%（−26.0pp）",
+   "comparison": null,
+   "setting": "消融 M3",
+   "quote": "M3 (Policy Updater) is the most critical: its removal raises Phase II ASR by +13.4+13.4 pp and collapses Phase III Novel-DR to 35.8%35.8\\% (−26.0-26.0 pp).",
+   "locator": "§5 Results",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "M1 非对称速率移除后误报率近乎翻倍（4.2%→8.5%），因更新速率失控导致过度适配",
+   "metric": "FPR",
+   "value": "4.2%→8.5%",
+   "comparison": null,
+   "setting": "消融 M1",
+   "quote": "M1’s removal nearly doubles FPR (4.2%→8.5%4.2%\\!\\to\\!8.5\\%), as uncontrolled update rates cause the system to over-adapt and misclassify normal agents.",
+   "locator": "§5 Results",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "防御对象是多智能体共享状态，与单智能体语义记忆载体不同；跨载体外推需谨慎",
+   "quote": null,
+   "locator": null
+  },
+  {
+   "statement": "语料为 HTML 转文本，LaTeX 数字重复影响引文可读性",
+   "quote": null,
+   "locator": null
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "results"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "shared_state_not_semantic_memory",
+  "denominator_unclear",
+  "manually_extracted_no_agent",
+  "latex_duplication_in_corpus"
+ ]
+}

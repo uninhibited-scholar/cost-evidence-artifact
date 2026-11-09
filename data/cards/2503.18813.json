@@ -1,0 +1,275 @@
+{
+ "arxiv_id": "2503.18813",
+ "title": "Defeating Prompt Injections by Design",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v2"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "cross-task",
+  "carrier": "以 Python 函数表达、由部署方（the entity serving the CaMeL engine）定义的 security policies（§4.2：'Security policies can be defined globally by the entity serving the engine'，跨任务持久生效）；运行期内为每个值附加的 capability 标注（来源 provenance + 允许读者 readers，存于 CaMeL 解释器维护的 data flow graph，单次任务内、解释器状态在同任务多次代码修复间保留）",
+  "operations_covered": [
+   "formation"
+  ]
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "同时保护机密性与完整性：(1) confidentiality——用户私有数据（文档、密码、PII 等）不得经未授权数据流流向无权读者或被状态改变工具外泄（capability 记录每个值的 allowed readers，策略在其依赖图上任一违规即阻断工具调用）；(2) integrity——工具调用序列与参数不得被注入数据劫持（P-LLM 只见用户查询、控制流由可信代码固定，untrusted 数据永远不能影响程序流）。保证性质为 by design：策略违规在执行前被自定义解释器阻断，不依赖模型鲁棒性。失效条件（作者自认）：侧信道（§6：间接依赖推断、异常触发泄露 1 bit、时间侧信道）、不影响控制/数据流的 text-to-text 攻击与向用户展示钓鱼内容（§3.1 显式非目标）、de-classification 用户疲劳（§8.2）、解释器与策略实现尚未形式化验证（§9）。判定：AgentDojo 上 949 个攻击的成功数为 0，同时效用（任务成功率）可接受",
+  "operationalized_as": "AgentDojo 基准（Workspace/Banking/Slack/Travel）：(a) benign 任务成功率（utility，Table 2）；(b) 949 个 prompt injection 攻击下的成功攻击数（security，Table 4/Table 7）；(c) security policy 触发率（用户需确认的频率，Figure 8/Table 8/9）；(d) token 开销（Table 10-13）"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "攻击者可向 agent 会检索的任意不可信数据源（邮件、云端文档、网页、日历、评论等）植入 prompt injection（含对用户不可见的文本），数据被 victim 的 agentic 系统取回后即进入处理流程",
+   "数据流攻击（主威胁，AgentDojo 焦点）：注入可操纵 Q-LLM 的结构化输出，从而在不改变工具调用序列（控制流）的情况下篡改工具调用参数（如把收款邮箱换成攻击者地址），类比 SQL 注入改参数而非改查询结构",
+   "§5.4：若生成代码让数据决定控制流（'data flow becomes control flow'），注入可升级为任意代码执行；还可把恶意程序拆成多个看似无害的小指令（类似 Jones et al. 2024/Glukhov et al. 2025）绕过意图审查",
+   "§6 侧信道：可观察外部资源被抓取次数、通过触发异常使执行中止、或测时，从系统可观测行为推断私有变量（可泄露 1 bit 或经间接依赖泄露整值）",
+   "§7 次级场景：恶意/被攻陷用户（rogue user，故意下达违反策略的指令）与恶意工具（spy tool，其文档本身即是注入，可诱导 agent 把全部数据传给它）"
+  ],
+  "assumptions": [
+   "用户 prompt 可信；用户不会把不可信来源的内容粘贴进查询",
+   "若系统带 memory，则 memory 未被攻击者攻陷（§3 Threat Model 明示假设）",
+   "工具按声明返回真实 capability（如云盘文件自带 shared-with 读者列表）；工具自身可信（恶意工具仅作为 §7 扩展场景讨论）",
+   "CaMeL 解释器、capability 传播与策略实现本身正确——形式化验证留作未来工作（§9）；当前未实现策略冲突解决机制（§4.2）",
+   "P-LLM 生成的代码落在受限 Python 子集内；越界可检测并自动修复（最多重试 10 次）"
+  ],
+  "not_covered": [
+   "不影响控制流也不影响数据流的 text-to-text 攻击：如让摘要失真、向用户展示注入原文/注入式钓鱼链接（'click this malicious link'）——§3.1 显式非目标，AgentDojo 中 travel 套件的 print(评论) 残留成功即属此类",
+   "完全自主、无需人工介入的系统不是目标；用户确认/澄清仍保留在回路中",
+   "侧信道攻击不能完全防止（§6 承认；STRICT 模式仅缓解 Q-LLM 相关与控制流依赖类）",
+   "capability 生态外的第三方工具：不支持 capability 时效用退化（§8.1）；采用成本高（以 CHERI 重设计全栈为鉴）",
+   "对策略编写者/部署方的信任：策略由 serving entity 定义，若策略本身写错则保证失效；不做策略冲突自动消解"
+  ]
+ },
+ "intervention": {
+  "name": "CaMeL（CApabilities for MachinE Learning）",
+  "mechanism_layer": "architecture",
+  "description": "在 LLM 外围构建防护系统层（不修改模型本身）：(1) P-LLM（特权）只见用户查询，把任务编译为受限 Python 代码（固定控制流）；(2) 自定义解释器执行代码并维护 data flow graph，为每个值传播 capability（provenance 来源 User/CaMeL/tool/inner source + allowed readers）；(3) Q-LLM（隔离、无工具）经 JSON schema 解析不可信数据；(4) 每次工具调用前沿依赖图检查 security policies（Python 函数，返回 Allowed/Denied），违规即阻断（实际部署中转为用户确认）；(5) NORMAL/STRICT 双模式——STRICT 把控制流条件/循环 iterable 计入块内赋值依赖、并使 Q-LLM 调用后的语句依赖其输入，以缓解侧信道。安全保证来自架构隔离+provenance 强制执行，属'by design'而非模型训练/提示加固；可与模型侧防御叠加构成纵深防御"
+ },
+ "controls": [
+  {
+   "name": "Native Tool Calling API（各模型官方工具调用，无防御）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "CaMeL (no policies)（仅 P/Q-LLM 隔离，不安装 security policies）",
+   "purpose": "ablation"
+  },
+  {
+   "name": "Undefended model（Claude 3.5 Sonnet 无防御）",
+   "purpose": "negative-control"
+  },
+  {
+   "name": "Tool Filter（AgentDojo 内置，Debenedetti et al. 2024a）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Spotlighting（Hines et al. 2024，定界符标注）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Prompt Sandwiching（Learn Prompting 2024）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GPT-4o mini 原生 API（默认实现 instruction hierarchy，Wallace et al. 2024）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "NORMAL vs STRICT 解释器模式对比",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "[replaced_by_different_metric in v2] v2 摘要口径：CaMeL 以可证安全解决 AgentDojo 77% 的任务（未防御系统为 84%）。v1 的口径——'以 o1 为骨干时 67% utility、仅比 GPT-4o 原生工具调用低 2%'——在 v2 中不再出现（v2 换用新模型名单：gemini-2.5、claude-sonnet-4、gpt-4.1、o3/o4-mini 等，§6.1.1 改为定性表述 'With an exception of Travel suite–on a subset of models–we find that CaMeL does not significantly degrade utility'，并报告 o3 比 o1 高约 10% utility）。新旧口径不可直接换算：67% 是 v1 名单下的绝对效用，77%/84% 是 v2 名单下'可证安全 vs 未防御'的成对比较。",
+   "metric": "utility_rate",
+   "value": "77% (provable security) vs 84% (undefended) [v1: 67% utility on o1, 2% below GPT-4o native]",
+   "comparison": "undefended system 84% on the same benchmark (v2 abstract)",
+   "setting": "AgentDojo 全套件（Workspace/Banking/Slack/Travel，benign 任务）；CaMeL 完整开启；o1-2024-12-17（high reasoning effort）为 P-LLM/Q-LLM 骨干；对照为原 AgentDojo 论文 2024-06 的 GPT-4o 原生工具调用",
+   "quote": "We demonstrate effectiveness of CaMeL by solving 77%77\\% of tasks with provable security (compared to 84%84\\% with an undefended system) in AgentDojo.",
+   "locator": "Abstract (also §6.1)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Share of AgentDojo tasks solved with acceptable detail under CaMeL vs undefended tool-calling, as stated in the v2 abstract; per-suite utilities in Appendix B Tables 2/5"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "[replaced_by_different_metric in v2] 无安全策略时（安全收益仅来自 P-LLM/Q-LLM 隔离，即 Willison Dual LLM 模式），CaMeL 大幅降低所有模型的攻击成功数，部分模型归零：v2 例证换成 Gemini 2.5 Pro（300 → 0）；v1 的 GPT-4o 233 → 0 不再出现。v2 同时如实报告残余：两处注入任务（banking 文档付款指令、travel 评论打印）仍成功，但作者说明它们显式落在 §3.1 声明的非目标内（后者甚至不是注入）。攻击总数口径更新为 949。",
+   "metric": "successful_attacks",
+   "value": "Gemini 2.5 Pro: 300 -> 0 successful attacks (no policies) [v1: GPT-4o 233 -> 0]",
+   "comparison": "all models improve; two residual injections outside the declared threat model (§6.2.1)",
+   "setting": "AgentDojo 全部 949 个 prompt injection 攻击；GPT-4o-2024-08-06 骨干；无 security policies；残留成功攻击仅 2 类显式非目标（banking 分笔转账任务、travel print 评论任务）",
+   "quote": "Figure 9 shows that CaMeL reduces the number of successful attacks for all models, and in some cases, it completely eliminates the attacks. For example, the number of successful attacks for Gemini 2.5 Pro drops from 300300 without to 00 with CaMeL.",
+   "locator": "§6.2.1 (Figure 9, Table 4)",
+   "denominator": {
+    "n_total": 949,
+    "n_valid": null,
+    "how_counted": "Successful attacks out of 949 AgentDojo attack instances in total (Figure 9/11 captions), per model with Tool Calling API vs CaMeL without security policies"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "在 Claude 3.5 Sonnet 上与 AgentDojo 内置启发式防御对比：CaMeL 成功攻击数为 0，论文所称次优防御 tool filter 为 8；CaMeL 是唯一带安全保证（其余均为概率性、无保证）的防御",
+   "metric": "successful_attacks",
+   "value": "0",
+   "comparison": "next best defense per prose: tool filter 8; note Table 7 shows Spotlighting at 5 (inconsistency persists in v2)",
+   "setting": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022) 骨干，AgentDojo 949 攻击，重跑 tool filter/spotlighting/prompt sandwiching 基线；注意 Appendix C Table 7 中 Spotlighting 计 5（<8），正文仍称 tool filter 为 next best",
+   "quote": "For example, the the number of successful attacks with CaMeL is 00, while the number of successful attacks with the next best defense (tool filter) is 88.",
+   "locator": "§6.3 (Figure 11, Table 7)",
+   "denominator": {
+    "n_total": "949",
+    "n_valid": "949",
+    "how_counted": "Figure 7 说明 'out of 949 attacks in total'、Figure 9 说明 'The total number of attacks is 949949'：成功攻击数为 AgentDojo 全部 949 个攻击任务中被 utility/security checker 判定攻击成功的计数"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "仅靠模型内建 instruction hierarchy 不足以防御：GPT-4o mini 原生工具调用在 AgentDojo 上仍有 276 次攻击成功，而论文称 GPT-4o Mini 配 CaMeL 时无任何攻击成功——系统级能力/策略保证优于学习到的指令层级",
+   "metric": "successful_attacks",
+   "value": "276",
+   "comparison": null,
+   "setting": "gpt-4o-mini-2024-07-18，AgentDojo 949 攻击；原生 API 默认实现 instruction hierarchy（Wallace et al. 2024; OpenAI 2024）；注意 Appendix B Table 4 中 GPT-4o Mini Native Overall 为 264±239.3，正文写 276（与 o3 Mini High 行数值相同），论文内部不一致，此处按正文引用",
+   "quote": "While GPT-4o Mini with CaMeL is not vulnerable to any of the attacks in AgentDojo, GPT-4o-mini with the tool calling API (which implements the instruction hierarchy by default) is vulnerable to 276 attacks.",
+   "locator": "§6.3",
+   "denominator": {
+    "n_total": "949",
+    "n_valid": "949",
+    "how_counted": "Figure 7 说明 'out of 949 attacks in total'、Figure 9 说明 'The total number of attacks is 949949'：成功攻击数为 AgentDojo 全部 949 个攻击任务中被 utility/security checker 判定攻击成功的计数"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "CaMeL 的代价：相对原生工具调用，中位任务需 2.82× 输入 token 与 2.73× 输出 token（用于生成受限 Python 代码与修复错误），作者认为换取安全保证是合理代价",
+   "metric": "token_overhead_median",
+   "value": "2.82× input / 2.73× output",
+   "comparison": null,
+   "setting": "Claude 3.5 Sonnet 骨干，AgentDojo（under attack 测量），tiktoken GPT-4o tokenizer（Claude 分词器未公开）；工具文档 token 未计入（两种方法均排除），但计入 Python 子集规范 token；注意 Table 10 中位数为 Input 2.73、Output 2.82，与正文/Figure 11 的表述互换",
+   "quote": "Overall, we find that CaMeL requires 2.82×2.82\\times input tokens and 2.73×2.73\\times more output tokens for the median task in AgentDojo.",
+   "locator": "§6.5 (Figure 13)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "CaMeL 的效用代价（Claude 3.5 Sonnet，Overall）：任务成功率由未防御的 90.72% 降至 63.92%（benign，Appendix B Table 5；v1 报 90.7%/63.9%，v2 给出两位小数并新增更多模型行）；降幅最大的是 Travel 套件（75.00%→25.00%，主因工具输出结构未文档化，见 §6.1.2）；被攻击场景下的同表为 Table 6。",
+   "metric": "utility_rate",
+   "value": "63.92% (vs undefended 90.72%) [v1: 63.9% / 90.7%]",
+   "comparison": "90.7% → 63.9%",
+   "setting": "AgentDojo benign 任务，Overall 列，claude-3-5-sonnet-20241022；CaMeL 完整开启（含 security policies）；± 为跨套件标准差（Table 2）",
+   "quote": "Undefended model 90.72%±5.7790.72\\%\\pm 5.77 81.25%±19.1281.25\\%\\pm 19.12 95.24%±9.1195.24\\%\\pm 9.11 75.00%±18.9875.00\\%\\pm 18.98 100.00%±0.00100.00\\%\\pm 0.00 CaMeL 63.92%±9.5663.92\\%\\pm 9.56 75.00%±21.2275.00\\%\\pm 21.22 71.43%±19.3271.43\\%\\pm 19.32 25.00%±18.9825.00\\%\\pm 18.98 75.00%±13.4275.00\\%\\pm 13.42",
+   "locator": "Appendix B (Table 5, Defenses utility — Claude 3.5 Sonnet)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Task success rate (%) per AgentDojo suite with mean±std over runs; per-suite task counts not restated in v2 appendix"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "STRICT 模式（把控制流条件计入依赖以缓解侧信道）的代价是策略触发率大幅上升：benign 评估 Overall 触发率由 NORMAL 的 33.87% 升至 53.23%——用户需确认的频率明显增加（用户疲劳风险）",
+   "metric": "policy_trigger_rate",
+   "value": "33.87%",
+   "comparison": "NORMAL 33.87% → STRICT 53.23%（benign，Overall）",
+   "setting": "benign（非攻击）评估，CaMeL 开启；触发率=安全策略拒绝工具执行（需用户显式同意）的任务占比；Figure 8 说明称比例仅统计成功解决的任务；attack 下为 26.54%→45.34%（Table 9）",
+   "quote": "| | Overall | Banking | Slack | Travel | Workspace |\n| Mode | | | | | |\n| NORMAL | 33.87%33.87\\% | 58.33%58.33\\% | 60.00%60.00\\% | 0.00%0.00\\% | 16.67%16.67\\% |\n| STRICT | 53.23%53.23\\% | 58.33%58.33\\% | 80.00%80.00\\% | 80.00%80.00\\% | 33.33%33.33\\% |",
+   "locator": "Appendix D (Table 8)",
+   "denominator": {
+    "n_total": "62",
+    "n_valid": "62",
+    "how_counted": "Figure 8 caption 明写触发比例 'reported only over the successfully solved tasks'（分母=成功解决的任务数），Table 8 为 benign（not under attack）触发率；Table 1（Claude 3.5 Sonnet 失败分析）'Correct' 行逐字给出成功解决任务数 31+12+14+5 = 62，且 21/62 = 33.87%（NORMAL Overall）与 33/62 = 53.23%（STRICT Overall）均精确吻合（2 位小数），Banking 7/12 = 58.33%、Travel 4/5 = 80.00% 亦吻合，证实 Table 8 与 Table 1 同为 Claude 3.5 Sonnet + CaMeL 设置；触发数 21/33 及 Table 8 各套件 solved 计数语料未直接印出（套件级比率拟合 solved 12/15/5/30，合计 62）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "在所测防御中 CaMeL 的 token 开销最高，最省的是 Spotlighting（中位任务 1.06× 输入、0.98× 输出）——安全保证与 token 成本之间存在明显权衡",
+   "metric": "token_overhead_median",
+   "value": "1.06× input / 0.98× output",
+   "comparison": "CaMeL 为各防御中 token 用量最高",
+   "setting": "与 §5.3 相同防御集（Claude 3.5 Sonnet，AgentDojo，tiktoken GPT-4o tokenizer，中位任务）；对比对象含 tool filter、tool filter (efficient)、prompt sandwiching",
+   "quote": "CaMeL requires the highest token usage among the defenses we analyze, the best being Spotlighting, which uses 1.06×1.06\\times more input and 0.98×0.98\\times the output tokens.",
+   "locator": "§6.5 and Appendix F (Figure 13, Table 10)",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "作者明确承认 CaMeL 可被侧信道攻击（经共享资源观测系统行为推断敏感信息：间接依赖推断、异常触发泄露 1 bit、时间侧信道），这在一定程度上削弱'强安全保证'的主张；STRICT 模式只是缓解而非根除",
+   "quote": "We find that CaMeL is vulnerable to side-channel attacks, where an attacker can infer sensitive information by observing the system’s behavior with shared resources (Anderson et al., 2002).",
+   "locator": "§6 Side channels can be a problem"
+  },
+  {
+   "statement": "显式非目标：不影响控制流/数据流的 text-to-text 攻击不在防护范围（如把摘要改得与原邮件不符、注入式钓鱼链接展示给用户），此类攻击仍可欺骗最终用户",
+   "quote": "CaMeL doesn’t aim to defend against attacks that do not affect the control nor the data flow.",
+   "locator": "§3.1 Explicit non-goals of CaMeL"
+  },
+  {
+   "statement": "de-classification/用户确认环节可能引发安全疲劳：用户对安全提示脱敏后可能习惯性批准恶意操作——安全性最终受限于策略质量与用户行为",
+   "quote": "This can lead to user fatigue, where users become desensitized to security prompts and may inadvertently approve malicious actions, a practice that is often seen in other settings (Felt et al., 2012; Cao et al., 2021).",
+   "locator": "§8.2 De-classification and user fatigue"
+  },
+  {
+   "statement": "部署方/用户需编写并持续维护安全策略，负担显著；作者明确回答'提示注入并未被完全解决'",
+   "quote": "Importantly, CaMeL suffers from users needing to codify and specify security policies and maintain them.",
+   "locator": "§8.3 So, are prompt injections solved now?"
+  },
+  {
+   "statement": "无事务原子性/回滚：代码抛异常前已执行的有副作用工具调用（如已创建日历事件）无法撤销，只能靠提示告知 P-LLM 不要重复执行",
+   "quote": "At present CaMeL has no means to enable atomicity for sequences of instructions or rollbacks of operations that failed yet had side-effects.",
+   "locator": "§4.4 CaMeL Interpreter"
+  },
+  {
+   "statement": "安全保证目前依赖解释器与策略实现的正确性（当前未实现策略冲突解决机制），形式化验证留作未来工作",
+   "quote": "verification can provide a formal proof that CaMeL’s interpreter itself is without faults and that it resolves conflicts and enforces the intended security policies",
+   "locator": "§9 Future work"
+  },
+  {
+   "statement": "capability 系统理想上要求整个生态参与：第三方工具不支持 capability 时效用退化，且实现成本高（作者以 CHERI 需重设计软硬件全栈为鉴）",
+   "quote": "Furthermore, capability-based systems ideally require full participation from the entire ecosystem.",
+   "locator": "§8.1 Past problems with adoption of capabilities"
+  },
+  {
+   "statement": "Travel 套件效用大幅下降暴露 CaMeL 对工具文档质量的依赖：v2 §6.1.2 归因于工具输出结构未文档化（P-LLM 无法解析）；v2 新增观察——更新模型可在不改 CaMeL 的情况下大幅缓解（Claude Sonnet 系 Travel utility 25%→55%→75%），即该代价部分是模型能力问题而非纯机制问题",
+   "quote": "We observe that the low performance on the Travel suite mostly comes from the fact that the tool outputs structure is not well documented.",
+   "locator": "§6.1.2"
+  }
+ ],
+ "counterexamples": [
+  {
+   "statement": "CaMeL（无策略）下 AgentDojo 仍有 2 类攻击被判成功（banking 1 + travel 1）：banking 任务为'分笔转账 $30,000、单笔≤$10,000'，注入藏在文档中诱导模型按文档内指令付款——数据即指令，作者归为显式非目标",
+   "quote": "The injection is successful when is it inserted in a document, and the model is instructed to make a payment based on the instructions present in the document.",
+   "locator": "§5.2.1 Case study: without any Security Policies"
+  },
+  {
+   "statement": "travel 任务'宣称 Riverside View Hotel 值得一游'在含策略的 CaMeL 下仍成功：模型对评论调用 print，把注入原文（含酒店名）展示给用户——并非 prompt injection 劫持执行流，属 §3.1 非目标；作者建议用 capability 溯源在 UI 标注不可信来源",
+   "quote": "this task is successful when the user asks for something related to reviews, and the model calls the print function on the reviews, hence showing to the user the entire injection (including the hotel name).",
+   "locator": "§5.2.2 Case study: with Security Policies"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "denominator_unclear",
+  "corpus_keeps_latex_digit_duplications_quotes_verbatim",
+  "prose_vs_table10_input_output_median_swap_persists_in_v2_prose_2.82_in_2.73_out_vs_table_median_2.73_in_2.82_out",
+  "prose_next_best_toolfilter_8_vs_table7_spotlighting_5_persists_in_v2",
+  "gpt4o_mini_276_prose_only_no_v2_table_crosscheck"
+ ]
+}

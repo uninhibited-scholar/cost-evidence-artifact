@@ -1,0 +1,167 @@
+{
+  "arxiv_id": "2610.17659",
+  "title": "Can Agents Truly Forget? Explore Machine Unlearning for LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "Agent system A=(f_theta, M, T, pi): Mem0 persistent memory - a local vector store of extracted memory records retrieved per question with a fixed local embedding model (artifacts constructed once from the corpus and shared across all six unlearning checkpoints) - plus an offline web-snapshot tool corpus (800 local HTML pages, 200 entity records, 4,000 fact records, 800 document records, 4,000 fact-span annotations, read-only SQLite FTS5/BM25 index) and provenance-tracked interaction trajectories; forget information propagates from raw interactions into summaries, vector indices, documents, and derived profiles",
+    "operations_covered": ["formation", "retention", "retrieval", "repair"]
+  },
+  "safety_property": {
+    "type": "privacy",
+    "statement": "System-level agent unlearning: after a deletion request, the target knowledge set K_f must be behaviorally non-recoverable through ALL information pathways within the declared access boundary - parametric recall, persistent-memory retrieval, derived/evolved memory structures, and memory-mediated tool use - while the agent's utility on retain queries and authorized tool tasks is preserved (an (epsilon_f, epsilon_r)-agent unlearning). Failure condition: the agent stops answering directly but still retrieves the same information from memory or reacquires it through tools; also, effective forgetting must be distinguished from indiscriminate refusal or tool disabling.",
+    "operationalized_as": "Token-level F1 (%) between generated and reference answers, reported separately on the forget split forget05 (200 questions) and retain split retain95 (3,800 questions) under four conditions (Para., +Mem., +Tool, Final) x {Vanilla, GD, KL, NPO} x 2 model families; tool-invocation behavior (Call %, Empty %, Refusal %) to distinguish forgetting from generation failures; worst-case expected recoverability defined as the supremum of expected recovery scores over response conditions and permitted strategies."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Recovery-seeking evaluator: adaptive evaluations beyond exact queries and fixed tool interfaces - the recoverability metric takes the supremum over evaluated response conditions (direct generation, memory-augmented generation, tool-call memory access) and permitted prompting/interaction/tool-use strategies",
+      "The agent itself is a recovery vector: privacy-seeking trajectories shape future tool selection, query formulation, and action planning, so unlearning must remove the learned behavior of seeking, reconstructing, or using the target information"
+    ],
+    "assumptions": [
+      "A controlled offline environment: static web snapshot and deterministic search/browsing tools make tool observations reproducible and attribute failures to specific channels; synthetic fictitious-author subjects reduce privacy and pretraining-contamination risks",
+      "Fact-level provenance supports attributing failures to residual parametric knowledge, persistent memory, or tool-mediated reacquisition; a retain-only oracle constructed under matched conditions bounds retained utility"
+    ],
+    "not_covered": [
+      "Only two 8B model families, three parameter-level unlearning methods, and the 5% forget setting of TOFU; findings may not generalize to other scales, datasets, forget-set sizes, or multi-step interactive tasks (authors' stated limitation)",
+      "Memory artifacts are fixed (no continuously updated memories) and the web corpus is offline; live web search and heterogeneous external sources are not captured (authors' stated limitation)",
+      "Low retain-set scores under tool access limit conclusions about tool-mediated answer recovery (authors' stated limitation)"
+    ]
+  },
+  "intervention": {
+    "name": "AUBench: evaluation of parameter-level unlearning (GD, KL, NPO) across agent information channels",
+    "mechanism_layer": "evaluation",
+    "description": "Extends the TOFU fictitious-author setting into an agent environment with three channels: the parametric channel (vanilla/full fine-tuned checkpoint vs GD/KL/NPO unlearned checkpoints), the memory channel (Mem0 persistent memory whose retrieved records are appended to the prompt without parameter modification), the tool channel (a local Web Search surrogate over one HTML profile + one SQLite profile per record via the Ollama tool schema), and the Final condition combining retrieved Mem0 context with the local Web Search tool. Every question records retrieved memory, tool calls, and the final answer; a result counts only if the JSONL contains exactly the expected rows (200/3,800)."
+  },
+  "controls": [
+      {"name": "Base (vanilla parametric model, no memory or tool context)", "purpose": "baseline"},
+      {"name": "GD / KL / NPO parametric unlearning checkpoints", "purpose": "baseline"},
+      {"name": "Shared Mem0 memory artifact across all six checkpoints", "purpose": "fair-comparison"},
+      {"name": "Retain-only oracle under matched conditions", "purpose": "fair-comparison"}
+  ],
+  "results": [
+      {
+        "claim": "Persistent memory restores forgotten content: on Qwen3-8B, adding Mem0 raises average forget-set F1 across the three methods from 19.9% to 26.5%, with KL's forget-set F1 rising from 16.8% to 30.1% - memory reduces the effectiveness of parameter-level unlearning at the agent level.",
+        "metric": "forget-set token-level F1 (%) without vs with memory",
+        "value": "19.9% -> 26.5% (avg); KL 16.8% -> 30.1%",
+        "comparison": "Para. vs +Mem. conditions (Table 1); average retain-set F1 across six checkpoints rises 34.9% -> 56.8%",
+        "setting": "Qwen3-8B, TOFU forget05 (200 questions), Mem0 memory records appended to prompt, greedy decoding",
+        "quote": "For Qwen3-8B, forgetting becomes less effective for all three methods, with average forget-set F1 rising from 19.9% to 26.5%.",
+        "locator": "§5.2 (Table 1)",
+        "denominator": {
+          "n_total": 200,
+          "n_valid": null,
+          "how_counted": "Mean token-level F1 over the 200 forget05 questions, averaged over the three unlearning methods; retain split (3,800 questions) scored separately"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Forgetting-utility trade-off: NPO produces the largest forget-set reduction on Llama-3.1-8B (F1 49.8% -> 27.0%) but also the largest utility loss (retain F1 50.2% -> 34.4%), while GD reaches 43.5% forget with retain largely preserved at 48.7% - the largest forgetting accompanies the largest retain loss.",
+        "metric": "forget vs retain token-level F1 (%) per unlearning method",
+        "value": "NPO 27.0% forget / 34.4% retain; GD 43.5% / 48.7%; KL 47.9% / 50.4%",
+        "comparison": "Base 49.8% forget / 50.2% retain (Table 1)",
+        "setting": "Llama-3.1-8B, parametric condition only, TOFU forget05/retain95",
+        "quote": "For Llama-3.1-8B, NPO produces the largest forget-set F1 reduction, from 49.8% to 27.0%, but also the largest utility loss, with retain-set F1 dropping from 50.2% to 34.4%.",
+        "locator": "§5.2 (Table 1)",
+        "denominator": {
+          "n_total": 200,
+          "n_valid": null,
+          "how_counted": "Forget scores over 200 forget05 questions; retain scores over 3,800 retain95 questions; token-level F1 with multiset overlap"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Checkpoint-level forgetting does not predict complete-agent forgetting: KL has the lowest parametric forget-set F1 on Qwen3-8B (16.8%) yet the highest forget-set F1 among the three complete agents (36.9%, with retain rising to 63.0%) - a ranking reversal under the Final condition.",
+        "metric": "forget/retain F1 (%) across Para. vs Final conditions",
+        "value": "KL: 16.8% -> 36.9% (forget); 19.1% -> 63.0% (retain)",
+        "comparison": "GD Final 14.5% / 45.3%; NPO Final 18.3% / 52.8%",
+        "setting": "Qwen3-8B, Final condition (Mem0 context + local Web Search tool) vs parametric condition (Table 1)",
+        "quote": "Despite exhibiting the lowest forget-set F1 under the parametric condition, KL attains the highest forget-set F1 among the three complete agents.",
+        "locator": "§5.2 (Table 1)",
+        "denominator": {
+          "n_total": 200,
+          "n_valid": null,
+          "how_counted": "Token-level F1 over 200 forget05 and 3,800 retain95 questions per condition"
+        },
+        "is_primary_result": true
+      },
+      {
+        "claim": "Tool access lowers F1 on both splits: averaged across the six checkpoints, forget-set F1 falls from 29.7% to 12.9% and retain-set F1 from 34.9% to 17.3% - comparable absolute reductions mean tool-condition forgetting reductions alone do not establish effective unlearning.",
+        "metric": "forget/retain F1 (%) under +Tool condition",
+        "value": "forget 29.7% -> 12.9%; retain 34.9% -> 17.3% (averages)",
+        "comparison": "Para. vs +Tool (Table 1); per-model: GD (Qwen3-8B) 4.1% forget / 5.3% retain",
+        "setting": "Local Web Search surrogate (offline corpus), all six model-method checkpoints",
+        "quote": "Averaged across checkpoints, forget-set F1 decreases from 29.7% to 12.9%, while retain-set F1 falls from 34.9% to 17.3%, showing comparable absolute reductions.",
+        "locator": "§5.2 (Table 1)",
+        "denominator": {
+          "n_total": 200,
+          "n_valid": null,
+          "how_counted": "Averages over three methods x two models on 200 forget and 3,800 retain questions"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Behavioral analysis: low F1 under tool access partly reflects generation failure, not forgetting - Qwen3-8B emits empty outputs for 23.6%-58.0% of Tool-condition examples (up to 30.0% under Final), and unlearning can also alter tool-use behavior (KL's Final-condition call rates fall to 0.5%/0.1%).",
+        "metric": "tool Call %, Empty-output %, Refusal %",
+        "value": "Empty 23.6-58.0% (Tool, Qwen3-8B); Call 0.5%/0.1% (KL Final)",
+        "comparison": "Llama-3.1-8B empty rates <=1.0% with zero refusals (Table 2)",
+        "setting": "Agentic-condition behavior over forget05/retain95 (Table 2)",
+        "quote": "Qwen3-8B produces empty outputs for 23.6%–58.0% of examples under the Tool condition and up to 30.0% under the Final condition. Its low F1 scores therefore partly reflect generation failures and cannot be interpreted directly as evidence of successful forgetting.",
+        "locator": "§5.2 (Table 2)",
+        "denominator": {
+          "n_total": 200,
+          "n_valid": null,
+          "how_counted": "Shares of the 200 forget / 3,800 retain examples per condition in which the tool is invoked, the prediction is empty, or the output is refusal-like"
+        },
+        "is_primary_result": false
+      },
+      {
+        "claim": "Memory raises retained utility: average retain-set F1 across the six checkpoints rises from 34.9% to 56.8% when Mem0 memory is added, while average forget-set F1 on Llama-3.1-8B changes only slightly (39.5% to 40.9%).",
+        "metric": "retain-set token-level F1 (%) without vs with memory",
+        "value": "34.9% -> 56.8% (average across six checkpoints)",
+        "comparison": "Para. vs +Mem. conditions on both models (Table 1)",
+        "setting": "Llama-3.1-8B and Qwen3-8B, shared Mem0 artifact, retain95 split",
+        "quote": "Adding Mem0 increases average F1 on both the forget and retain sets for both models, with average retain-set F1 across the six checkpoints rising from 34.9% to 56.8%.",
+        "locator": "§5.2 (Table 1)",
+        "denominator": {
+          "n_total": 3800,
+          "n_valid": null,
+          "how_counted": "Mean token-level F1 over the 3,800 retain95 questions, averaged over three methods x two models"
+        },
+        "is_primary_result": false
+      }
+    ],
+  "limitations": [
+    {
+      "statement": "Scope: two 8B model families, three unlearning methods, and TOFU's 5% forget setting; generalization to other scales, datasets, forget-set sizes, or multi-step interactive tasks is untested.",
+      "quote": "Our evaluation covers two 8B model families, three parameter-level unlearning methods, and the 5% forget setting of TOFU. The findings therefore concern a controlled question-answering setting and may not generalize to other model scales, datasets, forget-set sizes, or tasks requiring multi-step reasoning and interaction.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "Controlled sources cut both ways: fixed memory artifacts, a fixed embedding model, and an offline web corpus support comparisons but do not capture continuously updated memories, heterogeneous external sources, or live web search.",
+      "quote": "This design supports comparisons across checkpoints, but does not capture continuously updated memories, heterogeneous external sources, or live web search.",
+      "locator": "Limitations"
+    },
+    {
+      "statement": "Low retain-set scores under tool access limit the conclusions drawable about tool-mediated answer recovery.",
+      "quote": "Moreover, the low retain-set scores under tool access limit the conclusions that can be drawn about tool-mediated answer recovery.",
+      "locator": "Limitations"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": "TOFU (4,000 question-answer pairs, 200 fictitious authors; forget05 = 200 questions, retain95 = 3,800); offline web snapshot: 800 HTML pages, 200 entity records, 4,000 fact records, 800 document records, 4,000 fact-span annotations, SQLite FTS5/BM25 index; Mem0 memory artifacts shared across checkpoints; Ollama local serving with fixed GPU assignment",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "related_work", "formulation", "dataset_construction", "metrics", "experimental_setup", "main_results", "tool_invocation_analysis", "conclusion", "limitations"],
+    "complete": false
+  },
+  "quality_flags": [
+    "two_8b_model_families_only",
+    "offline_snapshot_no_live_web",
+    "appendices_unread"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "rule": {
+    "panel": "a card is priced when at least two of three readers mark any of c1-c3 numeric",
+    "ledger": "any of utility_loss/latency_compute/false_positive has=true and qualitative=false",
+    "harmonized": "drop cards whose every numeric c1-c3 reading is a negative cost"
+  },
+  "excluded": [
+    "2610.13267",
+    "2610.17544",
+    "2610.23559"
+  ],
+  "as_is": {
+    "ledger_priced": 62,
+    "panel_priced": 63,
+    "both": 47,
+    "ledger_only": 15,
+    "panel_only": 16,
+    "neither": 51,
+    "agreement": 98,
+    "flips": 31,
+    "precision": 0.7580645161290323,
+    "recall": 0.746031746031746
+  },
+  "harmonized": {
+    "ledger_priced": 59,
+    "panel_priced": 63,
+    "both": 44,
+    "ledger_only": 15,
+    "panel_only": 19,
+    "neither": 51,
+    "agreement": 95,
+    "flips": 34,
+    "precision": 0.7457627118644068,
+    "recall": 0.6984126984126984
+  }
+}

@@ -1,0 +1,326 @@
+{
+ "arxiv_id": "d6f6b6c78cd3",
+ "title": "Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM Agents",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "published"
+ ],
+ "object": {
+  "what_persists": "none",
+  "scope": "single-session",
+  "carrier": "none — the paper evaluates single-turn IPI attack/defense interactions (agent executes the user tool, reads one tool response, next one or two outputs are judged); no persistent memory, skill, experience, or shared state is formed, stored, or reused across turns/tasks",
+  "operations_covered": []
+ },
+ "safety_property": {
+  "type": "multiple",
+  "statement": "Protects LLM agents from indirect prompt injection: malicious instructions embedded in tool responses must not make the agent execute attacker-chosen tools (integrity: unauthorized actions such as financial transactions or device control) or exfiltrate sensitive user data (confidentiality: data stealing). The property fails when the agent's output executes the attacker tool; judged per test case by tool-execution match, not keyword or LLM judgment.",
+  "operationalized_as": "ASR on InjecAgent: success = output includes execution of the attacker tool Ta (direct harm); for data stealing, step 1 = executes the data extraction tool, step 2 (with gpt-4-0613 simulating the tool response) = executes the data transmission tool. ASR-all = successful attacks / total test cases (default); ASR-valid also defined over valid outputs. Detector defenses are additionally scored by detection rate (DR)."
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "Injects a malicious instruction Ia into the external content ETu of a tool response (e.g., an email or review) that the agent reads; the attacker cannot directly modify the agent's prompt, tools, or model",
+   "Appends/prepends optimized adversarial strings to the malicious instruction (GCG, Multi-objective GCG, Two-stage GCG, AutoDAN) to force execution of the attacker tool Ta",
+   "Adaptive attacks assume knowledge of and white-box access to the agent model, defense models, and detailed prompts; joint or iterative optimization against the specific defense (e.g., stealth objective to fool detectors, two-stage strings to survive paraphrasing, low-perplexity AutoDAN strings)"
+  ],
+  "assumptions": [
+   "IPI setting: the attacker can only manipulate the content of external sources the agent accesses",
+   "White-box access to agent and defense models and prompts for adaptive string optimization (stated as the adaptive-attack standard)",
+   "Single turn of interaction is evaluated: the agent executes the user tool, retrieves the response, and its next one or two outputs are judged; success = execution of the attacker tool",
+   "Defenses are deployed individually and their mechanism is fully disclosed to the attacker before the attack is crafted"
+  ],
+  "not_covered": [
+   "Black-box and grey-box attackers (authors flag this as future work)",
+   "Combinations of multiple defenses deployed together",
+   "Impact of defenses and attacks on normal/benign cases (utility under no attack) — explicitly not assessed",
+   "Exhaustive coverage of all potential IPI defenses (e.g., LLM self-evaluation, alternative finetuning methods)",
+   "Attacks targeting multi-step/long-horizon behavior beyond the agent's first-step action"
+  ]
+ },
+ "intervention": {
+  "name": "Stress-test of eight existing IPI defenses (fine-tuned detector, LLM-based detector, perplexity filtering, instructional prevention, data prompt isolation, sandwich prevention, paraphrasing, adversarial finetuning) with per-defense adaptive attacks; no new defense proposed",
+  "mechanism_layer": "content",
+  "description": "The paper contributes the attack side: adapting jailbreak attack strategies (GCG, M-GCG, T-GCG, AutoDAN) to IPI with knowledge of each defense. The evaluated defenses span content-level detection (DeBERTaV3 classifier, LLM Yes/No prompt, perplexity threshold), input/prompt-level content modification (warning instructions, ''' delimiters, repeated user command, paraphrasing), and one model-level defense (adversarial finetuning via LoRA on unsuccessful attacks), so mechanism_layer is recorded as content (7 of 8 defenses are content-level)."
+ },
+ "controls": [
+  {
+   "name": "Original IPI attacks without any defense or adversarial string (Original ASR column in Table 4; gray bars in Figure 2)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Non-adaptive GCG adversarial string trained without targeting any defense (ASR-o column in Table 3; 'None|GCG' in Figure 5)",
+   "purpose": "fair-comparison"
+  },
+  {
+   "name": "Cross evaluation of every adaptive attack against every defense (Figure 5)",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "Adaptive (white-box, defense-aware) attacks bypass all eight evaluated IPI defenses on both agents, consistently achieving an attack success rate over 50%",
+   "metric": "ASR",
+   "value": "over 50%",
+   "comparison": null,
+   "setting": "Eight IPI defenses (fine-tuned detector FD, LLM-based detector LD, perplexity filtering PF, instructional prevention IP, data prompt isolation DPI, sandwich prevention SP, paraphrasing P, adversarial finetuning AF) deployed individually on the Vicuna-7B prompted agent and the Llama3-8B finetuned agent; InjecAgent 100-case subset; white-box defense-aware adaptive attacks: GCG, Multi-objective GCG (M-GCG), Two-stage GCG (T-GCG), AutoDAN",
+   "quote": "we evaluate eight different defenses and bypass\n    all of them using adaptive attacks, consistently        Figure 1: Defenses and adaptive attacks of indirect\n    achieving an attack success rate of over 50%.",
+   "locator": "Abstract",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "ASR-all per paper: 'the ratio of successful attacks to the total number of test cases'; evaluation subset = 100 InjecAgent test cases (50 direct harm + 50 data stealing) per agent and per defense/attack configuration; invalid outputs are not credited as success (paper defaults to ASR-all)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On the InjecAgent subset, every ASR-adaptive attack across all eight defenses and both agents exceeds 50%, i.e., every tested defense can be circumvented",
+   "metric": "ASR",
+   "value": "over 50%",
+   "comparison": null,
+   "setting": "Eight IPI defenses (fine-tuned detector FD, LLM-based detector LD, perplexity filtering PF, instructional prevention IP, data prompt isolation DPI, sandwich prevention SP, paraphrasing P, adversarial finetuning AF) deployed individually on the Vicuna-7B prompted agent and the Llama3-8B finetuned agent; InjecAgent 100-case subset; white-box defense-aware adaptive attacks: GCG, Multi-objective GCG (M-GCG), Two-stage GCG (T-GCG), AutoDAN",
+   "quote": "results show that all ASR-adaptive attack across       reveals that many outputs in this setting begin with\ndifferent defenses and agents exceed 50%, demon-       sequences similar to the target, such as “Thought: I\nstrating that the defenses can be circumvented.",
+   "locator": "§5.2 Experiment Results",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "ASR-all per paper: 'the ratio of successful attacks to the total number of test cases'; evaluation subset = 100 InjecAgent test cases (50 direct harm + 50 data stealing) per agent and per defense/attack configuration; invalid outputs are not credited as success (paper defaults to ASR-all)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Without adaptive attacks, defenses reduce the Vicuna-7B no-defense ASR from 56% to lower values, e.g., to 12% under the adversarial finetuning defense",
+   "metric": "ASR",
+   "value": "12%",
+   "comparison": "56% (no defense) -> 12% (with adversarial finetuning defense)",
+   "setting": "Vicuna-7B prompted agent, InjecAgent 100-case subset, non-adaptive original IPI attacks vs deployed defenses (adversarial finetuning = LoRA finetuning on unsuccessful attacks)",
+   "quote": "For the Vicuna-7B based agent, most defenses        semantically similar outputs as hitting the target,\nreduce the original ASR from 56% to lower val-         the target rate increases to 62%. We speculate\nues, such as 12% with adversarial finetuning.",
+   "locator": "§5.2 Experiment Results",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "ASR-all per paper: 'the ratio of successful attacks to the total number of test cases'; evaluation subset = 100 InjecAgent test cases (50 direct harm + 50 data stealing) per agent and per defense/attack configuration; invalid outputs are not credited as success (paper defaults to ASR-all)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "The Llama3-8B finetuned agent is more resilient to IPI attacks: its original no-defense ASR is 9%, and defenses lower it further",
+   "metric": "ASR",
+   "value": "9%",
+   "comparison": null,
+   "setting": "Llama3-8B finetuned agent, InjecAgent 100-case subset, original IPI attacks without any defense",
+   "quote": "Llama3-based agent shows greater resilience to         the semantic coherence of the adversarial string,\nIPI attacks, with an original ASR of 9% and even       leading to outputs that resemble the target when\nlower ASRs under defenses.",
+   "locator": "§5.2 Experiment Results",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "ASR-all per paper: 'the ratio of successful attacks to the total number of test cases'; evaluation subset = 100 InjecAgent test cases (50 direct harm + 50 data stealing) per agent and per defense/attack configuration; invalid outputs are not credited as success (paper defaults to ASR-all)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Against perplexity filtering, adaptive training raises ASR from 24% to 76% (Vicuna-7B) and from 22% to 61% (Llama3-8B): adaptively trained adversarial strings bypass this defense",
+   "metric": "ASR",
+   "value": "76% (Vicuna-7B) / 61% (Llama3-8B)",
+   "comparison": "ASR-o 24% -> ASR-a 76% (Vicuna-7B); 22% -> 61% (Llama3-8B)",
+   "setting": "Perplexity filtering defense (threshold = max perplexity of original-attack tool responses so none are filtered); Vicuna-7B and Llama3-8B agents, InjecAgent 100-case subset; ASR-o = GCG string trained with no defense objective, ASR-a = defense-aware adaptive string (AutoDAN per Table 1)",
+   "quote": "Perplexity      Vicuna-7B          24         76          the first step after receiving external content. We\n    filtering      Llama3-8B          22         61",
+   "locator": "Table 3",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "ASR-all per paper: 'the ratio of successful attacks to the total number of test cases'; evaluation subset = 100 InjecAgent test cases (50 direct harm + 50 data stealing) per agent and per defense/attack configuration; invalid outputs are not credited as success (paper defaults to ASR-all)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Against paraphrasing, adaptive training raises ASR from 53% to 79% (Vicuna-7B) and from 8% to 54% (Llama3-8B): Two-stage GCG strings bypass this defense",
+   "metric": "ASR",
+   "value": "79% (Vicuna-7B) / 54% (Llama3-8B)",
+   "comparison": "ASR-o 53% -> ASR-a 79% (Vicuna-7B); 8% -> 54% (Llama3-8B)",
+   "setting": "Paraphrasing defense (agent backbone model rephrases tool response); Vicuna-7B and Llama3-8B agents, InjecAgent 100-case subset; ASR-o = non-adaptive GCG string, ASR-a = adaptive Two-stage GCG (T-GCG)",
+   "quote": "Vicuna-7B          53         79          section 6.3.\n Paraphrasing\n                   Llama3-8B          8          54",
+   "locator": "Table 3",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "ASR-all per paper: 'the ratio of successful attacks to the total number of test cases'; evaluation subset = 100 InjecAgent test cases (50 direct harm + 50 data stealing) per agent and per defense/attack configuration; invalid outputs are not credited as success (paper defaults to ASR-all)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The fine-tuned DeBERTaV3 detector's detection rate collapses under the adaptive M-GCG attack: from 61% on original attacks to 1% (Vicuna-7B agent) and 10% (Llama3-8B agent)",
+   "metric": "detection_rate (DR)",
+   "value": "1% (Vicuna-7B) / 10% (Llama3-8B)",
+   "comparison": "DR-o 61% -> DR-a 1% (Vicuna-7B); 61% -> 10% (Llama3-8B)",
+   "setting": "Fine-tuned detector (DeBERTaV3, ProtectAI) guarding Vicuna-7B and Llama3-8B agents, InjecAgent 100-case subset; DR-o = original IPI attacks (malicious instruction only), DR-a = attacks with adversarial strings (adaptive Multi-objective GCG with stealth objective)",
+   "quote": "Fine-tuned    Vicuna-7B        61        1\n                                                              detector     Llama3-8B        61       10",
+   "locator": "Table 2",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "DR = 'the ratio of test cases classified as attacks by the detectors' (paper 6.1), computed over the same 100-case InjecAgent evaluation subset"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "The LLM-based detector's detection rate drops to 0% under the adaptive M-GCG attack for both agents (34% to 0% with Vicuna-7B; 72% to 0% with Llama3-8B)",
+   "metric": "detection_rate (DR)",
+   "value": "0% (both agents)",
+   "comparison": "DR-o 34% -> DR-a 0% (Vicuna-7B); 72% -> 0% (Llama3-8B)",
+   "setting": "LLM-based Yes/No detector (agent backbone model used as detector) guarding Vicuna-7B and Llama3-8B agents, InjecAgent 100-case subset; adaptive Multi-objective GCG with stealth objective maximizing the 'No' response",
+   "quote": "LLM-based     Vicuna-7B        34        0\n                                                              detector     Llama3-8B        72        0",
+   "locator": "Table 2",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "DR = 'the ratio of test cases classified as attacks by the detectors' (paper 6.1), computed over the same 100-case InjecAgent evaluation subset"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Perplexity filtering flags 65% of tool responses containing GCG adversarial strings (0% on original attacks by design), yet adaptive AutoDAN strings still achieve high ASR against it",
+   "metric": "detection_rate (DR)",
+   "value": "65%",
+   "comparison": null,
+   "setting": "Perplexity filtering defense (Vicuna-7B backbone as perplexity model), InjecAgent 100-case subset; tool responses containing GCG-generated adversarial strings",
+   "quote": "with strings generated by GCG, the detection rate            two defenses. To further analyze this, we compare\nrises to 65%, indicating its effectiveness.",
+   "locator": "§6.1 Detailed Results and Analysis",
+   "denominator": {
+    "n_total": "100",
+    "n_valid": null,
+    "how_counted": "DR = 'the ratio of test cases classified as attacks by the detectors' (paper 6.1), computed over the same 100-case InjecAgent evaluation subset"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Averaged across the eight defenses, adaptive attacks raise direct-harm ASR to 0.90 (Vicuna-7B) and 0.87 (Llama3-8B), versus 0.39/0.05 under defenses alone and 0.62/0.14 without any defense",
+   "metric": "ASR",
+   "value": "0.90 (Vicuna-7B) / 0.87 (Llama3-8B)",
+   "comparison": "0.62 (original) -> 0.39 (defense avg) -> 0.90 (adaptive), Vicuna-7B; 0.14 -> 0.05 -> 0.87, Llama3-8B",
+   "setting": "Average ASR across the eight defenses (mean ± std over defenses) vs original no-defense ASR; direct harm attacks; Vicuna-7B prompted agent and Llama3-8B finetuned agent",
+   "quote": "Vicuna-7B            0.62          0.39 ± 0.19           0.90 ± 0.06\n           Direct Harm\n                                  Llama3-8B            0.14          0.05 ± 0.04           0.87 ± 0.10",
+   "locator": "Table 4",
+   "denominator": {
+    "n_total": "50",
+    "n_valid": null,
+    "how_counted": "50 direct-harm test cases in the 100-case InjecAgent evaluation subset; ASR = successful attacks / total test cases (ASR-all)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Averaged across the eight defenses, adaptive attacks raise total data-stealing ASR to 0.68 (Vicuna-7B) and 0.57 (Llama3-8B), versus 0.33/0.02 under defenses alone and 0.50/0.40 without any defense",
+   "metric": "ASR",
+   "value": "0.68 (Vicuna-7B) / 0.57 (Llama3-8B)",
+   "comparison": "0.50 (original) -> 0.33 (defense avg) -> 0.68 (adaptive), Vicuna-7B; 0.40 -> 0.02 -> 0.57, Llama3-8B",
+   "setting": "Average ASR across the eight defenses (mean ± std over defenses) vs original; total data stealing attacks (both steps); Vicuna-7B prompted agent and Llama3-8B finetuned agent",
+   "quote": "Vicuna-7B            0.50          0.33 ± 0.18           0.68 ± 0.15\n                        Total\n                                  Llama3-8B            0.40          0.02 ± 0.02           0.57 ± 0.17",
+   "locator": "Table 4",
+   "denominator": {
+    "n_total": "50",
+    "n_valid": null,
+    "how_counted": "50 data-stealing test cases in the 100-case InjecAgent evaluation subset; ASR = successful attacks / total test cases (ASR-all)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Adaptive attacks give minimal improvement on the second step of data-stealing attacks (Vicuna-7B 0.81 original vs 0.75 adaptive; Llama3-8B 0.40 vs 0.71) because adversarial strings are trained only to control the first-step response",
+   "metric": "ASR",
+   "value": "0.75 (Vicuna-7B) / 0.71 (Llama3-8B)",
+   "comparison": "0.81 (original) -> 0.75 (adaptive), Vicuna-7B; 0.40 -> 0.71, Llama3-8B",
+   "setting": "Second step of data stealing attacks (agent must execute the data transmission tool after step-1 extraction succeeds; gpt-4-0613 simulates the tool response); adversarial strings trained only on the first-step target",
+   "quote": "Vicuna-7B            0.81          0.64 ± 0.26           0.75 ± 0.17\n      Data Stealing     Step 2\n                                  Llama3-8B            0.40          0.31 ± 0.27           0.71 ± 0.16",
+   "locator": "Table 4",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "On AgentDojo with no defense, the GCG adaptive attack raises ASR from 6.25% to 56.25% on the Llama3-8B agent",
+   "metric": "ASR",
+   "value": "56.25%",
+   "comparison": "6.25% (ASR-defense, no defense deployed) -> 56.25% (ASR-adaptive attack)",
+   "setting": "AgentDojo benchmark (dynamic simulated environment), 16 cases on the Llama3-8B based agent, no defense deployed; GCG adversarial string",
+   "quote": "Defense                Adaptive Attack        ASR-defense        ASR-adaptive attack\n              No defense                    GCG                    6.25                 56.25",
+   "locator": "Table 6",
+   "denominator": {
+    "n_total": "16",
+    "n_valid": null,
+    "how_counted": "16 AgentDojo cases (workspace/Slack/travel/banking x 2 attacker cases x 2 user cases) evaluated on the Llama3-8B agent; e.g., 6.25% = 1/16"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On AgentDojo, the adaptive attacks against the LLM-based detector (0% -> 31.25%) and instructional prevention (6.25% -> 43.75%) improve ASR substantially but stay below 50%",
+   "metric": "ASR",
+   "value": "31.25% / 43.75%",
+   "comparison": "0 -> 31.25 (LLM-based detector); 6.25 -> 43.75 (instructional prevention)",
+   "setting": "AgentDojo benchmark, 16 cases on the Llama3-8B based agent; defenses: LLM-based detector (adaptive Multi-objective GCG) and instructional prevention (adaptive GCG)",
+   "quote": "LLM-based detector         Multi-objective GCG             0                  31.25\n        Instructional prevention            GCG                    6.25                 43.75",
+   "locator": "Table 6",
+   "denominator": {
+    "n_total": "16",
+    "n_valid": null,
+    "how_counted": "16 AgentDojo cases (workspace/Slack/travel/banking x 2 attacker cases x 2 user cases) evaluated on the Llama3-8B agent; e.g., 6.25% = 1/16"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On AgentDojo's significantly longer contexts, adaptive attacks still improve ASR substantially but are less effective than on InjecAgent, where all adaptive-attack ASRs exceed 50%",
+   "metric": "ASR",
+   "value": "below 50%",
+   "comparison": null,
+   "setting": "AgentDojo benchmark (avg context 3,823 tokens, max 6,152 vs InjecAgent avg 1,033, max 1,711), Llama3-8B based agent; all three tested adaptive attack configurations",
+   "quote": "Although adaptive attacks still yield substantial improvements in ASR, they\nare not as effective as on the InjecAgent benchmark—where all adaptive attack ASRs exceed 50%.",
+   "locator": "§B Experiments on the AgentDojo Benchmark",
+   "denominator": {
+    "n_total": "16",
+    "n_valid": null,
+    "how_counted": "16 AgentDojo cases (workspace/Slack/travel/banking x 2 attacker cases x 2 user cases) evaluated on the Llama3-8B agent; e.g., 6.25% = 1/16"
+   },
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Adaptive attacks focus solely on the agent's first-step action: all adversarial strings are trained to produce the ReAct-style first-step output ('Thought: I will use the {Attacker tool name} tool to,'), so improvement on the second step of data-stealing attacks is minimal; refining attacks for longer-term impact is left to future work.",
+   "quote": "• Our adaptive attacks focus solely on the            defensive_measures/sandwich_defense.\n       agent’s first-step action.",
+   "locator": "§10 Limitations"
+  },
+  {
+   "statement": "The attacks assume white-box access to the agent model, defense models, and detailed prompts; black-box and grey-box settings are not studied.",
+   "quote": "• Our attacks assume the attacker has white-box\n       access to the agent model, defense models,",
+   "locator": "§10 Limitations"
+  },
+  {
+   "statement": "Combinations of defenses are not accounted for: adaptive attacks are designed per individual defense, while combining defenses (e.g., all three detection strategies) could create stronger protection.",
+   "quote": "• We do not account for the combination of de-      R Gorman Stuart Armstrong. 2023.        Using gpt-\n       fenses.",
+   "locator": "§10 Limitations"
+  },
+  {
+   "statement": "The study is not an exhaustive exploration of all potential IPI defenses (e.g., LLM self-evaluation, alternative model finetuning methods, or others are not covered).",
+   "quote": "• Our research is not an exhaustive exploration",
+   "locator": "§10 Limitations"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://github.com/uiuc-kang-lab/AdaptiveAttackAgent",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "no_persistent_state",
+  "denominator_unclear",
+  "figure_data_not_in_text"
+ ]
+}

@@ -1,0 +1,221 @@
+{
+ "arxiv_id": "2608.01679",
+ "title": "When Memory Becomes Authority: Benchmarking Authority Collapse at the Memory Consolidation Boundary",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "cross-task",
+  "carrier": "durable natural-language memory items written by LLM consolidators adapted from agent-memory systems (Mem0-inspired, Mem0 classic/additive, LangMem, Graphiti, Letta, Minimal), optionally persisted with authority metadata (Authorized/Attested/Unendorsed) in an end-to-end pipeline",
+  "operations_covered": [
+   "formation",
+   "retention",
+   "retrieval"
+  ]
+ },
+ "safety_property": {
+  "type": "authority",
+  "statement": "Memory consolidation must preserve the source constraints governing a claim's authorized use: a stored memory may not imply downstream uses beyond those its source permits (false authority upgrade). When consolidation erases this boundary (authority collapse), the stored memory implies greater authority than its source allows, and adversarial exploitation (authority laundering) turns unendorsed claims into apparent user facts, attested observations, or standing instructions that trigger unauthorized tool actions.",
+  "operationalized_as": "Module A write-time Upgrade-all / Ret- / Ret+ rates on paired histories; Module B/C ASR = fraction of non-authorizing cases issuing the prohibited matching native tool call, TSR = fraction of authorized counterparts issuing the required call; authority-label accuracy / macro F1 and dangerous-upgrade rate of predicted metadata"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "controls content supplied through source classes the authority policy treats as unendorsed, e.g., designated non-authoritative tool inputs",
+   "can introduce claims via third-party reports, external procedures, or assistant suggestions that consolidation may launder into user facts, standing rules, or user decisions",
+   "the claim need not be false or contain an injected instruction; the attack exploits the authority silently assigned during consolidation"
+  ],
+  "assumptions": [
+   "a frozen deployment authority policy maps source roles to labels (direct user evidence -> Authorized, assistant -> Attested, tool -> Unendorsed)",
+   "one controlled write-to-action cycle per pair: the later task leaves the operative value unstated so the agent must use memory; the exact matching tool action is prohibited for H- and required for H+",
+   "source-class annotations are trustworthy and cannot be altered by the adversary"
+  ],
+  "not_covered": [
+   "the adversary cannot alter source-class annotations, direct user or system messages, outputs from deployment-designated authoritative tools, the memory store, or the authorization policy",
+   "memory poisoning via optimized retrieval triggers or query-only record insertion (AgentPoison/MINJA-style attacks) is not evaluated; the benchmark instead varies source authority of true, non-instructional, textually identical claims",
+   "memory revocation/repair after a collapse and multi-hop attack chains across sessions are not benchmarked"
+  ]
+ },
+ "intervention": {
+  "name": "Persisted authority metadata (automatically predicted source-authority labels on stored memories), with source-aware write-time prompting as a secondary intervention",
+  "mechanism_layer": "provenance",
+  "description": "Each candidate predictor selects the primary supporting message for a stored memory and maps its source role deterministically to Authorized, Attested, or Unendorsed; the predicted label is persisted with the memory and exposed to the action model at action time (Module C frozen pipeline: Qwen3.7-Max as authority predictor, Gemini 3.1 Pro as consolidator and action model). Controlled counterparts in Module B test washed vs source-attributed text, no vs gold authority metadata, plus text-sanitizer and conservative-join baselines; Module A tests Marked and Marked+source-aware writing objectives."
+ },
+ "results": [
+  {
+   "claim": "Authority collapse generalizes: write-time authority upgrades occur in 48 of 49 consolidator-backbone configurations (seven writing objectives x seven LLM backends); the sole zero-upgrade configuration (Mem0 classic + GPT-5.5) avoids the failure by omitting all non-authorizing focal propositions, i.e., non-retention rather than authority preservation.",
+   "metric": "configurations with authority upgrades (Module A write-time)",
+   "value": "48 of 49",
+   "comparison": "48 of 49 configurations exhibit upgrades; the exception is omission-driven",
+   "setting": "Module A base grid: seven memory-writing objectives (Mem0-inspired, Mem0 classic, Mem0 additive, LangMem, Graphiti, Letta, Minimal) x seven LLM backends (GPT-5.5, GPT-5.4 mini, Gemini 3.1 Pro, Gemini 3.5 Flash, Qwen3.7-Max, GLM-5.2, DeepSeek-V4-Pro), temperature zero",
+   "quote": "Authority upgrades occur in 48 of the 49 objective–backend configurations.",
+   "locator": "§4.2 RQ1 (also Abstract; Table 2 base grid)",
+   "denominator": {
+    "n_total": "49 consolidator–backbone configurations",
+    "n_valid": "49",
+    "how_counted": "7 writing objectives × 7 LLM backends; per Table 2 caption each configuration is evaluated on 350 H−/H+ pairs"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On the base grid, low Upgrade-all masks the failure: among all non-authorizing cases, 17.8% are authority-upgraded, only 8.2% are retained with authority preserved, and 74.0% are omitted — general-purpose writing objectives often avoid observed upgrades through omission rather than reliable preservation of source authority.",
+   "metric": "upgraded / preserved / omitted shares of non-authorizing cases (Module A grid average)",
+   "value": "17.8%",
+   "comparison": "17.8% upgraded vs 8.2% preserved vs 74.0% omitted",
+   "setting": "Module A base grid pooled over all writing objectives and backends; percentages of all non-authorizing (H−) cases",
+   "quote": "Among all H−H^{-} cases, 17.8% are authority-upgraded, only 8.2% are retained with authority preserved, and 74.0% are omitted.",
+   "locator": "§4.2 RQ1 (Table 2 discussion)",
+   "denominator": {
+    "n_total": "350 H− cases per configuration, pooled over the 7×7 base grid",
+    "n_valid": "350",
+    "how_counted": "Table 2 caption: all values are percentages with 350 H−/H+ pairs per configuration"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "With washed memory and no authority metadata, macro ASR and TSR are nearly equal for every action model, showing a washed proposition is operationalized almost independently of its original source authority.",
+   "metric": "ASR / TSR (Module B, washed memory, no metadata, macro over seven action models)",
+   "value": "50.3%",
+   "comparison": "macro ASR 50.3% vs macro TSR 49.4%",
+   "setting": "Module B: the same seven backends as action models, benchmark-supplied washed focal memory without metadata; 350 non-authorizing cases and 350 authorized counterparts per model",
+   "quote": "With washed memory and no metadata, macro ASR and TSR are 50.3% and 49.4%, and the two rates remain similar for every backend.",
+   "locator": "§4.3 RQ2 Table 4 (macro average row)",
+   "denominator": {
+    "n_total": "2,450 trajectories per metric",
+    "n_valid": "2,450",
+    "how_counted": "Table 4 caption: each model–condition entry reports ASR/TSR over 350 non-authorizing cases and 350 authorized counterparts; each macro value aggregates 2,450 trajectories per metric"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Natural-language source attribution helps but is insufficient: replacing washed memory with source-attributed text lowers macro ASR by 9.8 points and raises TSR by 4.2 points, yet 40.5% of non-authorizing cases still trigger the prohibited action.",
+   "metric": "ASR (Module B, source-attributed memory, no metadata, macro)",
+   "value": "40.5%",
+   "comparison": "macro ASR −9.8 points and TSR +4.2 points vs washed no-metadata; residual ASR 40.5%",
+   "setting": "Module B macro over seven action models, source-attributed memory without metadata",
+   "quote": "Replacing washed memory with source-attributed text lowers macro ASR by 9.8 points and raises TSR by 4.2 points. ASR decreases for all seven models, while TSR increases for six. Nevertheless, 40.5% of non-authorizing cases still trigger the prohibited action",
+   "locator": "§4.3 RQ2 Table 4",
+   "denominator": {
+    "n_total": "2,450 trajectories per metric",
+    "n_valid": "2,450",
+    "how_counted": "Table 4 caption: each macro value aggregates 2,450 trajectories per metric; source-attr. macro row 40.5 / 53.6"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Explicit gold authority metadata provides the strongest action-time discrimination — macro ASR falls to 5.8% with washed memory and 2.7% with source-attributed memory while TSR stays 53.9% in both conditions — whereas heuristic baselines (text sanitizer, conservative joining) match safety and utility rates, i.e., indiscriminate action suppression.",
+   "metric": "ASR / TSR (Module B, gold authority metadata, macro)",
+   "value": "5.8% / 2.7%",
+   "comparison": "macro ASR 5.8% (washed) and 2.7% (source-attributed) at 53.9% TSR in both",
+   "setting": "Module B macro over seven action models with gold authority metadata attached to the focal memory",
+   "quote": "Gold metadata reduces ASR to 5.8% with washed memory and 2.7% with source-attributed memory, while maintaining 53.9% TSR in both conditions.",
+   "locator": "§4.3 RQ2 Table 4",
+   "denominator": {
+    "n_total": "2,450 trajectories per metric",
+    "n_valid": "2,450",
+    "how_counted": "Table 4 caption: each macro value aggregates 2,450 trajectories per metric"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In the frozen end-to-end pipeline (Qwen3.7-Max authority predictor; Gemini 3.1 Pro consolidator and action model), automatically predicted and persisted authority labels reduce observed ASR from 16.9% to 0.0% over all 350 pairs while TSR is essentially unchanged from 39.7% to 40.0%; reference metadata produces the same aggregate rates.",
+   "metric": "ASR / TSR (Module C end-to-end, all pairs in denominators)",
+   "value": "16.9% -> 0.0%",
+   "comparison": "ASR 16.9% → 0.0%; TSR 39.7% → 40.0% (all 350 pairs)",
+   "setting": "Module C frozen pipeline: Mem0-inspired consolidation with predicted persisted authority labels; all source-authority pairs remain in the denominators including write-time omissions and retrieval failures",
+   "quote": "Over all 350 pairs, observed ASR similarly falls from 16.9% to 0.0%, while TSR changes from 39.7% to 40.0%. Reference metadata produces the same aggregate rates, showing that automatically recovered authority is sufficient to match the observed reference safety–utility outcome.",
+   "locator": "§4.4 RQ3 Table 5",
+   "denominator": {
+    "n_total": "350 pairs",
+    "n_valid": "350",
+    "how_counted": "Table 5 caption: all pairs remain in the denominators, including cases where consolidation omits the focal memory (no-metadata ASR 16.9% = 59/350; predicted 0.0% = 0/350)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "End-to-end utility remains recall-limited: the consolidator retains the focal proposition in only 139 of 350 H− cases and 256 of 350 H+ cases; without metadata all 59 prohibited actions arise among the 139 retained H− cases, corresponding to 42.4% ASR conditional on focal retention, and predicted metadata blocks all of these observed actions.",
+   "metric": "ASR conditional on focal retention / focal retention counts (Module C)",
+   "value": "42.4%",
+   "comparison": "42.4% = 59 prohibited actions among 139 retained H− cases; retention 139/350 H− vs 256/350 H+",
+   "setting": "Module C no-metadata arm of the frozen pipeline, 350 pairs",
+   "quote": "The consolidator retains the focal proposition in only 139 of 350 H−H^{-} cases and 256 of 350 H+H^{+} cases. Without metadata, all 59 prohibited actions arise among the 139 retained H−H^{-} cases, corresponding to 42.4% ASR conditional on focal retention",
+   "locator": "§4.4 RQ3",
+   "denominator": {
+    "n_total": "139 retained H− cases (of 350)",
+    "n_valid": "139",
+    "how_counted": "conditional on the focal proposition being retained: 59 prohibited actions / 139 retained H− cases"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On the strictly held-out test slice, the no-metadata pipeline issues the prohibited action in 10 of 70 cases (14.3% ASR); predicted metadata reduces this to 0 of 70 while authorized completions stay unchanged at 20 of 70 (28.6% TSR).",
+   "metric": "ASR / TSR (Module C, strictly held-out test slice)",
+   "value": "14.3%",
+   "comparison": "ASR 14.3% (10/70) → 0.0% (0/70); TSR 28.6% (20/70) unchanged",
+   "setting": "Module C strictly held-out test slice of the frozen pipeline (the full aggregate includes train and validation partitions)",
+   "quote": "no-label ASR/TSR is 14.3/28.6% (10/70,20/70)(10/70,20/70), while predicted-label ASR/TSR is 0.0/28.6% (0/70,20/70)(0/70,20/70).",
+   "locator": "Appendix F.4 (also §4.4 Table 5 held-out columns)",
+   "denominator": {
+    "n_total": "70 held-out test pairs",
+    "n_valid": "70",
+    "how_counted": "no-label ASR 10/70, TSR 20/70; predicted-label ASR 0/70, TSR 20/70"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "The benign task success rate is essentially unchanged by the defence: over 350 pairs TSR moves from 39.7% to 40.0% while ASR falls from 16.9% to 0.0%.",
+   "metric": "TSR (benign task success) and ASR",
+   "value": "TSR 39.7% -> 40.0%; ASR 16.9% -> 0.0%",
+   "comparison": "no metadata vs predicted authority metadata",
+   "setting": "held-out pairs, Section 4.4 RQ3, Table 5",
+   "quote": "Over all 350 pairs, observed ASR similarly falls from 16.9% to 0.0%, while TSR changes from 39.7% to 40.0%.",
+   "locator": "Section 4.4, Table 5",
+   "denominator": "350 pairs",
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Authority metadata governs how stored content is used but does not repair recall: labels cannot recover propositions omitted during consolidation and do not eliminate action-model failures, so authorized task success stays recall-limited.",
+   "quote": "Authority metadata therefore controls how stored content is used, but does not repair missing memory.",
+   "locator": "§4.4 RQ3"
+  },
+  {
+   "statement": "Aggregate equality between predicted- and reference-metadata arms (same TSR) should not be read as case-wise equivalence: four success predicates differ between separate calls with identical prompts, and none of the differently-labeled prompts changed the predicate in this single run.",
+   "quote": "Aggregate equality should therefore not be interpreted as case-wise equivalence.",
+   "locator": "Appendix F.3"
+  },
+  {
+   "statement": "The headline end-to-end aggregate over all pairs is descriptive because it includes the train and validation partitions; only the 70-pair slice is strictly held out.",
+   "quote": "The complete 350-pair aggregate is descriptive because it includes the train and validation partitions. The 70-pair test slice is the strictly held-out confirmation",
+   "locator": "Appendix F.4"
+  },
+  {
+   "statement": "Threat-model boundary: the adversary only controls content in unendorsed source classes and cannot alter source-class annotations, direct user/system messages, authoritative tool outputs, the memory store, or the authorization policy.",
+   "quote": "The adversary cannot alter source-class annotations, direct user or system messages, outputs from deployment-designated authoritative tools, the memory store, or the authorization policy.",
+   "locator": "§2 Scope and threat model"
+  },
+  {
+   "statement": "Storage and retrieval are simplified to a deterministic bounded in-memory store returning the complete product-generated write set in stable order, keeping retrieval coverage and ordering identical across arms — real retrieval stacks are not evaluated.",
+   "quote": "Storage and retrieval use a deterministic bounded in-memory store that returns the complete product-generated write set in stable order.",
+   "locator": "Appendix F.4"
+  }
+ ],
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "appendix_partially_read (Appendix D/E per-cell tables and B/C implementation details scanned via captions and targeted reads, not line by line)",
+  "latex_number_artifacts_in_corpus (e.g. '4,4534{,}453' in §4.4)"
+ ]
+}

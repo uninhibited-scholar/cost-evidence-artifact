@@ -1,0 +1,175 @@
+{
+  "arxiv_id": "2510.02373",
+  "title": "A-MemGuard: A Proactive Defense Framework for LLM-based Agent Memory",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "The agent's memory store M of past-interaction records (retrieved per query, top-k=4) plus a dedicated lesson memory M_les of anomalous structured reasoning paths distilled from detected failures; validation intercepts at retrieval (before memories inform the policy) and the lesson memory is consulted before action execution",
+    "operations_covered": ["retrieval", "formation", "update"]
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "Memory integrity under poisoning: injected records that 'appear innocuous in isolation, with harm emerging solely in specific contexts' must not steer agent actions, including through the self-reinforcing error cycle where 'the corrupted outcome is stored as precedent'. Failure conditions: malicious records surviving validation and steering actions (ASR), or benign accuracy loss on non-attack queries. Judged by ASR-r/ASR-a/ASR-t (direct poisoning), final ASR after all indirect injection interactions, and benign ACC.",
+    "operationalized_as": "ASR at three stages (retrieval ASR-r, agent's thought ASR-a, end-to-end ASR-t) under the AgentPoison direct poisoning attack on ReAct-StrategyQA and EHRAgent; final ASR after all attack interactions for indirect injection on MMLU; benign accuracy (ACC) on non-attack queries; MAS Final Score and Task Success under misinformation injection (MISINFOTASK); token consumption on EHRAgent as cost side."
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "Direct poisoning: limited write access to the memory store (injecting a limited set of malicious records into the agent's memory)",
+      "Indirect poisoning: no direct memory access - tricking the agent into archiving malicious content through benign queries",
+      "Black-box access to the agent's core LLM; knows the memory schema to craft records that appear benign in isolation but exploit context-dependent vulnerabilities",
+      "Enhanced baseline: adversary can infer retrieval details through black-box probing to optimize the trigger query and malicious records (evaluated as a stronger setting)"
+    ],
+    "assumptions": [
+      "The agent's memory is mainly composed of benign records from normal interactions, with only a small fraction being malicious",
+      "Adversary operates through everyday interaction channels and limits injections to avoid detection; cannot overwrite existing entries or interfere with ongoing queries",
+      "Victim is a benign user with no prior attack knowledge who cannot directly inspect or modify the memory"
+    ],
+    "not_covered": [
+      "The adversary does not adapt the attack after observing the defense's outputs across deployment (no re-attack against A-MemGuard's validated memory set or lesson memory); the enhanced probing baseline optimizes against the undefended retrieval configuration, not against the running defense",
+      "White-box access to the model optimizer or internal training processes is excluded by assumption",
+      "Attacks on the lesson memory itself (poisoning the 'lessons' channel) are not modeled"
+    ]
+  },
+  "intervention": {
+    "name": "A-MemGuard (consensus-based validation + dual-memory lesson structure)",
+    "mechanism_layer": "content",
+    "description": "A validation function V audited at memory retrieval: (1) consensus validation - for each of the K retrieved memories, generate a free-form rationale then extract a structured reasoning path; score each path's divergence from the group consensus; paths exceeding threshold tau are anomalous and their memories excluded from the validated set M_val; (2) dual-memory self-correction - detected anomalous paths are archived as 'lessons' in a separate lesson memory; before executing a plan, the agent structures the plan as a candidate path and retrieves structurally similar lessons, and their presence triggers a deliberative loop that revises the plan. No modification of the agent's core architecture."
+  },
+  "controls": [
+    {"name": "No Defense", "purpose": "baseline"},
+    {"name": "LLM Auditor (LLM-based Memory Auditor)", "purpose": "baseline"},
+    {"name": "Distil Classifier (fine-tuned)", "purpose": "baseline"},
+    {"name": "Perplexity Filter (PPL, two-stage)", "purpose": "baseline"},
+    {"name": "w/o L&C (remove consensus validation + lesson mechanisms)", "purpose": "ablation"},
+    {"name": "w/o Safety (remove final safety check)", "purpose": "ablation"},
+    {"name": "w/o Lessons (remove lesson memory)", "purpose": "ablation"},
+    {"name": "top-k sensitivity (2/4/6/8 for main and lesson memory)", "purpose": "ablation"}
+  ],
+  "results": [
+    {
+      "claim": "Under the AgentPoison direct poisoning attack on EHRAgent (GPT-4o-mini + DPR), A-MemGuard cuts the retrieval-stage attack success rate from a complete 100.0 to 2.13; the end-to-end ASR-t drops from 100.0 to 36.17.",
+      "metric": "ASR-r / ASR-t (%) under AgentPoison, lower is better",
+      "value": "2.13 (ASR-r); 36.17 (ASR-t)",
+      "comparison": "No Defense 100.0 / 100.0; LLM Auditor 46.81 / 100.0; Distil Classifier 100.0 / 100.0; PPL 100.0 / 100.0",
+      "setting": "EHRAgent, GPT-4o-mini backbone, DPR retrieval, AgentPoison attack (Chen et al., 2024), Table 1 'Ours' row",
+      "quote": "This is most striking in the challenging EHRAgent benchmark, where our framework slashed the ASR at retrieval (ASR-r) from a complete 100.0 to as low as 2.13.",
+      "locator": "§5.2 (Table 1)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "ASR percentage over poisoned queries in the EHRAgent setup following Chen et al. (2024); the paper does not state the number of poisoned queries, so the absolute count is unreported"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Against indirect memory injection on MMLU, A-MemGuard reduces ASR by over 60% for both backbones, reaching final average ASRs of 0.256 (GPT-4o-mini) and 0.233 (LLaMA-3.1-8B), vs No Defense 0.667 / 0.663.",
+      "metric": "final ASR after all attack interactions (fraction), lower is better",
+      "value": "0.256 (GPT-4o-mini); 0.233 (LLaMA-3.1-8B)",
+      "comparison": "No Defense 0.667 / 0.663; LLM Auditor 0.567 / 0.600; Distil Classifier 0.689 / 0.567; PPL 0.689 / 0.656",
+      "setting": "MMLU general agent, indirect interaction-based injection following Dong et al. (2025), Table 2 average performance",
+      "quote": "The results show a reduction in Attack Success Rate (ASR) by over 60% for both GPT-4o-mini and LLaMA-3.1-8B, achieving final average ASRs of 0.256 and 0.233, respectively.",
+      "locator": "§5.3 (Table 2)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "ASR averaged over MMLU attack interactions following Dong et al. (2025); absolute interaction/query counts not reported in the paper"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Cost reading (utility): on benign tasks A-MemGuard keeps the highest accuracy among all defenses, but on EHRAgent (GPT-4o-mini, DPR) benign accuracy still drops from 83.0 (No Defense) to 71.3 (-11.7 points) - the defense's utility cost on the hardest configuration.",
+      "metric": "benign accuracy (ACC, %), higher is better",
+      "value": "71.3 (vs 83.0 No Defense, -11.7)",
+      "comparison": "No Defense 83.0; LLM Auditor 70.2; Distil Classifier 61.0; PPL 19.1; Ours 71.3 (highest among defenses)",
+      "setting": "EHRAgent benign (non-attack) queries, GPT-4o-mini + DPR, Table 3 row 'GPT-4o-mini (DPR)', ReAct column 63.0 -> 76.7 for Ours (+13.7)",
+      "quote": "GPT-4o-mini (DPR) 63.0 83.0 74.0↑\\uparrow11.0 70.2↓\\downarrow12.8 61.0↓\\downarrow2.0 19.1↓\\downarrow63.9 73.3↑\\uparrow10.3 66.0↓\\downarrow17.0 76.7↑\\uparrow13.7 71.3↓\\downarrow11.7",
+      "locator": "§5.4 (Table 3)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "ACC on non-attack queries per benchmark configuration; the paper does not report the number of benign queries per benchmark"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Cost reading (tokens): on EHRAgent, A-MemGuard consumes ~7.8K tokens vs ~3.6K for the undefended baseline (~2.2x), while the Auditor baseline consumes ~8.0K at lower performance - the defense pays a moderate token overhead for near-0.9 performance (1 - ASR).",
+      "metric": "token cost (K tokens) on EHRAgent",
+      "value": "7.8K (vs 3.6K No Defense; 8.0K Auditor)",
+      "comparison": "No Defense 3.6K @ performance 0.5; Auditor 8.0K @ ~0.68; Ours 7.8K @ ~0.9",
+      "setting": "EHRAgent benchmark, token consumption measured across three approaches (No Defense, Auditor, A-MemGuard), performance measured as 1 - ASR",
+      "quote": "Our A-MemGuard framework strikes a superior balance, achieving the highest performance with a score of nearly 0.9, which effectively neutralizes the attack. Notably, it delivers this state-of-the-art security while being more computationally efficient than the Auditor, using 7.8K tokens.",
+      "locator": "Appendix E (Figure 7)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Approximate token consumption per run on EHRAgent as read from Figure 7 ('approximately 3.6K', 'around 8.0K', '7.8K tokens'); per-query token counts not tabulated"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Ablation: removing the consensus validation and lesson mechanisms (w/o L&C) nearly doubles the end-to-end ASR-t from 36.17 to 71.27 (LLaMA-3-8B, DPR, EHRAgent), confirming both components are load-bearing.",
+      "metric": "ASR-t (%), ablation",
+      "value": "71.27 (w/o L&C) vs 36.17 (full)",
+      "comparison": "Ours (Full) 36.17; w/o L&C 71.27; w/o Safety 38.30; w/o Lessons 40.63",
+      "setting": "EHRAgent ablation, LLaMA-3-8B (DPR), Table 5",
+      "quote": "For instance, removing the consensus and lesson mechanisms (w/o L&C) caused the end-to-end attack success rate (ASR-t) to nearly double from 36.17 to 71.27.",
+      "locator": "§5.6 (Table 5)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "ASR-t percentage over the EHRAgent poisoned queries in the ablation configuration; absolute count not reported"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Multi-agent scalability: under misinformation injection on MISINFOTASK, A-MemGuard achieves the highest task success (0.950 vs 0.800 No Defense) and the lowest Final Score (2.150 vs 3.200).",
+      "metric": "Task Success (higher better) and Final Score (lower better)",
+      "value": "0.950 / 2.150",
+      "comparison": "No Defense 0.800 / 3.200; LLM Auditor 0.867 / 2.200; PPL 0.900 / 2.850; Distil 0.750 / 2.850",
+      "setting": "Collaborative multi-agent setup adapted from Li et al. (2025), MISINFOTASK dataset, Table 4",
+      "quote": "Our method not only achieved the highest task success rate at 0.950, showing that the agent team could successfully complete its objectives despite the attack, but it also obtained the lowest (best) Final Score of 2.150.",
+      "locator": "§5.5 (Table 4)",
+      "denominator": {
+        "n_total": null,
+        "n_valid": null,
+        "how_counted": "Fractions/scores over MISINFOTASK episodes following Li et al. (2025); number of episodes not stated"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Lesson-memory retrieval is noise-sensitive: retrieving too many stored 'lessons' degrades final decisions, so the defense's own memory operation must be balanced.",
+      "quote": "This suggests that while recalling past mistakes is beneficial, retrieving too many “lessons” can introduce distracting noise. This noise can weaken the final decision, causing the overall performance to drop. Hence, it is important to find the right balance for top-k to ensure that learning from mistakes is helpful, not harmful.",
+      "locator": "§5.7"
+    },
+    {
+      "statement": "Hyperparameter sensitivity is material: on the main memory, top-k=2 leaves ASR-r at 19.14 (vs 0.00 at top-k=4), and on the lesson memory, moving from top-k=4 to 8 raises ASR-a from 12.76 to 21.27 - protection and cost both swing with configuration.",
+      "quote": "top-k=2 19.14 17.02 42.13 46.80",
+      "locator": "§5.7 (Table 6)"
+    },
+    {
+      "statement": "The paper provides no dedicated limitations section; the constraints above are the authors' self-identified weaknesses stated in the sensitivity analysis.",
+      "quote": "We analyzed how sensitive our framework is to its key hyperparameter, top-k, which controls how many memories are retrieved for a given query.",
+      "locator": "§5.7"
+    }
+  ],
+  "reproduction": {
+    "code": "https://github.com/TangciuYueng/AMemGuard (Abstract: 'Our code is available in https://github.com/TangciuYueng/AMemGuard'); §8 Reproducibility Statement commits to releasing framework, baseline implementations, and scripts",
+    "data": "ReAct-StrategyQA, EHRAgent, MMLU (public benchmarks); MISINFOTASK for the multi-agent setting; AgentAuditor dataset for the knowledge-graph analysis",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "threat_model", "method", "experiments", "appendix_E_token_cost", "ethics_and_reproducibility"],
+    "complete": false
+  },
+  "quality_flags": [
+    "denominator_unclear",
+    "no_dedicated_limitations_section",
+    "topk_sensitive",
+    "utility_drop_on_ehr_11_7_points_vs_no_defense"
+  ]
+}

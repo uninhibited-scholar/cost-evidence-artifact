@@ -1,0 +1,125 @@
+{
+ "arxiv_id": "2609.34463",
+ "title": "CoDeL: Co-Evolutionary Defense against Indirect Prompt Injection in LLM Agents",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "policy",
+  "scope": "cross-task",
+  "carrier": "防御者以 LoRA 形式每轮更新（权重空间）；攻击侧为共演化 prober，无外部记忆载体",
+  "operations_covered": [
+   "update"
+  ]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "智能体在多轮工具交互中应区分「完成用户任务」与「服从注入目标」，即使恶意意图被折叠进合理工作流并延迟数轮",
+  "operationalized_as": "三个 IPI 基准上的 ASR、攻击下效用 UA、良性效用 BU"
+ },
+ "threat_model": {
+  "adversary": "external",
+  "capabilities": [
+   "在注入轮次、攻击方法与载荷上搜索",
+   "把注入意图折叠进合理工作流并延迟",
+   "针对当前防御者再适应"
+  ],
+  "assumptions": [
+   "攻击者可自动探测防御者",
+   "基准为 AgentDojo-trajnew / InjecAgent / ASB-OPI"
+  ],
+  "not_covered": [
+   "持久记忆作为注入载体",
+   "多智能体共享状态"
+  ]
+ },
+ "intervention": {
+  "name": "CoDeL（LoRA 每轮 GDPO 更新 + 共演化 prober）",
+  "mechanism_layer": "weight-space",
+  "description": "防御者每轮以 LoRA-based GDPO 在安全、任务进度、格式合规的解耦奖励下更新；共演化 prober 按攻击成功率与攻击延迟搜索仍能穿透当前防御者的注入，形成移动课程"
+ },
+ "controls": [
+  {
+   "name": "九个基线（含 PIGuard、TSGuard、Meta-SecAlign）",
+   "purpose": "baseline"
+  },
+  {
+   "name": "无防御",
+   "purpose": "baseline"
+  }
+ ],
+ "results": [
+  {
+   "claim": "CoDeL 把 ASR 从 0.364 压到 0.042（降 88.5%），同时把攻击下效用从最强基线的 0.602 提到 0.831（升 38.0%）",
+   "metric": "ASR / UA",
+   "value": "0.364→0.042（−88.5%）；UA 0.602→0.831（+38.0%）",
+   "comparison": null,
+   "setting": "三个 IPI 基准、九个基线、两个基座模型",
+   "quote": "CoDeL drives the ASR down from 0.3640.364 to 0.0420.042 (−88.5%-88.5\\%), and raises the utility under attack (UA) from the strongest baseline’s 0.6020.602 to 0.8310.831 (+38.0%+38.0\\%).",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "良性效用未被牺牲：BU 达 0.779",
+   "metric": "BU",
+   "value": "0.779",
+   "comparison": null,
+   "setting": "同上",
+   "quote": "In addition, CoDeL reaches a benign utility (BU) of 0.7790.779, confirming that safety earned under adversarial pressure need not be traded against the agent’s usefulness.",
+   "locator": "Abstract",
+   "denominator": null,
+   "is_primary_result": false
+  },
+  {
+   "claim": "静态训练的防御在仅改变投递方式（不换攻击目标）时大幅失效：TSGuard 上升 45.9%",
+   "metric": "ASR 增幅",
+   "value": "+45.9%",
+   "comparison": null,
+   "setting": "重写投递方式、攻击目标不变的对照",
+   "quote": "TSGuard suffers a 45.9%45.9\\% jump that leaves it barely better than running no defense at all, even though it never faced a new attack goal, only a less conspicuous delivery of the old one.",
+   "locator": "§3 Motivation",
+   "denominator": null,
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "防御演化发生在权重空间（LoRA），未覆盖持久记忆/技能库载体",
+   "quote": null,
+   "locator": null
+  },
+  {
+   "statement": "语料的 HTML 转文本保留了 LaTeX 数字重复（如 0.3640.364），引文按语料原文逐字复制，可读性受影响",
+   "quote": null,
+   "locator": null
+  },
+  {
+   "statement": "LoRA 每轮更新（权重空间），非持久状态载体，按 SCOPE 降为背景",
+   "quote": null,
+   "locator": null
+  }
+ ],
+ "reproduction": {
+  "code": "https://anonymous.4open.science/r/CoDeL-repo-F750/",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results"
+  ],
+  "complete": false
+ },
+ "quality_flags": [
+  "demoted_to_background_weight_space",
+  "denominator_unclear",
+  "latex_duplication_in_corpus",
+  "manually_extracted_no_agent",
+  "weight_space_not_persistent_state"
+ ]
+}

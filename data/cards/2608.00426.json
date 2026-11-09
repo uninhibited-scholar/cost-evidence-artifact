@@ -1,0 +1,238 @@
+{
+ "arxiv_id": "2608.00426",
+ "title": "MAPLE-Guard: Memory-Aware Link Enforcement Against Memory-Link Poisoning in Multi-Agent Systems",
+ "screening_status": "核心研究",
+ "versions_read": [
+  "v2"
+ ],
+ "object": {
+  "what_persists": "memory",
+  "scope": "mixed",
+  "carrier": "Persistent agent memory items m=(x,μ) — text records with metadata (content x, access scope, provenance, lifecycle state, guard-side signals) — held in per-agent private stores and shared stores of a memory-augmented multi-agent system; a memory link is the dependency created by write/retrieve/promote/reuse/update operations on such items",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation",
+   "repair"
+  ]
+ },
+ "safety_property": {
+  "type": "integrity",
+  "statement": "A poisoned memory item written once must not steer benign agents' later decisions, be promoted into shared memory, or be reused by agents that never saw the original attack; the property fails when an attack-specified target answer/tool is reached (ASR@3) instead of a correct non-target consensus (MDSR@3), and the defense is judged to potentially fail under forged provenance metadata or payloads that stay below per-event risk thresholds.",
+  "operationalized_as": "ASR@3 (fraction of trigger tasks whose final-round aggregated answer equals the attacker target y*) and MDSR@3 (fraction reaching correct, non-target consensus among non-attacker agents) at the final round, scored by an LLM judge (Qwen3.5-122B-A10B, temperature 0), plus propagation diagnostics PMUR / PMUR-A / Sec. ASR@3 (Appendix D)"
+ },
+ "threat_model": {
+  "adversary": "insider",
+  "capabilities": [
+   "controls one or a few benign-looking agents inside the MAS",
+   "writes experience-like poisoned memories through ordinary task interaction (dialogue route)",
+   "seeds items directly into a memory store it can reach (direct-memory route)",
+   "goal: make a poisoned item survive long enough to steer a benign agent's later decision (targeted attack toward a specific wrong answer or risky tool)"
+  ],
+  "assumptions": [
+   "attacker cannot modify other agents' private stores",
+   "attacker cannot modify the guard's hidden signals φ(m)",
+   "attacker cannot modify the communication topology",
+   "runtime provenance metadata and retrieval traces are trustworthy",
+   "unless stated otherwise, the attacker is unaware of the guard"
+  ],
+  "not_covered": [
+   "an attacker who can forge source-route, writer, scope, or lineage records (metadata forgery)",
+   "payloads designed to remain below per-event risk thresholds",
+   "prevention of every initial compromise (guard contains rather than prevents)",
+   "generalization to unseen adaptive attacks (one fixed signal/weight/threshold configuration evaluated)",
+   "causal isolation of the attack entry point (each benchmark paired with a single attack)"
+  ]
+ },
+ "intervention": {
+  "name": "MAPLE-Guard (Memory-Aware Propagation and Link Enforcement Guard)",
+  "mechanism_layer": "provenance",
+  "description": "A lifecycle guard that intercepts every memory-link event and places gates at four checkpoints — a write firewall at storage (reject/quarantine/rewrite/private), a retrieval gate before reasoning (value-aware ranking plus rule-based filter), a promotion gate before an item enters shared memory, and a cross-agent gate before another agent reuses it — each deciding allow/demote/block. Decisions come from one fixed variant-agnostic risk model over eight signals (provenance, lineage, self-claimed success, instruction-likeness, answer binding, trigger sensitivity, cluster dominance, source-agent trust; largest weights on provenance and lineage) computed from the memory text, hidden guard state φ(m) and provenance chain P(m), combined with outcome-conditioned utility/trust updates (Q-value style) after each task; signals are never exposed to the backbone LLM."
+ },
+ "controls": [
+  {
+   "name": "No Defense",
+   "purpose": "baseline"
+  },
+  {
+   "name": "AgentSafe (prompt-level/identity-aware checks)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "AgentXposed (agent-facing interrogation/behavior inspection)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Challenger (agents challenge suspicious peer outputs)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "GUARDIAN (independent reviewer over visible messages/actions)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "G-Safeguard (communication-graph GNN intervention)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "INFA-Guard (topology-aware remediation)",
+   "purpose": "baseline"
+  },
+  {
+   "name": "Single-gate removal (write/retrieval/promotion/cross-agent, outcome update retained)",
+   "purpose": "ablation"
+  }
+ ],
+ "results": [
+  {
+   "claim": "In the LongMemEval-MemoryGraft setting with Qwen3.5-122B-A10B, MAPLE-Guard raises MDSR@3 from 54.0% to 74.3% and reduces RDA@3 [v2 对 v1 的 ASR@3 改名] from 38.2% to 0.9% (Table 2). v2 补充基线语境：其 RDA 仅比最佳基线 Challenger（2.2%）低 1.3 个百分点，而 PIGuard 的 MDSR 更高（79.1%）但 RDA 5.9%——MAPLE 降低检索损伤但不领先任务成功。",
+   "metric": "ASR@3 / MDSR@3",
+   "value": "RDA@3 0.9%; MDSR@3 74.3% [v1 记为 ASR@3 0.9%]",
+   "comparison": "ASR@3 38.2% -> 0.9%; MDSR@3 54.0% -> 74.3%",
+   "setting": "LongMemEval-MemoryGraft; 8-agent MAS (3 attacker-controlled), 3 rounds, star/chain/tree topologies, 15 runs per topology, judge Qwen3.5-122B-A10B temperature 0, controlled-topology main grid",
+   "quote": "With Qwen3.5-122B-A10B, MAPLE raises MDSR@3 from 54.0% to 74.3% and reduces RDA@3 from 38.2% to 0.9% (Table 2). Its RDA is 1.3 points below the best baseline (Challenger: 2.2%). PIGuard instead has the highest MDSR (79.1%), with 5.9% RDA: MAPLE lowers retrieval damage but does not lead task success.",
+   "locator": "§5.3 Obs2 (Table 2)",
+   "denominator": {
+    "n_total": "200 benchmark instances per run; 15 runs per topology, reported as mean over star/chain/tree topology means",
+    "n_valid": null,
+    "how_counted": "ASR@3 and MDSR@3 are fractions of trigger tasks (attack-successful iff final answer equals attacker target; defense-successful iff correct non-target consensus), Appendix D.1"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In AppWorld-AgentPoison with Qwen3.5-122B-A10B, MAPLE-Guard raises MDSR@3 from 42.5% to 99.8% and cuts RDA@3 from 34.7% to 0.2%; with gemma-4-31B it reaches 95.3% MDSR@3 and 0.0% RDA@3 [v2 补充 gemma 数值]。",
+   "metric": "ASR@3 / MDSR@3",
+   "value": "RDA@3 0.2%; MDSR@3 99.8% (Qwen); gemma 95.3% / 0.0%",
+   "comparison": "ASR@3 34.7% -> 0.2%; MDSR@3 42.5% -> 99.8%",
+   "setting": "AppWorld-AgentPoison; 8-agent MAS (3 attacker-controlled), 3 rounds, star/chain/tree topologies, 15 runs per topology, Qwen3.5-122B-A10B main grid (gemma-4-31B: 95.3% MDSR@3 / 0.0% ASR@3 per §5.5)",
+   "quote": "On AppWorld-AgentPoison, MAPLE-Guard achieves 99.8% MDSR@3 and 0.2% RDA@3 with Qwen3.5-122B-A10B, and 95.3% MDSR@3 and 0.0% RDA@3 with gemma-4-31B.",
+   "locator": "§5.5 Obs5 (Table 2)",
+   "denominator": {
+    "n_total": "200 benchmark instances per run; 15 runs per topology, reported as mean over star/chain/tree topology means",
+    "n_valid": null,
+    "how_counted": "ASR@3 and MDSR@3 are fractions of trigger tasks (Appendix D.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "Without any defense, memory-link poisoning is potent: RDA@3 reaches 51.4% on MMLU-MINJA and 34.7% on AppWorld with Qwen3.5-122B-A10B, and 75.1% on MMLU and 84.4% on InjectAgent with gemma-4-31B [v2 将 ASR@3 更名 RDA@3，数值不变]；v2 Obs1 标题强调 gemma 两设置 RDA@3 超过 75%。",
+   "metric": "ASR@3 (No Defense)",
+   "value": "RDA@3 75.1% and 84.4% (gemma); 51.4% and 34.7% (Qwen) [v1 记为 ASR@3]",
+   "comparison": null,
+   "setting": "No Defense condition of the main grid; five benchmark-attack settings, 8 agents (3 attacker-controlled), 3 rounds, controlled topologies, both backbones",
+   "quote": "Under No Defense, RDA@3 is 51.4% on MMLU-MINJA and 34.7% on AppWorld with Qwen3.5-122B-A10B, and 75.1% on MMLU and 84.4% on InjectAgent with gemma-4-31B.",
+   "locator": "§5.2 Obs1 (Table 2)",
+   "denominator": {
+    "n_total": "200 benchmark instances per run; 15 runs per topology, reported as mean over star/chain/tree topology means",
+    "n_valid": null,
+    "how_counted": "ASR@3 is the fraction of trigger tasks whose final-round answer equals the attacker target (Appendix D.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "On AppWorld-AgentPoison with Qwen3.5-122B-A10B, the message-level baseline GUARDIAN backfires and increases RDA from 34.7% (No Defense) to 56.5%, consistent with incomplete coverage of stored-memory paths [v2 措辞]；同时 v2 补充：MMLU 上全部六个 message/topology 级守卫都降低了 RDA。",
+   "metric": "ASR@3",
+   "value": "56.5%",
+   "comparison": "34.7% -> 56.5%",
+   "setting": "AppWorld-AgentPoison, Qwen3.5-122B-A10B, GUARDIAN baseline vs No Defense, main grid",
+   "quote": "On MMLU with Qwen3.5-122B-A10B, all six message- and topology-level guards reduce RDA relative to No Defense; on AppWorld, however, GUARDIAN increases RDA from 34.7% to 56.5%.",
+   "locator": "§5.2 Obs1 (Table 2)",
+   "denominator": {
+    "n_total": "200 benchmark instances per run; 15 runs per topology, reported as mean over star/chain/tree topology means",
+    "n_valid": null,
+    "how_counted": "ASR@3 is the fraction of trigger tasks whose final-round answer equals the attacker target (Appendix D.1)"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "In the InjectAgent-ToolAttack transfer setting with Qwen3.5-122B-A10B, the same fixed guard configuration reduces RDA@3 from 20.6%±7.2 (No Defense) to 4.9%±2.7 (Table 2 MAPLE 行；v2 将 ASR@3 更名 RDA@3 且 v1 的 prose 句改由 Obs3 的固定配置论述承担)：信号函数、权重与阈值跨五个攻击设置保持固定，无攻击特定参数搜索。",
+   "metric": "ASR@3",
+   "value": "RDA@3 4.9%±2.7 (from 20.6%±7.2) [v1: ASR@3 4.9%]",
+   "comparison": "20.6% -> 4.9%",
+   "setting": "InjectAgent-ToolAttack transfer setting, Qwen3.5-122B-A10B (gemma-4-31B: 56.1% ASR@3 per Table 1), fixed guard configuration without attack-specific tuning",
+   "quote": "On Qwen3.5-122B-A10B, MAPLE-Guard achieves the lowest mean RDA@3 in four settings, including 0.3%, 0.9%, and 0.2% on MMLU, LongMemEval, and AppWorld, respectively. The signal functions, weights, and thresholds remain fixed without attack-specific parameter search.",
+   "locator": "§5.3 Obs3 (Table 2)",
+   "denominator": {
+    "n_total": "200 benchmark instances per run; 15 runs per topology, reported as mean over star/chain/tree topology means",
+    "n_valid": null,
+    "how_counted": "ASR@3 is the fraction of trigger tasks whose final-round answer equals the attacker target (Appendix D.1)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "In the single-gate ablation on LongMemEval-MemoryGraft (outcome feedback retained in every variant), removing the promotion gate causes the largest degradation, reducing MDSR@3 from 73.6% to 60.0% and raising RDA@3 from 0.9% to 14.5% [v1 记 73.60/60.00/14.50，v2 改为一位小数]；去掉 write/retrieval/cross-agent 门产生较小但一致的损失。v2 新增 matched-lifecycle 对照：full guard 88.4%/0.1% vs retrieval-only 65.0%/21.6%（AppWorld 代理，Gemma Base）。",
+   "metric": "MDSR@3 / ASR@3 (gate ablation)",
+   "value": "MDSR@3 60.0%; RDA@3 14.5% [v1: 60.00% / 14.50%]",
+   "comparison": "MDSR@3 73.60% -> 60.00%; ASR@3 0.90% -> 14.50%",
+   "setting": "LongMemEval-MemoryGraft; one lifecycle gate removed at a time while retaining the outcome-conditioned update; remaining write/retrieval/cross-agent ablations give smaller consistent losses",
+   "quote": "The full guard achieves 73.6% MDSR@3 and 0.9% RDA@3. Removing the promotion gate causes the largest degradation, reducing MDSR@3 to 60.0% and increasing RDA@3 to 14.5%; removing the write, retrieval, or cross-agent gate produces smaller but consistent losses.",
+   "locator": "§5.6 Obs7 (Figure 5)",
+   "denominator": {
+    "n_total": "200 benchmark instances per run; 15 runs per topology, reported as mean over star/chain/tree topology means",
+    "n_valid": null,
+    "how_counted": "ASR@3 and MDSR@3 are fractions of trigger tasks (Appendix D.1; a benign mistake counts toward neither, so they are not complementary). The ablation keeps the main-grid evaluation protocol: the full-guard reference (73.60%/0.90%) equals the Table 1 / Appendix C LongMemEval-MemoryGraft main-grid cell (200 benchmark instances per run, eight agents of which three are attacker-controlled, 15 runs per topology, averaged over star/chain/tree topology means), and Appendix D.2 states the ablation removes one lifecycle gate at a time under the same outcome update. No separate ablation instance count is printed; soft corroboration: 60.00% and 14.50% of 200 are integer counts (120/29)."
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "Benign utility: under random topology, MAPLE changes MDSR by −1.5 (MMLU), +7.0 (LongMemEval), +1.0 (AppWorld), +1.4 (CSQA), +0.9 (InjectAgent) points on Qwen — Table 6 行值与 v1 一致（MMLU 88.5→87.0，AppWorld 99.0→100.0）。v2 明确改口：the guard is not uniformly cost-free（两骨干在 MMLU 均失 1.5 点，gemma 在 LongMemEval 失 1.4 点）；v2 新增 token 审计：MAPLE 在 MMLU/InjectAgent 上相对 No Defense 减少 35.0%/27.8% 的测量 token 用量，且无额外 guard-LLM 调用。",
+   "metric": "MDSR@3 (attack-free benign utility)",
+   "value": "MMLU 87.0 vs 88.5; AppWorld 100.0 vs 99.0; MMLU −1.5 pt on both backbones",
+   "comparison": "88.5 -> 87.0 (MMLU); 99.0 -> 100 (AppWorld)",
+   "setting": "Attack-free benign utility under random topology, Qwen3.5-122B-A10B backbone (gemma-4 columns: MMLU 56.5 -> 55.0, LongMemEval 34.2 -> 32.8)",
+   "quote": "Thus the guard is not uniformly cost-free: both backbones lose 1.5 points on MMLU, and gemma also loses 1.4 points on LongMemEval.",
+   "locator": "§5.7 (Table 6)",
+   "denominator": {
+    "n_total": null,
+    "n_valid": null,
+    "how_counted": "Attack-free MDSR@3 (%) under random topology per benchmark, No Defense -> MAPLE (Table 6); five benchmarks x two backbones; token audit on five fixed tasks per benchmark, eight agents, three rounds, one fixed random adjacency and seed, 128-token generation limit"
+   },
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "MAPLE-Guard contains memory-link poisoning after it enters the system rather than preventing every initial compromise.",
+   "quote": "MAPLE-Guard is designed to contain memory-link poisoning after it enters the system rather than prevent every initial compromise.",
+   "locator": "Limitation section (unnumbered, after §6)"
+  },
+  {
+   "statement": "The guard assumes reliable provenance metadata and retrieval traces; forged metadata or below-threshold payloads may evade it.",
+   "quote": "It assumes reliable provenance metadata and retrieval traces; forged metadata or payloads designed to remain below per-event thresholds may evade the guard.",
+   "locator": "Limitation section (unnumbered, after §6)"
+  },
+  {
+   "statement": "Because each benchmark is paired with a single attack, the evaluation cannot isolate the causal effect of the attack entry point.",
+   "quote": "because each benchmark is paired with a single attack, the evaluation supports within-benchmark comparisons among defenses but does not isolate the causal effect of the attack entry point.",
+   "locator": "Limitation section (unnumbered, after §6)"
+  },
+  {
+   "statement": "v2 Limitation 重写：固定单一信号/权重/阈值配置的跨设置表现仍成立（Obs3），但新增两条 caveat——完整反馈设定使用 benchmark-evaluator 结果作为反馈源；CSQA transfer runner 的部分运行时元数据由已知攻击者角色初始化；且每个 benchmark 只配一种攻击，评估支持基准内对比而不能分离攻击入口的因果效应",
+   "quote": "Finally, because each benchmark is paired with a single attack, the evaluation supports within-benchmark comparisons among defenses but does not isolate the causal effect of the attack entry point.",
+   "locator": "Limitation"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": "https://github.com/xiong-wenjun/MAPLE-Guard",
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "metric_renamed_asr3_to_rda3_in_v2",
+  "v2_rewrites_observations_obs1_obs7_and_adds_obs4_obs6"
+ ]
+}

@@ -1,0 +1,167 @@
+{
+  "arxiv_id": "2610.07309",
+  "title": "The Right Memory in the Wrong Context: Verifying Retrieval Admissibility in Long-Term Agent Memory",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "mixed",
+    "carrier": "Long-term agent memory records from RHELM and MemOps benchmarks, carrying released governance metadata: trusted namespace/provenance identifiers (authenticated account, persona, profile, tenant, or project), policy fields, and lifecycle states (current/stale/superseded)",
+    "operations_covered": ["retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "A memory retrieved as relevant to a query must also be admissible for the current principal, purpose/policy, intent, and time; relevance-based recall and final-answer accuracy cannot reveal whether another principal's record, a policy-violating record, or a superseded/forgotten record crossed the prompt boundary, nor whether required eligible evidence was withheld.",
+    "operationalized_as": "Three-valued (admissible/inadmissible/unresolved) per-record labels on scope, policy, and lifecycle axes combined by strong Kleene conjunction; matched-recall partial-identification bounds and typed violation exposure rates on feasible matched prefixes at target recall .8; memory-ID tracking through prompt exposure; and literal-marker target disclosure scoring in agent answers."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [
+      "No live adversary in the main studies; failures arise from context mismatch (wrong principal, policy violation, superseded/forgotten state) in ordinary retrieval",
+      "Robustness stress tests only: method-visible metadata corruption (namespace false-deny/false-allow/missing/swaps, policy and lifecycle label errors) injected at eight nested rates over ten seeds"
+    ],
+    "assumptions": [
+      "Namespaces are trusted provenance identifiers rather than inferred from text; under complete trusted namespace labels and unchanged within-namespace scores, namespace pre-filtering cannot worsen a released anchor's rank",
+      "Released governance fields (scope, policy, lifecycle state) are available and treated as released-field consistency rather than independently adjudicated ground truth",
+      "Readers are stateless and receive only the question and ordered memory IDs/text, blinded to route identity and scores; a blinded judge scores answers"
+    ],
+    "not_covered": [
+      "Adversarial attacks on memory content or provenance in deployment; corruption channels are simulated grid brackets, not safety thresholds",
+      "Graph-structured selectors where unauthenticated structural writes can alter which authenticated records are selected; support result assumes flat candidate sets and trusted support labels",
+      "Gold-aware over-refusal, internal causal use of evidence, model ranking, safety certification, or generalization beyond tested corruption channels",
+      "Wall-clock latency claims (hardware records incomplete; similarity-evaluation counts are query-candidate score computations)"
+    ]
+  },
+  "intervention": {
+    "name": "Trusted namespace (provenance) candidate-support restriction within a retrieval-admissibility verification framework",
+    "mechanism_layer": "provenance",
+    "description": "Restricts retrieval candidate support to memories carrying the query's trusted namespace label before semantic ranking (dense embedding), evaluated post-hoc against global dense, recency+dense, random same-size partitions, late global post-filtering, threshold/cluster routers, released-field governance gates, and text-only LLM verifiers; a three-valued admissibility audit then scores scope/policy/lifecycle violations at matched required-evidence recall and follows memory IDs through prompt exposure to answer-level disclosure."
+  },
+  "results": [
+    {
+      "claim": "On frozen top-20 rankings of 3,767 RHELM/MemOps queries, restricting candidate support to the trusted namespace raises anchor recall and 80%-recall feasibility relative to global dense retrieval.",
+      "metric": "top-20 anchor recall (feasibility at tau=.8)",
+      "value": ".533",
+      "comparison": "recall .432 -> .533; feasibility .237 -> .311",
+      "setting": "Post-hoc top-20 reanalysis of frozen dense rankings (Qwen3-Embedding-8B), 3,767 recall-evaluable RHELM/MemOps evaluation queries, equal-source macro average, target recall .8, no adversary",
+      "quote": "Namespace support raises top-20 recall .432 to .533 and feasibility .237 to .311 (Table 2a).",
+      "locator": "§5 Table 2a",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Namespace restriction lowers both endpoints of the admissibility partial-identification bounds on feasible matched prefixes at .992 label coverage.",
+      "metric": "admissibility violation bounds [C^L, C^U]",
+      "value": "[.118,.126]",
+      "comparison": "[.187,.195] -> [.118,.126] at .992 coverage",
+      "setting": "Post-hoc top-20 admissibility audit on frozen rankings, 3,767 RHELM/MemOps queries, scope+policy+lifecycle target, equal-source macro",
+      "quote": "Both bound endpoints decrease from [.187,.195] to [.118,.126] at .992 coverage.",
+      "locator": "§5 Table 2a",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Namespace pre-filtering cuts exact similarity evaluations by roughly two orders of magnitude versus global dense while achieving the higher recall (58.1x fewer per the delta row).",
+      "metric": "similarity evaluations (query-candidate score computations)",
+      "value": "1,551",
+      "comparison": "90,122 -> 1,551",
+      "setting": "Frozen top-20 audit, 3,767 RHELM/MemOps queries; work counted as query-candidate score computations, not wall-clock latency",
+      "quote": "| Global dense | text | .432 | .237 | [.187,.195] | .798 | 90,122 |\n| Global recency+dense | text + released order | .452 | .256 | [.198,.206] | .784 | 90,122 |\n| Namespace dense | text + trusted namespace | .533 | .311 | [.118,.126] | .713 | 1,551 |",
+      "locator": "§5 Table 2a",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Trusted namespace support eliminates wrong-scope (other-principal) typed exposure in feasible matched prefixes under complete trusted labels, while policy-disallowed exposure slightly rises and lifecycle-incompatible exposure is nearly unchanged.",
+      "metric": "typed violation exposure rate (wrong scope)",
+      "value": ".000",
+      "comparison": "wrong scope .084 -> .000; policy .094 -> .101; lifecycle .019 -> .017",
+      "setting": "Feasible matched prefixes at tau=.8 on frozen top-20 rankings, 3,767 RHELM/MemOps queries; typed axes can overlap",
+      "quote": "| Route | Wrong scope ↓\\downarrow | Policy-disallowed ↓\\downarrow | Lifecycle-incompatible ↓\\downarrow |\n| Global dense | .084 | .094 | .019 |\n| Namespace dense | .000 | .101 | .017 |",
+      "locator": "§5 Table 2c",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Across 1,523 paired benchmark-native cases, namespace routing is associated with judged-accuracy gains for all three readers, but recall also changes, so the route-to-reader comparison is observational rather than causal.",
+      "metric": "judged answer accuracy gain (namespace minus global)",
+      "value": "0.053-0.068",
+      "comparison": null,
+      "setting": "1,523 paired RHELM/MemOps reader cases (523 RHELM + 1,000 MemOps sample), readers DeepSeek V4 Pro / Gemini 3.6 Flash / gated GPT-5.6 Luna, shared blinded Claude Haiku 4.5 judge, no reader pooling",
+      "quote": "Across 1,523 paired benchmark-native cases, namespace routing is associated with judged-accuracy gains of 0.053–0.068 across three readers; recall also changes, so this comparison is observational.",
+      "locator": "Abstract / §5 Table 2b",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "Text-only LLM verifiers are near chance at eligibility decisions (ROC-AUC .626/.522 for GPT-5.6 Sol / Gemini 3.6 Flash) and, at the 1% required-anchor false-denial limit, detect no violations.",
+      "metric": "verifier ROC-AUC (and required-anchor false denial)",
+      "value": ".626/.522",
+      "comparison": null,
+      "setting": "72 held-out development analysis cases with fixed top-20 pools; GPT-5.6 Sol and Gemini 3.6 Flash as text-only verifiers; at the 1% required-anchor false-denial limit GPT-5.6 Sol detects nothing and no Gemini 3.6 Flash threshold qualifies",
+      "quote": "Their ROC-AUC is .626/.522 and required-anchor false denial is .059/.020.",
+      "locator": "§5 Eligibility verification / Table 9 / Figure 3b",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "A label-aligned released-metadata reference gate preserves required evidence, lowering constrained loss .032 with unchanged recall and feasibility, in contrast to the text-only verifiers which lower recall/feasibility.",
+      "metric": "recall-constrained loss change",
+      "value": ".032",
+      "comparison": null,
+      "setting": "72 held-out development cases, fixed top-20 pools, released-field deterministic reference control (not an independently validated governance predictor)",
+      "quote": "On 72 held-out development cases, the label-aligned reference lowers loss .032 with unchanged recall/feasibility.",
+      "locator": "§5 Eligibility verification",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "In the 16 controlled exposure scenarios, only DeepSeek V4 Pro shows a relevant-inadmissible exposure effect on literal target disclosure whose 95% CI excludes zero (+.156 [.031,.312]); the other three readers' contrasts are .000/.000/+.125, a reader-specific exact-marker effect, not a safety guarantee.",
+      "metric": "relevant-inadmissible literal-disclosure contrast (exposed minus withheld)",
+      "value": "+.156",
+      "comparison": null,
+      "setting": "16 constructed scenarios (4 per relevance-admissibility cell), 192 paired units and 384 stateless requests per reader; readers GPT-5.6 Sol, Gemini 3.6 Flash, DeepSeek V4 Pro, plus unpooled Claude Opus 5 replication",
+      "quote": "corresponding relevant-inadmissible literal-disclosure contrasts are .000/.000/+.156/+.125. Only DeepSeek V4 Pro excludes zero (95% CI [.031,.312]).",
+      "locator": "§5 Controlled exposure / Figure 3c",
+      "denominator": null,
+      "is_primary_result": true
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Evidence base is narrow: two public benchmarks with only seven RHELM evaluation groups, and namespaces are trusted labels rather than inferred.",
+      "quote": "The evidence covers two public sources and only seven RHELM groups; namespaces are trusted rather than inferred.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "Human governance labels are only a repeatability sample, with weak agreement on prohibited status, so that axis is released-field consistency rather than adjudicated truth.",
+      "quote": "Human labels are a repeatability sample, with weak prevalence-corrected agreement for prohibited status.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "Candidate-count reductions are not wall-clock latency claims because source-execution hardware records are incomplete.",
+      "quote": "Source-execution hardware records are incomplete, so candidate-count reductions are not wall-clock latency claims.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "The study does not establish gold-aware over-refusal, internal causal use of evidence, a model ranking, safety certification, or generalization beyond the tested corruption channels.",
+      "quote": "We do not establish gold-aware over-refusal, internal use, a model ranking, safety certification, or generalization beyond the tested corruption channels.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "The frozen-route reader comparison is associational; only the constructed 16-scenario exposure study randomizes prompt exposure.",
+      "quote": "The frozen-route reader comparison is associational; only the constructed exposure study randomizes prompt exposure under its stated scenarios.",
+      "locator": "Appendix B"
+    },
+    {
+      "statement": "The support result does not cover graph-structured selectors in which unauthenticated structural writes can alter which authenticated records are selected.",
+      "quote": "We also do not cover graph-structured selectors in which unauthenticated structural writes can alter which authenticated records are selected; our support result assumes flat candidate sets and trusted support labels",
+      "locator": "Appendix B"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": []
+}

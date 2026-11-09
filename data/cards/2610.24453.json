@@ -1,0 +1,334 @@
+{
+ "arxiv_id": "2610.24453",
+ "title": "Hippo: Training-Free Agent Self-Evolution via Hippocampal Replay",
+ "screening_status": "必要背景",
+ "versions_read": [
+  "v1"
+ ],
+ "object": {
+  "what_persists": "experience",
+  "scope": "cross-task",
+  "carrier": "外部非参数记忆（模型参数全程冻结，不蒸进权重）：两层结构——L1 惊讶驱动的情景反思（episodic reflections，逐 attempt 诊断，主要作为整合原料被保留）与 L2 持久经验库（论文原文 'persistent L2 bank, represented as a set of identified entries'；Figure 2 标注 'Persistent memory: Experiences + applicability'），条目=可复用决策+显式适用条件（applicability conditions）；检索时 top-K 嵌入召回+LLM 适用性门控后注入 context（约 240–273 token 等效/步）。长程 400 任务后仅保留 83 条 L2 条目",
+  "operations_covered": [
+   "formation",
+   "update",
+   "retention",
+   "retrieval",
+   "revocation"
+  ]
+ },
+ "safety_property": {
+  "type": "none",
+  "statement": "纯性能论文，不声明任何安全属性：研究记忆式自演化能否在 SWE-bench Verified / WebArena / Mind2Web 上提升任务成功率/分辨率并在长任务流中保持（主指标为 resolution rate / task success rate / step success rate）。与安全最接近的机制是 surprise judge 对'侥幸成功'（fortuitous success：如 N/A 引用、空回答被模糊匹配接受）的甄别，用于阻止未验证流程作为成功经验入库（§3.1、Appendix D），但这被论文框架为学习信号/记忆质量问题，判定指标仍是任务成功率而非任何安全属性，故 type=none",
+  "operationalized_as": null
+ },
+ "threat_model": {
+  "adversary": "none",
+  "capabilities": [],
+  "assumptions": [
+   "无对抗者：经验由 agent 自身在固定基准任务流上产生并消费；不研究记忆投毒、prompt injection 或恶意经验注入",
+   "training-free：模型参数全程冻结，适应仅通过外部记忆实现；每个 Hippo run 从空记忆库开始（'Each Hippo run starts with an empty memory bank'）",
+   "WebArena 上 judge 在记忆构建时可访问官方结果与参考答案（actor 无当前任务参考/奖励/判官理由的直接访问）；AWM 与 ReasoningBank 在相同反馈条件下对比（对原在线设定的适配）；SWE-bench 判官无标签（label-free），分辨率另由官方 harness 计算",
+   "任务按固定 ID 顺序处理；同任务所有 rollout 共享同一记忆快照，记忆引擎在全部 8 次 rollout 结束后才更新；主结果为 3 个随机种子完整 run 的均值±样本标准差",
+   "judge 对证据模糊的 accepted attempt 默认判 genuine；checkpoint 评测不修改后续学习所用记忆"
+  ],
+  "not_covered": [
+   "任何对抗性设置：无记忆投毒/对抗性经验/攻击者模型；安全属性未研究",
+   "跨用户/跨部署共享记忆的污染传播与撤销",
+   "超长单任务内的中途反思与分层整合（作者自述 future work，未测试）",
+   "更强模型为弱模型构造经验的可迁移性与成本收益（作者自述未评测）",
+   "KV-cache 复用与专用判别模型的端到端节省（未量化）"
+  ]
+ },
+ "intervention": {
+  "name": "Hippo",
+  "mechanism_layer": "content",
+  "description": "免训练记忆自演化框架，作用层为记忆内容（存什么/改什么/删什么/注入什么），不改变模型参数或执行引擎。四组件：(i) 多 rollout 探索：同一冻结策略与同一检索记忆下 N=8 并行采样；(ii) surprise 驱动的情景缓冲：judge 判定失败或'侥幸成功'（right for the wrong reasons）才写 L1 反思；(iii) 记忆演化引擎（海马回放式两阶段）：先跨 rollout 对比归纳 candidate experience（verified-success 多数/少数/平分/全败四案例规则），再与相关记忆比较——丢弃重复、以显式适用条件合并重叠并解决冲突，产出增删集 (Δ+, Δ−)，L2,t+1=(L2,t\\Δ−)∪Δ+（对照 append-only 与 repeated rewrite 两种更新策略）；(iv) 检索与注入：top-K 嵌入召回+LLM 适用性门控（75.2% 选择率 vs BM25+content 66.4%），选中经验作为可选 hint 注入，所有 rollout 共享。效果：WebArena 64.2%→72.9%（GPT-5.6 Sol），长程 400 任务后 86%/82% 且仅存 83 条"
+ },
+ "results": [
+  {
+   "claim": "在 WebArena 全量任务流（764 题，任务按 ID 顺序、每任务 8 rollout、每 rollout ≤30 步）上，GPT-5.6 Sol 的 Hippo 将整体任务成功率从 No Memory 的 64.2% 提高到 72.9%（+8.7 pp），且在全部五个网站上均优于 No Memory——说明对强 base model 记忆复用仍有提升空间",
+   "metric": "WebArena task success rate (%)",
+   "value": "72.9%",
+   "comparison": "64.2% (No Memory) -> 72.9% (+8.7 pp)",
+   "setting": "WebArena 全量 764 任务（Shopping/Admin/GitLab/Reddit/Map）；GPT-5.6 Sol；N=8 rollout/任务、≤30 步/rollout、3 个随机种子完整 run 的均值±样本标准差；对比 No Memory / Vanilla-IB / AWM / ReasoningBank（均启用官方实现）",
+   "quote": "With GPT-5.6 Sol, Hippo increases the success rate from 64.2% to 72.9% (+8.7 %) over No Memory.",
+   "locator": "§4.7",
+   "denominator": {
+    "n_total": "764 WebArena tasks",
+    "n_valid": "761（Hippo 任务级记录，2 个任务级错误案例被剔除）",
+    "how_counted": "Table 1 表头 Overall (764)；成功率=每任务 8 次 rollout 成功均值再跨任务平均；Appendix B: 'Per-task statistics use 763 records for No Memory and 761 for Hippo'"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "SWE-bench Verified（全部 500 题，官方 harness 判定）上，GPT-5.6 Sol 的 Hippo 分辨率达 88.5%，高于 No Memory 与全部记忆基线（最强记忆基线 ReasoningBank 82.5%）；该增益在四个 base model 上方向一致（Claude Haiku 4.5 70.7、Gemini 3 Flash 81.6、Qwen3.5-27B 76.5）",
+   "metric": "SWE-bench Verified resolution rate (%)",
+   "value": "88.5%",
+   "comparison": "82.5% (ReasoningBank, 最强记忆基线) -> 88.5%",
+   "setting": "SWE-bench Verified 500 题 test split；GPT-5.6 Sol（Table 2 GPT-5.6 Sol 列）；每任务 8 个 patch 以官方 swebench 4.1.0 harness 判定，任务内平均后跨 500 题平均；Hippo 每任务 8 rollout，记忆引擎在 8 次尝试全部结束后才更新",
+   "quote": "ReasoningBank 82.5 ± 1.9 62.8 ± 1.5 75.0 ± 2.1 70.1 ± 2.4 Hippo 88.5 ± 1.2 70.7 ± 1.4 81.6 ± 1.4 76.5 ± 1.8",
+   "locator": "§4.1 Table 2",
+   "denominator": {
+    "n_total": "500 SWE-bench Verified tasks",
+    "n_valid": "同左（全部任务）",
+    "how_counted": "§4 Evaluation: 'We report resolution rate on all 500 SWE-bench Verified tasks'；Appendix C: 每 task 评估全部 8 个 patch（官方 harness），任务内平均后跨任务平均"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "长程持续学习（450 题任务流，GPT-5.6 Sol）中，Hippo 在 400 任务 checkpoint 于 revisited 50 题与 unseen 50 题上分别达到 86% 与 82%，超过各任务集上最强记忆基线 24 与 22 个百分点——整合式更新使增益在长任务流中保持，而 AWM/ReasoningBank 最终跌破各自 no-memory 基线",
+   "metric": "success rate at 400-task checkpoint (%)",
+   "value": "86% / 82%",
+   "comparison": "较各任务集最强记忆基线 +24 / +22 pp",
+   "setting": "450 题任务流（SWE-bench Verified + SWE-bench Pro 选材，固定任务顺序），GPT-5.6 Sol；每 checkpoint 在 first 50（revisited）+ 固定 50 unseen 上评测，评测不修改后续学习所用记忆",
+   "quote": "At the 400-task checkpoint, success rates reach 86% and 82%, respectively, exceeding the strongest memory baseline on each task set by 24 and 22 percentage points.",
+   "locator": "§4.2",
+   "denominator": {
+    "n_total": "450 任务流；每 checkpoint 评测 50 (revisited) + 50 (unseen)",
+    "n_valid": "50 + 50",
+    "how_counted": "§4.2: 'we evaluate performance against the no-memory baseline on the first 50 tasks and the same fixed set of 50 unseen tasks'；86%/82% 分别对应两组各 50 题"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "同一 400 任务 checkpoint 上，Hippo 仅保留 83 条记忆条目，远少于 AWM 的 270 条与 ReasoningBank 的 665 条——在长任务流中以少得多的存留经验维持更高性能（选择性归纳+整合 vs 持续累积）",
+   "metric": "retained memory entries at 400-task checkpoint",
+   "value": "83",
+   "comparison": "83 (Hippo) vs 270 (AWM) vs 665 (ReasoningBank)",
+   "setting": "同 R3 的 450 题长程设置（GPT-5.6 Sol）；Figure 4(b) 记忆条目数按任务流增长轨迹给出，400 任务时点取值",
+   "quote": "At the same checkpoint, Hippo retains 83 entries, compared with 270 for AWM and 665 for ReasoningBank (Figure 4(b)).",
+   "locator": "§4.2 Figure 4(b)",
+   "denominator": null,
+   "is_primary_result": true
+  },
+  {
+   "claim": "附录 C.1 对照实验：400 个学习任务后，full Hippo 在 revisited/unseen 两组各 50 题上为 86.0%/82.0%，而仅追加不整合的 append-only 变体为 72.0%/66.0%（差 14.0/16.0 pp）——直接证明记忆整合（删改+合并）超出单纯追加新经验的价值",
+   "metric": "success rate after 400 learning tasks (%)",
+   "value": "86.0 / 82.0",
+   "comparison": "72.0 / 66.0 (append-only) -> 86.0 / 82.0 (full Hippo)",
+   "setting": "§4.2 长程设置（GPT-5.6 Sol，450 题流）的 400 任务 checkpoint；对照变体 append-only Hippo（只加不删），其余设置相同",
+   "quote": "Table 11: Success rates (%) after 400 learning tasks, evaluated on the first 50 tasks and a fixed set of 50 unseen tasks. Method Revisited Unseen Append-only Hippo 72.0 66.0 Full Hippo 86.0 82.0",
+   "locator": "Table 11",
+   "denominator": {
+    "n_total": "50 (revisited) + 50 (unseen)",
+    "n_valid": "同左",
+    "how_counted": "Table 11 表题原文: 'evaluated on the first 50 tasks and a fixed set of 50 unseen tasks'"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "无记忆基线的直接重试效应：GPT-5.6 Sol 在四个 WebArena 网站上，8 次尝试内至少成功一次的任务比例为 73.6%，高于平均单次成功率 64.3%（+9.3 pp；按单次失败率归一化的平均增益 28.8%）——论文据此提出自演化方法必须在与直接重试相同的预算/反馈/判据下比较",
+   "metric": "per-attempt vs at-least-once success within 8 tries (No Memory) (%)",
+   "value": "64.3% / 73.6%",
+   "comparison": "64.3% -> 73.6% (+9.3 pp; normalized mean +28.8%)",
+   "setting": "No Memory agent（GPT-5.6 Sol）；WebArena 四网站 Shopping/Shopping Admin/Reddit/GitLab（不含 Map），网站级等权平均；8 次尝试、无记忆更新",
+   "quote": "The resulting mean per-attempt and at-least-once success rates are 64.3% and 73.6%, respectively. The mean absolute gain is 9.3 percentage points. The website-level normalized gains are 26.4%, 47.4%, 15.7%, and 25.5%, giving a mean of 28.8%.",
+   "locator": "§E.1",
+   "denominator": {
+    "n_total": "四网站合计 655 任务（Table 1: Shopping 187 + Admin 182 + GitLab 180 + Reddit 106）",
+    "n_valid": "同左",
+    "how_counted": "§E.1: 指标按网站计算后对四网站等权平均；'success at least once within eight attempts'（a8,d），Δd=100(a8,d−pd)，Gd=100(a8,d−pd)/(1−pd)"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "记忆选择组件评测（ recorded WebArena 查询回放）：在存在同模板匹配经验的 363 条查询上，Hippo（cosine top-5 召回 + LLM 适用性选择）选择率达 75.2%，高于 BM25+content 的 66.4%（配对增益 8.8 pp，95% 任务级 bootstrap CI [4.1, 13.5]），并超过 dense top-1 / RRF / 全库 LLM 直选等策略",
+   "metric": "memory selection rate (%)",
+   "value": "75.2%",
+   "comparison": "66.4% (BM25+content) -> 75.2% (+8.8 pp, 95% CI [4.1, 13.5])",
+   "setting": "752 条 recorded WebArena 查询（使用各查询检索时点的同站 L2 历史 bank，不重跑下游 agent）；匹配判据=经验源任务与查询共享 intent template；对比 BM25 / BGE dense top-1 / hybrid RRF / 阈值策略 / LLM-only",
+   "quote": "As shown in Table 10, Hippo achieves the highest selection rate among these policies: 75.2%, compared with 66.4% for BM25 with experience content. The paired gain is 8.8 percentage points, with a 95% task-bootstrap confidence interval (Efron, 1979) of [4.1, 13.5].",
+   "locator": "Table 10",
+   "denominator": {
+    "n_total": "363（有同模板匹配经验的查询）",
+    "n_valid": "273（LLM 实际选中匹配经验）",
+    "how_counted": "§B.1: 'Selection rate is measured on the 363 queries with a match available'；'The resulting selection rate is 273/363, or 75.2%'"
+   },
+   "is_primary_result": true
+  },
+  {
+   "claim": "经验层级消融（GPT-5.6 Sol）：去掉 L2（直接检索 L1 情景反思）在 WebArena/SWE-bench Verified 上为 66.50%/83.80%，去掉 L1（引擎直接从原始轨迹+判官反馈构建 L2）为 68.70%/85.63%，均低于完整 Hippo 的 72.90%/88.50%——支持'显式反思+经验构建'两级结构",
+   "metric": "WebArena / SWE-bench Verified success (%)",
+   "value": "66.50 / 83.80 (w/o L2); 68.70 / 85.63 (w/o L1)",
+   "comparison": "66.50/83.80 (w/o L2) 与 68.70/85.63 (w/o L1) -> 72.90/88.50 (full Hippo)",
+   "setting": "GPT-5.6 Sol，与主实验相同设置；WebArena 764 题 / SWE-bench Verified 500 题",
+   "quote": "No Memory 64.20 81.50 flections. The engine builds L2 experiences directly from w/o L2 66.50 83.80 raw trajectories and judge feedback. This variant achieves w/o L1 68.70 85.63 68.70% and 85.63%, respectively. Explicit reflections may Hippo 72.90 88.50",
+   "locator": "Table 4",
+   "denominator": {
+    "n_total": "WebArena 764 tasks；SWE-bench Verified 500 tasks",
+    "n_valid": "同左",
+    "how_counted": "§4.6: 'We evaluate ablations with GPT-5.6 Sol under the same settings as the main experiments'"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "经验构建方式消融（WebArena，两变体均用 append-only 更新）：单 rollout 独立摘要 61.30% < 跨 rollout 对比归纳 70.10%——跨尝试比较提供判定该保留什么、何时适用的证据",
+   "metric": "WebArena success rate (%)",
+   "value": "61.30 / 70.10",
+   "comparison": "61.30 (separate summaries + append only) -> 70.10 (compare rollouts + append only)",
+   "setting": "GPT-5.6 Sol，主实验同设置；Table 5 两变体均为 append-only 记忆更新",
+   "quote": "Separate summaries + append only 61.30 cific to that execution. Comparison across attempts pro- Compare rollouts + append only 70.10",
+   "locator": "Table 5",
+   "denominator": {
+    "n_total": "764 WebArena tasks",
+    "n_valid": "同左",
+    "how_counted": "与主实验相同的任务集与评测口径（§4.6 ablation settings）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "记忆更新策略消融（固定跨 rollout 比较，WebArena）：Hippo 的 add+delete 策略 72.90% > append-only 70.10% > repeated rewrite 54.57%——冲突需经显式适用条件受控地替换，无差别的自由改写反而最差",
+   "metric": "WebArena success rate (%)",
+   "value": "72.90%",
+   "comparison": "70.10 (append-only) / 54.57 (repeated rewrite) -> 72.90 (add and delete)",
+   "setting": "GPT-5.6 Sol，主实验同设置；三种更新策略见 Appendix G.3",
+   "quote": "Memory update strategies. With rollout comparison fixed, Hippo achieves 72.90%, compared with 70.10% for append-only storage and 54.57% for repeated rewriting.",
+   "locator": "Table 5",
+   "denominator": {
+    "n_total": "764 WebArena tasks",
+    "n_valid": "同左",
+    "how_counted": "与主实验相同的任务集与评测口径（§4.6 ablation settings）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "surprise judge 贡献消融：用官方成功/失败标签替换 judge 后，五个 WebArena 网站成功率全部下降 1.8–8.5 个百分点（Map 最大 −8.5，因其 N/A/None 类侥幸成功最多）——判官的'侥幸成功'甄别与失败诊断对记忆质量有实质贡献",
+   "metric": "success-rate decrease when judge removed (pp)",
+   "value": "1.8-8.5",
+   "comparison": "各站 -1.8 至 -8.5 pp（Map -8.5 最大）",
+   "setting": "GPT-5.6 Sol，主实验同设置；移除 genuine/fluke 区分与文本诊断，仅保留官方 outcome 标签",
+   "quote": "Replacing the judge with just success/failure labels reduces success rates by 1.8%-8.5% across the five WebArena websites.",
+   "locator": "§4.6",
+   "denominator": {
+    "n_total": "五网站任务数 Shopping 187 / Admin 182 / GitLab 180 / Reddit 106 / Map 109（Table 1）",
+    "n_valid": "同左",
+    "how_counted": "Table 14：相对完整 Hippo 的每网站成功率下降（pp）；Map 包含最多 N/A/None 案例，降幅最大 8.5 pp"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "增益来源分解（761 个 WebArena 任务中 471 个获得经验）：按产生经验的 rollout 结果分组，majority-success 组平均增益 +23.0 pp（124 题）、majority-failure +13.0 pp（140 题）、balanced +55.8 pp（24 题）、all-failure +3.3 pp（183 题）——成功与失败并存时的跨尝试对比是主要增益来源",
+   "metric": "mean success-rate gain by experience source (pp)",
+   "value": "+23.0 / +13.0 / +3.3",
+   "comparison": "majority-success +23.0 pp (124 题) vs all-failure +3.3 pp (183 题)",
+   "setting": "gpt-5.6-sol，N=8，761 个 WebArena 任务（471 获得经验 / 290 未获得）；分组按产生该经验的 rollout 成败构成；Cg=ng/761×Δg",
+   "quote": "Table 17: Gains by experience source at N = 8. Experience source Tasks ∆g (pp) Cg (pp) All failure 183 +3.3 +0.80 Majority failure 140 +13.0 +2.39 Balanced 24 +55.8 +1.76 Majority success 124 +23.0 +3.75",
+   "locator": "Table 17",
+   "denominator": {
+    "n_total": "471 个获得经验的任务（761 之内）：183+140+24+124",
+    "n_valid": "各组 183 / 140 / 24 / 124",
+    "how_counted": "§E: 'We analyze 761 WebArena tasks with gpt-5.6-sol at N = 8. Of these tasks, 471 received experience and 290 did not.'；Δg 为组内均值增益（pp）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "效率代价（WebArena，GPT-5.6 Sol）：actor 模型平均调用从 69.27 升至 74.75 次/任务（+7.9%），API 成本 proxy 从 $1.93 升至 $2.17/任务（+12.4%）——记忆式自演化以可控开销换取 +8.7 pp 成功率",
+   "metric": "actor calls per task / API cost proxy per task",
+   "value": "69.27 -> 74.75 (+7.9%); $1.93 -> $2.17 (+12.4%)",
+   "comparison": null,
+   "setting": "WebArena，GPT-5.6 Sol；成本 proxy 覆盖任务执行、轨迹评估与记忆操作（含注入的记忆文本）；记忆注入约 240–273 token 等效/步",
+   "quote": "The resource records show that mean calls to the actor model rise from 69.27 to 74.75 (+7.9%), while cost increases from $1.93 to $2.17 per task (+12.4%).",
+   "locator": "§4.7",
+   "denominator": {
+    "n_total": "763 (No Memory) / 761 (Hippo) 任务级记录",
+    "n_valid": "同左",
+    "how_counted": "Appendix B: 'Per-task statistics use 763 records for No Memory and 761 for Hippo'；+12.4% 为相对 No Memory 均值成本的增幅"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "判官可靠性与记忆污染风险（WebArena recorded pool）：7,937 条 evaluator-accepted 轨迹中 412 条被 judge 标记为侥幸成功（fortuitous success），其中 193 条（46.8%）参考答案含 N/A、192 条无最终回答——若不做甄别，这类未经验证的'成功'会作为成功经验入库并误导后续任务",
+   "metric": "fortuitous successes with N/A reference (%)",
+   "value": "46.8%",
+   "comparison": null,
+   "setting": "WebArena recorded pool（全部 accepted traces 7,937 条；judge 事后标记）；计数为 judge-flagged 子集而非全部任务（论文自述）",
+   "quote": "Among 412 accepted traces flagged by the judge as fortuitous successes, 193 (46.8%) have N/Acontaining references, and 192 of these have no final response (Table 12).",
+   "locator": "Table 12",
+   "denominator": {
+    "n_total": "412 条被 judge 标记为 fortuitous success 的 accepted traces",
+    "n_valid": "193",
+    "how_counted": "§D.1: 193/412=46.8% 含 N/A 引用；'These counts describe judge-flagged traces, not all WebArena tasks'"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "judge 人工一致性审计：两位标注者先在 200 条中的 195 条上一致（97.5%，κ=0.95）；排除 5 处分歧与 1 例不可判定后，judge 与人工标签在 194 条中的 183 条一致（94.3%，Cohen's κ=0.89）；对 judge 标记为侥幸成功的 94 条 retained 轨迹人工确认 86 条——支撑'侥幸成功过滤'这一记忆质量控制的可信度",
+   "metric": "judge-human agreement (%)",
+   "value": "94.3% (183/194)",
+   "comparison": "flag precision 86/94（人工确认的 judge 标记）",
+   "setting": "200 条 evaluator-accepted WebArena 轨迹分层审计（4 个 actor 模型各 50 条；每网站 20 genuine + 20 flagged）；两位人工标注者；judge–human 比较限定于人工一致且可判定的 194 条",
+   "quote": "the 200 traces (97.5%; Cohen's κ = 0.95). After excluding five disagreements and one inconclusive case, the judge agrees with the human labels on 183 of the remaining 194 traces (94.3%), with Cohen's κ = 0.89. Among the 94 retained traces flagged as fortuitous successes, humans confirm 86",
+   "locator": "§D.4",
+   "denominator": {
+    "n_total": "194 条（200 条审计中人工标注一致且可判定者）",
+    "n_valid": "183",
+    "how_counted": "§D.4：judge–human 比较使用 n=194（pooled po=183/194，pe=18,866/37,636，κ=0.8863 报告为 0.89）；flag precision 分母为 94 条 retained flagged traces（pooled precision 见 Table 15）"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "案例证据（Appendix F.3，t141→t143）：从全失败批次（0/8）的失败诊断中形成的 L2 经验，在后续任务 t143 上使 Hippo 达到 8/8 成功而 No Memory 为 0/8（$260.69 vs 正确的 $265.69，差 $5 运费分摊）——说明失败诊断（而非仅成功示范）也能形成可复用经验",
+   "metric": "task success (attempts out of 8)",
+   "value": "8/8 vs 0/8",
+   "comparison": null,
+   "setting": "WebArena Shopping 单任务对（t143，8 attempts/arm）；经验形成于 t141（双臂均 0/8）的失败诊断；选择器从 5 个候选中选中该经验（cosine 0.585）",
+   "quote": "All eight no-memory attempts return $260.69, while all eight Hippo attempts return $265.69, giving 0/8 versus 8/8 success.",
+   "locator": "§F.3",
+   "denominator": {
+    "n_total": "每臂 8 attempts",
+    "n_valid": "Hippo 8/8；No Memory 0/8",
+    "how_counted": "§F: 'All counts are successful attempts out of eight within the corresponding run'"
+   },
+   "is_primary_result": false
+  },
+  {
+   "claim": "失效模式（论文贡献之一）：不做整合的持续经验累积使性能随记忆增长呈倒 U 型——先升后降并最终跌破 no-memory 基线；这界定了一类新的评测需求（自演化方法须在持续学习设置下检验长期记忆维护）",
+   "metric": "success-rate trend under accumulation without consolidation",
+   "value": "inverted-U",
+   "comparison": null,
+   "setting": "accumulation baseline（成功与失败尝试的经验都追加、无整合）；§4.2 长程实验中以 AWM/ReasoningBank/Hippo-append-all 复现（Figure 4(a)，最终低于各自 no-memory 基线）",
+   "quote": "With this baseline, performance follows an inverted-U pattern as memory grows: it improves at first, then declines and eventually falls below the no-memory baseline.",
+   "locator": "§1 Introduction",
+   "denominator": null,
+   "is_primary_result": true
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "多 rollout 并行探索与记忆更新带来额外推理与交互开销；KV-cache 复用（SGLang/vLLM）与专用判别模型（Jev）可望降低成本，但论文未评测 Jev、也未量化端到端节省",
+   "quote": "Hippo incurs additional inference and interaction costs from multiple rollouts and memory updates.",
+   "locator": "§H Limitations"
+  },
+  {
+   "statement": "任务执行、轨迹评估与记忆更新共用同一 base model，共享盲区可能让错误或过度泛化的经验持续留存于记忆；更强模型为弱模型构造经验的可迁移性与成本收益未评测",
+   "quote": "Shared blind spots may allow incorrect or overly general lessons to persist in memory.",
+   "locator": "§H Limitations"
+  },
+  {
+   "statement": "长程评测只研究跨任务的记忆更新，未确立超长单任务上的表现；长轨迹可能挤占 context 预算并使早期决策更难保留，中途反思与分层整合能否保留足够证据尚待检验",
+   "quote": "Our long-horizon evaluation studies memory updates across tasks; it does not establish performance on exceptionally long individual tasks.",
+   "locator": "§H Limitations"
+  }
+ ],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": [
+   "abstract",
+   "intro",
+   "method",
+   "results",
+   "appendix",
+   "figures"
+  ],
+  "complete": true
+ },
+ "quality_flags": [
+  "figure_only_numeric_results",
+  "no_code_or_data_release_stated"
+ ]
+}

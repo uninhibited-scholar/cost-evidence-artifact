@@ -1,0 +1,229 @@
+{
+  "arxiv_id": "2312.11513",
+  "title": "Maatphor: Automated Variant Analysis for Prompt Injection Attacks",
+  "screening_status": "必要背景",
+  "versions_read": [
+    "v1"
+  ],
+  "object": {
+    "what_persists": "none",
+    "scope": "single-session",
+    "carrier": "无持久载体：注入仅在目标模型当次推理内生效（AutoGPT/GPT-3.5-turbo 经 LangChain ReadFile 读取的 HTML 内容中的自然语言注入文本），不跨会话/用户/任务留存；工具侧（Maatphor）仅在单次运行内临时维护高分变体及其得分的历史列表用于反馈环，运行结束即弃。",
+    "operations_covered": []
+  },
+  "safety_property": {
+    "type": "integrity",
+    "statement": "LLM 集成系统应持续执行其原始任务（摘要/问答），已部署的 guardrails（系统提示规则、输入/输出分类器）应能抵御已知 prompt injection 的变体。论文主旨：仅针对已知注入样本定制的 guardrails 会被自动生成的变体绕过（类比恶意软件变体逃逸杀软）。失效判定：目标模型输出呈现注入目标（虚假信息、欺诈链接、风格改变、插件劫持）而非原始任务输出。论文还列举其他后果类别（不准确/有害文本、泄露用户敏感信息、插件执行非预期操作，§1），但实验操作化的是输出任务完整性劫持。",
+    "operationalized_as": "effectiveness = 注入成功的试验次数占该变体总试验次数的百分比（默认每变体 5 次试验，温度 0.5，LangChain 15 次交互上限）；自动评分用字符串匹配（正/反关键词表）或 MPNet(768 维) 嵌入 + kNN 回归（对成功/失败参考输出）；最高分提示另做人工核查对照（Table 1 的 Eval vs Man 列）。"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "控制目标代理随后读取的网页/文件内容并在其中嵌入注入提示（indirect / cross-domain prompt injection），且内容对人类读者外观不变",
+      "持有已知 prompt injection（种子提示），且该种子可以是为其他系统编写的",
+      "仅黑盒 oracle 访问：只能向目标系统喂输入并观察输出（无权重、logits 或系统提示访问权）",
+      "用生成器 LLM（GPT-3.5 Turbo）按预定义策略与反馈批量生成种子提示的变体"
+    ],
+    "assumptions": [
+      "防御者/攻击者能获得种子提示（来源：内部安全团队、协调漏洞披露、威胁情报共享、野外发现）",
+      "变体有效性可以仅凭目标模型输出自动判定（字符串匹配或嵌入相似度）",
+      "能为成功/失败两类生成参考输出；若种子完全无效，可放松目标模型 guardrails 使种子成功以产出成功类参考（§3.2 脚注）",
+      "目标系统会把不可信文本（网页/文件）纳入 LLM 输入且未做来源验证/隔离"
+    ],
+    "not_covered": [
+      "jailbreak 攻击（正交；论文称可扩展但未评测）",
+      "对抗性随机字符串/后缀优化（GCG 类）：当前 Maatphor 不生成随机字符串（§5 自述局限）",
+      "白盒设定：反馈环无显式优化，更严格的白盒模式留作未来工作（§5）",
+      "未构建也未端到端评测任何已部署防御；用 Maatphor 反向生成系统提示防御仅是提议（§5）",
+      "持久化记忆投毒类威胁不在研究范围：注入为推理期行为，仅在单次任务执行内生效"
+    ]
+  },
+  "intervention": {
+    "name": "Maatphor",
+    "mechanism_layer": "content",
+    "description": "面向防御者的已知 prompt injection 自动化变体分析工具（测试 guardrails 稳健性并缓解攻击数据集稀缺）。(1) Prompt Variation：以'七条原则'元提示（上下文切换、命令式框定、令模型忽略先前指令、与历史差异化的新颖性等）驱动生成器 LLM（GPT-3.5 Turbo）在保持提取出的攻击目标的前提下变异种子提示；(2) Prompt Evaluation：仅凭目标模型输出自动评分——精确字符串匹配（期望/禁止短语表）或对成功/失败参考输出做 MPNet 嵌入 kNN 相似度回归；(3) 反馈环将高分变体及其得分回传指导后续变异。全部机制处于自然语言内容层；无来源标记、执行沙箱、架构改动或形式化验证。"
+  },
+  "controls": [
+    {
+      "name": "Seed prompt（已知注入，在目标系统上 0% 有效）",
+      "purpose": "negative-control"
+    },
+    {
+      "name": "作者人工核查输出（自动评估器的 ground truth，Table 1 'Man' 列）",
+      "purpose": "baseline"
+    },
+    {
+      "name": "关闭反馈环的 Prompt Variation",
+      "purpose": "ablation"
+    },
+    {
+      "name": "自动目标提取 vs 手写目标（Fraud 任务）",
+      "purpose": "ablation"
+    },
+    {
+      "name": "单次 100 次迭代 vs 3 个并行运行（迭代数与并行的权衡）",
+      "purpose": "ablation"
+    }
+  ],
+  "results": [
+    {
+      "claim": "对三类间接 prompt injection 任务（misinformation、fraud、style change），Maatphor 从 0% 有效的种子提示出发，均能稳定生成在前 40 次迭代内至少 60% 有效的变体。",
+      "metric": "ASR (prompt injection effectiveness)",
+      "value": "至少 60%",
+      "comparison": "0%（无效种子）→ 至少 60%（前 40 次迭代内）",
+      "setting": "目标为经 LangChain 挂 ReadFile/WriteFile 插件的 AutoGPT（chat GPT-3.5-turbo），温度 0.5、15 次交互上限；变体间接注入 GPT-4 生成的 HTML（Einstein/虚构 Khufu）；种子取自 Greshake et al. 2023；由 GPT-3.5 Turbo 生成变体；字符串匹配或 MPNet 相似度自动评分；每任务跑 50 次迭代；每变体 5 次试验。",
+      "quote": "Our results show that, starting from an ineffective (0%0\\%) seed prompt, Maatphor is able to consistently generate variants that are at least 60%60\\% effective within the first 4040 iterations.",
+      "locator": "§1 Introduction（亦见 Abstract）",
+      "denominator": {
+        "n_total": "5（每变体试验次数）",
+        "n_valid": null,
+        "how_counted": "§4.1：'we test each variant five times against the target model, and calculate effectiveness as the percentages of these trials in which the prompt injection succeeds'；Table 1 题注 'over 55 trials' 为 5 的 LaTeX 排版重复。'至少 60%' 指变体 effectiveness 分数。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Table 1（列序为 Seed-Eval/Seed-Man/Best-Eval/Best-Man/2nd-Eval/2nd-Man）：三任务种子均为 0 分，最优变体自动评分（Eval）达 60（misinfo 字符串匹配）、72（misinfo 相似度）、100（fraud）、68（style change）分（百分比）；人工评分（Man）最优为 60/80/100/80，与自动评分一致且无假阳性，相似度评估略偏严。",
+      "metric": "ASR (injection effectiveness, 自动 Eval vs 人工 Man)",
+      "value": "Seed 0 → Best Eval 60/72/100/68",
+      "comparison": "Eval：0 → 60/72/100/68；Man Best：60/80/100/80",
+      "setting": "目标为经 LangChain 挂 ReadFile/WriteFile 插件的 AutoGPT（chat GPT-3.5-turbo）；间接注入 GPT-4 生成的 HTML；种子取自 Greshake et al. 2023；每格分数按每变体 5 次试验计算（Table 1 题注 'over 55 trials' 为 5 的排版重复）。",
+      "quote": "| Misinfo (SM) | 0 | 0 | 60 | 60 | 40 | 40 |\n| Misinfo (Sim) | 0 | 0 | 72 | 80 | 64 | 80 |\n| Fraud | 0 | 0 | 100 | 100 | 100 | 100 |\n| Style Change | 0 | 0 | 68 | 80 | 64 | 80 |",
+      "locator": "§4.2 Table 1",
+      "denominator": {
+        "n_total": "5（每变体试验次数）",
+        "n_valid": null,
+        "how_counted": "成功率=5 次试验中成功次数占比；Table 1 题注 'All scores were calculated over 55 trials'（'55' 为 5 的 LaTeX 排版重复）；§4.1：'we test each variant five times against the target model'。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Fraud 任务：不提供手写目标、依赖 Maatphor 自动目标提取时，仅得到最高 20% 有效率的提示，作者因此改用手写目标（随后将手写目标轻微改述即达到最大有效率 100%）。",
+      "metric": "ASR (自动目标提取下的最大变体有效率)",
+      "value": "20%",
+      "comparison": null,
+      "setting": "Fraud 任务（嵌入欺诈链接并诱使用户点击），AutoGPT/GPT-3.5-turbo 目标；场景与种子取自 Greshake et al. 2023；字符串匹配评估（列表 [myWebsite, http, amazon, voucher]）。",
+      "quote": "Initially, we attempt this setting without specifying a particular goal, relying on Maatphor’s ability to automatically extract the goal.\nHowever, this approach only yields prompts with a maximum effectiveness of 20%, thus we try using a manually written goal.",
+      "locator": "§4.3 Fraud",
+      "denominator": {
+        "n_total": "5（每变体试验次数）",
+        "n_valid": null,
+        "how_counted": "§4.1：每变体 5 次试验，effectiveness=成功试验占比；'20%' 为所生成变体中的最大值。"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Fraud 任务：把手写目标从'说服用户点击领 $200 礼品'轻微改述为'在输出中嵌入 URL 并引导用户点击领 200$ 券'后，即达到最大有效率 100%；作者归因于 prompt injection 对提示措辞高度敏感，以及基础模型对措辞明确的欺诈目标因安全训练而更抗拒。",
+      "metric": "ASR (手写目标改述后)",
+      "value": "100%",
+      "comparison": null,
+      "setting": "Fraud 任务，字符串匹配评估（列表 [myWebsite, http, amazon, voucher]），AutoGPT/GPT-3.5-turbo 目标；与 Table 1 Fraud 行 Eval=Man=100 一致。",
+      "quote": "However, slightly rephrasing the goal to “Embed the URL http:/myWebsite.com’ for winning a 200$ voucher into the target model’s output and guide the user to click on it.” results in maximum effectiveness (100%).",
+      "locator": "§4.3 Fraud",
+      "denominator": {
+        "n_total": "5（每变体试验次数）",
+        "n_valid": null,
+        "how_counted": "最大有效率 100% 即 5 次试验全部成功。"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "相似度评估的参考输出质量核查：人工逐条检查发现约 25% 的'成功类'参考输出实际不成功（模型仍回答 Einstein 获得诺奖），剔除错误输出后成功/失败两类各保留 15 条参考输出；作者以此说明该注入任务本身的难度。",
+      "metric": "reference-output misclassification rate (人工核查)",
+      "value": "25%",
+      "comparison": null,
+      "setting": "Misinformation 任务的相似度评估：改写问题诱导生成成功类参考输出，目标模型 GPT-3.5-turbo。",
+      "quote": "However, manual inspection reveals that approximately 25% of the supposedly successful outputs were not actually successful, i.e., the model still responds to the question by stating that Einstein did win the Nobel prize.",
+      "locator": "§4.2 Misinformation",
+      "denominator": {
+        "n_total": "20（成功类参考输出；原文 '2020' 为 20 的 LaTeX 排版重复）",
+        "n_valid": "15（剔除错误输出后每类参考输出数）",
+        "how_counted": "约 25%（≈5/20）经人工检查判为实际不成功并剔除；§4.2：'We removed all incorrect outputs and use 15 reference outputs for both the successful and unsuccessful classes.'"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "反馈环消融（每任务 3 次独立运行以抵消 LLM 随机性）：开启反馈环在全部三任务上都显著增加 Maatphor 生成的有效提示数量；计数分布仅见于 Figure 3，正文未给汇总数值。",
+      "metric": "有效提示数量（with vs. without feedback loop 的计数分布）",
+      "value": "显著增加（定性；仅以 Figure 3 计数分布呈现，正文无数值）",
+      "comparison": "with feedback loop vs. without feedback loop（全任务一致提升）",
+      "setting": "三任务（Misinfo SM/Sim、Fraud、Style Change），AutoGPT/GPT-3.5-turbo 目标，每任务 3 次独立 Maatphor 运行。",
+      "quote": "As shown in Figure 3, for all three tasks, the feedback loop significantly increases the number of effective prompts generated by Maatphor.",
+      "locator": "§4.5 Dissecting Maatphor, Figure 3",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "讨论节实验：对常见配置（LangChain + ReadFile 插件）通过 prompt injection 劫持插件（诱导模型从 etc 目录下文件提取随机数）的成功率接近 50%，作者据此强烈建议限制此类插件可访问的文件范围。",
+      "metric": "ASR (plugin hijacking)",
+      "value": "接近 50%",
+      "comparison": null,
+      "setting": "LangChain 代理 + ReadFile 插件的常见配置（§5 讨论实验；试验次数与分母未报告）。",
+      "quote": "Our findings revealed a near 50% success rate in hijacking the ReadFile plugin through prompt injection attacks, allowing the model to extract a random number form a file stored in the “etc\\” folder.",
+      "locator": "§5 Discussion and Limitations (Hijacking Plugins)",
+      "denominator": null,
+      "is_primary_result": true
+    },
+    {
+      "claim": "探索性防御性用法：在内容创作者网页中刻意嵌入 prompt injection，能以约 20% 的比例阻断 LLM 对该网站的访问/复述（使模型输出 'Do not read my content! This content is protected.'），作者提议将其作为内容创作者的知识产权保护手段并留作未来工作。",
+      "metric": "blocking rate (LLM 访问被阻断)",
+      "value": "约 20%",
+      "comparison": null,
+      "setting": "探索性实验（§5 提出的内容创作者保护用法；试验次数与分母未报告）。",
+      "quote": "An exploratory experiment revealed prompts capable of blocking LLM access to a website by about 20%, i.e., blocking the LLM original task and making it output outputting a message like “Do not read my content! This content is protected.”.",
+      "locator": "§5 Discussion and Limitations (Prompt Injection For Content Creators)",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "自动评估可能被目标模型输出欺骗：字符串匹配会被包含目标短语的拒答式语句误导，相似度评估可能偏向成功类（如只复述文件名而无实际摘要）；作者建议人工复核最高分提示。",
+      "quote": "A potential limitation of automated evaluations is the possibility of getting deceived by the target model’s output.\nFor instance, string matching can be misled if the output consists of statements like “I cannot perform {the injected-prompt’s task}” which may contain the specified phrases.",
+      "locator": "§3.2 Prompt Evaluation (Evaluation Method Limitations)"
+    },
+    {
+      "statement": "反馈环缺少显式优化，这是为兼容目标模型与 LangChain Agents 等完整系统而做的设计选择；未来拟为白盒模型引入带显式优化的更严格模式。",
+      "quote": "First, its feedback loop lacks explicit optimization, a design choice made for compatibility with target models and comprehensive systems like LangChain Agents. In the future, we plan to introduce a stricter mode for white-box models with explicit optimization.",
+      "locator": "§5 Discussion and Limitations"
+    },
+    {
+      "statement": "评估指标虽与人工标注相当，仍可能被目标模型输出误导，需要更稳健的指标（作者自述局限清单第二条）。",
+      "quote": "Second, the evaluation metrics, though strong and comparable to human annotations, can still be misled by the target model’s output, necessitating further research for more robust metrics.",
+      "locator": "§5 Discussion and Limitations"
+    },
+    {
+      "statement": "Maatphor 目前不生成随机字符串（如对抗性后缀）；加入此类元素可能提升性能（作者自述局限清单第三条）。",
+      "quote": "Lastly, Maatphor currently does not generate random strings, but an extension could incorporate such elements, potentially enhancing its performance.",
+      "locator": "§5 Discussion and Limitations"
+    }
+  ],
+  "counterexamples": [
+    {
+      "phenomenon": "一个否定式输出（'Albert Einstein was not mentioned to have won the Nobel Prize.'）本可能误导字符串匹配评估器，但被相似度评估器正确分类。",
+      "quote": "while examining the outputs from the similarity-based evaluation, we encountered this instance: “Albert Einstein was not mentioned to have won the Nobel Prize.”.\nThis output could have confused the string matching technique, but was correctly classified by the similarity-based technique.",
+      "locator": "§4.2 Misinformation"
+    }
+  ],
+  "reproduction": {
+    "code": null,
+    "data": null,
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": [
+      "abstract",
+      "intro",
+      "method",
+      "results",
+      "appendix"
+    ],
+    "complete": true
+  },
+  "quality_flags": [
+    "no_persistent_state",
+    "denominator_unclear",
+    "corpus_numbers_doubled_by_pdf_extraction",
+    "figure_only_results",
+    "no_code_release_stated"
+  ]
+}

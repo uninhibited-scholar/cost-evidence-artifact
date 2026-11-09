@@ -1,0 +1,170 @@
+{
+  "arxiv_id": "2609.35596",
+  "title": "SEABench: Benchmarking Endogenous Misalignment In Self-Evolving Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "cross-task",
+    "carrier": "file-backed agent harness: controller/policy files (e.g. AGENTS.md), memory files and memory-handling procedures (e.g. SHORT_TERM_MEMORY.md), and reusable tools/skills (e.g. skills/*/main.py, TOOLS.md); parameter-free, model weights unchanged",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "A self-evolving personal-assistant agent must preserve its safety constraints (contextual privacy boundaries, authorization/confirmation guardrails, contextual scope boundaries, factual grounding) after it writes persistent self-updates; the property fails when a locally useful upstream update (controller policy, memory procedure, or tool/skill) overgeneralizes into a downstream task where it is no longer appropriate, and is judged by comparing the evolved agent against a paired non-evolving counterfactual on downstream safety tests.",
+    "operationalized_as": "Offline LLM-judge multi-criteria safety rubrics (5-point Likert, threshold 4) on downstream safety-test tasks; a safety failure counts only when the evolved agent fails while the paired non-evolving baseline stays safe and an attribution judge (score >= 4) links the failure to upstream self-evolution (S4.3, S5 Metrics)."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "Users interact via an input channel and can supply prompts and feedback observed by the agent, but do not directly edit the agent's controller files, memory store, or tool interface (S3 Interaction model)",
+      "Evolution-task prompts individually contain no instruction or explicit intent to compromise the agent's safety constraints (S4.2)",
+      "Endogenous misalignment arises from realistic user pressure and feedback during benign tasks, without external or explicit adversarial influence (S3)"
+    ],
+    "not_covered": [
+      "Direct adversarial attacks such as indirect prompt injection, memory poisoning, or retrieval-corpus poisoning",
+      "Parameter-based self-evolution (fine-tuning / weight updates); only parameter-free harness updates are studied",
+      "Simultaneous evolution across multiple surfaces or interactions between surfaces (each surface run separately)",
+      "Attribution of a failure to one specific evolved artifact rather than the self-evolution process as a whole"
+    ]
+  },
+  "intervention": {
+    "name": "CoT-monitor mitigation (ExtraTrees progression filter + multi-instance classifier + LM verifier)",
+    "mechanism_layer": "execution",
+    "description": "A multi-stage runtime monitor over observable reasoning traces: an ExtraTrees classifier flags traces with suspicious risk-progression patterns, a multi-instance classifier selects the risk progressions of interest, and an LM verifier (GPT 5.6 Sol) checks whether the suspected risk thread is still active and liable to lead to failure; a trace is flagged only when both scores meet surface-specific thresholds chosen on validation data, thereby preventing harmful responses without access to model internals (S6.3, Appendix D)."
+  },
+  "controls": [
+    {"name": "paired non-evolving agent run on identical tasks", "purpose": "baseline"}
+  ],
+  "results": [
+    {
+      "claim": "In trajectories discovered by the stress-test pipeline, self-evolution increases downstream task completion from 35.7% to 47.2%, improving all model-surface combinations except one (Kimi K2.5 on tools/skills).",
+      "metric": "task_completion_rate",
+      "value": "47.2% (340/720)",
+      "comparison": "35.7% (257/720) -> 47.2% (340/720)",
+      "setting": "3 models (Kimi K2.5, Grok 4.3, GPT 5.6 Luna) x 3 evolution surfaces; 720 downstream safety tests from stress-test-discovered trajectories; no adversary",
+      "quote": "Overall task completion increases from 35.7% (257/720 tasks) for the unevolved baseline to 47.2% (340/720) for evolved agents.",
+      "locator": "§6.1, Fig. 3",
+      "denominator": {"n_total": "720", "n_valid": "720", "how_counted": "\"a total of 80 safety and task completion tests in total per base model and evolution surface combination ... for a total of 720 safety tests\" (§6.1)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "The capability gain is accompanied by causally attributed safety failures on 43.9% of downstream tests for evolved agents while paired unevolved baselines show none, with model-surface rates from 18.8% to 70.0%.",
+      "metric": "safety_failure_rate",
+      "value": "43.9% (316/720)",
+      "comparison": "evolved 316/720 vs paired unevolved baseline 0/720",
+      "setting": "3 models x 3 evolution surfaces, 720 downstream safety tests; failure requires attribution score >= 4 with paired baseline safe; no adversary",
+      "quote": "The evolved agent exhibits safety failures on 43.9% of tests overall (316/720), with rates across model-surface combinations ranging from 18.8% (Grok 4.3, memory) to 70.0% (Kimi K2.5, memory), whereas the paired unevolved baseline exhibits no safety failures (0/720).",
+      "locator": "§6.1, Fig. 3",
+      "denominator": {"n_total": "720", "n_valid": "720", "how_counted": "\"the percentage of discovered safety test tasks that yield failures while exceeding the attribution score threshold (≥4) while the paired baseline agent remains safe\" (§5 Metrics)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "Across all task candidates generated during discovery, the self-evolving agent accrues 1105 safety failures versus 833 for the unevolved baseline over 3435 attempts each, which the authors report as statistically significant (Fisher exact p=3.48e-13).",
+      "metric": "safety_failure_count",
+      "value": "1105 failures vs 833 failures over 3435 attempts each",
+      "comparison": null,
+      "setting": "All task candidates generated across 3 surfaces and 3 base models during the TextGrad-based discovery pipeline",
+      "quote": "all candidates generated across all three surfaces and three base models yields 1105 failures for the self-evolving agent and 833 for the unevolved baseline over 3435 attempts each",
+      "locator": "§6.1, Fig. 4",
+      "denominator": {"n_total": "3435", "n_valid": "3435", "how_counted": "\"over 3435 attempts each\" for self-evolving and unevolved agents (§6.1)"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "The tools/skills evolution surface is the most safety-vulnerable, failing on 55.83% of its tests, versus controller (38.75%) and memory (37.1%) surfaces.",
+      "metric": "safety_failure_rate",
+      "value": "55.83% (134/240)",
+      "comparison": "tools/skills highest of the three evolution surfaces",
+      "setting": "Disaggregation of the 316 attributed failures by evolution surface; 3 models, no adversary",
+      "quote": "The tools/skills surface is the most vulnerable at 55.83% (134/240 failures), where failures occur when a task-specific logic becomes reusable in an incompatible context, or a tool directly exposes sensitive sources.",
+      "locator": "§6.2, Fig. 5(iii)",
+      "denominator": {"n_total": "240", "n_valid": "240", "how_counted": "per-surface failure counts reported out of 240 tests per evolution surface (§6.2 \"By evolution surface\")"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "Kimi K2.5 shows the highest per-model attributed failure rate at 60.83%, with GPT 5.6 Luna lowest at 30.0% in the same discovered-trajectory setting.",
+      "metric": "safety_failure_rate",
+      "value": "60.83% (146/240)",
+      "comparison": "highest of the three models evaluated",
+      "setting": "Disaggregation of the 316 attributed failures by base model over 240 tests per model; no adversary",
+      "quote": "Kimi K2.5 has the highest rate at 60.83% (146/240), often turning a local shortcut into a general assumption or filling missing information with plausible specifics.",
+      "locator": "§6.2, Fig. 5",
+      "denominator": {"n_total": "240", "n_valid": "240", "how_counted": "per-model failure counts reported out of 240 tests per model (§6.2 \"By model\")"},
+      "is_primary_result": false
+    },
+    {
+      "claim": "In Kimi K2.5 reasoning traces, self-evolution shifts risk threads from resolved to active: resolved threads drop from 72.2% to 53.4% while active threads rise from 27.8% to 46.6%.",
+      "metric": "active_risk_thread_rate",
+      "value": "active risk threads 27.8% -> 46.6%",
+      "comparison": "resolved risk threads 72.2% -> 53.4%",
+      "setting": "480 annotated Kimi K2.5 traces (outcome-blind GPT 5.6 Sol annotator), paired evolving vs non-evolving agents",
+      "quote": "the percentage of risk threads marked as resolved declines from 72.2% for unevolved agents to 53.4% for the evolved agent, whereas that of active risk threads increases from 27.8% to 46.6%",
+      "locator": "§6.3, Fig. 6 (top)",
+      "denominator": null,
+      "is_primary_result": false
+    },
+    {
+      "claim": "A CoT-monitoring mitigation prevents 56 of 79 harmful outputs (70.9% harm reduction) at 9.7% FPR and 82.3% overall accuracy, on the test split of annotated Kimi K2.5 traces.",
+      "metric": "harm_reduction",
+      "value": "70.9% harm reduction (prevents 56 of 79 harmful outputs)",
+      "comparison": "FPR 9.7% (11 of 113 safe traces); accuracy 82.3%",
+      "setting": "45:15:40 train-val-test split over 480 annotated Kimi K2.5 traces; ExtraTrees + multi-instance classifier + GPT 5.6 Sol verifier",
+      "quote": "this mitigation strategy prevents 56 out of 79 harmful outputs, for 70.9% harm reduction (given by the failure recall) while yielding an FPR of 9.7% (incorrectly flagging 11 of 113 safe traces) as shown in Fig. 7, and an overall accuracy of 82.3%.",
+      "locator": "§6.3, Fig. 7",
+      "denominator": {"n_total": "79 harmful outputs and 113 safe traces in test split", "n_valid": "79 harmful + 113 safe", "how_counted": "45:15:40 train-val-test split over 480 annotated traces; test portion yields 79 harmful outputs and 113 safe traces (§6.3)"},
+      "is_primary_result": true
+    },
+    {
+      "claim": "The mitigation is surface-dependent: harm reduction drops to 54.8% on the tools/skills surface where defects are latent in invoked artifacts, versus 90.0% (controller) and 88.9% (memory).",
+      "metric": "harm_reduction_rate",
+      "value": "54.8% harm reduction (tools/skills surface)",
+      "comparison": "54.8% vs 90.0% (controller) and 88.9% (memory)",
+      "setting": "Same CoT-monitor mitigation evaluated per evolution surface on annotated Kimi K2.5 test traces",
+      "quote": "This leads to a relatively lower harm reduction rate of 54.8% for the tools/skills surface, compared with 90.0% and 88.9% for the controller and memory surfaces, respectively.",
+      "locator": "§6.3",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "CoT monitoring is insufficient when the reasoning trace looks benign but the vulnerability resides in a persistent artifact (tool/skill) that only manifests when invoked.",
+      "quote": "in cases where the reasoning trace and the safety reasoning therein is benign but the actual vulnerability resides within an artifact like a tool or a skill and only manifests upon using that artifact being used, such a mitigation strategy may not be sufficient",
+      "locator": "Appendix A"
+    },
+    {
+      "statement": "The mitigation requires access to reasoning traces, which are obscured for closed-source models and would need deployers to run it as a subroutine.",
+      "quote": "this mitigation is relies upon access to reasoning traces; in cases where reasoning traces are obscured from closed-source models, this may require the model deployers (who can access these traces) to include it as a subroutine on their end in agentic frameworks",
+      "locator": "Appendix A"
+    },
+    {
+      "statement": "Causal attribution links failures to the self-evolution process as a whole via the paired non-evolving counterfactual, not to a specific evolved artifact.",
+      "quote": "The causal attribution provided in this paper attributes safety failure events to the upstream self-evolution process as a whole, with the counterfactual involved being a paired non-evolving agent.",
+      "locator": "Appendix A"
+    },
+    {
+      "statement": "Evolution surfaces are studied separately; agents that update multiple surfaces (or combinations) simultaneously are not evaluated.",
+      "quote": "The investigation in this paper seeks to study self-evolution behavior over different evolution surfaces separately, and as such reports results from trajectories run over each surface separately.",
+      "locator": "Appendix A"
+    },
+    {
+      "statement": "Due to agent stochasticity, the specific failures reported are specific to the trajectories discovered during their empirical evaluation.",
+      "quote": "Due to the stochasticity inherent in agents, the specific failures reported here are specific to the discovered trajectories during our empirical evaluation.",
+      "locator": "Appendix A"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "https://github.com/SEABench-Endogenous-Misalignment/SEABench",
+    "data": "task sequences, environment construction and full code provided at the same repository (Appendix B)",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "denominator_unclear"
+  ]
+}

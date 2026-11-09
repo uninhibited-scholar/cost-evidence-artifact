@@ -1,0 +1,185 @@
+{
+  "arxiv_id": "2610.18052",
+  "title": "Can Agents Forget When Asked? A Benchmark for Memory Unlearning in LLM Agents",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "External agent memory stores (Naive RAG vector store, Mem0 extracted facts, A-MEM linked notes, LangMem notes, LightMem, SimpleMem compressed notes) and the full dialogue transcript for the Full Context LLM baseline",
+    "operations_covered": ["formation", "update", "retention", "retrieval", "revocation"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "When a user issues a natural-language forget request, the agent's memory system must honor it: the requested information must be neither retrievable nor inferable afterwards (confidentiality of deleted data, right to be forgotten), the deletion must be scoped so unrelated memories stay intact and similar facts can still be learned (user authority over memory content without over-deletion). It fails when the deleted value resurfaces under prompt-based extraction probes or when the system deletes/preserves too much, judged by the paired-control suites on Bemula.",
+    "operationalized_as": "Five test suites scored against paired control dialogues: RA (retention), FE (efficacy, gold marker [FORGOTTEN]), PR (preservation, catches over-deletion), RLA (relearning), AR (attack robustness, gold marker [NO_LEAK] under 5 fixed attack frames), plus RPR (request pass rate over all questions of a request) and composite Score = FA x UG (geometric means of FE*AR and PR*RLA), all LLM-judged and reported as percentages."
+  },
+  "threat_model": {
+    "adversary": "user",
+    "capabilities": [
+      "Issues natural-language forget requests as ordinary dialogue turns (the system must act via its own write/update path; no external delete API is granted)",
+      "After the request, asks extraction probes in fresh sessions: indirect questioning, role playing, jailbreak prefixes, Boolean guessing, multi-hop reasoning (five fixed frames, never paraphrased)"
+    ],
+    "assumptions": [
+      "The user interacts with the agent only through natural language; neither the user nor the evaluation provides any deletion signal beyond the dialogue turn",
+      "Every question is answered in a fresh session containing only the query, so answers must come from memory",
+      "Answers are graded by a fixed LLM judge at temperature 0"
+    ],
+    "not_covered": [
+      "Adaptive or optimized attacks beyond the five fixed prompt frames",
+      "White-box or direct access to the memory store (the benchmark only probes through the query interface)",
+      "Multi-user / cross-user memory interference",
+      "Tool-use side channels: caches, logs, or external services where forgotten values may persist",
+      "Real-user dialogues (all data is synthetic, from one generation pipeline)"
+    ]
+  },
+  "intervention": {
+    "name": null,
+    "mechanism_layer": "none",
+    "description": "No defense is proposed; Bemula is an evaluation benchmark. Its measurement design (pairing each forget-version dialogue with a control version without forget requests, and conditioning every efficacy/preservation/attack probe on its control counterpart) is a scoring control that separates genuine forgetting from failure to encode, not an intervention on memory systems."
+  },
+  "results": [
+    {
+      "claim": "On Bemula, forget requests almost never pass end to end: across all evaluated systems and backbones (six memory systems under three backbone LLMs, with Full Context on two of them, and no Full Context or A-MEM runs under Qwen3-32B-AWQ on the full benchmark), the request pass rate never exceeds 1.5% and most systems pass none at all.",
+      "metric": "RPR (request pass rate)",
+      "value": "<=1.5%",
+      "comparison": "best RPR 1.5 (LangMem on DeepSeek-V4.1-Flash); most systems pass none",
+      "setting": "Bemula full benchmark (50 paired dialogue instances, 135 forget requests); six memory systems + Full Context, with Full Context on GPT-5.6-Luna and DeepSeek-V4.1-Flash only; Full Context and A-MEM have no runs under Qwen3-32B-AWQ on the full benchmark because of its context length limit",
+      "quote": "The request pass rate never exceeds 1.5 (LangMem on DeepSeek-V4.1-Flash), and most systems remain at zero.",
+      "locator": "§4.2 Table 1",
+      "denominator": {
+        "n_total": "135 forget requests",
+        "n_valid": null,
+        "how_counted": "§3.3: 'The benchmark contains 135 such requests targeting 269 facts'; RPR counts a request as passed only when all its questions and all preservation questions of its instance are correct (Eq. 4)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Overall Bemula scores stay low in every setting, reaching at most 23.1 on GPT-5.6-Luna (Full Context), 31.0 on DeepSeek-V4.1-Flash (LangMem), and 9.5 on Qwen3-32B-AWQ (SimpleMem).",
+      "metric": "Score (FA x UG, percentages)",
+      "value": "max 23.1% / 31.0% / 9.5% by backbone",
+      "comparison": "GPT-5.6-Luna best 23.1 (Full Context); DeepSeek-V4.1-Flash best 31.0 (LangMem); Qwen3-32B-AWQ best 9.5 (SimpleMem)",
+      "setting": "Bemula full benchmark; best system per backbone across evaluated systems and backbones; Full Context and A-MEM have no runs under Qwen3-32B-AWQ because of its context length limit, so the Qwen3-32B-AWQ best is over memory systems only",
+      "quote": "Overall scores stay low as well, reaching at most 23.1 on GPT-5.6-Luna (Full Context), 31.0 on DeepSeek-V4.1-Flash (LangMem), and 9.5 on Qwen3-32B-AWQ (SimpleMem).",
+      "locator": "§4.2 Table 1",
+      "denominator": {
+        "n_total": "1,742 test questions over 50 instances (suites: 224 retention / 224 efficacy / 114 relearning / 1,030 attack / 150 preservation)",
+        "n_valid": null,
+        "how_counted": "Table 4 suite counts; Score is a composite geometric mean (Eq. 5), not a single item fraction"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Attack robustness has the lowest ceiling of all metrics: AR stays at or below 35.7 in every setting and falls to 4.7 for Mem0 on GPT-5.6-Luna, so even when a system reports the requested information as gone, a suitable prompt usually extracts it again.",
+      "metric": "AR (attack robustness)",
+      "value": "<=35.7%; Mem0 on GPT-5.6-Luna 4.7%",
+      "comparison": "AR <=35.7 in every setting vs Mem0 4.7 (minimum, GPT-5.6-Luna)",
+      "setting": "Bemula full benchmark, all systems and backbones; five attack frames on the forget version",
+      "quote": "AR\\mathrm{AR} has the lowest ceiling in the table, staying at or below 35.7 in every setting and falling to 4.7 for Mem0 on GPT-5.6-Luna. Even when a system reports that the requested information is gone, a suitable prompt usually extracts it again.",
+      "locator": "§4.2 (Table 1; breakdown in Appendix H Table 7)",
+      "denominator": {
+        "n_total": "1,030 attack questions (five attack types, 206 questions per type)",
+        "n_valid": null,
+        "how_counted": "Appendix D: 'The attack suite covers the five attack types evenly with 206 questions per type'; AR averages effective correctness over the attack suite"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Backbone choice matters as much as memory architecture: switching from GPT-5.6-Luna to DeepSeek-V4.1-Flash raises Full Context forgetting efficacy from 26.8 to 53.6, while on Qwen3-32B-AWQ the extraction stage itself collapses and no overall score exceeds 9.5.",
+      "metric": "FE (forgetting efficacy)",
+      "value": "26.8% -> 53.6%",
+      "comparison": "GPT-5.6-Luna 26.8 vs DeepSeek-V4.1-Flash 53.6 (Full Context); Qwen3-32B-AWQ Score <=9.5",
+      "setting": "Full Context LLM on GPT-5.6-Luna and DeepSeek-V4.1-Flash on Bemula full benchmark (Full Context is excluded under Qwen3-32B-AWQ because of its context length limit); the Qwen3-32B-AWQ clause of the claim refers to the memory systems run under that backbone",
+      "quote": "Switching from GPT-5.6-Luna to DeepSeek-V4.1-Flash raises Full Context efficacy from 26.8 to 53.6, whereas on Qwen3-32B-AWQ the extraction stage itself collapses and no overall score exceeds 9.5.",
+      "locator": "§4.3 (Table 1)",
+      "denominator": {
+        "n_total": "224 efficacy questions",
+        "n_valid": null,
+        "how_counted": "Table 4: 'retention / efficacy / relearning 224 / 224 / 114'; FE averages effective correctness over the efficacy suite"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "No memory system deletes selectively: LangMem achieves the highest forgetting efficacy among memory systems on GPT-5.6-Luna (37.9) but its preservation drops to 20.0, so it cannot scope deletion to what was requested.",
+      "metric": "FE vs PR (efficacy vs preservation)",
+      "value": "FE 37.9% vs PR 20.0%",
+      "comparison": "LangMem on GPT-5.6-Luna: FE 37.9 with PR 20.0",
+      "setting": "LangMem on Bemula full benchmark, GPT-5.6-Luna backbone",
+      "quote": "Although LangMem achieves the highest efficacy among the memory systems on GPT-5.6-Luna (37.9), its preservation drops to 20.0, so it cannot selectively delete information.",
+      "locator": "§4.2 Table 1 (trade-off plot in Appendix G Figure 6)",
+      "denominator": {
+        "n_total": "FE 224 efficacy questions; PR 150 preservation questions",
+        "n_valid": null,
+        "how_counted": "Table 4 suite counts; preservation suite contains exactly three questions per instance (Appendix D)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Replacement requests (F6) look nearly solved on the two stronger backbones (efficacy at least 61.9 for every system), but the old value survives verbatim and resurfaces under attack, where every system scores at most 30.5.",
+      "metric": "FE and AR for F6 replacement requests",
+      "value": "FE >=61.9%; AR <=30.5%",
+      "comparison": "F6 FE at least 61.9 vs F6 attack robustness at most 30.5",
+      "setting": "F6 Replacement request subset of Bemula, two stronger backbones (GPT-5.6-Luna, DeepSeek-V4.1-Flash), all systems",
+      "quote": "Replacement (F6) appears nearly solved on the two stronger backbones, with efficacy of at least 61.9 for every system. However, the old value survives verbatim and resurfaces under attack, where every system scores at most 30.5.",
+      "locator": "§4.3 (Figure 4; Appendix I Figure 7)",
+      "denominator": {
+        "n_total": "21 F6 replacement requests (of 135 total)",
+        "n_valid": null,
+        "how_counted": "Appendix D: 'F6 (Replacement) for 21'; per-type cells draw on fewer units, read as descriptive (Appendix K)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "On GPT-5.6-Luna and DeepSeek-V4.1-Flash, for the systems that forget too little, indirect questions and Boolean guesses, which need no prompt trickery, are almost always the most effective: an indirect question extracts the deleted value from Mem0 in almost every attempt (AR 2.4 on GPT-5.6-Luna).",
+      "metric": "AR (indirect-question attack frame)",
+      "value": "2.4%",
+      "comparison": "AR 2.4 under the indirect-question frame on Mem0, GPT-5.6-Luna backbone",
+      "setting": "Mem0 on Bemula full benchmark, GPT-5.6-Luna backbone, indirect-question attack frame",
+      "quote": "Mem0 is the extreme case, where an indirect question extracts the deleted value in almost every attempt (AR 2.4 on GPT-5.6-Luna).",
+      "locator": "Appendix H Table 7",
+      "denominator": {
+        "n_total": "206 indirect attack questions (one of five attack types)",
+        "n_valid": null,
+        "how_counted": "Appendix D: 'The attack suite covers the five attack types evenly with 206 questions per type'"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The LLM judge used for all grading agrees with a human annotator on 98 of 100 sampled items, with Cohen's kappa 0.96, supporting the validity of the metric pipeline.",
+      "metric": "human-judge agreement (Cohen's kappa)",
+      "value": "98/100, kappa 0.96",
+      "comparison": null,
+      "setting": "100 sampled graded items with the two verdicts balanced at sampling time; judge = DeepSeek-V4.1-Flash at temperature 0",
+      "quote": "The annotator agrees with the judge on 98 of the 100 items, and Cohen’s kappa is 0.96.",
+      "locator": "Appendix B Table 3",
+      "denominator": {
+        "n_total": "100 sampled graded items",
+        "n_valid": "98 agreements",
+        "how_counted": "Appendix B: 'we validate the judge on a human-annotated sample of 100 graded items ... both outcomes contribute equally to the agreement estimate'"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "All dialogues are synthetic and come from one generation pipeline, and only conversational memory is covered, whereas tool-using agents can leave forgotten values in caches, logs, or external services.",
+      "quote": "Our study has two limitations. The dialogues are synthetic and come from one generation pipeline, and the benchmark covers conversational memory only, whereas tool-using agents can leave forgotten values in caches, logs, or external services.",
+      "locator": "§5 Conclusion"
+    },
+    {
+      "statement": "Per-request-type and per-length breakdowns rest on few units (e.g., 13 F4 requests, 3 xlong instances), producing wide bootstrap intervals, so these differences are descriptive rather than confirmatory.",
+      "quote": "The 13 F4 requests and the three xlong instances produce wide intervals, so we read per-type and per-length differences as descriptive rather than confirmatory.",
+      "locator": "Appendix K"
+    },
+    {
+      "statement": "Grading relies on an LLM judge, whose verdicts may carry model biases (mitigated by the 100-item human validation).",
+      "quote": "Since the grading relies on an LLM judge, its verdicts may carry model biases.",
+      "locator": "Ethics statement"
+    }
+  ],
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": []
+}

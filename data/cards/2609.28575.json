@@ -1,0 +1,208 @@
+{
+  "arxiv_id": "2609.28575",
+  "title": "TWIST: A Proposed Benchmark for Intervention Quality in Conversational Memory, with a Human-Validated Draft-Alignment Track",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "memory",
+    "scope": "cross-session",
+    "carrier": "the memory store of the system under test (deployed MindTwin coherence-oriented fact vault, or flat-RAG index) built over 10 LoCoMo multi-session conversations, exercised through a five-call API (ingest sessions, flag_tensions, check_alignment, recall, resolve)",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "A deployed conversational memory system must intervene correctly at change points and know when not to intervene. Instantiated (Track B): an outgoing draft must not contradict what the record actually says — the system must flag contradicting drafts with valid anchor evidence while passing aligned and surface-matched hard-negative drafts; failure is either silence on true contradictions or false intervention on safe drafts, judged by paired detect/control metrics with no aggregate. Specified for v2: answering with current beliefs while retaining supersession history (Track C) and governing sensitive recall so PII/crisis content is not disclosed without authorization while legitimate recall is not taxed (Track D).",
+    "operationalized_as": "Track B on the frozen human-validated TWIST-v1.0 key: contradiction recall, aligned specificity, hard-negative specificity, grounded contradiction recall (correct flag with valid top-3 evidence over all 38 contradicting items), and conditional attribution over a top-3 budget — scored by structural matching (no LLM judge), paired metrics required to be reported together."
+  },
+  "threat_model": {
+    "adversary": "none",
+    "capabilities": [],
+    "assumptions": [
+      "the system under test is cooperative and wraps the five-call API; benchmark items (drafts, arcs, plants) are the only probes, there is no active attacker",
+      "LoCoMo personas are synthetic; drafts are LLM-generated probes against the unmodified record (Track B requires no injected turns)",
+      "anti-gaming is built in: every detect/block metric is paired with a surface-matched hard-negative control priced symmetrically, so flagging everything cannot score",
+      "reader model and memory architecture are confounded across most configurations (disclosed by the authors)"
+    ],
+    "not_covered": [
+      "no active adversary: memory poisoning, prompt injection, or malicious users writing into memory are not modeled",
+      "Track D's unauthorized-recall adversary (PII/crisis disclosure) is specified but not instantiated in v1",
+      "cross-user leakage not tested: LoCoMo track is single-user personas; the multi-channel CS corpus ships in v2",
+      "no adaptive attacker that observes and responds to the system's vetting behavior"
+    ]
+  },
+  "intervention": {
+    "name": "TWIST benchmark suite (instantiated: Track B, output-time draft alignment)",
+    "mechanism_layer": "content",
+    "description": "Not a defense mechanism but an evaluation of content-level intervention: check_alignment(draft) vets a proposed outgoing message against the ingested record and must cite the contradicted anchor turns. The benchmark scores whether a memory system intervenes (contradiction recall), intervenes with valid evidence (grounded recall, attribution within a top-3 budget), and correctly refrains on surface-matched safe drafts (aligned and hard-negative specificity) — paired metrics, no single headline number, with a draft-only floor, flat-RAG, full-context, and gold-evidence control conditions across GPT-4o, Claude, and Gemini backends."
+  },
+  "controls": [
+    {"name": "Draft-only floor (draft and nothing else)", "purpose": "negative-control"},
+    {"name": "Flat RAG (vault-based retrieval)", "purpose": "baseline"},
+    {"name": "Full-context baseline (entire dated transcript in prompt)", "purpose": "ablation"},
+    {"name": "Gold-evidence condition (cited gold turns only)", "purpose": "positive-control"}
+  ],
+  "results": [
+    {
+      "claim": "On the human-validated Track B v1.0 key, no tested configuration simultaneously achieves high contradiction recall, high hard-negative specificity, and high attribution accuracy: flat-RAG baselines catch most contradictions (0.76–0.97) but falsely flag 16–43% of surface-matched safe drafts, while the deployed coherence-oriented system almost never over-flags (0.98–1.00 specificity) but catches only 42% of true contradictions.",
+      "metric": "contradiction_recall_and_false_flag_rate",
+      "value": "flat-RAG CR 0.76–0.97 with 16–43% false flags; deployed CR 42% with 0.98–1.00 specificity",
+      "comparison": "flat-RAG detection vs restraint trade-off against deployed coherence-oriented system",
+      "setting": "frozen TWIST-v1.0 Track B key (161 items) over 10 LoCoMo conversations; flat RAG vs deployed system; GPT-4o/Claude/Gemini backends; no adversary",
+      "quote": "flat-RAG baselines detect 0.76–0.97 of true contradictions but falsely flag 16–43% of surface-matched safe drafts depending on backend, while a deployed coherence-oriented system almost never over-flags (0.98–1.00 specificity on both control classes) yet catches 42% of true contradictions",
+      "locator": "Abstract",
+      "denominator": {
+        "n_total": "v1.0 key: 38 contradicting items for recall; 62 hard-negative drafts for false-flag rate",
+        "how_counted": "Table 3 caption: CR (n=38), HNS (n=62). The abstract's 16–43% false-flag range is per-backend 1−HNS over the 62 hard-negative items only (range endpoints: GPT-4o HNS 0.57, Gemini HNS 0.84); it is not pooled over aligned (n=61) + hard-negative (n=62). The abstract's '0.98–1.00 specificity on both control classes' spans the deployed system's AS and HNS columns."
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "In the model-controlled GPT-4o comparison on the v1.0 key, the deployed MindTwin system sits at the restraint extreme (CR 0.42, HNS 0.98) while flat RAG with the same backend trades the other way (CR 0.97, HNS 0.57; Claude flat RAG CR 0.92, HNS 0.74).",
+      "metric": "contradiction_recall / hard-negative specificity",
+      "value": "deployed MindTwin CR 0.42 / AS 1.00 / HNS 0.98; flat RAG GPT-4o CR 0.97 / HNS 0.57",
+      "comparison": "flat RAG Claude CR 0.92 / HNS 0.74",
+      "setting": "frozen TWIST-v1.0 Track B key; MindTwin deployed system vs flat-RAG vault, same GPT-4o backend (plus Claude flat RAG)",
+      "quote": "| Deployed (MindTwin)† | GPT-4o | 0.42 [.28,.58] | 1.00 | 0.98 [.91,1.0] | 0.18 | 0.44 | | Flat RAG† | GPT-4o | 0.97 [.87,1.0] | 0.77 | 0.57 [.44,.68] | 0.55 | 0.57 | | Flat RAG† | Claude | 0.92 [.79,.97] | 0.90 | 0.74 [.62,.83] | 0.50 | 0.54 |",
+      "locator": "§7.3 Table 3 (rows: Deployed MindTwin, Flat RAG GPT-4o/Claude)",
+      "denominator": {
+        "n_total": "CR over 38 contradicting, AS over 61 aligned, HNS over 62 hard-negative items",
+        "how_counted": "Table 3 caption: CR = contradiction recall (n=38), AS = aligned specificity (n=61), HNS = hard-negative specificity (n=62)"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Every gold contradiction is detectable from its own evidence: in the gold-evidence oracle condition all three LLM backends reach contradiction recall 1.000, meeting the pre-registered target, which bounds the failure of retrieval-based configurations as a coverage problem, not unsolvable items.",
+      "metric": "contradiction_recall (gold-evidence oracle)",
+      "value": "1.000 for all three backends",
+      "comparison": null,
+      "setting": "gold-evidence condition (only the cited gold turns in the prompt) on the Track B v1.0 key; GPT-4o, Claude, Gemini",
+      "quote": "given the cited gold turns, all three backends reach 1.000 contradiction recall (target ≥\\geq0.95), so no kept item is unsolvable from its own evidence — a detectability oracle; it bounds neither specificity nor full-record reasoning.",
+      "locator": "§5.3 Separability audit",
+      "denominator": {
+        "n_total": "38 contradicting items",
+        "how_counted": "Table 3 caption: CR = contradiction recall (n=38); GCR = grounded contradiction recall over all 38"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Grounded contradiction recall (correct flag with valid top-3 evidence, over all contradicting items) separates intervening from intervening-and-knowing-why: deployed 0.18, flat RAG 0.45–0.55, full-context Claude 0.84, gold-evidence 0.97–1.00.",
+      "metric": "grounded_contradiction_recall",
+      "value": "GCR 0.18 (deployed) vs 0.97–1.00 (gold evidence)",
+      "comparison": "flat RAG 0.45–0.55; full-context Claude 0.84",
+      "setting": "frozen TWIST-v1.0 Track B key; all 38 contradicting items; thirteen configurations across backends",
+      "quote": "Unconditional GCR (correct flag with valid top-3 evidence, over all 38 items) orders the ladder: deployed 0.18, flat RAG 0.45–0.55, full-context Claude 0.84, gold-evidence 0.97–1.00",
+      "locator": "§7.3 observation (5)",
+      "denominator": {
+        "n_total": "38 contradicting items",
+        "how_counted": "quote: over all 38 items"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "Draft-only label leakage is strongly model-dependent: with no record at all GPT-4o flags 71% of contradicting drafts at high specificity (Claude 0.34, Gemini 0.03), so draft style alone carries exploitable prior for some models — every record-grounded configuration significantly exceeds its own draft-only floor.",
+      "metric": "contradiction_recall (draft-only floor)",
+      "value": "71% (GPT-4o), 0.34 (Claude), 0.03 (Gemini)",
+      "comparison": "every record-grounded configuration significantly exceeds its own draft-only floor",
+      "setting": "draft-only condition (draft text and nothing else) on the v1.0 key; three LLM backends",
+      "quote": "With no record at all, GPT-4o flags 71% of contradicting drafts at 0.85/0.90 specificity; Claude reaches 0.34 and Gemini 0.03.",
+      "locator": "§7.3 observation (4)",
+      "denominator": {
+        "n_total": "38 contradicting items",
+        "how_counted": "Table 3 caption: CR = contradiction recall (n=38)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Vault-based rows are stochastic across re-ingestions: deployed-system contradiction recall is 0.32/0.42/0.42 across three independent ingests with multi-ingest mean 0.39 and hierarchical bootstrap interval [0.19, 0.51]; GPT-4o flat-RAG hard-negative specificity is likewise ingest-sensitive (0.42–0.57, mean 0.48 [0.37, 0.66]).",
+      "metric": "contradiction_recall multi-ingest mean (bootstrap CI)",
+      "value": "mean recall 0.39, hierarchical bootstrap CI [0.19, 0.51]; flat-RAG HNS mean 0.48 [0.37, 0.66]",
+      "comparison": "per-ingest point estimates 0.32/0.42/0.42",
+      "setting": "three independent ingests of the v1.0 key by the deployed system and flat-RAG baseline",
+      "quote": "deployed-system recall 0.32/0.42/0.42, multi-ingest mean 0.39 with conversation-×\\times-ingest hierarchical bootstrap 95% interval [0.19, 0.51]; GPT-4o flat-RAG hard-negative specificity is itself ingest-sensitive (0.42–0.57, mean 0.48 [0.37, 0.66]).",
+      "locator": "§7.3 honesty notes",
+      "denominator": {
+        "n_total": "38 contradicting items per ingest (recall); 62 hard-negative items (HNS)",
+        "how_counted": "Table 3 caption: CR (n=38), HNS (n=62); three pooled ingests"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "Retrieval coverage degrades with record length: splitting the v1.0 key at 620 history turns, the deployed system's contradiction recall falls from 0.48 to 0.31, and flat RAG degrades on both recall and restraint (Gemini recall 0.84 to 0.62; Claude hard-negative specificity 0.78 to 0.71), while full-context configurations are essentially length-robust.",
+      "metric": "contradiction_recall (long-history stratum)",
+      "value": "deployed CR 0.48 (short) to 0.31 (long history)",
+      "comparison": "Gemini flat-RAG recall 0.84 -> 0.62; Claude flat-RAG HNS 0.78 -> 0.71",
+      "setting": "v1.0 key split at 620 history turns (74 items shorter, 87 longer); deployed system and flat RAG vs full-context baselines",
+      "quote": "the deployed system's contradiction recall falls from 0.48 to 0.31 as history grows — the retrieval-coverage stress Track B is built to apply — and flat-RAG recall and restraint both degrade (Gemini recall 0.84→\\to0.62; Claude hard-negative specificity 0.78→\\to0.71)",
+      "locator": "§7.3 History-length stratification (rule 5)",
+      "denominator": {
+        "n_total": "strata: 74 items under 620 turns, 87 over; long-history contradicting stratum n=13",
+        "how_counted": "quote context: Splitting v1.0 at 620 history turns; strata are small (n=13 long-history contradicting items)"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "The frozen answer key is human-validated: two gold-blind annotators with adjudication produced the 161-item TWIST-v1.0 key (38 contradicting / 61 aligned / 62 hard-negative) with retained-set agreement kappa 0.851, above the pre-registered 0.8 bar (raw candidate agreement was 0.565).",
+      "metric": "inter_annotator_agreement_kappa",
+      "value": "retained-set kappa 0.851 on 161-item key (bar 0.8)",
+      "comparison": null,
+      "setting": "two independent gold-blind human annotators, randomized order, author-led adjudication (disclosed); 161 retained items",
+      "quote": "On the frozen TWIST-v1.0 key (161 items: 38 contradicting / 61 aligned / 62 hard-negative), retained-set agreement is 𝜿=0.851\\boldsymbol{\\kappa=0.851}, above the pre-registered 0.8 bar.",
+      "locator": "§5.1 Track B v1 annotation results",
+      "denominator": null,
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "All items are LLM-drafted, so naturalness is bounded by generation quality; real-workspace validation remains future work.",
+      "quote": "Items are LLM-drafted; naturalness is bounded by generation quality.",
+      "locator": "§8 Limitations and ethics (Synthetic data)"
+    },
+    {
+      "statement": "Track B v1 items were generated and gate-verified by a single model family (GPT-4o), so systems built on the same family may share blind spots with the item distribution.",
+      "quote": "Track B v1 items were generated and gate-verified by one model family (GPT-4o); a system built on the same family may share blind spots with the item distribution.",
+      "locator": "§8 Limitations and ethics (Single-generator circularity)"
+    },
+    {
+      "statement": "The benchmark is proposed by a vendor whose product is built around the measured capabilities, an author-bias risk mitigated structurally (public keys, per-item outputs, errata, external runs required).",
+      "quote": "TWIST is proposed by a vendor whose product is built around these capabilities.",
+      "locator": "§8 Limitations and ethics (Author bias)"
+    },
+    {
+      "statement": "Reader model and memory architecture are confounded across most of Table 3, so the results claim only that tested systems occupy different regions of the trade-off, not that architecture is the isolated cause; even the model-controlled GPT-4o triple differs in prompt shape, call structure, and evidence format.",
+      "quote": "We claim only that the tested systems occupy different regions of the recall/specificity/attribution trade-off, not that architecture is the isolated cause: reader model and memory architecture are confounded across most of Table 3.",
+      "locator": "§7.1 Pre-registered predictions"
+    },
+    {
+      "statement": "Attribution and GCR variance across vault ingests is estimable only from the single cap-consistent ingest, a stated limitation; a three-fresh-ingest protocol is deferred to the venue version.",
+      "quote": "attribution/GCR variance across ingests is estimable only from the cap-consistent ingest — a stated limitation; a three-fresh-ingest protocol is the venue upgrade.",
+      "locator": "§7.3 honesty notes"
+    },
+    {
+      "statement": "History-length strata are small (13 long-history contradicting items), so only direction, not significance, is reported for the length effects.",
+      "quote": "strata are small (n=13n{=}13 long-history contradicting items), so we report direction, not significance.",
+      "locator": "§7.3 History-length stratification"
+    },
+    {
+      "statement": "One annotator was the benchmark author and adjudication was author-led (disclosed), and the retained-set kappa is conditioned on the adjudicated selection rather than an independent reliability estimate for the frozen key.",
+      "quote": "adjudication was author-led with both annotators' notes and is disclosed as such",
+      "locator": "§5.1 Track B v1 annotation results"
+    }
+  ],
+  "counterexamples": [],
+  "reproduction": {
+    "code": "https://github.com/subratpanda/twist-benchmark (items, gold keys, harness, annotation trail, per-item outputs for all thirteen configurations)",
+    "data": "same repository; LoCoMo corpus under its original license",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "vendor_authored_benchmark_author_bias_disclosed",
+    "only_track_B_instantiated_tracks_A_C_D_specified_for_v2",
+    "annotation_involved_benchmark_author_author_led_adjudication_disclosed",
+    "reader_model_and_memory_architecture_confounded"
+  ]
+}

@@ -1,0 +1,1239 @@
+{
+ "n_labelled": 203,
+ "counts": {
+  "not-a-cost": 60,
+  "attacker-cost": 6,
+  "defence-cost": 130,
+  "construction-only": 7
+ },
+ "flips": [
+  "2608.15012",
+  "2608.27443",
+  "2609.00404",
+  "2609.01345",
+  "2609.01677",
+  "2609.10416",
+  "2609.18338",
+  "2610.08928"
+ ],
+ "rows": [
+  {
+   "arxiv_id": "2608.00104",
+   "verdict": "not-a-cost",
+   "evidence": "the zero-trust overhead of TrustAgentNet is dominated by off-chain inference, while the blockchain layer incurs minor ledger costs",
+   "title": "Skillsets on the Chain: A Blockchain-based Zero-Trust Framework for Agentic AI Networking"
+  },
+  {
+   "arxiv_id": "2608.00134",
+   "verdict": "attacker-cost",
+   "evidence": "increasing attacker-token consumption by 198.83% on average relative to evaluated baselines",
+   "title": "Stateful Cooperative Agents Safeguarding LLMs Against Evolving Multi-Turn Attacks"
+  },
+  {
+   "arxiv_id": "2608.00515",
+   "verdict": "defence-cost",
+   "evidence": "while replacing 581 responses and lowering helpfulness",
+   "title": "Auditable Release Control for Pedagogical Leakage in LLM Tutors"
+  },
+  {
+   "arxiv_id": "2608.02843",
+   "verdict": "defence-cost",
+   "evidence": "A native suite passes all declared authorization, topology, tamper, signer-epoch, and post-mutation-recall cases; median signed-transition latency is 4.865 ms.",
+   "title": "MutMem: Cryptographically Authorized Mutation in Persistent Agent Memory"
+  },
+  {
+   "arxiv_id": "2608.02986",
+   "verdict": "defence-cost",
+   "evidence": "a protocol-imposed metabolic cost is debited each cycle from a key-derived economic account",
+   "title": "Internalising the Identity Primitive: Cryptographic Individuality for an Autonomous Agent on a Public Blockchain"
+  },
+  {
+   "arxiv_id": "2608.04893",
+   "verdict": "not-a-cost",
+   "evidence": "In one natural cell, zeroing the relay costs 14.7 points; a mismatched cache, 0.4.",
+   "title": "When Does Latent Communication Pay? A Causal Audit of Relayed KV Caches in Multi-Agent LLMs"
+  },
+  {
+   "arxiv_id": "2608.05199",
+   "verdict": "not-a-cost",
+   "evidence": "A modular certificate using per-stage certificates and a pairwise overlap bound yields a positive average gain of 0.6%, quantifying the cost of lacking joint access.",
+   "title": "Post-Hoc Trajectory-Risk Certification for Modular LLM-Based Security Agents"
+  },
+  {
+   "arxiv_id": "2608.05695",
+   "verdict": "defence-cost",
+   "evidence": "maintains an average end-to-end latency of 25 ms per call",
+   "title": "DreamGuard: Efficient Runtime Guardrail for LLM Agents via Risk-Aware World Model"
+  },
+  {
+   "arxiv_id": "2608.05909",
+   "verdict": "defence-cost",
+   "evidence": "raises the average refusal rate on unsafe multimodal inputs to 99% with less than 2% utility degradation",
+   "title": "MMAligner: Safeguarding Multimodal Large Language Models through Representation Calibration"
+  },
+  {
+   "arxiv_id": "2608.07952",
+   "verdict": "not-a-cost",
+   "evidence": "context-isolated self-verification achieves 20--79% reduction (median 36.5%) without oracle references while keyword-based detection produces systematic false positives",
+   "title": "Persistent Semantic Entities in Tool-Augmented LLM Systems"
+  },
+  {
+   "arxiv_id": "2608.08645",
+   "verdict": "defence-cost",
+   "evidence": "Deployed as a Qdrant admission filter, the verifier runs at 284 us and 24 bytes of sidecar per vector, validated end-to-end against three C2PA reference-SDK bindings.",
+   "title": "HaloMark: A Spectral Threshold for Embedding-Vector Watermarking under C2PA"
+  },
+  {
+   "arxiv_id": "2608.09225",
+   "verdict": "defence-cost",
+   "evidence": "injecting the salt at that boundary rather than the chain root retains an estimated 93% of the prefix-cache benefit with no cross-principal signal",
+   "title": "Governing the KV Cache: Preventing Timing Side-Channel Leakage in Multi-Tenant LLM Inference"
+  },
+  {
+   "arxiv_id": "2608.09524",
+   "verdict": "not-a-cost",
+   "evidence": "In the independent CAGE4 environment with ongoing attacks and benign activity, STAIR reduces cumulative penalties by approximately 28.8% relative to the strongest baseline.",
+   "title": "STAIR: Effective Incident Response Using an End-to-End Agentic Planning Framework"
+  },
+  {
+   "arxiv_id": "2608.12911",
+   "verdict": "not-a-cost",
+   "evidence": "improving leakage suppression by 4.8 percentage points, effectively mitigating privacy risks while maintaining robust document information extraction performance",
+   "title": "Beyond Visual Evidence: Revealing and Mitigating Relational Privacy Leakage in Document MLLMs"
+  },
+  {
+   "arxiv_id": "2608.15012",
+   "verdict": "defence-cost",
+   "evidence": "\\sysfield achieves zero-loss collection at 2.1\\% overhead",
+   "title": "SysEvolve: An AI-native, safe, autonomous adversarial attack-defense co-evolutionary system"
+  },
+  {
+   "arxiv_id": "2608.15475",
+   "verdict": "attacker-cost",
+   "evidence": "direct regression and token policies fall in $1$--$5$ flips, whereas the evaluated flow-matching policies require ${\\sim}100$--$300$",
+   "title": "Bit-Flip Attacks on Vision-Language-Action Models: Action-Decoding Architecture Shapes the Vulnerability"
+  },
+  {
+   "arxiv_id": "2608.15888",
+   "verdict": "defence-cost",
+   "evidence": "Authorization latency was 0.24 ms at the 99th percentile on an idle host; across 949 AgentDojo task-injection pairs, utility was 8.6 and 13.9 percentage points lower in the two settings.",
+   "title": "Bounded Agents: Delegation Security for Multi-Agent AI Systems"
+  },
+  {
+   "arxiv_id": "2608.16032",
+   "verdict": "defence-cost",
+   "evidence": "while leaving legitimate operation intact (0% false positives in eight of nine cells, 1.7% in the ninth, within sampling noise)",
+   "title": "Proof-of-Execution Memory: Defending LLM Agents Against Forged-Reasoning Attacks by Verifying What Actually Happened"
+  },
+  {
+   "arxiv_id": "2608.16536",
+   "verdict": "defence-cost",
+   "evidence": "DSPrompt incurs no additional per-query optimization and introduces fewer than 1% additional parameters",
+   "title": "DSPrompt: Dynamic Soft Prompt Defense Against M-RAG Corruption"
+  },
+  {
+   "arxiv_id": "2608.17176",
+   "verdict": "defence-cost",
+   "evidence": "Per-record data and full synchronization reduce throughput to approximately 242 requests/s and raise median latency to 16.0 ms.",
+   "title": "The Acknowledgment Point Is the System: Durable Policy-Decision Receipts for AI Audit Evidence"
+  },
+  {
+   "arxiv_id": "2608.17220",
+   "verdict": "defence-cost",
+   "evidence": "A Solidity smart account enforces PDR signatures on-chain with a measured overhead of 29,826-31,822 gas.",
+   "title": "PACE: Policy-Attested Contract Execution for Safe AI Agents in Decentralized Finance"
+  },
+  {
+   "arxiv_id": "2608.17445",
+   "verdict": "not-a-cost",
+   "evidence": "Under a 1% denial cap for these requests and a 0.5% cap for unrelated background traffic",
+   "title": "Decomposition Attacks Across Unlinkable Identities: Limits of Stateful Defenses for LLM Services"
+  },
+  {
+   "arxiv_id": "2608.17485",
+   "verdict": "defence-cost",
+   "evidence": "Placing this split after reusable public prefixes preserved most modeled reuse at a 1.7-2.5% cost increase.",
+   "title": "KeyPooling: Measuring Where LLM API Relay Paths Collapse Prompt Cache Isolation"
+  },
+  {
+   "arxiv_id": "2608.17556",
+   "verdict": "defence-cost",
+   "evidence": "Reflex-Guard achieves 95.9% recall on harmful prompts at 37.6 ms end-to-end latency",
+   "title": "Reflex-Guard: A Low-Latency Guardrail for LLM Prompt Safety Using Dense Semantic Embeddings"
+  },
+  {
+   "arxiv_id": "2608.18093",
+   "verdict": "defence-cost",
+   "evidence": "On Llama-3-8B, AMRA improves post-abliteration refusal scores by $2.16$ points over the undefended baseline with less than $0.5$ percentage points of MMLU degradation.",
+   "title": "Abliteration Mitigation via Refusal Aliases"
+  },
+  {
+   "arxiv_id": "2608.18613",
+   "verdict": "defence-cost",
+   "evidence": "Build-time validation guarantees zero fabricated identifiers by construction, and the scaffold sustains 1,168 investigations end-to-end at about 2.6 cents each.",
+   "title": "CTIFoundry: An Agent-Native Corpus Scaffold for Cyber Threat Intelligence"
+  },
+  {
+   "arxiv_id": "2608.19135",
+   "verdict": "not-a-cost",
+   "evidence": "an onboard agent classifies each incoming V2X message into one of four actions - Accept, Drop, Quarantine, or Escalate - within a 10-millisecond budget",
+   "title": "Autonomous Cyber Defense in Connected Vehicles: A Multi-Agent Approach to V2X Security"
+  },
+  {
+   "arxiv_id": "2608.19161",
+   "verdict": "not-a-cost",
+   "evidence": "monitoring requires only a small normalized load relative to all possible directed pairs",
+   "title": "Beyond the Transcript: Detecting Covert Co ordination in Latent Multi-Agent Communication"
+  },
+  {
+   "arxiv_id": "2608.21159",
+   "verdict": "defence-cost",
+   "evidence": "Its strict exact-manifest profile reduced benign utility by 35.4 to 43.8 percentage points; a typed frontier recovered 9-10 completions without observed unsafe effects.",
+   "title": "AID-Guard: Stateful Authorization for Delegated Agent Effects"
+  },
+  {
+   "arxiv_id": "2608.21230",
+   "verdict": "defence-cost",
+   "evidence": "A four-stage write-time screening pipeline that reaches 0.832 recall on indirect prompt injection while flagging 1.5% of trigger-word-laden benign text rejects 0 of 360 poisoned memories.",
+   "title": "Utility Under Attack: Agent Memory Poisoning and the Limits of Content Screening and Provenance Ranking"
+  },
+  {
+   "arxiv_id": "2608.22275",
+   "verdict": "defence-cost",
+   "evidence": "the first attempt of CodeMechanic produces 47.6% more plausible patches (i.e., patches that pass PoC- replay validation) than the best baseline while using 91% fewer tokens",
+   "title": "CodeMechanic: Bug-Property-Guided Program Mitigation"
+  },
+  {
+   "arxiv_id": "2608.23873",
+   "verdict": "not-a-cost",
+   "evidence": "SEP separation rises from 24.3% to 99.0% with utility unchanged (our scoring rule; we correct a defect in the published grader)",
+   "title": "Semantic Overlays: Mitigating Prompt Injection with Annotations Beyond Tokens and Steering Vectors"
+  },
+  {
+   "arxiv_id": "2608.24957",
+   "verdict": "defence-cost",
+   "evidence": "Median latency is 1.77\\,ms.",
+   "title": "ToolMinimize: Auditing and Rewriting LLM Agent Tool Calls to Minimize Privacy Exposure"
+  },
+  {
+   "arxiv_id": "2608.25431",
+   "verdict": "defence-cost",
+   "evidence": "GIFT and GIFT-CC enforce user data isolation with a 4-10.7% throughput overhead while maintaining the same latency level.",
+   "title": "Here is a GIFT: Enforcing User Data Isolation in LLM Serving via GPU Information Flow Tracking"
+  },
+  {
+   "arxiv_id": "2608.25697",
+   "verdict": "defence-cost",
+   "evidence": "with XSTest false refusals rising from 2.40% to 4.40%, while retaining 98.14% of the throughput of a matched serving path that performs no monitoring work at 32 active sequences",
+   "title": "LMSM: LLM Security Framework Inspired by Linux Security Modules"
+  },
+  {
+   "arxiv_id": "2608.25817",
+   "verdict": "defence-cost",
+   "evidence": "Across 731 benign task descriptions, SkillShield yields a mean safety-refusal rate of 0.14%.",
+   "title": "SkillShield: Prompt-Space Security Skills for LLM Coding Agents"
+  },
+  {
+   "arxiv_id": "2608.26402",
+   "verdict": "defence-cost",
+   "evidence": "it limits quality loss to at most 0.76 pp across evaluated CNNs and 0.17 perplexity across eight LLMs",
+   "title": "SILK: Closing the Time-of-Check-to-Time-of-Use Gap in RoT-Protected AI Systems"
+  },
+  {
+   "arxiv_id": "2608.27443",
+   "verdict": "defence-cost",
+   "evidence": "POLICY lowered runtime prompts from 18.0 to 10.9, but total intervention time was not reliably lower when rule setup was included.",
+   "title": "Do User-Authored Permission Policies Improve Protection Against AI Agent Overreach?"
+  },
+  {
+   "arxiv_id": "2608.27990",
+   "verdict": "not-a-cost",
+   "evidence": "On standard benchmarks, CAITLYN matches the detection performance of state-of-the-art defenses at lower token overhead than LLM-as-a-judge baselines.",
+   "title": "CAITLYN: Can LLM Agents Autonomously Synthesize Defenses against Emerging Injection Attacks?"
+  },
+  {
+   "arxiv_id": "2608.28021",
+   "verdict": "not-a-cost",
+   "evidence": "it consumes under $1\\%$ of the output budget, bounding the effect",
+   "title": "Compared to What? A Human-Anchored Security Benchmark for LLM-Generated Infrastructure-as-Code"
+  },
+  {
+   "arxiv_id": "2608.28327",
+   "verdict": "defence-cost",
+   "evidence": "The same stack refuses four in five benign prompts while remaining statistically indistinguishable from its strongest single layer.",
+   "title": "Layered LLM Defenses as an Ensemble: Access Tiers, Inference Cost, and the Measured Failure Correlation Between Defense Layers"
+  },
+  {
+   "arxiv_id": "2608.30083",
+   "verdict": "defence-cost",
+   "evidence": "A 32-bit threshold predicate proves in 6.2 ms and verifies in 1.0 ms with a 608-byte Bulletproofs proof on one commodity vCPU",
+   "title": "Zero-Knowledge Predicate Proofs Between AI Agents: A Measured, Cross-Protocol Gateway and the Source-Integrity Gap"
+  },
+  {
+   "arxiv_id": "2608.30387",
+   "verdict": "defence-cost",
+   "evidence": "its mean end-to-end latency was 813.1ms versus 770.8ms without evidence",
+   "title": "Attesting Outputs and Delegation Ancestry in Multi-Agent AI Systems"
+  },
+  {
+   "arxiv_id": "2608.30703",
+   "verdict": "defence-cost",
+   "evidence": "while adding less than 0.5% serving overhead in our implementation",
+   "title": "SingProbe Technical Report"
+  },
+  {
+   "arxiv_id": "2609.00267",
+   "verdict": "defence-cost",
+   "evidence": "it enforces at microsecond cost (about 2.6 microseconds per decision), negligible against model inference",
+   "title": "Delegation Without Trust: An Empirical Gap Analysis of Identity, Authorization, and Runtime Governance in Multi-Agent LLM Systems"
+  },
+  {
+   "arxiv_id": "2609.00404",
+   "verdict": "defence-cost",
+   "evidence": "A same-hardware comparison against Sigstore-Cosign and python-TUF locates federated trust&#39;s per-verify cost between the two and its per-publisher storage footprint below both",
+   "title": "Federated Trust for Embodied Robot Capability Marketplaces"
+  },
+  {
+   "arxiv_id": "2609.00470",
+   "verdict": "defence-cost",
+   "evidence": "at an added latency of ~16-19 s/query under live retrieval",
+   "title": "TRIS: A Tri-Layer Retrieval Integrity Sieve Against Knowledge Poisoning"
+  },
+  {
+   "arxiv_id": "2609.01345",
+   "verdict": "defence-cost",
+   "evidence": "a frontier verifier drives $β$ to about 0.05 but then escalates on 46% of hard-MATH queries against a 39% true error rate, paying the frontier price on nearly half of all traffic",
+   "title": "Cheap Verifiers, Large Blind Spots: Measuring the Reliability Cost of Cost-Saving Cascades"
+  },
+  {
+   "arxiv_id": "2609.01677",
+   "verdict": "defence-cost",
+   "evidence": "We provide an open-source Python implementation over XMTP with 1.8-2.9 s cross-continent hot-reconnect latency",
+   "title": "Skill-as-API: Confidential Multi-Agent Coordination for Agentic Software Engineering"
+  },
+  {
+   "arxiv_id": "2609.01931",
+   "verdict": "defence-cost",
+   "evidence": "The full system adds ~48 microseconds median per-event latency and 512 bytes per event.",
+   "title": "Agent Flight Recorder: Tamper-Evident Audit Trails with On-Chain Anchoring for Long-Horizon Tool-Using Agents"
+  },
+  {
+   "arxiv_id": "2609.01992",
+   "verdict": "defence-cost",
+   "evidence": "Receipt instrumentation adds 0.021% of model-inference time and 9.9 KB per transaction.",
+   "title": "ClaimReceipt: Verifying Evidence Sufficiency and Coverage in Agent Evaluations"
+  },
+  {
+   "arxiv_id": "2609.02690",
+   "verdict": "defence-cost",
+   "evidence": "the complete design increases request-level pooled p95 latency on normal allowed calls by 25.7% relative to OAuth-only",
+   "title": "ACLE-MCP: Attested Capability Leases for Execution-Time Trust in Remote LLM Tool Use"
+  },
+  {
+   "arxiv_id": "2609.04075",
+   "verdict": "not-a-cost",
+   "evidence": "the original PoC-only validation inflates the patching task solve rate of agents by 1.83$\\times$ on average",
+   "title": "PatchBench: Evaluating AI Agents for Vulnerability Patching"
+  },
+  {
+   "arxiv_id": "2609.04820",
+   "verdict": "defence-cost",
+   "evidence": "Compared with exhaustive cost of 12.0 units,the proposed system reduces te average cost to 6.724 units, representing approximately 44% saving.",
+   "title": "Cost-Aware Hierarchical Multi-Agent Ransomware Detection and Family Attribution"
+  },
+  {
+   "arxiv_id": "2609.04875",
+   "verdict": "defence-cost",
+   "evidence": "while selective replay is indistinguishable from a full reset at up to 9x fewer recomputed tokens",
+   "title": "Forgetting Without Restarting: Execution-State Unlearning for Stateful LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.05901",
+   "verdict": "not-a-cost",
+   "evidence": "cryptographic microbenchmarks measure online signing cost and its scaling behavior",
+   "title": "From Review to Authorization: Key-Isolated Threshold Signing for LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.05903",
+   "verdict": "defence-cost",
+   "evidence": "it reduces attack success rate from 50.9% to 12.6% for direct attacks and from 40.4% to 7.4% for indirect attacks, with a 3.3-point utility cost",
+   "title": "EvoSafeHarness: Evolving Model- and Domain-Specific Harnesses for Securing Agents"
+  },
+  {
+   "arxiv_id": "2609.06500",
+   "verdict": "defence-cost",
+   "evidence": "Its semantic scoping pipeline achieves over 90% perfect privilege-bundle retrieval within 17 milliseconds on enterprise-scale API schemas",
+   "title": "CAPMAS: Capability-Based Delegation of Privileges in Multi-Agent Systems"
+  },
+  {
+   "arxiv_id": "2609.06966",
+   "verdict": "not-a-cost",
+   "evidence": "selective use of a stronger monitor improves budget-AUC by 10% over applying it to every account-day at comparable modeled cost",
+   "title": "MOLE: Detecting Insider Threats in AI Agents"
+  },
+  {
+   "arxiv_id": "2609.08306",
+   "verdict": "defence-cost",
+   "evidence": "the router reaches F1=.911 at 38 ms median added latency",
+   "title": "HoneyRoute: Honeypot-Model Routing for Adversarial LLM Serving"
+  },
+  {
+   "arxiv_id": "2609.08747",
+   "verdict": "not-a-cost",
+   "evidence": "SBERT+LR achieves the best overall performance with 91.7% accuracy and a 0.908 macro-F1 score",
+   "title": "MemSentry: A Framework for Detecting Persistent Memory Poisoning in Agentic AI"
+  },
+  {
+   "arxiv_id": "2609.10416",
+   "verdict": "defence-cost",
+   "evidence": "Owner marking adds no trajectory actions; the integrity layer adds explicit read-only seals, and matched Pass@1 is 26.9% versus 26.3% for unwatermarked runs",
+   "title": "TrajMark: Ownership Attribution and Segment-Level Tamper Localization for Coding-Agent Trajectories"
+  },
+  {
+   "arxiv_id": "2609.11028",
+   "verdict": "defence-cost",
+   "evidence": "BenchShield improves full-chain recall from 23-94% to 77-100%, same-vector coverage from 16-56% to 43-78%, and reduces per-task cost by up to 65%",
+   "title": "BenchShield: Formal Model-Backed Instrumentation for Reward Integrity in LLM-Agent Evaluation Infrastructure"
+  },
+  {
+   "arxiv_id": "2609.11152",
+   "verdict": "defence-cost",
+   "evidence": "A dependency-free implementation adds 0.20 to 0.65 ms per request on one vCPU.",
+   "title": "terms.txt: A Consent and Compensation Protocol for Agentic Web Access"
+  },
+  {
+   "arxiv_id": "2609.11841",
+   "verdict": "defence-cost",
+   "evidence": "proving a query in under a second on the SIFT1M benchmark and in 2.0 seconds at 100 million vectors",
+   "title": "Atlas: Efficient Verifiable Semantic Search"
+  },
+  {
+   "arxiv_id": "2609.12582",
+   "verdict": "defence-cost",
+   "evidence": "Blast-radius queries: 45.5ms p99 over 10M edges (3.3x faster than a columnar baseline), 167.9ms over 100M (1 client, n=30)",
+   "title": "NovaFabric: Tamper-Evident, Replayable Evidence for Autonomous AI Agent Runs"
+  },
+  {
+   "arxiv_id": "2609.14723",
+   "verdict": "not-a-cost",
+   "evidence": "ActProbe requires no modification to the backend LLM and reduces localization overhead from O(n) exhaustive probing to O(k log n) forward passes",
+   "title": "Detecting and Localizing Segment-Level Poisoning in Multi-Source LLM-Agent Inputs"
+  },
+  {
+   "arxiv_id": "2609.14780",
+   "verdict": "defence-cost",
+   "evidence": "set-valued scope caused a measured $57\\times$ latency ratio under function-wrapped membership predicates",
+   "title": "The Stochastic Deputy: Structural Tenant Isolation for Tool-Using LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.15516",
+   "verdict": "not-a-cost",
+   "evidence": "a single manipulated description reduces task success from 84.31% to 37.25%, or increases token consumption or execution time by over 111%",
+   "title": "Misleading the Planner through Deceptive Resumes: Registration-Time Injection in Centralized Multi-Agent Systems"
+  },
+  {
+   "arxiv_id": "2609.15576",
+   "verdict": "defence-cost",
+   "evidence": "the final stateful recheck-recovery policy increases exact-match error by 9.23 percentage points relative to the initial checkpoint",
+   "title": "Approval Integrity and Recovery in LLM Answer Publication"
+  },
+  {
+   "arxiv_id": "2609.16193",
+   "verdict": "not-a-cost",
+   "evidence": "We therefore quantify the loss in model performance associated with applying these methods, for both attack and defense, showing it to be minimal.",
+   "title": "Permutation-Based Stegomalware in Large Language Models: Threats and Countermeasures"
+  },
+  {
+   "arxiv_id": "2609.16204",
+   "verdict": "construction-only",
+   "evidence": "all at 30 to 450 times lower optimization cost per configuration than the trained baselines",
+   "title": "Decoy Direction Optimization: A Post-Hoc Defense Against LLM Abliteration"
+  },
+  {
+   "arxiv_id": "2609.16541",
+   "verdict": "not-a-cost",
+   "evidence": "The task of the agents is to prevent hosts in the network from being accessed by the red-team agent, while minimizing the availability costs induced from defensive measures.",
+   "title": "A Cyber Range Evaluation of Inductive Autonomous Network Incident Response Agents"
+  },
+  {
+   "arxiv_id": "2609.16563",
+   "verdict": "not-a-cost",
+   "evidence": "the trained defender agent induced lower costs than a naive heuristic agent under noisy alert conditions",
+   "title": "The MAL Simulator: Cyber Operations Simulation based on Attack &amp; Defense Graphs"
+  },
+  {
+   "arxiv_id": "2609.17897",
+   "verdict": "not-a-cost",
+   "evidence": "moderate randomization cuts MEV exposure by over 50% with only modest profit loss",
+   "title": "When AI Agents Meet MEV: Cross-Chain Arbitrage in the Agentic Economy"
+  },
+  {
+   "arxiv_id": "2609.18338",
+   "verdict": "defence-cost",
+   "evidence": "the governor admits, rejects, and bounds intents at microsecond cost without disrupting protected-flow regularity",
+   "title": "Autonomy in Check: Governor-Mediated Adaptive Security at the Edge"
+  },
+  {
+   "arxiv_id": "2609.18862",
+   "verdict": "defence-cost",
+   "evidence": "CASHEWS also has a median preprocessing time of 30 seconds while reducing net analysis cost by 34.6%",
+   "title": "CASHEWS: Source Preprocessor for LLM-based Malicious Package Detection"
+  },
+  {
+   "arxiv_id": "2609.19587",
+   "verdict": "not-a-cost",
+   "evidence": "Even with these improvements, preventing multi-context attacks at an acceptable cost remains an open problem.",
+   "title": "Red-Teaming Auto Mode: Improving Blocking Classifiers Against Malign Coding Agents"
+  },
+  {
+   "arxiv_id": "2609.19720",
+   "verdict": "defence-cost",
+   "evidence": "A time-aware defender holds 585 blocks on average, but one step of clock lag drops its containment to 0%.",
+   "title": "Reachability, Not Observation: Containing Systems Whose Wiring Changes"
+  },
+  {
+   "arxiv_id": "2609.21957",
+   "verdict": "defence-cost",
+   "evidence": "End to end the stack takes the leak from 100,000 to 59 bits, a factor of 1,704, leaving 12% of legitimate work standing",
+   "title": "Provisional Reachability: Containing Agents by Making Every Crossing Revocable"
+  },
+  {
+   "arxiv_id": "2609.22157",
+   "verdict": "not-a-cost",
+   "evidence": "It cuts the harm rate on capacity-bound inputs from 0.75 to 0.026",
+   "title": "PAGE: Partition-Aware Gated KV-Cache Eviction"
+  },
+  {
+   "arxiv_id": "2609.22510",
+   "verdict": "defence-cost",
+   "evidence": "Our detector, DeFuse, reaches 3.0% at a calibrated 5% false-positive budget with the best detection quality of any method tested (AUC 0.9994) and 25x lower latency",
+   "title": "Defusing Explosive Prompts: Understanding and Preventing Trigger-Based Prompt Injections in LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.22818",
+   "verdict": "defence-cost",
+   "evidence": "Token overhead was 0% for sanitization and provenance, 1.5% for anomaly detection, 3.0% for the reranker, and 4.5% with all four stacked.",
+   "title": "The Price of Safety: Benign-Case Utility and Token Overhead of Memory-Poisoning Defenses in LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.22949",
+   "verdict": "not-a-cost",
+   "evidence": "Four architectural defenses reduce overall injection success from 31.2% to 4.2%",
+   "title": "Beyond Single-Model Injection: A Threat Model and Defense Architecture for Prompt Injection in Multi-Agent Systems"
+  },
+  {
+   "arxiv_id": "2609.23766",
+   "verdict": "defence-cost",
+   "evidence": "the whole scope effect comes from the one fault whose cause is a cluster-level object, and cluster scope costs 55% more tokens",
+   "title": "TriFleetRCA: On-Premise LLM Root Cause Analysis for Kubernetes"
+  },
+  {
+   "arxiv_id": "2609.24200",
+   "verdict": "attacker-cost",
+   "evidence": "Deterministic rules proved cheaper to forge than eight open-weight LLM judges, failing at 2% of attacker-controlled response content against a median of 50%.",
+   "title": "Forgeable Confirmation in Automated Computer Security Testing: Deterministic Rules versus AI Judges"
+  },
+  {
+   "arxiv_id": "2609.25443",
+   "verdict": "defence-cost",
+   "evidence": "prepared worker-admission-to-dispatch p95 ranges from 9.802 to 11.374 ms, versus 25.018 to 334.000 ms synchronously, across the tested concurrency levels.",
+   "title": "ZeroGate: Trust-Preserving Fast Paths for Governed AI Agent Runtimes"
+  },
+  {
+   "arxiv_id": "2609.26091",
+   "verdict": "construction-only",
+   "evidence": "achieving up to 3-4% improvements under differential privacy while reducing communication cost by over 80%",
+   "title": "From Bilinear to Linear: Differentially Private Federated LoRA via Low-Dimensional Parameterization"
+  },
+  {
+   "arxiv_id": "2609.27367",
+   "verdict": "defence-cost",
+   "evidence": "on a TinyLlama-1.1B trace, proving seven of 47 chunks takes 22.0% of the time and 6.8% of the proof size of proving all 47.",
+   "title": "Seal, Then Sample: Sampled Layerwise Proofs for Verifiable LLM Inference from GPT-2 to 70B"
+  },
+  {
+   "arxiv_id": "2609.28585",
+   "verdict": "not-a-cost",
+   "evidence": "retaining raw history increases mean effective session cost by 21.2-35.9%.",
+   "title": "Persistent Billable State: Denial-of-Wallet Attacks and Defenses in Tool-Calling LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.29099",
+   "verdict": "defence-cost",
+   "evidence": "TraceGuard removes an average of 98.4% of poisoned examples and 5.4% of clean examples.",
+   "title": "TraceGuard: Adaptive Multimodal Poison Filtering through Cross-Feature Rank Agreement"
+  },
+  {
+   "arxiv_id": "2609.29287",
+   "verdict": "not-a-cost",
+   "evidence": "AEGIS reduces the average unsafe rate from 17.9% to 0.4%, while causing only a marginal increase in over-refusal on benign inputs",
+   "title": "AEGIS: Audio Endogenous Guarding via Internal Signals Against Large Audio-Language Model Jailbreaks"
+  },
+  {
+   "arxiv_id": "2609.29808",
+   "verdict": "defence-cost",
+   "evidence": "microsecond-scale (4.8 $μ$s median / $&lt; 0.154$ ms WCET bound) POSIX preemption buses",
+   "title": "Hard Stop: Kernel-Level Preemption and Containment for Rogue Agentic Execution"
+  },
+  {
+   "arxiv_id": "2609.32565",
+   "verdict": "defence-cost",
+   "evidence": "hides every single-carrier fact from four language-model adversaries at 40% lower edit cost than deletion",
+   "title": "Reading Is Not Leaking: Local, Auditable Measurement and Reduction of Inference Exposure from Public Footprints"
+  },
+  {
+   "arxiv_id": "2609.32616",
+   "verdict": "not-a-cost",
+   "evidence": "a harness gate driven by the benchmark&#39;s live signals cuts replayed harm by 74%",
+   "title": "&#34;You&#39;re Right, Let Me Fix It&#34;: How LLM Agents Damage Correct Work When Falsely Accused"
+  },
+  {
+   "arxiv_id": "2609.33446",
+   "verdict": "not-a-cost",
+   "evidence": "selects read-only probes by expected information gain per cost",
+   "title": "HESP: Separating What to Probe from When to Stop in Local LLM Alert-Triage Agents"
+  },
+  {
+   "arxiv_id": "2609.33671",
+   "verdict": "defence-cost",
+   "evidence": "On Huawei Ascend 910C NPUs, pure NPU inference runs in 21.77 ms mean latency (45.90 QPS)",
+   "title": "COGNIT-Guard: Calibrated Standalone Direct-Decision Guardrails with Heterogeneous CPU-NPU Confidence Cascading under Explicit Latency and False-Positive Constraints"
+  },
+  {
+   "arxiv_id": "2609.33924",
+   "verdict": "defence-cost",
+   "evidence": "Median in-memory latency of the full offline verifier was 1.61 ms for the scenario traces.",
+   "title": "A2A-ForensicTrace: Offline Verification of Tamper-Evident A2A Runtime Evidence"
+  },
+  {
+   "arxiv_id": "2609.34376",
+   "verdict": "not-a-cost",
+   "evidence": "A corrected timeout intervention finds 18/20 admissions with repair or full resynthesis versus 0/20 for a static plan, with lower committed cost when receipts are reused.",
+   "title": "Before Agents Act: Assurance-Aware Semantic Scheduling for Evidence Acquisition in Distributed Systems"
+  },
+  {
+   "arxiv_id": "2609.34963",
+   "verdict": "defence-cost",
+   "evidence": "at $6.27\\times$ lower median API latency and $55.9\\times$ lower estimated API cost",
+   "title": "JevVibe: Efficient Classification-Guided Secure Code Generation"
+  },
+  {
+   "arxiv_id": "2609.35234",
+   "verdict": "defence-cost",
+   "evidence": "validation operations from up to `10,201` to approximately `26`, and assurance evidence storage from `0.79`MiB to `0.15`MiB per project",
+   "title": "Poster: Towards ProofWeave: A Privacy-Minimised, Integrity-Anchored Evidence Plane for Continuous Agentic Assurance"
+  },
+  {
+   "arxiv_id": "2609.35266",
+   "verdict": "defence-cost",
+   "evidence": "At 1,000 independent assurance contexts, full policy-triggered recomputation with one worker recorded a maximum aggregate refresh of 1.62 s",
+   "title": "Continuous Assurance of Agentic Security Auditors for Software Delivery Decision Gates"
+  },
+  {
+   "arxiv_id": "2609.35366",
+   "verdict": "defence-cost",
+   "evidence": "allows users to recover from erroneous actions with only 3% overhead.",
+   "title": "Planarian: Managing Agent State with Statepoints"
+  },
+  {
+   "arxiv_id": "2609.35659",
+   "verdict": "defence-cost",
+   "evidence": "every insider attack in two suites is caught; the signer round trip is 0.45 ms median",
+   "title": "Tracekit: Tamper-Evident Intent-Reasoning-Action Auditing for AI Agents"
+  },
+  {
+   "arxiv_id": "2609.35886",
+   "verdict": "defence-cost",
+   "evidence": "A measured median payment of $0.007 places a hard constraint on deployment: one human review costs 143 times the value of the payment it examines.",
+   "title": "Agentic Commerce Bench: Measuring Fraud Detection for Agents That Spend Money"
+  },
+  {
+   "arxiv_id": "2609.35909",
+   "verdict": "attacker-cost",
+   "evidence": "Trajectory analysis shows that agents spend 30.6-51.5% of completion tokens and an estimated 32.5-49.9% of runtime verifying decoys",
+   "title": "Cheap to Hypothesize, Costly to Verify: The Defense Surface of Agentic Vulnerability Discovery"
+  },
+  {
+   "arxiv_id": "2609.36376",
+   "verdict": "defence-cost",
+   "evidence": "a private query over a corpus the size of a clinical reference requires one to three minutes of server time",
+   "title": "Quantization Enables Private Dense Retrieval against Malicious Service Providers"
+  },
+  {
+   "arxiv_id": "2609.36494",
+   "verdict": "defence-cost",
+   "evidence": "ANCHOR processes a full audit day at dollar-level API cost, supporting practical, context-grounded investigation across windows.",
+   "title": "Know the Normal, Track the Attack: Context-Grounded and Stateful LLM Investigation over System Provenance"
+  },
+  {
+   "arxiv_id": "2609.36570",
+   "verdict": "defence-cost",
+   "evidence": "at 93-100% typography-normalized benign utility, with larger task-dependent costs when reasoning over steered content",
+   "title": "CounterSteer: Suppressing Indirect Prompt Injection with Activation Steering"
+  },
+  {
+   "arxiv_id": "2609.36958",
+   "verdict": "defence-cost",
+   "evidence": "with 3.4216 calls per item and an RLVR score of 0.6417 for VStress-CA",
+   "title": "VStress: Correlation-Aware Auditing and Adaptive Budget Allocation for Repeated Verifiers"
+  },
+  {
+   "arxiv_id": "2609.37196",
+   "verdict": "defence-cost",
+   "evidence": "ToolFence reduces overall ASR to near zero with only a 3.80 percentage-point clean-utility drop and practical runtime overhead",
+   "title": "ToolFence: Fine-Grained Authorization for Secure Tool-Using LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.37367",
+   "verdict": "not-a-cost",
+   "evidence": "This all comes at a negligible communication overhead.",
+   "title": "Backdoor Mitigation in Decentralized LLM Fine-Tuning"
+  },
+  {
+   "arxiv_id": "2609.38223",
+   "verdict": "defence-cost",
+   "evidence": "Median paired hook overhead is approximately 85 ms, and offline verification takes approximately 174 ms end to end on the testbed.",
+   "title": "CATP: Design and Evaluation of Local Agent Authorization and Audit Evidence"
+  },
+  {
+   "arxiv_id": "2609.38245",
+   "verdict": "defence-cost",
+   "evidence": "On x86-64 and ARM64 bare-metal hosts, the evaluated workloads showed 0.2-3.5% end-to-end overhead and 0.6-3.7% additional system CPU time.",
+   "title": "Agent-Warden: eBPF-Based Kernel-Native Process-File Provenance Tracking for LLM Agents"
+  },
+  {
+   "arxiv_id": "2609.38248",
+   "verdict": "defence-cost",
+   "evidence": "median overhead is 11.96-12.89% in a Linux 6.15 virtual machine and 35.79-61.54% on a Linux 6.15 physical platform",
+   "title": "ContractWarden: Kernel-Enforced Damage Boundaries for AI Agents via Human-Authorized Contracts"
+  },
+  {
+   "arxiv_id": "2609.38266",
+   "verdict": "defence-cost",
+   "evidence": "We evaluate Janus under crash injection (144 kills in-process, 81 through the daemon), by verifying a 100-million-event log offline (254.5 s)",
+   "title": "Janus: Evidence-Before-Effect Sagas and Offline-Verifiable Provenance for Agentic LLMs"
+  },
+  {
+   "arxiv_id": "2609.39678",
+   "verdict": "defence-cost",
+   "evidence": "On average, the evaluation takes 44.35 seconds and costs US$0.22 per rule.",
+   "title": "Aletheia: Permission-Minimality Testing for Coding-Agent Rules"
+  },
+  {
+   "arxiv_id": "2610.00132",
+   "verdict": "defence-cost",
+   "evidence": "An 18,000-execution valid-path study measures a 6.21 ms default median on resident inputs.",
+   "title": "The Cognitive Continuity Test: Verifying Governed State Transitions in Persistent AI Agents"
+  },
+  {
+   "arxiv_id": "2610.00327",
+   "verdict": "not-a-cost",
+   "evidence": "Across 1,280 cross-object attacks, the joint contract detects 1,275 substitutions (0.9961).",
+   "title": "Actions with Receipts: Jointly Binding Claims, Evidence, and Execution for Replayable Tool-Agent Auditing"
+  },
+  {
+   "arxiv_id": "2610.00354",
+   "verdict": "defence-cost",
+   "evidence": "Overhead is about 41k gas and 0.1-0.2 s per check.",
+   "title": "Proof-Gated Signing: Solver-Checked Transaction Guards that Hold Under State Drift for Onchain AI Agents"
+  },
+  {
+   "arxiv_id": "2610.00371",
+   "verdict": "not-a-cost",
+   "evidence": "reviewing combined artifacts reduces the denied-commit rate from 86.0% to zero with no loss of authorized supply",
+   "title": "Deny Without Disabling: Authorization-Paired Evaluation and Control for Multi-Agent Systems"
+  },
+  {
+   "arxiv_id": "2610.00663",
+   "verdict": "not-a-cost",
+   "evidence": "reduce the attack success rate (ASR) from 100% to 0-10% on most settings across two tasks, three attacks, and four model families, while downstream utility is often preserved or only modestly affected",
+   "title": "Backdoor Containment via Expert Quarantine and Shutdown in LLMs"
+  },
+  {
+   "arxiv_id": "2610.01058",
+   "verdict": "defence-cost",
+   "evidence": "MOMAT&#39;s CiM-based retrieval accelerates a 100-query batch from 15,052.44 ms to 3,207.21 ns (a $4.69 \\times 10^6\\times$ speedup) and reduces energy from $8.1 \\times 10^7$ $μ$J to 3.32 $μ$J",
+   "title": "MOMAT: Mixture of Multiple Atlases for Low-Power Jailbreak Defense of Quantized LLMs"
+  },
+  {
+   "arxiv_id": "2610.01073",
+   "verdict": "construction-only",
+   "evidence": "Full validation and validated rollback end with fully correct programs in the core trajectory study while retaining over 43% deployment savings.",
+   "title": "Safety Must Survive Self-Improvement: Why Failures Persist and How Agents Recover"
+  },
+  {
+   "arxiv_id": "2610.01535",
+   "verdict": "not-a-cost",
+   "evidence": "On HELM Safety the selection cost is 0.003-0.030 of harm under random splits and 0.045-0.113 under held-out categories",
+   "title": "False Floors: LLM Safety Routing Evaluations Break Under Distribution Shift"
+  },
+  {
+   "arxiv_id": "2610.01756",
+   "verdict": "not-a-cost",
+   "evidence": "We apply the criterion to controlled and native workflows, covering 840 matched executions and an exhaustive 11,648-case check over a finite objective-task domain.",
+   "title": "SoK: Decentralized Agent Economic Infrastructure"
+  },
+  {
+   "arxiv_id": "2610.02349",
+   "verdict": "defence-cost",
+   "evidence": "MIRROR reduces ASR to 0% below the threshold at 1x LLM token cost. LLM-as-a-Judge costs 35x in the same deployment, and blocks up to 44.2% of benign outputs in the topology sweep.",
+   "title": "MIRROR: Multipath Quorum Integrity for LLM Multi-Agent Communication"
+  },
+  {
+   "arxiv_id": "2610.02432",
+   "verdict": "defence-cost",
+   "evidence": "we propose AttestMCP, which attests tool calls with HMAC-protected packets at under 0.1 ms per call, and the Commit Boundary isolation pattern.",
+   "title": "Evaluating and Improving the Robustness of Large Language Models to Input Sequence Variations"
+  },
+  {
+   "arxiv_id": "2610.03014",
+   "verdict": "construction-only",
+   "evidence": "Corpus-wide analysis recovers source-to-operation dependency evidence for 9,821 candidates (41.15%) and potential guard evidence for 3,075 (12.88%), completing in 50.8 minutes.",
+   "title": "Beyond Predefined Sinks: Security-Aware Dependency Analysis for LLM Agents"
+  },
+  {
+   "arxiv_id": "2610.03319",
+   "verdict": "defence-cost",
+   "evidence": "This prevents the adversary from controlling the UAV schedule, but it also increases cumulative cost by 79% and 74% for the two detectors, respectively, compared with the undefended system.",
+   "title": "Defense-in-Depth at the Perception-Reasoning Interface of LLM-Centric Agentic UAV Swarms"
+  },
+  {
+   "arxiv_id": "2610.03999",
+   "verdict": "not-a-cost",
+   "evidence": "The same library is evaluated with three small, locally deployable SLMs, namely Llama 3.1, Phi-4:14B, and Qwen2.5:7B, without fine-tuning or paid hosted inference.",
+   "title": "SERA-IDS: Structured Experience Retrieval-Augmented Intrusion Detection with Small Language Models"
+  },
+  {
+   "arxiv_id": "2610.04504",
+   "verdict": "not-a-cost",
+   "evidence": "50 scenarios, 12 attack variants, adaptive/white-box/PAIR escalation (~7,000 testbed calls; ~10,000 harness calls on AgentDojo/JADE)",
+   "title": "The Same Zero: Why Identical ASR Can Imply Different Guarantees in LLM-Agent Security"
+  },
+  {
+   "arxiv_id": "2610.05089",
+   "verdict": "not-a-cost",
+   "evidence": "Across five paired four-worker runs, tenant scoping reduces victim fallback after recovery from 54/60 to 0/60, while increasing attempts against exhausted shared quotas.",
+   "title": "Cooldown Landmines: Cross-Tenant Interference Attacks on LLM Gateways"
+  },
+  {
+   "arxiv_id": "2610.05163",
+   "verdict": "defence-cost",
+   "evidence": "Under full-benchmark fail-open scoring with Claude Sonnet 5, PAA reaches 86% Block recall at a 6-8% false-block rate (FBR), whereas ARGUS reaches 44-47% recall at 16-33% FBR.",
+   "title": "Blocking at the Boundary: Auditing Long-Horizon Agents against Staged Prompt Injection"
+  },
+  {
+   "arxiv_id": "2610.05323",
+   "verdict": "defence-cost",
+   "evidence": "while maintaining a mean Pass@1 of 59.18% versus 59.58% for unwatermarked generation.",
+   "title": "Grammar-Guided Code Watermarking with Green Temperature"
+  },
+  {
+   "arxiv_id": "2610.07212",
+   "verdict": "defence-cost",
+   "evidence": "and on MATH the noise of an eightfold tighter budget costs at most 1.2 points.",
+   "title": "Reward-Driven Learning under Prompt-Level Differential Privacy"
+  },
+  {
+   "arxiv_id": "2610.07256",
+   "verdict": "defence-cost",
+   "evidence": "reduces the average number of LLM audits from 8.15 to 2.33 per run and token usage from 47.8k to 14.6k",
+   "title": "Efficient Auditing of Adversarial AI Agent Behavior from Agent Traces"
+  },
+  {
+   "arxiv_id": "2610.07639",
+   "verdict": "not-a-cost",
+   "evidence": "Network isolation and read-only mode reduce attack effects with substantial utility losses",
+   "title": "HarnessSecurity-Bench: Do Security Mechanisms Really Protect Coding Agent Harnesses?"
+  },
+  {
+   "arxiv_id": "2610.07657",
+   "verdict": "not-a-cost",
+   "evidence": "In independent testing across four domains, attack success rates drop from about 30.0% to approximately 3.0%, with 78% of blocked attacks handled by deterministic checks.",
+   "title": "Where Rules End and Judges Begin: Measuring the Judgment Boundary in Multi-Agent Systems Security"
+  },
+  {
+   "arxiv_id": "2610.08061",
+   "verdict": "not-a-cost",
+   "evidence": "ASCENT improves downstream utility by up to 20.3\\% and reduces attack success rate by up to 35.5\\%",
+   "title": "ASCENT: First-Order Optimal Fine-Tuning with Recalibration for Safety--Utility Co-Enhancement"
+  },
+  {
+   "arxiv_id": "2610.08668",
+   "verdict": "defence-cost",
+   "evidence": "Paraphrase robustness costs about half of the per-step watermark capacity.",
+   "title": "Semantic Behavioral Watermarking: Paraphrase-Robust and Forgery-Resistant Provenance for LLM Agents"
+  },
+  {
+   "arxiv_id": "2610.08739",
+   "verdict": "defence-cost",
+   "evidence": "the monitoring infrastructure incurs under 3% energy, under 4% area, and about 10% latency overhead",
+   "title": "BARE-AI: Bit-Flip Attack Resilience in AI Hardware through Built-in Performance Monitors"
+  },
+  {
+   "arxiv_id": "2610.08928",
+   "verdict": "defence-cost",
+   "evidence": "composition under the precautionary blocking policy drives attack success to zero with no observed false positives and microsecond-scale per-event cost",
+   "title": "Multi-Aspect Runtime Verification for Simulation-Based V&amp;V of LLM-Enabled Autonomous Agents"
+  },
+  {
+   "arxiv_id": "2610.09981",
+   "verdict": "defence-cost",
+   "evidence": "Per-category length-matched parity with accurate labels removes the gap on real traffic, costing at most 0.2 accuracy points on RouterBench (post hoc)",
+   "title": "Sensitive-Topic Leakage Through LLM Routing Metadata: Measurement and Mitigation"
+  },
+  {
+   "arxiv_id": "2610.10345",
+   "verdict": "not-a-cost",
+   "evidence": "On Llama3.1/SST2, SLDR reduces the average harmful score from 11.54 to 0.08 while maintaining downstream accuracy",
+   "title": "SLDR: Defending Against Malicious Fine-tuning via Selective Layers Recovery and Dynamic Routing"
+  },
+  {
+   "arxiv_id": "2610.10655",
+   "verdict": "not-a-cost",
+   "evidence": "existing methods struggle to balance forget quality with utility, and typically incur substantial computational costs due to parameter fine-tuning",
+   "title": "Nullify: Null-Space Activation Steering for Training-Free LLM Unlearning"
+  },
+  {
+   "arxiv_id": "2610.11169",
+   "verdict": "not-a-cost",
+   "evidence": "Reviewing the 100 repositories it ranks highest prevents 14.9% of later adoptions of high-risk skills, against 0.5% for the 100 most starred",
+   "title": "Skill Constellations: Tracing the Supply Chain of Agent Skills on GitHub"
+  },
+  {
+   "arxiv_id": "2610.12050",
+   "verdict": "defence-cost",
+   "evidence": "incurs an additional overhead of 22% in comparison to an application manually ported to OP-TEE, while also facilitating the execution of unaltered AI models with an additional inference latency of 6%",
+   "title": "Protecting CPU AI On Edge TEEs: WebAssembly&#39;s Promise and Practical Challenges"
+  },
+  {
+   "arxiv_id": "2610.12948",
+   "verdict": "defence-cost",
+   "evidence": "the witness-commit mechanism lowers admission cost by up to 40.8% compared with baselines, and admitting common payments costs approximately \\$0.04-\\$0.21.",
+   "title": "AgentValve: Sybil-Resilient Payment Authorization for Permissionless AI Markets"
+  },
+  {
+   "arxiv_id": "2610.14089",
+   "verdict": "defence-cost",
+   "evidence": "while retaining 85.62% of the protected reference&#39;s relaxed utility and comparable prompted containment.",
+   "title": "SAGE: Efficient Protected Vision-Language Inference on Smart Glasses"
+  },
+  {
+   "arxiv_id": "2610.14194",
+   "verdict": "defence-cost",
+   "evidence": "label inference falls below what honest training already leaks, at under two points of task-accuracy cost.",
+   "title": "Embedding Asymmetry as Attack Signal: Detecting and Defending Active Label Inference in Vertical Federated Learning"
+  },
+  {
+   "arxiv_id": "2610.14378",
+   "verdict": "not-a-cost",
+   "evidence": "Bias sweeps show model-dependent distortion costs, and shared-rule controls support a locality interpretation without establishing a unique advantage of bytes.",
+   "title": "Tokenization-Invariant Watermarking: A Byte-Local Method for LLM Text"
+  },
+  {
+   "arxiv_id": "2610.14488",
+   "verdict": "defence-cost",
+   "evidence": "A no-op brokered request has a median latency of 4.0 ms, and the spawned programs we measured take 8.5 ms to 18.4 ms longer than without ZTAC.",
+   "title": "Names Are Not Objects: Object-Bound Confinement for Compromised AI Coding Agents"
+  },
+  {
+   "arxiv_id": "2610.14606",
+   "verdict": "defence-cost",
+   "evidence": "with an average per-step latency of 0.043 ms and total embedding overhead below 0.54 ms.",
+   "title": "Decision Uncertainty-Oriented Watermarking (DUOW): Securing Multi-Agent Routing Against Policy Cloning"
+  },
+  {
+   "arxiv_id": "2610.15721",
+   "verdict": "not-a-cost",
+   "evidence": "VReparo reduces the average HarmBench attack success rate (ASR) from 57.28% to 39.21%",
+   "title": "To Cache or Not to Cache: Understanding and Mitigating Safety Incompatibility in Cross-Model KV Cache Reuse"
+  },
+  {
+   "arxiv_id": "2610.15924",
+   "verdict": "not-a-cost",
+   "evidence": "The iterative design scales with the hardening budget, producing progressively stronger defenses as the number of loop iterations increases",
+   "title": "Scalable Weak-to-Strong Verifier Hardening for Agent Environments"
+  },
+  {
+   "arxiv_id": "2610.16814",
+   "verdict": "not-a-cost",
+   "evidence": "StableJudge centers on a compact 0.13B Sentry that localizes injected spans and performs targeted sanitization prior to evaluation",
+   "title": "StableJudge: A Lightweight Adversarial Defense Framework for LLM-as-a-Judge"
+  },
+  {
+   "arxiv_id": "2610.17431",
+   "verdict": "defence-cost",
+   "evidence": "Relative to serving without verification, VeriRouter adds only 4.08 s under per-turn selection and 0.11 s under session-pinned selection.",
+   "title": "VeriRouter: Towards Verifiable LLM Routing"
+  },
+  {
+   "arxiv_id": "2610.18007",
+   "verdict": "defence-cost",
+   "evidence": "Under the strategic attack-prompt condition, it reduces leakage from 28.19% to 18.79% and reduces checker-only cost amplification from 1.32x to 1.02x.",
+   "title": "Cost-Efficient Privacy Enforcement for Email-Generating LLM Agents under Strategic Information Requests"
+  },
+  {
+   "arxiv_id": "2610.18326",
+   "verdict": "defence-cost",
+   "evidence": "its separate permission gate cuts mean review time per task from 4.80s for an SFT-LLM judge to 1.33s",
+   "title": "Jev-Guard: Fast Routing and Auditing Agent Actions over Editable Policy Trees"
+  },
+  {
+   "arxiv_id": "2610.19278",
+   "verdict": "defence-cost",
+   "evidence": "TrackShield reduces attacked tracking-stage latency from $139.90$ to $6.27$\\,ms and whole-pipeline P99 latency from $190.9$ to $48.8$\\,ms, at a benign MOTA cost of $1.06$ points",
+   "title": "TrackShield: An Efficient Runtime Defense Against Availability Attacks on High-Performance Real-Time Multi-Object Tracking"
+  },
+  {
+   "arxiv_id": "2610.19498",
+   "verdict": "defence-cost",
+   "evidence": "one compiler setting yields a unique output across the tested platforms at negligible quality cost (+0.06% perplexity)",
+   "title": "What You Sign Is Not What You Run: The Verifiability Gap in Quantized LLM Supply Chains"
+  },
+  {
+   "arxiv_id": "2610.20668",
+   "verdict": "not-a-cost",
+   "evidence": "the two-layer audit reports a clean false-positive rate of 0.0000, detects 0.9983 of serialized faults and 0.9982 of unlogged hidden-read faults",
+   "title": "CascadeLedger: Counterfactual Auditing of Information and Resource Integrity in LLM Cascades"
+  },
+  {
+   "arxiv_id": "2610.21063",
+   "verdict": "defence-cost",
+   "evidence": "the trusted card raises the attack catch rate from 0.30 to 0.98, at the cost of refusing 16 percent of harmless near misses",
+   "title": "Approve What, Exactly? Effect Binding and Trusted Rendering for Agent Step-Up Authorization"
+  },
+  {
+   "arxiv_id": "2610.21394",
+   "verdict": "defence-cost",
+   "evidence": "reuse reduces complete lifecycle cost by 3.49 percent in JS and 1.79 percent in Python",
+   "title": "Matoi: Selective Revalidation of Consequence Evidence for Agent Authorization"
+  },
+  {
+   "arxiv_id": "2610.22440",
+   "verdict": "defence-cost",
+   "evidence": "cutting wall-clock time by 54% and frames decoded by 64%, without loss of accuracy",
+   "title": "An Agentic ENF Framework for Forensic Video Authentication Against Generative AI"
+  },
+  {
+   "arxiv_id": "2610.22697",
+   "verdict": "defence-cost",
+   "evidence": "Isolation disrupts functionality on only 3.7% of tasks",
+   "title": "What It Is, Not What It Says: Securing Agentic Browsing Interactions with Web Semantics"
+  },
+  {
+   "arxiv_id": "2610.22959",
+   "verdict": "not-a-cost",
+   "evidence": "SAFE-Mem attains the lowest attack success among defenses that retain legitimate memory, at least 77% below the strongest of them",
+   "title": "SAFE-Mem: Secure Agentic Memory with Fine-Grained Authority and Governance-Aware Retrieval"
+  },
+  {
+   "arxiv_id": "2610.23233",
+   "verdict": "defence-cost",
+   "evidence": "Experiments show that the average observation overhead of AgentLoupe is below 8%",
+   "title": "AgentLoupe: Kernel-Resident Semantic Causal Labels for AI Agent Observability"
+  },
+  {
+   "arxiv_id": "2610.24834",
+   "verdict": "defence-cost",
+   "evidence": "e5 always-filtering reduces $\\mathrm{ASR}_{\\mathrm{exp}}$ to 0.167 overall and 0.138 on parametrically unknown queries, at a 13.6-point clean cost",
+   "title": "Consistency Is the Attack Surface: Detecting Coordinated Retrieval Poisoning with Embedding Geometry"
+  },
+  {
+   "arxiv_id": "2610.24896",
+   "verdict": "construction-only",
+   "evidence": "it matches a within-policy control at half the verifier spend",
+   "title": "Peer Pressure: Execution-Verified Co-Evolution of Attacker and Defender Populations for Code Security"
+  },
+  {
+   "arxiv_id": "2610.24907",
+   "verdict": "defence-cost",
+   "evidence": "On CyberSecEval, CAT-RAG nearly doubles the secure code generation improvement over the state of the art (23.57% vs. 12.11%) while reducing token overhead by 41.71%.",
+   "title": "CAT-RAG: Improving Secure Code Generation with Category-Aware Agentic Retrieval"
+  },
+  {
+   "arxiv_id": "2610.24916",
+   "verdict": "not-a-cost",
+   "evidence": "the proposed configuration increased expected-outcome rates by 80.4 percentage points over the ordinary-tool baseline",
+   "title": "Same Data, Different Bytes: Serialization-Invariant Integrity Checks for Agent-Published Datasets"
+  },
+  {
+   "arxiv_id": "2610.25133",
+   "verdict": "not-a-cost",
+   "evidence": "improves aggregate target security rates by 5.28--15.00 percentage points over unsteered generation across languages and misuse categories",
+   "title": "Many Repairs, One Direction: Steering Code Models Toward Safer Cryptographic API Use"
+  },
+  {
+   "arxiv_id": "2610.25791",
+   "verdict": "defence-cost",
+   "evidence": "excision lowers WMDP-Bio accuracy by 48.4 points while MMLU changes by less than 3 points",
+   "title": "Towards Architectural-Level Safety Control: Relocating Hazardous Knowledge into Removable Experts in Mixture-of-Experts Models"
+  },
+  {
+   "arxiv_id": "2610.26501",
+   "verdict": "defence-cost",
+   "evidence": "The hold adds 4.5 ms median per released connection, of which 24 us is policy",
+   "title": "Connection Escrow: Holding AI-Agent Pod Egress in the Kernel Until an Isolated Verifier Rules"
+  },
+  {
+   "arxiv_id": "2610.27543",
+   "verdict": "defence-cost",
+   "evidence": "incurs low overhead (&lt;1%)",
+   "title": "KNOX: Hardware-assisted Regulatory Sandbox for Generative Models"
+  },
+  {
+   "arxiv_id": "2610.27739",
+   "verdict": "defence-cost",
+   "evidence": "Enabling thinking on both sides increases defender energy by 8--17 times and reverses the exchange for one model pair in the original campaign.",
+   "title": "Make the Adversary Spend More Energy: Generative Deception against Language-Model Attackers in Critical Infrastructure"
+  },
+  {
+   "arxiv_id": "2610.29178",
+   "verdict": "defence-cost",
+   "evidence": "a rule that counts sources instead of votes blocked 0.9% of correct payments, against 7.4% for the best counting rule, at equal safety",
+   "title": "Correlated Failures of AI Approval Monitors"
+  },
+  {
+   "arxiv_id": "2610.30193",
+   "verdict": "not-a-cost",
+   "evidence": "a normalized 8-gram guard reduces 20-token copying to 0.0%, but a three-query adaptive attacker recovers 48.3% of hidden facts on Qwen3-8B",
+   "title": "Protection Is Not One Event: A Survey of RAG Protection Research by Measured Endpoint"
+  },
+  {
+   "arxiv_id": "2610.30361",
+   "verdict": "construction-only",
+   "evidence": "With approximately 80 ms decision overhead per request, this approach improves performance by 4.2 percentage points across ten seeds",
+   "title": "The Psychology of an AI Hacker"
+  },
+  {
+   "arxiv_id": "2610.30666",
+   "verdict": "attacker-cost",
+   "evidence": "Across 50-round traces, TokenTrap amplifies token consumption by $2{,}487.0\\times$, $1{,}616.0\\times$, and $567.8\\times$ relative to a no-token-task baseline for the three workflows.",
+   "title": "Your Token Is Gone: A Token-Consumption Countermeasure for Disrupting LLM-Based Scam Systems"
+  },
+  {
+   "arxiv_id": "2610.31695",
+   "verdict": "defence-cost",
+   "evidence": "Clean AUROC falls by at most 0.01, but our test of non-inferiority is inconclusive.",
+   "title": "Fooling LLM Safety Guards into Judging the Wrong Text"
+  },
+  {
+   "arxiv_id": "2610.32453",
+   "verdict": "not-a-cost",
+   "evidence": "Compared with reconstruction alone, protocol mutation reduces success with supplied public answers by 10.9 percentage points on average across detect, exploit, and patch.",
+   "title": "Beyond Copying: Lifelong Smart Contract Security Task Construction via Protocol Mutation"
+  },
+  {
+   "arxiv_id": "2610.33198",
+   "verdict": "defence-cost",
+   "evidence": "Yet deleting it costs 673 detections.",
+   "title": "Deletion, Substitution, Repair and Transplant: Component Attribution in BARBICAN, a Layered Prompt-Injection Gateway for MCP"
+  },
+  {
+   "arxiv_id": "2610.33318",
+   "verdict": "defence-cost",
+   "evidence": "Supervision leaves the compute loop of a 16-rank LAMMPS job unchanged, on graphics processors too, and adds about 3 s of start-up.",
+   "title": "A Deterministic Security Runtime for LLM Agents on MPI and Batch-Scheduled HPC Systems: Consensus-Governed, Hardware-Rooted Supervision of Every Rank"
+  },
+  {
+   "arxiv_id": "2610.33489",
+   "verdict": "defence-cost",
+   "evidence": "with 80.2% precision and average token consumption of 13.7 million",
+   "title": "From Instructions to Exploits: Applying Program Analysis to Malicious Agent Skills Across Natural Language and Code"
+  },
+  {
+   "arxiv_id": "2610.33587",
+   "verdict": "defence-cost",
+   "evidence": "The cost is coverage, as without attack 16.0-61.7% of claims receive a binary verdict and the rest are disputed for audit.",
+   "title": "Who Verifies the Verifiers? Accountable Semantic Consensus for AI-Mediated Web Information Verification"
+  },
+  {
+   "arxiv_id": "2610.33633",
+   "verdict": "construction-only",
+   "evidence": "On the agent banks, equality refuses every reachable replacement from 64 probes and the bounded distance from 512, and sharper post hoc gates halve both.",
+   "title": "ProbeID: Verifying MCP Tool Identity for LLM Agents under Registry Drift"
+  },
+  {
+   "arxiv_id": "2610.33732",
+   "verdict": "defence-cost",
+   "evidence": "Verifying a signed pack takes about 4.5 ms versus about 29 min for embedding its passages on the device",
+   "title": "Trust Mechanisms for Offline Generative AI at the Edge: A Connectivity-Regime Framework and an Empirical Study on a Raspberry Pi 5"
+  },
+  {
+   "arxiv_id": "2610.34121",
+   "verdict": "not-a-cost",
+   "evidence": "collision rates up to 35% lower than under detection without economic consequences and up to 43% lower than under conventional stake slashing",
+   "title": "BE-CTDE: Blockchain-Enabled Multi-Agent Reinforcement Learning with Anomaly Detection and Token Economics"
+  },
+  {
+   "arxiv_id": "2610.34535",
+   "verdict": "defence-cost",
+   "evidence": "refuse-more caution drives over-refusal to 100 percent on two of three models for at most a 3.7-point change in attack success and yields the worst harm everywhere",
+   "title": "SentryBench: A Cost-Sensitive Benchmark for Adversarial Robustness of Tool-Using LLM Agents in Public-Safety Deployments"
+  },
+  {
+   "arxiv_id": "2610.34675",
+   "verdict": "defence-cost",
+   "evidence": "It also remains robust under fine-tuning, pruning, quantization, model merging, parameter permutation, and adaptive attacks, while requiring less than 0.3 MiB of fingerprint storage.",
+   "title": "From Representations to Computational Trajectories: Intrinsic Fingerprinting for Large Language Model Provenance Verification"
+  },
+  {
+   "arxiv_id": "2610.35082",
+   "verdict": "defence-cost",
+   "evidence": "while policy-compliant task completion on matched benign controls changes from 66.67% to 65.00%.",
+   "title": "CoSA: The Conflict of Skills Attack in Real-World LLM Agent Ecosystems"
+  },
+  {
+   "arxiv_id": "2610.36570",
+   "verdict": "not-a-cost",
+   "evidence": "in which every method has the same intervention menu and the same compute cost",
+   "title": "CASEL: Consequence-Aware Selective Execution for Reliable Long-Horizon Tool-Using Agents"
+  },
+  {
+   "arxiv_id": "2610.37657",
+   "verdict": "attacker-cost",
+   "evidence": "requires 3 times more FLOPs to reach the same ASR on HoS as it does on GPT-OSS-20B or SecAlign",
+   "title": "Heads of Security: Learned Attention Gates Improve Prompt Injection Robustness"
+  },
+  {
+   "arxiv_id": "2610.38126",
+   "verdict": "not-a-cost",
+   "evidence": "The ledger records the disclosure charge associated with this gain; budgets of 16 nats or less leave accuracy near the cloud-only baseline on GSM8K.",
+   "title": "Answer-Only Disclosure: Private-Context LLM Assistance over Web APIs with a Leakage Ledger"
+  },
+  {
+   "arxiv_id": "2610.38458",
+   "verdict": "not-a-cost",
+   "evidence": "All 13 end-to-end checks pass on a real KVM runner (the test that runs them takes 28.5 s, including image pull and boot)",
+   "title": "Tracekit Box: Running AI Agents in Micro-VMs Where Every Way Out Is Decided and Signed"
+  },
+  {
+   "arxiv_id": "2610.39109",
+   "verdict": "defence-cost",
+   "evidence": "Two independent verifiers agree on all 926 verdicts, and verification takes about 1 ms.",
+   "title": "PCM: A Proof-Carrying Message Protocol for Verifiable Multi-Agent Communication"
+  },
+  {
+   "arxiv_id": "2610.39840",
+   "verdict": "defence-cost",
+   "evidence": "It saves 43% of judge calls, but an attacker with access to the model can choose lies that pass it.",
+   "title": "Surprise Alone Learns Lies: Evidence-Gated Continual Learning for LLMs from Streaming Claims"
+  },
+  {
+   "arxiv_id": "2610.40744",
+   "verdict": "defence-cost",
+   "evidence": "while improving isolation and fairness at slightly higher latency costs, i.e. approximately 27 ms",
+   "title": "CLIC: Closed-Loop Intent Consistency for Securing LLM-Driven Control in Open RAN"
+  },
+  {
+   "arxiv_id": "2610.40981",
+   "verdict": "not-a-cost",
+   "evidence": "Their cost increases with power, proximity to mandatory safety invariants, and repeated requests.",
+   "title": "Towards Elastic Least Privilege for Agent Planning"
+  },
+  {
+   "arxiv_id": "2610.41072",
+   "verdict": "defence-cost",
+   "evidence": "Finetuned models statistically match it on alert classification and rule writing for 5.6 to 59 times less energy.",
+   "title": "LanG 2.0: Energy-Efficient Agentic AI for Semi-Automated Security Operations at Scale"
+  }
+ ]
+}

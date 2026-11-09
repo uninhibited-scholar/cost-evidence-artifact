@@ -1,0 +1,184 @@
+{
+ "arxiv_id": "2609.38372",
+ "title": "Self-Evolving Harness on Multiple Tasks with the Agent as Its Own Optimizer",
+ "screening_status": "必要背景",
+ "versions_read": ["v1"],
+ "object": {
+  "what_persists": "mixed",
+  "scope": "mixed",
+  "carrier": "Evolved harness source code C_t (Python files: system prompt, tool definitions and implementations, context handling, execution control) plus free-text evolution notes N_t stored alongside the code; both are carried to the next iteration ('the notes travel with the harness to the next round'), acting as optimizer state. Harness code is the agent's operating policy; the notes are cross-iteration experience.",
+  "operations_covered": ["formation", "update", "retention", "retrieval", "repair"]
+ },
+ "safety_property": {
+  "type": "policy-compliance",
+  "statement": "The paper studies no adversarial safety property; its only safety-relevant mechanism is an evaluation-compliance safeguard against reward hacking. What is protected: that reported scores reflect genuine task solving rather than bypassing the task to obtain answers or exploiting grading loopholes (evaluation validity / task-rule compliance). It fails if the agent obtains answers from published solutions, upstream patches, or evaluation files without being caught. Judged by: a scripted scan of all evaluation trajectories plus independent-agent review of flagged records; a record confirmed as cheating scores 0, and the paper reports no confirmed cheating in any evaluation record.",
+  "operationalized_as": "Two safeguards applied identically to all three harnesses (Seed, Iteration 5, Codex): (1) preventive constraint - every task description ends with a fixed requirement forbidding the agent to obtain answers from published solutions, upstream patches, or evaluation files, and reference answers and grading tests are placed in the environment only after the agent has finished; (2) post-hoc audit - a script scans every trajectory for suspicious behavior (downloading upstream fixes, searching for published answers or dataset copies, reading grading materials, modifying test files; for SWE-Bench Pro it also compares network-returned content with the reference patch record by record), independent agents check flagged records one by one, and records with unusually high or low scores are inspected; confirmed cheating scores 0 and is not rerun."
+ },
+ "threat_model": {
+  "adversary": "model-itself",
+  "capabilities": [
+   "The evaluated agent itself may reward-hack: bypass the task to obtain answers directly (e.g., download upstream fixes, search for published answers or dataset copies)",
+   "Read grading materials or modify test files, or exploit loopholes in grading",
+   "The proposer may edit any part of its own harness (files may be created or deleted) - accepted on runnability only, so a harmful or degenerate edit is not blocked by design"
+  ],
+  "assumptions": [
+   "No external attacker exists in the setting; the base model is frozen and only the external harness state is modified",
+   "The reward-hacking safeguards are applied identically to all three harnesses, and confirmed cheating scores 0",
+   "Acceptance of a new harness version requires only engineering checks: edits touch only the harness itself, at least one change besides the notes, new lines within budget, and a full task run with a mock model"
+  ],
+  "not_covered": [
+   "No external adversary is modeled: prompt injection, malicious tasks, poisoned trajectories, or attacks on the persisted harness/notes are entirely absent",
+   "Safety of self-modification: the acceptance gate checks runnability only ('Acceptance without validation'), never whether an evolved mechanism is safe or correct",
+   "Robustness of the evolved mechanisms to manipulation of the run records or notes the proposer reads",
+   "Variation across independent evolution chains (stochasticity unquantified); only one strong model and one stage-2 domain tested"
+  ]
+ },
+ "intervention": {
+  "name": "Self-evolving harness framework (the agent as its own optimizer), with reward-hacking evaluation safeguards",
+  "mechanism_layer": "architecture",
+  "description": "A recursive self-improvement framework over the agent's scaffolding: the same frozen model (GPT-5.6 Sol, high) runs as solver and proposer on the same harness version, each in a fresh session. Each iteration: rollout (solver runs a 60-task batch mixing 12 tasks from each of 5 in-distribution benchmarks, once per task, producing full run records), update (the proposer reads the complete, unfiltered run records plus current code and evolution notes, and directly edits the harness with no restriction on scope), check (engineering checks only: edits touch only the harness, at least one non-note change, new-line budget respected, full mock-model run; on failure a repair session runs, otherwise the previous version is kept). New-line budget acts as a learning rate (cosine 500->100 over stage 1; re-warmed to 200 then decayed to 100 in stage 2); evolution notes act as optimizer state. Stage 2 = continual training on Claw-Eval (40 new tasks + 20 success-anchor replays per iteration). Emerged mechanisms: output truncation (48,000-char cap), command time limits, history compaction (360,000-char threshold), independent review in a fresh context (capped at 150s/8 calls), visual inspection budget (4 images/reply, 24/task, 360s/500s delivery deadlines). As 必要背景 it supplies the mechanism baseline for 'an agent persistently rewriting the code that runs it across sessions'; its safety coverage is limited to the evaluation-compliance safeguards, with no gate on what the agent may evolve, and its documented side effects (compaction deleting the customer's request; acceptance without validation) are directly relevant to persisted-state safety."
+ },
+ "controls": [
+  {"name": "Seed harness (49-line Python file: system prompt, bash tool, minimal loop)", "purpose": "baseline"},
+  {"name": "Codex CLI 0.146.0 (same model, own tools and context compaction)", "purpose": "baseline"},
+  {"name": "Iteration 5 (end of stage 1) as reference point for stage-2 gains", "purpose": "baseline"},
+  {"name": "OOD average excluding BrowseComp-Plus (65.56 vs 63.76/64.97)", "purpose": "ablation"}
+ ],
+ "results": [
+  {
+   "claim": "On the held-out tasks of the five in-distribution benchmarks, the stage-1 evolved harness (Iteration 5) averages 60.17, 4.48 points above the 49-line Seed and 2.99 above Codex; gains concentrate on Terminal-Bench 2.1 (66.67->83.91) and SWE-Bench Pro (51.00->61.00).",
+   "metric": "average_score",
+   "value": "60.17",
+   "comparison": "Seed +4.48; Codex +2.99",
+   "setting": "GPT-5.6 Sol (high reasoning effort); five in-distribution benchmarks (Terminal-Bench 2.1, GAIA2, OfficeQA Pro, tau3-Bench banking, SWE-Bench Pro), held-out tasks only; three harnesses compared: Seed, Iteration 5, Codex CLI 0.146.0 (same model)",
+   "quote": "Iteration 5 averages 60.17 across the five benchmarks, 4.48 points above Seed and 2.99 above Codex.",
+   "locator": "§4.2 In-distribution results",
+   "denominator": {"n_total": "5 benchmarks", "n_valid": "5 benchmarks", "how_counted": "Figure 3: 'Averages weight the five benchmarks equally'; per-benchmark scores are success rates on held-out tasks (Table 3: TB2.1 29x3, GAIA2 100, OfficeQA Pro 73x2, tau3-Bench banking 37x2, SWE-Bench Pro 100)"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "On the five out-of-distribution benchmarks never used during evolution, Iteration 5 averages 70.45, 12.64 points above Seed and within one point of Codex (70.57) - the evolved mechanisms generalize beyond the training distribution.",
+   "metric": "average_score",
+   "value": "70.45",
+   "comparison": "Seed +12.64; Codex 70.57",
+   "setting": "GPT-5.6 Sol (high); five OOD benchmarks (SWE-bench Verified, DeepSWE, BrowseComp-Plus, APEX-Agents, Claw-Eval), held-out tasks; none used in stage-1 evolution",
+   "quote": "Iteration 5 averages 70.45, 12.64 points above Seed and within one point of Codex (70.57).",
+   "locator": "§4.2 Out-of-distribution results",
+   "denominator": {"n_total": "5 benchmarks", "n_valid": "5 benchmarks", "how_counted": "Figure 3: five benchmarks equally weighted; held-out counts per Table 3: SWE-bench Verified 100, DeepSWE 53, BrowseComp-Plus 100, APEX-Agents 100, Claw-Eval 100"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "Largest per-benchmark change: on BrowseComp-Plus, Iteration 5 rises from Seed's 34.00 to 90.00 (Codex 93.00), mainly owing to the output-truncation mechanism added from terminal/SWE training tasks - a gain on a retrieval benchmark never seen in evolution.",
+   "metric": "success_rate",
+   "value": "90.00",
+   "comparison": "Seed 34.00 -> 90.00; Codex 93.00",
+   "setting": "BrowseComp-Plus held-out 100 questions (deep-research QA over a fixed corpus of about 100,000 web pages); GPT-5.6 Sol (high)",
+   "quote": "The largest change is on BrowseComp-Plus, where Iteration 5 rises from Seed’s 34.00 to 90.00, compared with 93.00 for Codex, mainly owing to output truncation (Section 5.2).",
+   "locator": "§4.2 Out-of-distribution results",
+   "denominator": {"n_total": "100", "n_valid": "100", "how_counted": "Table 3: BrowseComp-Plus held-out = 100; Figure 3 caption: on the other benchmarks scores are success rates (%)"},
+   "is_primary_result": false
+  },
+  {
+   "claim": "Continual training (stage 2, Iterations 6-7 on Claw-Eval with 40 new tasks + 20 success anchors per iteration) raises the overall score from 66.17 to 68.06 and passed tasks from 52 to 57, both highest among the four harnesses; gain concentrated in multimodal tasks (39.3->47.8).",
+   "metric": "mean_official_score_x100",
+   "value": "68.06",
+   "comparison": "66.17 -> 68.06; passed tasks 52 -> 57",
+   "setting": "Claw-Eval held-out: the same 100 tasks and same model for all four harnesses; Iteration 7 vs Iteration 5, Seed, Codex; pass = score at least 0.75 (Figure 4b)",
+   "quote": "Iteration 7 raises the overall score from 66.17 to 68.06 and the number of passed tasks from 52 to 57, both the highest among the four harnesses.",
+   "locator": "§4.3 Continual Training on Claw-Eval",
+   "denominator": {"n_total": "100", "n_valid": "100", "how_counted": "Figure 4(a): mean official score over the 100 Claw-Eval held-out tasks, multiplied by 100"},
+   "is_primary_result": true
+  },
+  {
+   "claim": "Mechanism-level result for output truncation: of the 65 BrowseComp-Plus tasks where the Seed aborted from context overflow (overlong tool output), Iteration 5 answers 57 correctly by narrowing searches and reading candidate files one at a time (on SWE-Bench Pro, 7 of 12 similarly aborted tasks).",
+   "metric": "recovered_tasks",
+   "value": "57 of 65",
+   "comparison": null,
+   "setting": "Seed aborted with context overflow on nine of ten benchmarks; BrowseComp-Plus most affected (65 tasks); GPT-5.6 Sol (high); truncation thresholds: 48,000 chars per command output, 6,000 chars for older outputs",
+   "quote": "the seed aborted on 65 tasks for this reason. Receiving truncated output, Iteration 5 narrows its searches and reads candidate files one at a time, and it answers 57 of these 65 tasks correctly.",
+   "locator": "§5.2 Output Truncation",
+   "denominator": {"n_total": "65", "n_valid": "65", "how_counted": "denominator = the 65 BrowseComp-Plus tasks on which the Seed aborted from context overflow"},
+   "is_primary_result": false
+  },
+  {
+   "claim": "The visual inspection budget added in stage 2 fixes multimodal-task timeouts: Iteration 5 failed to deliver within 600 seconds on 22 of the 34 multimodal held-out tasks, while multimodal average score rises from 39.3 to 47.8 under Iteration 7 (image quota 4/reply and 24/task, 360s/500s deadlines).",
+   "metric": "mean_official_score_x100",
+   "value": "47.8",
+   "comparison": "39.3 -> 47.8",
+   "setting": "Claw-Eval held-out multimodal category (34 tasks); delivery deadline 600 seconds; Iteration 5 vs Iteration 7",
+   "quote": "The gain comes mainly from multimodal tasks, whose average score rises from 39.3 to 47.8, consistent with the visual inspection budget added in these two iterations (Section 5.5).",
+   "locator": "§4.3 Continual Training on Claw-Eval",
+   "denominator": {"n_total": "34", "n_valid": "34", "how_counted": "multimodal held-out subset of Claw-Eval's 100 tasks; subset size 34 stated in §5.5 ('22 of the 34 multimodal held-out tasks'); Figure 4(a) mean official score x100"},
+   "is_primary_result": false
+  },
+  {
+   "claim": "Robustness check: even excluding BrowseComp-Plus (the benchmark that benefited most from truncation), Iteration 5's average over the other four OOD benchmarks (65.56) still exceeds Seed (63.76) and Codex (64.97).",
+   "metric": "average_score",
+   "value": "65.56",
+   "comparison": "Seed 63.76; Codex 64.97",
+   "setting": "four OOD benchmarks (SWE-bench Verified, DeepSWE, APEX-Agents, Claw-Eval), held-out tasks; GPT-5.6 Sol (high)",
+   "quote": "Even excluding BrowseComp-Plus, the average of Iteration 5 over the other four benchmarks (65.56) exceeds those of Seed (63.76) and Codex (64.97).",
+   "locator": "§4.2 Out-of-distribution results",
+   "denominator": {"n_total": "4 benchmarks", "n_valid": "4 benchmarks", "how_counted": "equal-weight average over the other four OOD benchmarks after excluding BrowseComp-Plus"},
+   "is_primary_result": false
+  },
+  {
+   "claim": "Regression tied to a persistence operation (regression analysis, not a headline result): on tau3-Bench banking Iteration 5 passes four fewer runs than Seed, because in all 11 runs that triggered history compaction the customer's original request was deleted at the first compaction (only one passed); in 4 runs Iteration 5 also used configure_run to lower the conversation step limit from 200, cutting off 2 runs.",
+   "metric": "compaction_triggered_runs",
+   "value": "11",
+   "comparison": null,
+   "setting": "tau3-Bench banking held-out (37x2 runs); GPT-5.6 Sol (high); multi-turn dialogue where the request exists only in conversation history; mechanism added for other task types (local fix with side effects)",
+   "quote": "all 11 runs in which Iteration 5 triggered compaction deleted the customer’s original request at the first compaction; only one of them passed.",
+   "locator": "§5.6 Regressions Relative to the Seed",
+   "denominator": {"n_total": "11", "n_valid": "11", "how_counted": "count of runs (out of 37x2 held-out runs on tau3-Bench banking) in which Iteration 5 triggered history compaction"},
+   "is_primary_result": false
+  }
+ ],
+ "limitations": [
+  {
+   "statement": "Only one strong model is evaluated; what outer pipeline weaker models would need is untested.",
+   "quote": "We report results for only one strong model; what kind of outer pipeline weaker models would need remains to be studied experimentally (Section 5.7).",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "Evolution is stochastic; rerunning may produce different mechanisms, and the variance across independent evolution chains was not estimated.",
+   "quote": "Evolution is itself stochastic: rerunning the same setup may produce different mechanisms, and estimating this variation would require multiple independent evolution chains.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "Some benchmarks have few held-out tasks (evaluated repeatedly and averaged); run-to-run randomness still has a sizable effect, so small differences should be read with caution.",
+   "quote": "the run-to-run randomness of the model still has a sizable effect on individual benchmarks, and small differences should be interpreted with caution.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "Stage 2 uses only one new domain (Claw-Eval); extension to other domains untested.",
+   "quote": "The second stage uses only one new domain, and whether the conclusions extend to other domains remains to be tested.",
+   "locator": "§6 Limitations"
+  },
+  {
+   "statement": "Acceptance without validation: a new harness version is accepted if it merely runs; there is no validation set and no old-vs-new score comparison, so whether an edit helps rests on the model's judgment - the framework's key deviation from real training and a missing safety/correctness gate.",
+   "quote": "A new version is accepted as long as it runs; the framework has no validation set and does not compare the scores of the old and new versions, so whether an edit helps rests almost entirely on the model’s own judgment.",
+   "locator": "§5.7 Acceptance without validation"
+  },
+  {
+   "statement": "Local fixes have side effects: the proposer sees one batch at a time, and both regressions of Section 5.6 came from mechanisms added for other tasks.",
+   "quote": "Both regressions in Section 5.6 come from mechanisms added for other tasks.",
+   "locator": "§5.7 Local fixes with side effects"
+  }
+ ],
+ "counterexamples": [],
+ "reproduction": {
+  "code": null,
+  "data": null,
+  "run_by_us": false
+ },
+ "reading": {
+  "coverage": ["abstract", "intro", "method", "results", "appendix", "figures"],
+  "complete": true
+ },
+ "quality_flags": [
+  "background_paper_no_safety_experiments",
+  "metrics_mix_success_rates_and_scaled_official_scores",
+  "appendix_listings_not_in_corpus"
+ ]
+}

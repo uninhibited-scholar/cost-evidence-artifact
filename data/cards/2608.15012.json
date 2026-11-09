@@ -1,0 +1,191 @@
+{
+  "arxiv_id": "2608.15012",
+  "title": "SysEvolve: An AI-native, safe, autonomous adversarial attack-defense co-evolutionary system",
+  "screening_status": "核心研究",
+  "versions_read": ["v1"],
+  "object": {
+    "what_persists": "mixed",
+    "scope": "cross-task",
+    "carrier": "攻击侧：SecFlow 把 200+ 专家技能（从 30,000+ 生产机器十余年安全运营中人工蒸馏）编入带依赖图的结构化技能库，Solver 在每个决策点查询（技能本身是静态人工知识库，非运行中自积累）；Strategy Board 是单次攻击方案生成内的'推理记忆'——带类型的证据图，事实/假设/尝试/能力/工件以支持/矛盾关系共存、版本化更新，跨 Solver 经上下文投影共享，会话可从文件系统转录恢复。防御侧：SysArmor（NodLink 状态追踪 + KnowHow 检测）设计上由攻击产出驱动检测模型微调的'持续模型自进化'。跨侧闭环数据流（攻击方案 -> 防御训练数据；检测结果/置信度 -> Strategy Board -> 攻击精炼）为设计主张——注意：闭环本身没有任何实验评估。",
+    "operations_covered": ["formation", "update", "retention", "retrieval"]
+  },
+  "safety_property": {
+    "type": "multiple",
+    "statement": "保护对象：(a) 防御侧——企业多主机环境中多阶段 APT 的实时检测与响应（precision/recall、生产环境真实 APT 检出）；(b) 评估基础设施——可信评估边界防 Hack Rewarding（私有验证器、里程碑验证、隔离边界），这是论文最有安全工程实质的部分。失效条件：仅按最终 flag/状态计分会奖励逃逸范围、攻击验证器或绕过预期流程的捷径；审查器过载丢事件会让攻击者借高吞吐'超级生产者'隐匿行为（NoDrop/DPUaudit 针对此设计）。判定方式：环境侧状态 + 收集平面审计证据的三层验证（环境资格、能力推进里程碑、终端目标），攻击推进与防御可观测性作为同一轨迹的独立测量。",
+    "operationalized_as": "SysField：零丢失收集@2.1% 开销 vs 现有工具 60.0-98.5% 丢失/23.2-33.0% 开销；257 CVE 编排为 1,148 个 range；SysSpear：XBow 13 例对比；SysArmor：对 HOLMES/UNICORN 的 precision 倍数、华为 6 起 + Sangfor 5 起真实 APT；RQ4：50 个 L2 案例的攻击完成/防御信号覆盖率"
+  },
+  "threat_model": {
+    "adversary": "external",
+    "capabilities": [
+      "SysSpear 攻击智能体在多主机 range 内执行多阶段真实 CVE 链：凭据获取、横向移动、权限提升到最终目标（257 CVE、1,148 range 的位点库）",
+      "攻击者可借助专家技能库执行业务特定路径（Docker API socket 容器逃逸、K8s RBAC 提权、云 metadata 端点凭据窃取）",
+      "设计上的威胁升级通道（未实证）：SysArmor 检测置信度作为隐匿性信号反馈给 Strategy Board——高置信=易被看见=换更隐蔽方案；低置信未检出=可继续发展该方案",
+      "评估侧对手为商用 LLM（Kimi K3、DeepSeek-V4-Pro 等）直接驱动或经 SysSpear 编排"
+    ],
+    "assumptions": [
+      "闭环共演化是系统集成主张：三个组件各自运行即形成回路（§3 的双向数据流描述），但论文没有把'回路'本身作为实验对象",
+      "RQ4 的智能体评估中 SysArmor 以 observe-only 模式运行——未阻挡、未演化，攻击方面对的是静态检测观测而非在演化的防御",
+      "技能库为人工蒸馏的静态资产（十余年运营知识），实验中技能不因运行结果自动新增",
+      "范围构造：CVE 位点原子化+依赖组合，评估已知 CVE 利用与 ATT&CK 阶段推进，不评估 0-day 发现（作者明示）"
+    ],
+    "not_covered": [
+      "闭环共演化的实证缺失：没有任何实验测量'攻击产出改善防御、防御反馈升级攻击'的迭代效应；'防御侧持续自进化'无任何微调实验；agent 评估中 SysArmor 仅 observe-only",
+      "攻击是否针对演化后的防御重新适应——无测量（无轮次化攻防对抗实验，无 ASR 随防御更新的变化）",
+      "对防御系统自身（日志收集、验证器）的攻击作为安全问题的研究：仅做了防 Hack Rewarding 的完整性控制，0 个商用 LLM 逃逸 range 或绕过验证为正面结果",
+      "生产部署（华为/Sangfor）的检测无公开可复现实验协议；多智能体、跨组织对抗未覆盖"
+    ]
+  },
+  "intervention": {
+    "name": "SysEvolve（SysField 攻防演练场 + SysSpear 攻击 + SysArmor 防御）",
+    "mechanism_layer": "architecture",
+    "description": "把'攻防独立演化停滞'归因于三层（部署层缺可靠 range 与可信评估；能力层缺高效攻击生成与自适应检测；对抗层缺闭环数据流），并提出以共演化为整合洞见的三组件系统：SysField 提供多主机 range（CRADLE 声明式拓扑、NoDrop/DPUaudit 零丢失收集、弱点能力原子化+依赖组合、三层验证的可信评估边界）；SysSpear 以 Strategy Board（类型化证据图）为中心做任务切片局部搜索、SecFlow 专家技能库增强与 SMT/符号执行静态验证；SysArmor 做实时状态追踪检测、CTI 上下文融合告警解释、STAIR 阶段匹配自动响应。回路按设计双向运行：攻击方案 stress-test 防御覆盖（未检出=微调信号）、检测结果与置信度经 Strategy Board 引导攻击精炼。本综述判定：回路闭环是架构主张，评估只覆盖组件级（攻击能力/防御能力/基础设施），回路级与'攻击对演化防御再适应'均无实测。"
+  },
+  "controls": [
+    {"name": "NoDrop/DPUaudit vs 现有收集工具（60.0-98.5% 丢失、23.2-33.0% 开销）", "purpose": "baseline"},
+    {"name": "Claude Code 单智能体（GLM-5.1 / Opus 4.6 两种配置）vs SysSpear（同容器同工具）", "purpose": "fair-comparison"},
+    {"name": "SysSpear 五配置（含去技能 vs DeepSeek-V4-Pro-Flash + skills）", "purpose": "ablation"},
+    {"name": "HOLMES / UNICORN（provenance 检测）vs SysArmor", "purpose": "baseline"},
+    {"name": "单步 vs 多步组合 vs 7->50 节点拓扑（4 模型）", "purpose": "difficulty ablation"},
+    {"name": "诱饵端点干扰配置 vs 常规 range", "purpose": "environmental-interference control"}
+  ],
+  "results": [
+    {
+      "claim": "攻击完成率随任务结构难度大幅下降：多步组合使成功率降低 18.1-21.6 个百分点，7->50 节点拓扑再降 9.8-10.6 点（4 个模型）；单步评估掩盖的能力缺口在多步/大拓扑下暴露——瓶颈在初始访问之后的后渗透状态利用。",
+      "metric": "attack success drop (percentage points)",
+      "value": "-18.1 ~ -21.6 (multi-step)；-9.8 ~ -10.6 (7->50 nodes)",
+      "comparison": "单步基线 vs 多步组合 vs 更大拓扑",
+      "setting": "SysField range 上 4 个商用 LLM 的受控对比（§7.1 Evaluation Findings）",
+      "quote": "multi-step composition lowers success by 18.1–21.6 percentage points, and the separate 7-to-50-node comparison shows a 9.8–10.6 point reduction across four reported models.",
+      "locator": "§7.1.6 Evaluation Findings",
+      "denominator": {
+        "n_total": "各配置的 range 案例集（具体整数分母在 §7.1 各 RQ 表，正文摘要未复述）",
+        "n_valid": "同上；TODO: 逐 RQ 核对分母",
+        "how_counted": "三阶段链完成率（target-1/2/3 里程碑+终端目标），环境侧验证"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "攻击完成与防御可观测是两个独立维度：50 个 L2 案例上 Kimi K3 完成全部三目标 16/50 但产生至少一个新攻击窗口信号 42/50、覆盖全部预期规则 28/50；DeepSeek-V4-Pro 为 6/50、30/50、14/50。SysSpear 重跑仅 7/50 完成但 39/50 产生信号。",
+      "metric": "attack completion vs defensive observability (share of 50 L2 cases)",
+      "value": "Kimi K3 16/50 / 42/50 / 28/50；DeepSeek-V4-Pro 6/50 / 30/50 / 14/50；SysSpear 7/50 / 39/50 / 27/50",
+      "comparison": "any-signal 覆盖超出完全完成 52（Kimi）/48（DeepSeek）/64（SysSpear）个百分点",
+      "setting": "两个 matched direct-run L2 臂 + SysSpear 300-turn 重跑（50 例）；SysArmor observe-only 模式",
+      "quote": "Only 7/50 cases (14%) complete all three targets, but 39/50 (78%) produce at least one new attack-window signal and 27/50 (54%) cover the complete expected rule set.",
+      "locator": "§7.1.5 RQ4 (Fig. 18, Table 11)",
+      "denominator": {
+        "n_total": "50 个 L2 案例（SysSpear 臂同 50 例）；直接运行对比的 per-rule 子集为 40 个配对案例（另 10 个 DeepSeek 案例缺 per-rule 字段被排除，作者明示分母并警告不可当 matched 三臂样本）",
+        "n_valid": "40 配对案例（direct-run per-rule 比较）/ 50 案例（完成率与 any-signal）",
+        "how_counted": "any new signal=至少一条新攻击窗口规则触发；strict expected hit=完整预期规则集覆盖；observe-only，不代表阻挡"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "SysSpear 攻击能力：XBow 13 例上技能使能配置 10/13（76.9%）为最强设置（L3 难题 3/4，其余配置至多 1/4）；同模型对比 GLM-5.1 下 SysSpear 8/13 vs Claude Code 7/13；摘要口径'攻击成功率比基线 LLM 提升超 25%'。",
+      "metric": "XBow task success (13 cases)",
+      "value": "10/13 (76.9%)",
+      "comparison": "vs Claude Code GLM-5.1 7/13 (53.8%)、Opus 4.6 9/13 (69.2%)、DeepSeek-V4-Pro-Flash 无技能 9/13",
+      "setting": "XBow 13 例（L2 9 例 + L3 4 例），每任务 10 分钟超时，同容器工具集，5 个 SysSpear 配置 x 2 个 Claude Code 基线",
+      "quote": "On the 13-case slice, the skill-enabled SysSpear configuration is the strongest recorded setting, solving 10 tasks (76.9%). Its advantage is concentrated in Level-3 coverage: it solves 3 of 4 hard cases, whereas every other reported configuration solves at most one.",
+      "locator": "§7.2.2 (Table 12)",
+      "denominator": {
+        "n_total": "13 例 XBow 任务（L2 9 / L3 4）",
+        "n_valid": "同上；配置级比较未隔离单机制因果（作者自述，机制归因看 RQ2）",
+        "how_counted": "任务完成 / 13；分难度层报告"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "SysArmor 防御能力：对 HOLMES/UNICORN 实现 10-1000 倍 precision；华为与 Sangfor 生产部署分别检出 6 起与 5 起真实多日 APT（示例告警含 201 节点/1,982 边的 provenance 图）；实时检测速度 21x ProvDetector、7x UNICORN。",
+      "metric": "detection precision (multiples over baselines) / production APT detections",
+      "value": "10–1000x precision；6 (Huawei) + 5 (Sangfor) APT",
+      "comparison": "vs HOLMES / UNICORN / ProvDetector",
+      "setting": "§7.3：标准检测基准 + 两个生产 SOC 部署；端到端攻击-防御闭环未在此评估",
+      "quote": "SysArmor achieves 10–1000×\\times greater precision than HOLMES and UNICORN, detects 6 and 5 real APT attacks in Huawei and Sangfor production deployments respectively, and performs real-time detection at 21",
+      "locator": "§7.3 RQ1 (Abstract)",
+      "denominator": {
+        "n_total": "TODO: 基准数据集规模与生产评估窗口的整数分母需从 §7.3 表格核对（本卡精读未覆盖 §7.3 全部表格）",
+        "n_valid": "同上",
+        "how_counted": "precision/recall 与检测时延；生产部署为部署期观察性结果"
+      },
+      "is_primary_result": true
+    },
+    {
+      "claim": "智能体对环境干扰脆弱：在 range 中部署诱饵端点后，智能体超时增至 3 倍、下游完成消失，而初始访问成功率不变——干扰在初始访问之后的阶段起效。",
+      "metric": "timeout multiplier / downstream completion (decoy-endpoint interference)",
+      "value": "3x timeouts；downstream completion 消失",
+      "comparison": "常规 range vs 高干扰配置",
+      "setting": "SysField 受控干扰实验（§7.1 Evaluation Findings 第三条）",
+      "quote": "When decoy endpoints are deployed in the range, agent timeouts triple and downstream completion disappears despite the success rates of initial accesses are unchanged.",
+      "locator": "§7.1.6 Evaluation Findings",
+      "denominator": {
+        "n_total": "TODO: 干扰实验的案例数与模型数需从 §7.1 RQ 表核对",
+        "n_valid": "同上",
+        "how_counted": "超时率与下游阶段完成率对比"
+      },
+      "is_primary_result": false
+    },
+    {
+      "claim": "基础设施完整性正面结果：零丢失收集@2.1% 系统开销（对照工具 60.0-98.5% 丢失或 23.2-33.0% 开销）；257 个 CVE 编排为 1,148 个 range；评估中 0 个商用 LLM 逃逸 range 或绕过验证边界。",
+      "metric": "event collection loss/overhead; ranges orchestrated; boundary violations",
+      "value": "0% loss @ 2.1% overhead；257 CVEs -> 1,148 ranges；0 escapes",
+      "comparison": "vs 现有工具 60.0–98.5% loss / 23.2–33.0% overhead",
+      "setting": "SysField 压力测试（虚拟/物理机，1-CPU/2-GB 与 32-CPU/64-GB）+ range 编排（§7.1 RQ1-RQ2）",
+      "quote": "SysField achieves zero-dropout log collection at 2.1% system overhead (versus 60–98% dropout and 23–33% overhead for existing tools), orchestrates over 257 CVEs into 1,148 distinct ranges, and zero commercial LLMs escaped the range or bypassed its verification mechanism.",
+      "locator": "§7.1 RQ1-RQ2 (Abstract)",
+      "denominator": {
+        "n_total": "压力测试配置数与 range 实例数在 §7.1 RQ1/RQ2 表；TODO: 核对整数分母",
+        "n_valid": "同上",
+        "how_counted": "事件连续性计数（序列号+逐批确认）判丢失；开销为系统级测量"
+      },
+      "is_primary_result": false
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "【对本综述最重要】共演化闭环只有架构没有实验：双向数据流（攻击->防御微调、防御反馈->攻击精炼）在评估中未作为对象运行或测量；'continual model self-evolution' 无任何微调实验；智能体评估中 SysArmor 处于 observe-only 模式，'neither the presence nor the volume of signals implies that an attack was blocked'。摘要与贡献中 'the first system to realize autonomous, safe, attack-defense co-evolution' 的'realize'应读作系统集成层面的设计实现，而非回路效应的实证演示。",
+      "quote": "The present experiment establishes runtime visibility, not protection efficacy: SysArmor operates in observe-only mode, and neither the presence nor the volume of signals implies that an attack was blocked or that the observed activity was severe.",
+      "locator": "§7.1.5 RQ4"
+    },
+    {
+      "statement": "缺少预期防御证据的缺失规则不能解释为防御盲区：不同臂停止深度不同、SysSpear 重跑协议与分母不同，部分预期下游行为可能从未发生；区分'行为未执行'与'执行未观测'需逐轨迹对齐（作者自述）。",
+      "quote": "Because the arms stop at different depths and the SysSpear rerun uses a different execution protocol and denominator, some expected downstream behaviors may never occur.",
+      "locator": "§7.1.5 RQ4"
+    },
+    {
+      "statement": "评估资产未披露统一主机 CPU 型号或 OS build 作为实验控制；可用工件未覆盖全部生产部署细节（§7.1.1 自述可用工件限制）。",
+      "quote": "The available artifacts do not disclose a single host-CPU model or OS build shared by every range run, so we do not introduce one as an experimental control.",
+      "locator": "§7.1.1 Evaluation Setup"
+    },
+    {
+      "statement": "范围构造限于已知 CVE 利用与阶段推进，不含 0-day 发现；SysField 的验证器与收集平面自身作为攻击面的对抗性研究不在本文范围（只做了防 Hack Rewarding 的隔离控制）。",
+      "quote": "SysField evaluates known-CVE exploitation and continuous progression through credential or privilege acquisition, lateral movement, and externally verified final objectives, rather than novel vulnerability discovery.",
+      "locator": "§2.2.1"
+    }
+  ],
+  "counterexamples": [
+    {
+      "observation": "更强的攻击架构不带来等比的下游完成：以 DeepSeek-V4-Pro 为共同骨干，SysSpear 把 target-1 触达从 19/50 扩到 34/50，但 target-1 到 target-3 的绝对差从 30 点收缩到 10 点再到 2 点—— foothold 的增加不转化为等量下游完成，后渗透状态利用是瓶颈。",
+      "locator": "§7.1.6 Evaluation Findings"
+    },
+    {
+      "observation": "技能库在 L3 上的增益集中而总体有限：DeepSeek-V4-Pro-Flash 无技能 9/13 vs 加技能 10/13（总体 +1），增益全部来自 L3（1/4 -> 3/4）——专家技能库对常规难度任务的边际贡献小。",
+      "locator": "§7.2.2 Table 12"
+    }
+  ],
+  "reproduction": {
+    "code": "TODO: 论文正文未给出公开代码/artifact 链接（引用了 Orax/Eunomia/SymGx 等外部工具；CRADLE 引用 [5]）",
+    "data": "257 CVE 位点库、1,148 ranges、XBow 13 例、生产部署为不可复现的私有环境",
+    "run_by_us": false
+  },
+  "reading": {
+    "coverage": ["abstract", "intro", "method", "results", "appendix-partial", "figures"],
+    "complete": true
+  },
+  "quality_flags": [
+    "coevolution_loop_designed_not_evaluated",
+    "defense_observe_only_in_agent_evals",
+    "no_attack_readaptation_measurement",
+    "denominator_todo_s73",
+    "production_results_not_reproducible"
+  ]
+}

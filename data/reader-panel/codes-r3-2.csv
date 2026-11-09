@@ -1,0 +1,27 @@
+key,c1,c2,c3,c4,quote_c1,quote_c2,quote_c3,quote_c4
+2607.19351,none,qualitative,numeric,none,,,FPR remains below 5.2%,
+2607.23586,none,none,qualitative,none,,,,
+2607.27080,none,none,none,qualitative,,,,
+2608.00426,numeric,none,none,none,"both backbones lose 1.5 points on MMLU, and gemma also loses 1.4 points on LongMemEval",,,
+2608.01558,none,none,none,none,,,,
+2608.01679,none,none,numeric,none,,,"0.6% dangerous upgrades, and 0.7% over-restrictions",
+2608.01759,none,none,none,none,,,,
+2608.03509,none,none,qualitative,numeric,,,,80.0% of skill-mediated attacks persist after deleting the original poisoned records
+2608.05563,none,none,none,none,,,,
+2608.06984,none,none,none,none,,,,
+2608.09732,none,none,numeric,none,,,allowing 99.5% of benign workflows to pass,
+2608.12851,numeric,none,none,qualitative,SafeEvolve cuts C-ASR by 17.3 points but also costs 12.7 points of C-Util,,,
+2608.15012,none,numeric,none,none,,The DPUAudit-backed SysField configuration adds 2.1% overhead,,
+2608.21159,numeric,numeric,none,numeric,"Relative to the unprotected condition, benign utility changed by −43.8",The unoptimized protected median is 3930.8 ms above ambient,,"Exceptional response-loss and certified no-effect recovery average 10.0 s and 14.5 s, respectively."
+2608.25776,numeric,none,numeric,none,The counter-prompt reduces benign helper-copying by at most 11.7,,produces up to 47%47\% false positives on the library,
+2608.27299,none,none,none,none,,,,
+2609.01222,none,none,none,none,,,,
+2609.01836,numeric,none,none,none,"pooled legitimate action rate falls by 26.4 points in procurement, 16.0 in cybersecurity, and 17.8 in finance",,,
+2609.01852,none,none,none,none,,,,
+2609.02265,none,numeric,none,none,,Capture therefore costs 17% more tokens per turn than StateMem and 43% fewer than Full History.,,
+2609.05339,none,numeric,none,numeric,,"Full RAG re-embedding reaches every target for all 48 histories in both directions, at a median cost of $0.013.",,"The reported medians of $0.76, $0.75, and $0.75 are conditional on these progressively smaller successful subsets"
+2609.07529,none,qualitative,none,none,,,,
+2609.08258,none,none,none,qualitative,,,,
+2609.08444,none,numeric,none,none,,| SafeMem | 9425.40 | 17.62 |,,
+2609.08747,none,none,none,none,,,,
+2609.12413,numeric,numeric,numeric,none,yielding 100% over-refusal and 0% utility,SmoothLLM increases Qwen response time to 824.84 s,"Prompt Guard and Robust Aligned achieve 0% ASR for both models, but reject all benign XSTest prompts, yielding 100% over-refusal",
